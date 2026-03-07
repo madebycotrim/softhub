@@ -39,7 +39,10 @@ rotasAuth.post('/msal', async (c) => {
         const erroValidacao = validarClaims(payload, MSAL_TENANT_ID, MSAL_CLIENT_ID, DOMINIO_INSTITUCIONAL);
         if (erroValidacao) {
             console.warn('[Auth] Claims inválidas:', erroValidacao);
-            return c.json({ erro: 'Token inválido ou não autorizado: ' + erroValidacao }, 403);
+            return c.json({
+                erro: 'Rejeitado por validação de domínio/segurança.',
+                detalhe: erroValidacao
+            }, 403);
         }
 
         // 3. Extrair dados
@@ -69,7 +72,8 @@ rotasAuth.post('/msal', async (c) => {
             } else {
                 // Acesso negado se não estiver pré-cadastrado
                 return c.json({
-                    erro: 'Seu e-mail não está autorizado. Solicite acesso ao administrador.'
+                    erro: 'Acesso negado: email não autorizado.',
+                    detalhe: `O email ${email} não está na lista de membros e não é o email de bootstrap (${BOOTSTRAP_ADMIN_EMAIL}).`
                 }, 403);
             }
         } else {
