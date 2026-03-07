@@ -47,5 +47,12 @@ export default defineConfig(({ mode }) => {
         server: {
             port: 5173,
         },
-    };
-});
+        proxy: {
+            '/api': {
+                target: env.VITE_PROXY_TARGET || 'https://softhub.madebycotrim-67c.workers.dev',
+                changeOrigin: true,
+                secure: false,
+            },
+        },
+    }
+})

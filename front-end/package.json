@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:live": "cross-env VITE_PROXY_TARGET=https://softhub.madebycotrim-67c.workers.dev npm run dev",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -41,6 +42,7 @@
     "@types/react-router": "^5.1.20",
     "@types/react-router-dom": "^5.3.3",
     "@vitejs/plugin-react": "^5.1.4",
+    "cross-env": "^10.1.0",
     "shadcn": "^3.8.5",
     "tailwindcss": "^4.2.1",
     "tw-animate-css": "^1.4.0",
