@@ -1,4 +1,4 @@
-type VarianteEmblema = 'azul' | 'verde' | 'vermelho' | 'amarelo' | 'roxo' | 'cinza';
+type VarianteEmblema = 'azul' | 'verde' | 'vermelho' | 'amarelo' | 'roxo' | 'cinza' | 'alerta';
 
 interface EmblemaProps {
     texto: string;
@@ -18,6 +18,7 @@ export function Emblema({ texto, variante = 'cinza', className = '' }: EmblemaPr
         amarelo: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
         roxo: 'bg-violet-500/10 text-violet-500 border-violet-500/20',
         cinza: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
+        alerta: 'bg-orange-500/10 text-orange-500 border-orange-500/20',
     };
 
     const padroes = 'inline-flex items-center whitespace-nowrap px-2.5 py-0.5 rounded-full text-xs font-medium border';

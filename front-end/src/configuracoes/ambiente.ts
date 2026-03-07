@@ -3,13 +3,14 @@ import { z } from 'zod';
 const esquemaAmbiente = z.object({
     VITE_MSAL_CLIENT_ID: z.string().min(1, 'VITE_MSAL_CLIENT_ID é obrigatório'),
     VITE_MSAL_TENANT_ID: z.string().min(1, 'VITE_MSAL_TENANT_ID é obrigatório'),
-    VITE_API_URL: z.string().url('VITE_API_URL deve ser uma URL válida'),
-    // 🔴 CORRIGIDO: unificado para 'unieuro.com.br'.
-    // Unificado para 'unieuro.com.br' — deve bater EXATAMENTE com DOMINIO_INSTITUCIONAL do backend.
+    VITE_API_URL: z
+        .string()
+        .url('VITE_API_URL deve ser uma URL válida')
+        .default('https://backend.mateus.workers.dev'), // 👈 Substitua pela sua URL real do Worker
     VITE_DOMINIO_INSTITUCIONAL: z
         .string()
         .min(1, 'VITE_DOMINIO_INSTITUCIONAL é obrigatório')
-        .default('unieuro.com.br'),
+        .default('unieuro.edu.br'), // 👈 Atualizado para .edu.br
 });
 
 const _ambiente = esquemaAmbiente.safeParse(import.meta.env);

@@ -20,7 +20,7 @@ import { ModalEditarPerfil } from './componentes/ModalEditarPerfil';
  * Simula a rota de Perfil.
  */
 export function PerfilMembro({ membroId }: { membroId: string }) {
-    const { membros, carregando: carregandoMembros, atualizarMembro, recarregar } = usarMembros();
+    const { membros, carregando: carregandoMembros, erro: erroMembros, atualizarMembro, recarregar } = usarMembros();
     const [editando, setEditando] = useState(false);
     const [salvando, setSalvando] = useState(false);
 
@@ -66,7 +66,7 @@ export function PerfilMembro({ membroId }: { membroId: string }) {
             // 1. Atualiza o contexto de autenticação
             atualizarUsuarioLocalmente({
                 ...usuario!,
-                foto_perfil: payload.foto_perfil ?? undefined,
+                foto_perfil: payload.foto_perfil || undefined,
             });
 
             // 2. Atualiza a lista local de membros sem reload de página
@@ -89,6 +89,17 @@ export function PerfilMembro({ membroId }: { membroId: string }) {
     }
 
     if (carregandoMembros) return <Carregando />;
+
+    if (erroMembros) {
+        return (
+            <div className="p-12 text-center text-red-400 border border-red-900/20 bg-red-900/10 rounded-2xl shadow-sm">
+                {erroMembros}
+                <Button variant="link" onClick={() => recarregar()} className="block mx-auto mt-2">
+                    Tentar novamente
+                </Button>
+            </div>
+        );
+    }
 
     if (!membro) {
         return (
