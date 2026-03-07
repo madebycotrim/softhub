@@ -23,7 +23,7 @@ export default function TelaLogin() {
 
     const erroRedirect = searchParams.get('erro');
     const mensagemErroRedirect: Record<string, string> = {
-        'dominio': `Conta não autorizada. Use seu email @${ambiente.dominioInstitucional}.`,
+        'dominio': `Conta não autorizada. Use seu email @${ambiente.dominioInstitucional} ou @unieuro.com.br.`,
         'nao-autorizado': 'Acesso negado. Conta não cadastrada ou desativada.',
         'backend': 'Falha ao validar sua conta. Tente novamente.',
     };
@@ -36,9 +36,13 @@ export default function TelaLogin() {
                     const response = await instance.handleRedirectPromise();
                     if (response && response.account) {
                         const emailUsuario = response.account.username ?? '';
-                        if (!emailUsuario.toLowerCase().endsWith(`@${ambiente.dominioInstitucional}`)) {
+                        const emailMinusculo = emailUsuario.toLowerCase();
+                        const dominiosValidos = [`@${ambiente.dominioInstitucional}`, '@unieuro.com.br'];
+                        const ehValido = dominiosValidos.some(d => emailMinusculo.endsWith(d));
+
+                        if (!ehValido) {
                             await instance.logoutRedirect({ account: response.account });
-                            setErroLocal(`Use seu email @${ambiente.dominioInstitucional}.`);
+                            setErroLocal(`Use seu email @${ambiente.dominioInstitucional} ou @unieuro.com.br.`);
                             return;
                         }
                         setCarregando(true);
@@ -166,7 +170,7 @@ export default function TelaLogin() {
 
                                 <div className="flex items-center justify-center gap-2 text-slate-500 font-bold text-[13px] animate-in fade-in slide-in-from-bottom-2 duration-700 delay-500">
                                     <Info size={15} className="text-slate-400" />
-                                    <span>Use seu e-mail institucional @{ambiente.dominioInstitucional}</span>
+                                    <span>Use seu e-mail institucional @{ambiente.dominioInstitucional} ou @unieuro.com.br</span>
                                 </div>
                             </div>
                         </div>
