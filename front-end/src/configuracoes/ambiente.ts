@@ -6,7 +6,7 @@ const esquemaAmbiente = z.object({
     VITE_API_URL: z
         .string()
         .url('VITE_API_URL deve ser uma URL válida')
-        .default('https://backend.mateus.workers.dev'), // 👈 Substitua pela sua URL real do Worker
+        .default('https://softhub.madebycotrim-67c.workers.dev'),
     VITE_DOMINIO_INSTITUCIONAL: z
         .string()
         .min(1, 'VITE_DOMINIO_INSTITUCIONAL é obrigatório')

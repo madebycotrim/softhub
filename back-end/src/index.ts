@@ -36,7 +36,7 @@ const origemPermitida = (origin: string): string | null => {
         return origin;
     }
     // Produção: adicione aqui os domínios permitidos
-    const permitidos = ['https://seu-frontend.pages.dev'];
+    const permitidos = ['https://softhub-35u.pages.dev'];
     return permitidos.includes(origin) ? origin : null;
 };
 
@@ -53,17 +53,17 @@ app.onError(lidarExcecao);
 
 // ─── Rotas ────────────────────────────────────────────────────────────────────
 
-app.route('/api/auth',      rotasAuth);
-app.route('/api/auth',      rotasAuthQr);
-app.route('/api/usuarios',  rotasUsuarios);
-app.route('/api/tarefas',   rotasTarefas);
-app.route('/api/tarefas',   rotasTarefasDetalhes);
-app.route('/api/sprints',   rotasSprints);
-app.route('/api/ponto',     rotasPonto);
-app.route('/api/ponto',     rotasPontoJustificativas);
-app.route('/api/avisos',    rotasAvisos);
+app.route('/api/auth', rotasAuth);
+app.route('/api/auth', rotasAuthQr);
+app.route('/api/usuarios', rotasUsuarios);
+app.route('/api/tarefas', rotasTarefas);
+app.route('/api/tarefas', rotasTarefasDetalhes);
+app.route('/api/sprints', rotasSprints);
+app.route('/api/ponto', rotasPonto);
+app.route('/api/ponto', rotasPontoJustificativas);
+app.route('/api/avisos', rotasAvisos);
 app.route('/api/dashboard', rotasDashboard);
-app.route('/api/logs',      rotasLogs);
+app.route('/api/logs', rotasLogs);
 app.route('/api/organizacao', rotasOrganizacao);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
