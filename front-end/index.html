@@ -13,6 +13,32 @@
   <!-- Icones baseados no design/rules -->
   <link rel="shortcut icon" href="./public/ICONE.png" type="image/png">
   <title>Fábrica de Software - Unieuro</title>
+
+  <!-- Silenciador de Ruído de Extensões (ChatGPT, DeepSeek, etc) -->
+  <script>
+    (function () {
+      const RUÍDO = [
+        'tabs:outgoing.message.ready',
+        'Could not establish connection',
+        'Receiving end does not exist',
+        'The message port closed before a response'
+      ];
+      const filtrar = (m) => RUÍDO.some(r => String(m).includes(r));
+
+      window.addEventListener('unhandledrejection', (e) => {
+        if (filtrar(e.reason?.message || e.reason)) {
+          e.stopImmediatePropagation();
+          e.preventDefault();
+        }
+      }, true);
+
+      const originalError = console.error;
+      console.error = function (...args) {
+        if (filtrar(args.join(' '))) return;
+        originalError.apply(console, args);
+      };
+    })();
+  </script>
 </head>
 
 <body>
