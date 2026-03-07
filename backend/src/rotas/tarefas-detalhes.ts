@@ -1,0 +1,254 @@
+import { Hono } from 'hono';
+import { Env } from '../index';
+import { autenticacaoRequerida } from '../middleware/auth';
+import { registrarLog } from '../servicos/servico-logs';
+import { criarNotificacoes } from '../servicos/servico-notificacoes';
+
+const rotasTarefasDetalhes = new Hono<{ Bindings: Env, Variables: { usuario: any } }>();
+
+// === COMENTÁRIOS DA TAREFA ===
+
+rotasTarefasDetalhes.get('/:id/comentarios', autenticacaoRequerida, async (c) => {
+    const { DB } = c.env;
+    const tarefaId = c.req.param('id');
+    try {
+        const query = `
+            SELECT c.id, c.conteudo, c.criado_em, c.atualizado_em,
+                   u.id AS autor_id, u.nome AS autor_nome, u.foto_perfil AS autor_foto
+            FROM comentarios_tarefa c
+            JOIN usuarios u ON u.id = c.autor_id
+            WHERE c.tarefa_id = ? AND c.ativo = 1
+            ORDER BY c.criado_em ASC
+        `;
+        const { results } = await DB.prepare(query).bind(tarefaId).all();
+        return c.json(results);
+    } catch (erro) {
+        console.error('[ERRO DB] GET /tarefas/:id/comentarios', erro);
+        return c.json({ erro: 'Falha ao buscar comentários' }, 500);
+    }
+});
+
+rotasTarefasDetalhes.post('/:id/comentarios', autenticacaoRequerida, async (c) => {
+    const { DB } = c.env;
+    const tarefaId = c.req.param('id');
+    const { conteudo } = await c.req.json();
+    const usuario = c.get('usuario') as any;
+
+    try {
+        if (!conteudo || !conteudo.trim()) return c.json({ erro: 'Conteúdo vazio' }, 400);
+
+        const tarefaData = await DB.prepare('SELECT titulo FROM tarefas WHERE id = ?').bind(tarefaId).first<{ titulo: string }>();
+        if (!tarefaData) return c.json({ erro: 'Tarefa não encontrada' }, 404);
+
+        const idComentario = crypto.randomUUID();
+        await DB.prepare(`INSERT INTO comentarios_tarefa (id, tarefa_id, autor_id, conteudo) VALUES (?, ?, ?, ?)`)
+            .bind(idComentario, tarefaId, usuario.id, conteudo.trim()).run();
+
+        // Evitando Flood: Notificando o responsável + atuais comentaristas, isentando o próprio autor
+        const responsaveisReq = await DB.prepare('SELECT usuario_id FROM tarefas_responsaveis WHERE tarefa_id = ?').bind(tarefaId).all();
+        const comentaristasReq = await DB.prepare('SELECT DISTINCT autor_id FROM comentarios_tarefa WHERE tarefa_id = ? AND ativo = 1').bind(tarefaId).all();
+
+        const usuariosParaNotificar = new Set<string>();
+        responsaveisReq.results.forEach(r => usuariosParaNotificar.add(r.usuario_id as string));
+        comentaristasReq.results.forEach(cm => usuariosParaNotificar.add(cm.autor_id as string));
+
+        usuariosParaNotificar.delete(usuario.id); // O autor não é notificado da sua própria ação
+
+        for (const uid of usuariosParaNotificar) {
+            await criarNotificacoes(DB, {
+                usuarioId: uid,
+                tipo: 'tarefa',
+                titulo: 'Novo comentário',
+                mensagem: `${usuario.nome} comentou na tarefa "${tarefaData.titulo}".`,
+                link: `/app/kanban?tarefa=${tarefaId}`
+            });
+        }
+
+        // Comentário em Tarefa registrada com sucesso
+        await registrarLog(DB, {
+            usuarioId: usuario.id,
+            usuarioNome: usuario.nome,
+            usuarioEmail: usuario.email,
+            usuarioRole: usuario.role,
+            acao: 'TAREFA_COMENTADA',
+            modulo: 'kanban',
+            descricao: `Novo comentário na tarefa "${tarefaData.titulo}"`,
+            ip: c.req.header('CF-Connecting-IP') ?? '',
+            entidadeTipo: 'tarefas',
+            entidadeId: tarefaId
+        });
+
+        return c.json({ sucesso: true, id: idComentario });
+    } catch (erro) {
+        console.error('[ERRO DB] POST /tarefas/:id/comentarios', erro);
+        return c.json({ erro: 'Falha ao adicionar comentário' }, 500);
+    }
+});
+
+rotasTarefasDetalhes.patch('/comentarios/:id', autenticacaoRequerida, async (c) => {
+    const { DB } = c.env;
+    const comentarioId = c.req.param('id');
+    const { conteudo } = await c.req.json();
+    const usuario = c.get('usuario') as any;
+
+    try {
+        if (!conteudo || !conteudo.trim()) return c.json({ erro: 'Conteúdo vazio' }, 400);
+
+        const comentarioRow = await DB.prepare('SELECT autor_id, tarefa_id FROM comentarios_tarefa WHERE id = ? AND ativo = 1').bind(comentarioId).first<{ autor_id: string, tarefa_id: string }>();
+        if (!comentarioRow) return c.json({ erro: 'Comentário não encontrado' }, 404);
+
+        if (comentarioRow.autor_id !== usuario.id) {
+            return c.json({ erro: 'Apenas o autor pode editar este comentário.' }, 403);
+        }
+
+        await DB.prepare('UPDATE comentarios_tarefa SET conteudo = ?, atualizado_em = ? WHERE id = ?')
+            .bind(conteudo.trim(), new Date().toISOString(), comentarioId).run();
+
+        await registrarLog(DB, {
+            usuarioId: usuario.id,
+            acao: 'TAREFA_COMENTARIO_EDITADO',
+            modulo: 'kanban',
+            descricao: `Comentário ${comentarioId} editado na tarefa ${comentarioRow.tarefa_id}`,
+            ip: c.req.header('CF-Connecting-IP') ?? '',
+            entidadeTipo: 'tarefas',
+            entidadeId: comentarioRow.tarefa_id
+        });
+
+        return c.json({ sucesso: true });
+    } catch (erro) {
+        console.error('[ERRO DB] PATCH /tarefas/comentarios/:id', erro);
+        return c.json({ erro: 'Falha ao editar comentário' }, 500);
+    }
+});
+
+rotasTarefasDetalhes.delete('/comentarios/:id', autenticacaoRequerida, async (c) => {
+    const { DB } = c.env;
+    const comentarioId = c.req.param('id');
+    const usuario = c.get('usuario') as any;
+
+    try {
+        const comentarioRow = await DB.prepare('SELECT autor_id, tarefa_id FROM comentarios_tarefa WHERE id = ? AND ativo = 1').bind(comentarioId).first<{ autor_id: string, tarefa_id: string }>();
+        if (!comentarioRow) return c.json({ erro: 'Comentário não encontrado' }, 404);
+
+        const ehAdminOuLider = ['ADMIN', 'LIDER_GRUPO', 'LIDER_EQUIPE'].includes(usuario.role);
+        if (comentarioRow.autor_id !== usuario.id && !ehAdminOuLider) {
+            return c.json({ erro: 'Você não tem permissão para excluir este comentário.' }, 403);
+        }
+
+        await DB.prepare('UPDATE comentarios_tarefa SET ativo = 0, atualizado_em = ? WHERE id = ?')
+            .bind(new Date().toISOString(), comentarioId).run();
+
+        await registrarLog(DB, {
+            usuarioId: usuario.id,
+            acao: 'TAREFA_COMENTARIO_REMOVIDO',
+            modulo: 'kanban',
+            descricao: `Comentário ${comentarioId} removido da tarefa ${comentarioRow.tarefa_id}`,
+            ip: c.req.header('CF-Connecting-IP') ?? '',
+            entidadeTipo: 'tarefas',
+            entidadeId: comentarioRow.tarefa_id
+        });
+
+        return c.json({ sucesso: true });
+    } catch (erro) {
+        console.error('[ERRO DB] DELETE /tarefas/comentarios/:id', erro);
+        return c.json({ erro: 'Falha ao excluir comentário' }, 500);
+    }
+});
+
+// === Workflow 29: Histórico da Tarefa ===
+
+rotasTarefasDetalhes.get('/:id/historico', autenticacaoRequerida, async (c) => {
+    const { DB } = c.env;
+    const tarefaId = c.req.param('id');
+
+    try {
+        const query = `
+            SELECT h.*, u.nome as usuario_nome, u.foto_perfil as usuario_foto
+            FROM tarefa_historico h
+            JOIN usuarios u ON h.usuario_id = u.id
+            WHERE h.tarefa_id = ?
+            ORDER BY h.alterado_em DESC
+        `;
+        const { results } = await DB.prepare(query).bind(tarefaId).all();
+        return c.json(results);
+    } catch (e) {
+        return c.json({ erro: 'Falha ao buscar histórico da tarefa' }, 500);
+    }
+});
+
+// === Workflow 31: Checklist de Tarefas ===
+
+// Listar itens do checklist
+rotasTarefasDetalhes.get('/:id/checklist', autenticacaoRequerida, async (c) => {
+    const { DB } = c.env;
+    const tarefaId = c.req.param('id');
+    try {
+        const { results } = await DB.prepare('SELECT * FROM checklist_tarefa WHERE tarefa_id = ? ORDER BY ordem ASC, criado_em ASC').bind(tarefaId).all();
+        return c.json(results);
+    } catch (e) {
+        return c.json({ erro: 'Falha ao buscar checklist' }, 500);
+    }
+});
+
+// Adicionar item ao checklist
+rotasTarefasDetalhes.post('/:id/checklist', autenticacaoRequerida, async (c) => {
+    const { DB } = c.env;
+    const tarefaId = c.req.param('id');
+    const { texto } = await c.req.json();
+    const usuario = c.get('usuario') as any;
+
+    if (!['ADMIN', 'LIDER_GRUPO', 'LIDER_EQUIPE'].includes(usuario.role)) {
+        return c.json({ erro: 'Apenas líderes podem adicionar itens ao checklist.' }, 403);
+    }
+
+    if (!texto || !texto.trim()) return c.json({ erro: 'Texto obrigatório' }, 400);
+
+    try {
+        const id = crypto.randomUUID();
+        await DB.prepare('INSERT INTO checklist_tarefa (id, tarefa_id, texto) VALUES (?, ?, ?)')
+            .bind(id, tarefaId, texto.trim()).run();
+
+        return c.json({ id }, 201);
+    } catch (e) {
+        return c.json({ erro: 'Falha ao adicionar item' }, 500);
+    }
+});
+
+// Atualizar item (concluir/desconcluir ou editar texto)
+rotasTarefasDetalhes.patch('/:tarefaId/checklist/:itemId', autenticacaoRequerida, async (c) => {
+    const { DB } = c.env;
+    const { concluido, texto } = await c.req.json();
+    const itemId = c.req.param('itemId');
+
+    try {
+        if (concluido !== undefined) {
+            await DB.prepare('UPDATE checklist_tarefa SET concluido = ? WHERE id = ?').bind(concluido ? 1 : 0, itemId).run();
+        }
+        if (texto !== undefined) {
+            await DB.prepare('UPDATE checklist_tarefa SET texto = ? WHERE id = ?').bind(texto.trim(), itemId).run();
+        }
+        return c.json({ sucesso: true });
+    } catch (e) {
+        return c.json({ erro: 'Falha ao atualizar item' }, 500);
+    }
+});
+
+// Remover item do checklist (DELETE real conforme regra)
+rotasTarefasDetalhes.delete('/:tarefaId/checklist/:itemId', autenticacaoRequerida, async (c) => {
+    const { DB } = c.env;
+    const itemId = c.req.param('itemId');
+    const usuario = c.get('usuario') as any;
+
+    if (!['ADMIN', 'LIDER_GRUPO', 'LIDER_EQUIPE'].includes(usuario.role)) {
+        return c.json({ erro: 'Apenas líderes podem remover itens do checklist.' }, 403);
+    }
+
+    try {
+        await DB.prepare('DELETE FROM checklist_tarefa WHERE id = ?').bind(itemId).run();
+        return c.json({ sucesso: true });
+    } catch (e) {
+        return c.json({ erro: 'Falha ao remover item' }, 500);
+    }
+});
+
+export default rotasTarefasDetalhes;

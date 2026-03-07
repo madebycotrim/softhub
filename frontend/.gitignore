@@ -1,0 +1,88 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Dependency directories
+node_modules/
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+out/
+coverage/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Local configuration
+*.local
+
+# Cache
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+.svelte-kit/
+.vite/
+.eslintcache
+
+# TypeScript
+*.tsbuildinfo
+
+# Package managers
+.pnpm-store/
+.npm/
+.yarn/
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# Cloudflare
+.wrangler/
+.dev.vars
+.dev.vars.*
+.cloudflare/
+workers-site/
+functions/node_modules/
+
+# Cloudflare Pages
+.vercel/
+.netlify/
+
+# Testing
+coverage/
+.nyc_output/
+
+# Temporary files
+tmp/
+temp/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*~
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,59 @@
+import { D1Database } from '@cloudflare/workers-types';
+
+/**
+ * Interface para os dados de log de auditoria.
+ * Segue a Regra 11 e o Workflow 7 do projeto.
+ */
+export interface LogAuditoria {
+    usuarioId?: string;
+    usuarioNome?: string;
+    usuarioEmail?: string;
+    usuarioRole?: string;
+    acao: string;
+    modulo: string;
+    descricao: string;
+    ip?: string;
+    entidadeTipo?: string;
+    entidadeId?: string;
+    dadosAnteriores?: any;
+    dadosNovos?: any;
+}
+
+/**
+ * Registra uma ação de negócio na tabela de logs para auditoria.
+ * Esta função é resiliente: falhas no log não interrompem a requisição principal.
+ */
+export async function registrarLog(db: D1Database, dados: LogAuditoria) {
+    const timestamp = new Date().toISOString();
+
+    // Log no console para depuração em tempo real (wrangler tail)
+    console.log(`[AUDITORIA] ${timestamp} | ${dados.modulo.toUpperCase()} | ${dados.acao}: ${dados.descricao}`);
+
+    try {
+        await db.prepare(`
+            INSERT INTO logs (
+                id, usuario_id, usuario_nome, usuario_email, usuario_role,
+                acao, modulo, descricao, ip, entidade_tipo, entidade_id,
+                dados_anteriores, dados_novos, criado_em
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+            crypto.randomUUID(),
+            dados.usuarioId || null,
+            dados.usuarioNome || null,
+            dados.usuarioEmail || null,
+            dados.usuarioRole || null,
+            dados.acao,
+            dados.modulo,
+            dados.descricao,
+            dados.ip || null,
+            dados.entidadeTipo || null,
+            dados.entidadeId || null,
+            dados.dadosAnteriores ? JSON.stringify(dados.dadosAnteriores) : null,
+            dados.dadosNovos ? JSON.stringify(dados.dadosNovos) : null,
+            timestamp
+        ).run();
+    } catch (erro) {
+        // Falha no log nunca deve travar o sistema (Regra de Resiliência)
+        console.error('[FALHA CRÍTICA AUDITORIA] Erro ao gravar no D1:', erro);
+    }
+}
