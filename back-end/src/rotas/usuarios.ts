@@ -41,6 +41,11 @@ rotasUsuarios.get('/', autenticacaoRequerida, async (c) => {
 
         const { results } = await DB.prepare(query).all();
 
+        console.log(`[AUDITORIA] GET /api/usuarios - Membros encontrados: ${results?.length ?? 0}`);
+        if (results) {
+            console.log(`[AUDITORIA] Emails: ${results.map((u: any) => u.email).join(', ')}`);
+        }
+
         return c.json({
             membros: results ?? [],
             metadata: {

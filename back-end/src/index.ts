@@ -30,18 +30,17 @@ const app = new Hono<{ Bindings: Env }>();
 // Em produção: substituir pela URL real do frontend.
 
 // O Hono exige que a função retorne a própria origem (para permitir) ou null (para bloquear)
-const origemPermitida = (origin: string): string | null => {
-    // Permite qualquer localhost/127.0.0.1 em desenvolvimento
-    if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
-        return origin;
-    }
-    // Produção: adicione aqui os domínios permitidos
-    const permitidos = ['https://softhub-35u.pages.dev'];
-    return permitidos.includes(origin) ? origin : null;
-};
+
+// ─── CORS ─────────────────────────────────────────────────────────────────────
 
 app.use('*', cors({
-    origin: origemPermitida,
+    origin: (origin) => {
+        // Permite localhost e qualquer subdomínio do projeto no Cloudflare
+        if (!origin || /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin) || origin.includes('madebycotrim') || origin.includes('pages.dev')) {
+            return origin;
+        }
+        return null; // Bloqueia outros
+    },
     allowMethods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
