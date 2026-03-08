@@ -37,7 +37,7 @@ rotasUsuarios.get('/', autenticacaoRequerida(), async (c) => {
             FROM usuarios u
             LEFT JOIN equipes e ON u.equipe_id = e.id
             LEFT JOIN grupos  g ON e.grupo_id  = g.id
-            WHERE u.visivel = 1
+            WHERE 1=1 -- visivel = 1 (removido temporariamente)
             ORDER BY u.nome ASC
         `;
 
@@ -284,9 +284,11 @@ rotasUsuarios.post('/', async (c, next) => {
 
     let email: string;
     let role: string;
+    let funcoes: string[] | undefined;
+    let equipe_id: string | null | undefined;
 
     try {
-        ({ email, role } = await c.req.json());
+        ({ email, role, funcoes, equipe_id } = await c.req.json());
     } catch {
         return c.json({ erro: 'Corpo da requisição inválido.' }, 400);
     }
@@ -316,9 +318,9 @@ rotasUsuarios.post('/', async (c, next) => {
         const nomePadrao = emailLimpo.split('@')[0];
 
         const insertResult = await DB.prepare(
-            'INSERT INTO usuarios (id, nome, email, role, ativo) VALUES (?, ?, ?, ?, 1)'
+            'INSERT INTO usuarios (id, nome, email, role, ativo, funcoes, equipe_id) VALUES (?, ?, ?, ?, 1, ?, ?)'
         )
-            .bind(novoId, nomePadrao, emailLimpo, role)
+            .bind(novoId, nomePadrao, emailLimpo, role, JSON.stringify(funcoes || []), equipe_id || null)
             .run();
 
         console.log('[POST /usuarios] INSERT meta:', JSON.stringify(insertResult.meta));

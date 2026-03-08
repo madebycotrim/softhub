@@ -20,6 +20,11 @@ interface ToastState {
     id: number;
 }
 
+const FUNCOES_DISPONIVEIS = [
+    'Frontend', 'Backend', 'Fullstack', 'Mobile', 'UI/UX', 'UX Research',
+    'DevOps', 'QA/Testes', 'Product Owner', 'Scrum Master', 'Data Science'
+];
+
 // ─── Hook: useDebounce ────────────────────────────────────────────────────────
 
 function useDebounce<T>(valor: T, delay = 300): T {
@@ -147,9 +152,16 @@ function useGerenciarMembros() {
 
     const cadastrarMembro = useCallback(async (
         email: string,
-        role: string
+        role: string,
+        funcoes?: string[],
+        equipe_id?: string | null
     ): Promise<{ sucesso: boolean; erro?: string }> => {
-        const res = await adicionarMembro({ email: email.toLowerCase().trim(), role });
+        const res = await adicionarMembro({
+            email: email.toLowerCase().trim(),
+            role,
+            funcoes,
+            equipe_id
+        });
         if (res.sucesso) {
             // Força refetch para garantir que a lista exibida reflita o banco,
             // independentemente de qual instância do hook recebeu o insert local.
@@ -394,10 +406,7 @@ function LinhaMembro({
     const { usuario } = usarAutenticacao();
     const ehOMesmoUsuario = usuario?.id === membro.id;
 
-    const funcoesDisponiveis = [
-        'Frontend', 'Backend', 'Fullstack', 'Mobile', 'UI/UX', 'UX Research',
-        'DevOps', 'QA/Testes', 'Product Owner', 'Scrum Master', 'Data Science'
-    ];
+    const funcoesDisponiveis = FUNCOES_DISPONIVEIS;
 
     // Identifica os dois grupos disponíveis dinamicamente (os dois primeiros encontrados)
     const idsGrupos = Array.from(new Set(equipes.map(e => e.grupo_id)));
@@ -653,129 +662,173 @@ function BulkActions({ selecionados, onClear, onBulkUpdate, onExport }: BulkActi
 interface ModalCadastroProps {
     aberto: boolean;
     aoFechar: () => void;
-    aoCadastrar: (email: string, role: string) => Promise<{ sucesso: boolean; erro?: string }>;
+    aoCadastrar: (email: string, role: string, funcoes: string[], equipeId: string | null) => Promise<{ sucesso: boolean; erro?: string }>;
+    equipes: any[];
 }
 
-function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar }: ModalCadastroProps) {
+function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, equipes }: ModalCadastroProps) {
+    const [passo, setPasso] = useState(1);
     const [usuarioEmail, setUsuarioEmail] = useState('');
     const [dominio, setDominio] = useState('@unieuro.com.br');
     const [role, setRole] = useState('MEMBRO');
+    const [funcoes, setFuncoes] = useState<string[]>([]);
+    const [equipeId, setEquipeId] = useState<string | null>(null);
     const [salvando, setSalvando] = useState(false);
     const [erro, setErro] = useState<string | null>(null);
 
-    // Limpa o formulário ao abrir
     useEffect(() => {
         if (aberto) {
+            setPasso(1);
             setUsuarioEmail('');
             setDominio('@unieuro.com.br');
             setRole('MEMBRO');
+            setFuncoes([]);
+            setEquipeId(null);
             setErro(null);
         }
     }, [aberto]);
 
-    // Não usa <form> com onSubmit para manter consistência com o padrão shadcn/ui
     const handleSubmit = async () => {
-        if (!usuarioEmail.trim()) return;
+        if (passo === 1) {
+            if (!usuarioEmail.trim()) {
+                setErro('Por favor, informe o e-mail.');
+                return;
+            }
+            setPasso(2);
+            return;
+        }
 
         setSalvando(true);
         setErro(null);
 
         const emailCompleto = `${usuarioEmail.trim().toLowerCase()}${dominio}`;
-        const res = await aoCadastrar(emailCompleto, role);
+        const res = await aoCadastrar(emailCompleto, role, funcoes, equipeId);
         setSalvando(false);
 
         if (res.sucesso) {
             aoFechar();
         } else {
-            setErro(res.erro ?? 'Erro ao cadastrar membro. Verifique os dados e tente novamente.');
+            setErro(res.erro ?? 'Erro ao cadastrar membro.');
         }
     };
 
     return (
-        <Modal aberto={aberto} aoFechar={aoFechar} titulo="Cadastrar Novo Membro" largura="md">
+        <Modal aberto={aberto} aoFechar={aoFechar} titulo={passo === 1 ? "Cadastro - Passo 1: Identificação" : "Cadastro - Passo 2: Alocação"} largura="md">
             <div className="space-y-5 py-2">
-                <div className="space-y-2">
-                    <div className="relative group/email">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within/email:text-primary transition-colors z-10" />
-                        <div className="flex items-center w-full bg-background border border-border rounded-xl focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all overflow-hidden">
-                            <input
-                                id="email-membro"
-                                type="text"
-                                required
-                                placeholder="ex: nome.sobrenome"
-                                value={usuarioEmail}
-                                onChange={e => setUsuarioEmail(e.target.value)}
-                                onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-                                className="flex-1 bg-transparent pl-10 pr-2 py-2.5 text-sm focus:outline-none placeholder:text-muted-foreground/40"
-                            />
-                            <div className="flex items-center h-full border-l border-border bg-accent/30 px-3 relative min-w-[130px]">
-                                <select
-                                    value={dominio}
-                                    onChange={e => setDominio(e.target.value)}
-                                    className="bg-transparent text-[13px] text-foreground/70 font-semibold focus:outline-none cursor-pointer appearance-none w-full pr-5"
-                                >
-                                    <option value="@unieuro.com.br">@unieuro.com.br</option>
-                                    <option value="@unieuro.edu.br">@unieuro.edu.br</option>
-                                </select>
-                                <div className="absolute right-2.5 pointer-events-none text-muted-foreground/40">
-                                    <ChevronDown size={14} strokeWidth={2.5} />
+                {passo === 1 ? (
+                    <>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-1">E-mail Institucional</label>
+                            <div className="relative group/email">
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground transition-colors z-10" />
+                                <div className="flex items-center w-full bg-background border border-border rounded-xl focus-within:ring-2 focus-within:ring-primary/20 transition-all overflow-hidden">
+                                    <input
+                                        type="text"
+                                        placeholder="ex: nome.sobrenome"
+                                        value={usuarioEmail}
+                                        onChange={e => setUsuarioEmail(e.target.value)}
+                                        onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+                                        className="flex-1 bg-transparent pl-10 pr-2 py-2.5 text-sm focus:outline-none"
+                                    />
+                                    <div className="flex items-center h-full border-l border-border px-3 relative">
+                                        <select
+                                            value={dominio}
+                                            onChange={e => setDominio(e.target.value)}
+                                            className="bg-transparent text-[13px] font-semibold focus:outline-none cursor-pointer appearance-none pr-5"
+                                        >
+                                            <option value="@unieuro.com.br">@unieuro.com.br</option>
+                                            <option value="@unieuro.edu.br">@unieuro.edu.br</option>
+                                        </select>
+                                        <ChevronDown size={14} className="absolute right-2.5 pointer-events-none opacity-40" />
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <div className="space-y-2">
-                    <label
-                        htmlFor="role-membro"
-                        className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-1"
-                    >
-                        Nível de Acesso Inicial
-                    </label>
-                    <div className="relative">
-                        <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <select
-                            id="role-membro"
-                            value={role}
-                            onChange={e => setRole(e.target.value)}
-                            className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer"
-                        >
-                            <option value="MEMBRO">Membro (Padrão)</option>
-                            <option value="LIDER_EQUIPE">Líder de Equipe</option>
-                            <option value="LIDER_GRUPO">Líder de Grupo</option>
-                            <option value="ADMIN">Administrador Geral</option>
-                            <option value="VISITANTE">Visitante</option>
-                        </select>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground ml-1">
-                        O usuário terá este acesso assim que realizar o primeiro login com o e-mail acima.
-                    </p>
-                </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-1">Nível de Acesso</label>
+                            <div className="relative">
+                                <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <select
+                                    value={role}
+                                    onChange={e => setRole(e.target.value)}
+                                    className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer"
+                                >
+                                    <option value="MEMBRO">Membro (Padrão)</option>
+                                    <option value="LIDER_EQUIPE">Líder de Equipe</option>
+                                    <option value="LIDER_GRUPO">Líder de Grupo</option>
+                                    <option value="ADMIN">Administrador Geral</option>
+                                    <option value="VISITANTE">Visitante</option>
+                                </select>
+                            </div>
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        <div className="space-y-3">
+                            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-1">Funções Técnicas</label>
+                            <div className="flex flex-wrap gap-2 p-1">
+                                {FUNCOES_DISPONIVEIS.map(funcao => (
+                                    <button
+                                        key={funcao}
+                                        type="button"
+                                        onClick={() => setFuncoes(prev => prev.includes(funcao) ? prev.filter(f => f !== funcao) : [...prev, funcao])}
+                                        className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-all ${funcoes.includes(funcao) ? 'bg-primary border-primary text-primary-foreground shadow-sm' : 'border-border text-muted-foreground hover:bg-muted'}`}
+                                    >
+                                        {funcao}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-1">Alocação de Grupo</label>
+                            <div className="grid grid-cols-2 gap-3">
+                                {Array.from(new Set(equipes.map(e => e.grupo_id))).map((idG, ix) => {
+                                    const ex = equipes.find(eq => eq.grupo_id === idG);
+                                    return ex ? (
+                                        <button
+                                            key={idG}
+                                            type="button"
+                                            onClick={() => setEquipeId(ex.id)}
+                                            className={`p-3 rounded-xl border text-center transition-all ${equipeId === ex.id ? 'bg-primary/10 border-primary text-primary shadow-sm' : 'border-border text-muted-foreground hover:bg-muted'}`}
+                                        >
+                                            <UsersIcon className="w-5 h-5 mx-auto mb-1 opacity-50" />
+                                            <span className="text-[11px] font-bold uppercase">{ex.grupo_nome || `Grupo ${ix + 1}`}</span>
+                                        </button>
+                                    ) : null;
+                                })}
+                                <button
+                                    type="button"
+                                    onClick={() => setEquipeId(null)}
+                                    className={`p-3 rounded-xl border text-center transition-all ${equipeId === null ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 shadow-sm' : 'border-border text-muted-foreground hover:bg-muted'}`}
+                                >
+                                    <UserX className="w-5 h-5 mx-auto mb-1 opacity-50" />
+                                    <span className="text-[11px] font-bold uppercase">Sem Grupo</span>
+                                </button>
+                            </div>
+                        </div>
+                    </>
+                )}
 
                 {erro && (
-                    <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-xl text-xs flex items-center gap-2">
+                    <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-xl text-xs flex items-center gap-2 animate-in shake duration-300">
                         <AlertCircle className="w-4 h-4 shrink-0" /> {erro}
                     </div>
                 )}
 
                 <div className="flex justify-end gap-3 pt-4">
+                    {passo === 2 && (
+                        <button type="button" onClick={() => setPasso(1)} disabled={salvando} className="px-4 py-2 text-sm font-bold text-muted-foreground hover:text-foreground mr-auto transition-colors">Voltar</button>
+                    )}
+                    <button type="button" onClick={aoFechar} className="px-4 py-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-colors">Cancelar</button>
                     <button
                         type="button"
-                        onClick={aoFechar}
-                        className="px-4 py-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                        Cancelar
-                    </button>
-                    <button
-                        type="button"
-                        disabled={salvando || !usuarioEmail.trim()}
+                        disabled={salvando || (passo === 1 && !usuarioEmail.trim())}
                         onClick={handleSubmit}
                         className="bg-primary text-primary-foreground px-6 py-2 rounded-xl text-sm font-bold hover:bg-primary/90 transition-all shadow-sm disabled:opacity-50 flex items-center gap-2"
                     >
-                        {salvando
-                            ? <><Loader2 className="w-4 h-4 animate-spin" /> Salvando...</>
-                            : 'Autorizar Acesso'
-                        }
+                        {salvando ? <Loader2 className="w-4 h-4 animate-spin" /> : passo === 1 ? 'Continuar' : 'Finalizar Cadastro'}
                     </button>
                 </div>
             </div>
@@ -1092,6 +1145,7 @@ export function GerenciarMembros() {
                 aberto={modalAberto}
                 aoFechar={() => setModalAberto(false)}
                 aoCadastrar={cadastrarMembro}
+                equipes={equipes}
             />
 
             <ModalConvitesEmLote

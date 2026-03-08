@@ -125,7 +125,7 @@ export function usarMembros() {
     // ── Adicionar ─────────────────────────────────────────────────────────────
 
     const adicionarMembro = useCallback(async (
-        dados: { email: string; role: string }
+        dados: { email: string; role: string; funcoes?: string[]; equipe_id?: string | null }
     ): Promise<ResultadoOperacao> => {
         try {
             const res = await api.post('/api/usuarios', dados);
