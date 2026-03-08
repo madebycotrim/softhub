@@ -48,7 +48,7 @@ export function SecaoChecklist({ tarefaId }: SecaoChecklistProps) {
 
             <div className="space-y-2">
                 {itens.map((item) => (
-                    <div key={item.id} className="group flex items-center gap-3 p-2 rounded-lg hover:bg-accent transition-colors border border-transparent hover:border-border">
+                    <div key={item.id} className="group flex items-center gap-3 p-2 rounded-xl hover:bg-accent transition-colors border border-transparent hover:border-border">
                         <button
                             onClick={() => alternarItem(item.id, !item.concluido)}
                             className={`shrink-0 transition-colors ${item.concluido ? 'text-emerald-500' : 'text-muted-foreground hover:text-foreground'}`}
@@ -80,7 +80,7 @@ export function SecaoChecklist({ tarefaId }: SecaoChecklistProps) {
                         placeholder="Adicionar item..."
                         value={novoTexto}
                         onChange={(e) => setNovoTexto(e.target.value)}
-                        className="w-full bg-background border border-input rounded-lg pl-3 pr-10 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-all"
+                        className="w-full bg-background border border-input rounded-xl pl-3 pr-10 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-all"
                     />
                     <button
                         type="submit"

@@ -28,7 +28,7 @@ export function PainelLogs() {
     if (carregando) return <Carregando />;
 
     return (
-        <div className="space-y-6 flex flex-col h-full bg-background">
+        <div className="space-y-10 flex flex-col h-full bg-background animate-in fade-in duration-500 pb-10">
             <CabecalhoFuncionalidade
                 titulo="Logs de Auditoria"
                 subtitulo="Registros imutáveis de ações do sistema."
@@ -51,7 +51,7 @@ export function PainelLogs() {
                                 placeholder="Descrição, usuário ou e-mail..."
                                 value={busca}
                                 onChange={e => { setBusca(e.target.value); setPagina(1); }}
-                                className="w-full h-10 bg-background border border-border rounded-xl pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all shadow-sm"
+                                className="w-full h-10 bg-background border border-border rounded-2xl pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all shadow-sm"
                             />
                         </div>
                     </div>
@@ -65,7 +65,7 @@ export function PainelLogs() {
                             <select
                                 value={filtroModulo}
                                 onChange={e => { setFiltroModulo(e.target.value); setPagina(1); }}
-                                className="w-full h-10 bg-background border border-border rounded-xl px-3 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/10 appearance-none cursor-pointer hover:border-primary/40 transition-colors"
+                                className="w-full h-10 bg-background border border-border rounded-2xl px-3 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/10 appearance-none cursor-pointer hover:border-primary/40 transition-colors"
                             >
                                 <option value="">Todos Módulos</option>
                                 <option value="backlog">Backlog</option>
@@ -83,7 +83,7 @@ export function PainelLogs() {
                             <select
                                 value={filtroAcao}
                                 onChange={e => { setFiltroAcao(e.target.value); setPagina(1); }}
-                                className="w-full h-10 bg-background border border-border rounded-xl px-3 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/10 appearance-none cursor-pointer hover:border-primary/40 transition-colors"
+                                className="w-full h-10 bg-background border border-border rounded-2xl px-3 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/10 appearance-none cursor-pointer hover:border-primary/40 transition-colors"
                             >
                                 <option value="">Todas Ações</option>
                                 <option value="LOGIN">Entrada (Login)</option>
@@ -108,7 +108,7 @@ export function PainelLogs() {
                                         type="date"
                                         value={dataInicio}
                                         onChange={e => { setDataInicio(e.target.value); setPagina(1); }}
-                                        className="w-full h-10 bg-background border border-border rounded-xl pl-9 pr-2 text-[11px] font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/10 hover:border-primary/40 transition-colors"
+                                        className="w-full h-10 bg-background border border-border rounded-2xl pl-9 pr-2 text-[11px] font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/10 hover:border-primary/40 transition-colors"
                                     />
                                 </div>
                             </div>
@@ -120,7 +120,7 @@ export function PainelLogs() {
                                         type="date"
                                         value={dataFim}
                                         onChange={e => { setDataFim(e.target.value); setPagina(1); }}
-                                        className="w-full h-10 bg-background border border-border rounded-xl pl-9 pr-2 text-[11px] font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/10 hover:border-primary/40 transition-colors"
+                                        className="w-full h-10 bg-background border border-border rounded-2xl pl-9 pr-2 text-[11px] font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/10 hover:border-primary/40 transition-colors"
                                     />
                                 </div>
                             </div>
@@ -137,7 +137,7 @@ export function PainelLogs() {
                                     setDataFim('');
                                     setPagina(1);
                                 }}
-                                className="h-10 px-3 flex items-center justify-center text-primary hover:bg-primary/5 rounded-xl transition-all border border-transparent hover:border-primary/20"
+                                className="h-10 px-3 flex items-center justify-center text-primary hover:bg-primary/5 rounded-2xl transition-all border border-transparent hover:border-primary/20"
                                 title="Limpar todos os filtros"
                             >
                                 <X className="w-4 h-4" />
@@ -223,7 +223,7 @@ export function PainelLogs() {
                         <button
                             disabled={pagina === 1 || carregando}
                             onClick={() => setPagina(p => p - 1)}
-                            className="p-2 rounded-lg border border-border text-foreground hover:bg-accent disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                            className="p-2 rounded-xl border border-border text-foreground hover:bg-accent disabled:opacity-50 disabled:pointer-events-none transition-colors"
                             title="Página Anterior"
                         >
                             <ChevronLeft className="w-4 h-4" />
@@ -231,7 +231,7 @@ export function PainelLogs() {
                         <button
                             disabled={pagina === totalPaginas || carregando}
                             onClick={() => setPagina(p => p + 1)}
-                            className="p-2 rounded-lg border border-border text-foreground hover:bg-accent disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                            className="p-2 rounded-xl border border-border text-foreground hover:bg-accent disabled:opacity-50 disabled:pointer-events-none transition-colors"
                             title="Próxima Página"
                         >
                             <ChevronRight className="w-4 h-4" />
@@ -249,7 +249,7 @@ export function PainelLogs() {
                     aoFechar={() => setModalInspecao(null)}
                     largura="lg"
                 >
-                    <div className="bg-background p-4 rounded-xl border border-border overflow-x-auto">
+                    <div className="bg-background p-4 rounded-2xl border border-border overflow-x-auto">
                         <pre className="text-emerald-500 text-xs font-mono">
                             {JSON.stringify(modalInspecao, null, 2)}
                         </pre>

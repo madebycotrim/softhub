@@ -75,7 +75,7 @@ export default function PainelQRCode() {
     return (
         <div className="flex flex-col items-center text-center animate-in fade-in slide-in-from-bottom-8 duration-1000">
             {/* Label discreta mas legível acima do QR */}
-            <span className="text-[10px] font-black text-slate-500/60 uppercase tracking-[0.2em] mb-12">
+            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-12">
                 ESCANEIE PARA ENTRAR
             </span>
 
@@ -85,13 +85,13 @@ export default function PainelQRCode() {
 
                     {status === 'gerando' && (
                         <div className="w-[240px] h-[240px] flex flex-col items-center justify-center gap-3">
-                            <RefreshCw className="w-8 h-8 text-slate-100 animate-spin" />
-                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Iniciando</span>
+                            <RefreshCw className="w-8 h-8 text-primary animate-spin" />
+                            <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">Iniciando</span>
                         </div>
                     )}
 
                     {status === 'pendente' && sessao?.id && (
-                        <div className="relative animate-in zoom-in duration-500 p-2 bg-white flex items-center justify-center group/qr">
+                        <div className="relative animate-in zoom-in duration-500 p-4 bg-white rounded-2xl flex items-center justify-center group/qr shadow-xl ring-1 ring-border">
                             <QRCodeSVG
                                 value={sessao.id}
                                 size={240}
@@ -100,11 +100,11 @@ export default function PainelQRCode() {
                             {/* Logo Central Customizado - Apenas a imagem flutuante */}
                             {logoUnieuroSemTexto && (
                                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                    <div className="bg-slate-50 p-0.5 shadow-sm flex items-center justify-center">
+                                    <div className="bg-background p-0.5 shadow-sm flex items-center justify-center">
                                         <img
                                             src={logoUnieuroSemTexto}
                                             alt="Logo Unieuro"
-                                            className="w-11 h-11 object-contain brightness-0"
+                                            className="w-11 h-11 object-contain dark:invert"
                                         />
                                     </div>
                                 </div>
@@ -126,9 +126,9 @@ export default function PainelQRCode() {
                             <div className="absolute inset-0 z-20 flex flex-col items-center justify-center">
                                 <button
                                     onClick={gerarNovoQR}
-                                    className="group/btn flex flex-col items-center justify-center gap-3 p-6 bg-red-50 text-red-600 rounded-[2rem] hover:bg-red-100 active:scale-95 transition-all duration-300 border border-red-200/50 mb-4"
+                                    className="group/btn flex flex-col items-center justify-center gap-3 p-6 bg-red-500/10 text-red-600 rounded-[2rem] hover:bg-red-500/20 active:scale-95 transition-all duration-300 border border-red-500/20 mb-4"
                                 >
-                                    <div className="p-4 bg-red-600 rounded-full text-white shadow-lg shadow-red-200 group-hover:rotate-180 transition-transform duration-700 flex items-center justify-center">
+                                    <div className="p-4 bg-red-600 rounded-full text-white shadow-lg shadow-red-200 dark:shadow-red-900/40 group-hover:rotate-180 transition-transform duration-700 flex items-center justify-center">
                                         <RefreshCw className="w-6 h-6" />
                                     </div>
                                     <span className="text-[11px] font-black uppercase tracking-widest text-center mt-1">
@@ -136,7 +136,7 @@ export default function PainelQRCode() {
                                     </span>
                                 </button>
 
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">
                                     QR Code expirado
                                 </span>
                             </div>
@@ -144,8 +144,8 @@ export default function PainelQRCode() {
                     )}
 
                     {status === 'autorizado' && (
-                        <div className="w-[240px] h-[240px] flex flex-col items-center justify-center bg-white z-10 animate-in zoom-in duration-500">
-                            <div className="w-20 h-20 rounded-full bg-green-50 flex items-center justify-center mb-4 animate-bounce shadow-lg ring-4 ring-white">
+                        <div className="w-[240px] h-[240px] flex flex-col items-center justify-center bg-card z-10 animate-in zoom-in duration-500">
+                            <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center mb-4 animate-bounce shadow-lg ring-4 ring-card">
                                 <CheckCircle className="w-12 h-12 text-green-500" />
                             </div>
                             <span className="text-[12px] font-black text-green-600 uppercase tracking-widest">Autorizado</span>

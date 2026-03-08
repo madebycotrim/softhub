@@ -38,7 +38,7 @@ export function CartaoTarefa({ tarefa, aoClicar }: CartaoTarefaProps) {
             {...listeners}
             {...attributes}
             className={`
-        bg-card p-3 rounded-xl border flex flex-col gap-3 shadow-sm select-none cursor-grab active:cursor-grabbing hover:border-primary/50 hover:shadow-md transition-all duration-200
+        bg-card p-3 rounded-2xl border flex flex-col gap-3 shadow-sm select-none cursor-grab active:cursor-grabbing hover:border-primary/50 hover:shadow-md transition-all duration-200
         ${isDragging ? 'opacity-50 ring-2 ring-primary z-50 scale-105' : ''}
         ${isUrgente ? 'border-destructive/30 bg-destructive/5' : 'border-border'}
       `}

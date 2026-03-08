@@ -83,7 +83,7 @@ export function PainelSprints({ sprints, aoEncerrar, aoEditarRetrospectiva }: Pa
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {historico.slice(0, 4).map(sprint => (
-                            <div key={sprint.id} className="bg-card border border-border rounded-xl p-5 hover:border-primary/50 transition-colors shadow-sm">
+                            <div key={sprint.id} className="bg-card border border-border rounded-2xl p-5 hover:border-primary/50 transition-colors shadow-sm">
                                 <div className="flex items-start justify-between mb-3">
                                     <h4 className="font-medium text-card-foreground">{sprint.nome}</h4>
                                     <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />

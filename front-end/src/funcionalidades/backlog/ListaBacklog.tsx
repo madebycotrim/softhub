@@ -15,14 +15,14 @@ export function ListaBacklog({ tarefas }: ListaBacklogProps) {
 
     if (tarefas.length === 0) {
         return (
-            <div className="p-8 text-center border-2 border-dashed border-border rounded-xl bg-muted/50">
+            <div className="p-8 text-center border-2 border-dashed border-border rounded-2xl bg-muted/50">
                 <p className="text-muted-foreground">Backlog vazio.</p>
             </div>
         );
     }
 
     return (
-        <div className="rounded-xl border border-border overflow-hidden bg-card">
+        <div className="rounded-2xl border border-border overflow-hidden bg-card">
             <Table>
                 <TableHeader className="bg-muted/50 transition-colors">
                     <TableRow className="border-border hover:bg-transparent">

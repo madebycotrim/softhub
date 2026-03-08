@@ -49,7 +49,7 @@ export function ConfirmacaoExclusao({
                     type="button"
                     onClick={aoFechar}
                     disabled={carregando}
-                    className="inline-flex justify-center w-full sm:w-auto px-6 py-2.5 text-sm font-bold text-muted-foreground bg-transparent border border-border/60 rounded-xl hover:bg-accent hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all disabled:opacity-50"
+                    className="inline-flex justify-center w-full sm:w-auto px-6 py-2.5 text-sm font-bold text-muted-foreground bg-transparent border border-border/60 rounded-2xl hover:bg-accent hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all disabled:opacity-50"
                 >
                     Cancelar
                 </button>
@@ -57,7 +57,7 @@ export function ConfirmacaoExclusao({
                     type="button"
                     onClick={aoConfirmar}
                     disabled={carregando}
-                    className="inline-flex justify-center items-center w-full sm:w-auto px-6 py-2.5 text-sm font-bold text-white bg-destructive rounded-xl hover:bg-destructive/90 hover:scale-[1.02] shadow-[0_10px_20px_-5px_rgba(239,68,68,0.3)] focus:outline-none focus:ring-2 focus:ring-destructive/20 transition-all active:scale-[0.98] disabled:opacity-50"
+                    className="inline-flex justify-center items-center w-full sm:w-auto px-6 py-2.5 text-sm font-bold text-white bg-destructive rounded-2xl hover:bg-destructive/90 hover:scale-[1.02] shadow-[0_10px_20px_-5px_rgba(239,68,68,0.3)] focus:outline-none focus:ring-2 focus:ring-destructive/20 transition-all active:scale-[0.98] disabled:opacity-50"
                 >
                     {carregando ? (
                         <>

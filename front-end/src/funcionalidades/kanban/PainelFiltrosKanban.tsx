@@ -48,7 +48,7 @@ export function PainelFiltrosKanban({ filtros, aoFiltrar }: PainelFiltrosProps) 
                         placeholder="Buscar por Título ou Descrição..."
                         value={buscaText}
                         onChange={e => setBuscaText(e.target.value)}
-                        className="w-full bg-background/50 border border-input rounded-xl pl-9 pr-4 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+                        className="w-full bg-background/50 border border-input rounded-2xl pl-9 pr-4 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
                     />
                 </div>
 

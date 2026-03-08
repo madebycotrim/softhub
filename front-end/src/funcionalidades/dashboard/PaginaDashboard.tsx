@@ -21,7 +21,7 @@ export function PaginaDashboard() {
     if (!metricas) return <EstadoVazio titulo="Nenhuma sprint ativa" descricao="Inicie uma sprint para visualizar as métricas do dashboard." />;
 
     return (
-        <div className="space-y-8 pb-8">
+        <div className="w-full space-y-10 pb-20 animate-in fade-in duration-500">
             {/* Header do Hub com Saudação e busca já no header global */}
             <CabecalhoFuncionalidade
                 titulo="Centro de Operações"
@@ -71,7 +71,7 @@ export function PaginaDashboard() {
                         {/* Progresso */}
                         <div className="bg-card border border-border rounded-2xl p-5 shadow-sm group hover:border-primary/20 transition-all">
                             <div className="flex items-center justify-between mb-4">
-                                <span className="p-2 bg-primary/5 text-primary rounded-xl"><ListChecks className="w-4 h-4" /></span>
+                                <span className="p-2 bg-primary/5 text-primary rounded-2xl"><ListChecks className="w-4 h-4" /></span>
                                 <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Progresso</span>
                             </div>
                             <p className="text-2xl font-black text-foreground">{metricas.progressoSprint}%</p>
@@ -83,7 +83,7 @@ export function PaginaDashboard() {
                         {/* Entregas */}
                         <div className="bg-card border border-border rounded-2xl p-5 shadow-sm group hover:border-emerald-500/20 transition-all">
                             <div className="flex items-center justify-between mb-4">
-                                <span className="p-2 bg-emerald-500/5 text-emerald-500 rounded-xl"><CheckCircle2 className="w-4 h-4" /></span>
+                                <span className="p-2 bg-emerald-500/5 text-emerald-500 rounded-2xl"><CheckCircle2 className="w-4 h-4" /></span>
                                 <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Entregas</span>
                             </div>
                             <div className="flex items-baseline gap-2">
@@ -96,7 +96,7 @@ export function PaginaDashboard() {
                         {/* Tempo */}
                         <div className="bg-card border border-border rounded-2xl p-5 shadow-sm group hover:border-amber-500/20 transition-all">
                             <div className="flex items-center justify-between mb-4">
-                                <span className="p-2 bg-amber-500/5 text-amber-500 rounded-xl"><Clock className="w-4 h-4" /></span>
+                                <span className="p-2 bg-amber-500/5 text-amber-500 rounded-2xl"><Clock className="w-4 h-4" /></span>
                                 <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Cronômetro</span>
                             </div>
                             <p className="text-2xl font-black text-foreground">{metricas.diasRestantesSprint}d</p>
@@ -120,7 +120,7 @@ export function PaginaDashboard() {
                             {burndown.length > 0 ? (
                                 <GraficoBurndown dados={burndown} />
                             ) : (
-                                <div className="h-full flex flex-col items-center justify-center border border-dashed border-border rounded-xl bg-accent/5">
+                                <div className="h-full flex flex-col items-center justify-center border border-dashed border-border rounded-2xl bg-accent/5">
                                     <AlertCircle className="w-8 h-8 text-muted-foreground/30 mb-2" />
                                     <p className="text-xs text-muted-foreground uppercase font-black tracking-widest font-mono">Debug: Sem dados de burndown</p>
                                 </div>
@@ -140,7 +140,7 @@ export function PaginaDashboard() {
                         </div>
                         <div className="p-2 space-y-1">
                             {minhasTarefas.slice(0, 4).map(tarefa => (
-                                <button key={tarefa.id} className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-accent/20 transition-all text-left group">
+                                <button key={tarefa.id} className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-accent/20 transition-all text-left group">
                                     <div className="flex flex-col gap-1">
                                         <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1">{tarefa.titulo}</p>
                                         <div className="flex items-center gap-2">

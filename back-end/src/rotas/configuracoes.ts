@@ -21,6 +21,14 @@ rotasConfiguracoes.get('/', autenticacaoRequerida('ADMIN'), async (c) => {
             } catch {
                 config[row.chave] = row.valor;
             }
+
+            // Robustez: garante que chaves que DEVEM ser arrays ou objetos o sejam
+            if (row.chave === 'funcoes_tecnicas' && !Array.isArray(config[row.chave])) {
+                config[row.chave] = [];
+            }
+            if (row.chave === 'permissoes_roles' && (typeof config[row.chave] !== 'object' || config[row.chave] === null)) {
+                config[row.chave] = {};
+            }
         });
 
         return c.json({ configuracoes: config, bruta: results });

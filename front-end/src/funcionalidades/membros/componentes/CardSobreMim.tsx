@@ -20,12 +20,12 @@ export function CardSobreMim({ membro }: CardSobreMimProps) {
 
             <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {membro.email && (
-                    <div className="flex items-center gap-3 text-sm text-muted-foreground p-3 rounded-xl bg-muted/50 border border-border">
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground p-3 rounded-2xl bg-muted/50 border border-border">
                         <Mail className="w-5 h-5 text-primary" />
                         <a href={`mailto:${membro.email}`} className="hover:text-primary transition-colors truncate">{membro.email}</a>
                     </div>
                 )}
-                <div className="flex items-center gap-3 text-sm text-muted-foreground p-3 rounded-xl bg-muted/50 border border-border">
+                <div className="flex items-center gap-3 text-sm text-muted-foreground p-3 rounded-2xl bg-muted/50 border border-border">
                     <Calendar className="w-5 h-5 text-emerald-500" />
                     <span>
                         Entrou em {membro.criado_em
@@ -33,7 +33,7 @@ export function CardSobreMim({ membro }: CardSobreMimProps) {
                             : 'data desconhecida'}
                     </span>
                 </div>
-                <div className="flex items-center gap-3 text-sm text-muted-foreground p-3 rounded-xl bg-muted/50 border border-border">
+                <div className="flex items-center gap-3 text-sm text-muted-foreground p-3 rounded-2xl bg-muted/50 border border-border">
                     <ShieldCheck className="w-5 h-5 text-purple-500" />
                     <div className="flex items-center gap-2">
                         <span>Status:</span>
@@ -43,7 +43,7 @@ export function CardSobreMim({ membro }: CardSobreMimProps) {
                         }
                     </div>
                 </div>
-                <div className="flex items-center gap-3 text-sm text-muted-foreground p-3 rounded-xl bg-muted/50 border border-border">
+                <div className="flex items-center gap-3 text-sm text-muted-foreground p-3 rounded-2xl bg-muted/50 border border-border">
                     <MapPin className="w-5 h-5 text-rose-500" />
                     <span>Local: UNIEURO</span>
                 </div>

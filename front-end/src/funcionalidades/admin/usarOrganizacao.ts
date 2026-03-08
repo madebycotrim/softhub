@@ -5,6 +5,10 @@ export interface Grupo {
     id: string;
     nome: string;
     descricao: string | null;
+    lider_id: string | null;
+    sub_lider_id: string | null;
+    lider_nome?: string;
+    sub_lider_nome?: string;
     ativo: number;
 }
 
@@ -44,12 +48,21 @@ export function usarOrganizacao() {
         carregarDados();
     }, [carregarDados]);
 
-    const criarGrupo = async (dados: { nome: string, descricao?: string }) => {
+    const criarGrupo = async (dados: { nome: string, descricao?: string, lider_id?: string, sub_lider_id?: string }) => {
         try {
             await api.post('/organizacao/grupos', dados);
             await carregarDados();
         } catch (e: any) {
             throw new Error(e.response?.data?.erro || 'Falha ao criar grupo');
+        }
+    };
+
+    const editarGrupo = async (id: string, dados: { nome: string, descricao?: string, lider_id?: string, sub_lider_id?: string }) => {
+        try {
+            await api.patch(`/organizacao/grupos/${id}`, dados);
+            await carregarDados();
+        } catch (e: any) {
+            throw new Error(e.response?.data?.erro || 'Falha ao editar grupo');
         }
     };
 
@@ -94,6 +107,7 @@ export function usarOrganizacao() {
         carregando,
         erro,
         criarGrupo,
+        editarGrupo,
         criarEquipe,
         excluirGrupo,
         excluirEquipe,

@@ -110,10 +110,10 @@ export function PerfilMembro({ membroId }: { membroId: string }) {
     }
 
     return (
-        <div className="max-w-4xl mx-auto space-y-6 pb-12">
+        <div className="w-full space-y-10 pb-20 animate-in fade-in duration-500">
 
             {/* Header do Perfil (Capa e Avatar) */}
-            <div className="bg-card border border-border rounded-3xl overflow-hidden shadow-sm relative">
+            <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm relative">
                 <div className="h-32 sm:h-48 bg-gradient-to-r from-blue-900 via-indigo-900 to-[#020817] w-full relative">
                     {/* Botão de alterar capa — visível para o dono do perfil */}
                     {ehODono && (

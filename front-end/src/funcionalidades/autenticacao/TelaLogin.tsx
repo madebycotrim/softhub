@@ -82,8 +82,8 @@ export default function TelaLogin() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 sm:p-6 lg:p-8 selection:bg-red-500/20">
-            <div className="w-full max-w-6xl bg-white rounded-2xl shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] overflow-hidden flex flex-col lg:flex-row min-h-[700px] border border-slate-100 animate-in fade-in zoom-in-95 duration-700">
+        <div className="min-h-screen bg-background flex items-center justify-center p-4 sm:p-6 lg:p-8 selection:bg-red-500/20 transition-colors duration-500">
+            <div className="w-full max-w-6xl bg-card rounded-2xl shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] overflow-hidden flex flex-col lg:flex-row min-h-[700px] border border-border animate-in fade-in zoom-in-95 duration-700">
 
                 {/* Lado Esquerdo Institucional */}
                 <div className="lg:w-[40%] bg-gradient-to-br from-[#003366] via-[#002244] to-[#001a33] p-12 lg:p-16 flex flex-col justify-between text-white relative overflow-hidden group">
@@ -119,12 +119,12 @@ export default function TelaLogin() {
                     <div className="relative z-10 space-y-8">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <div className="p-2 bg-white/5 rounded-lg border border-white/10">
+                                <div className="p-2 bg-white/5 rounded-xl border border-white/10">
                                     <Globe size={14} className="opacity-40" />
                                 </div>
                                 <span className="text-[11px] font-black uppercase tracking-[0.2em] opacity-30">Campus Águas Claras</span>
                             </div>
-                            <div className="p-2 bg-white/5 rounded-xl border border-white/10">
+                            <div className="p-2 bg-white/5 rounded-2xl border border-white/10">
                                 <Code size={16} className="text-red-100/20" />
                             </div>
                         </div>
@@ -135,20 +135,20 @@ export default function TelaLogin() {
                 <div className="flex-1 flex flex-col lg:flex-row items-stretch">
 
                     {/* Lado Esquerdo: Acesso Microsoft */}
-                    <div className="flex-1 p-12 flex flex-col items-center justify-center bg-white">
+                    <div className="flex-1 p-12 flex flex-col items-center justify-center bg-card dark:bg-card/95">
                         <div className="space-y-12 w-full max-w-sm">
                             <div className="space-y-4 text-center">
-                                <div className="inline-flex py-1 px-3 bg-red-50 text-red-600 text-[10px] font-black uppercase tracking-widest rounded-full">
+                                <div className="inline-flex py-1 px-3 bg-red-500/10 text-red-600 text-[10px] font-black uppercase tracking-widest rounded-full">
                                     Bem-vindo de volta
                                 </div>
-                                <h3 className="text-4xl font-black text-slate-900 tracking-tight leading-none">Inicie agora.</h3>
-                                <p className="text-slate-400 font-bold text-sm leading-relaxed">
+                                <h3 className="text-4xl font-black text-foreground tracking-tight leading-none">Inicie agora.</h3>
+                                <p className="text-muted-foreground font-bold text-sm leading-relaxed">
                                     Acesse a plataforma da Fábrica de Software, utilize seu login institucional.
                                 </p>
                             </div>
 
                             {erro && (
-                                <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-4 text-red-600 text-[11px] font-bold animate-in shake duration-500">
+                                <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-4 text-red-600 text-[11px] font-bold animate-in shake duration-500">
                                     <AlertCircle size={16} />
                                     <span>{erro}</span>
                                 </div>
@@ -172,10 +172,10 @@ export default function TelaLogin() {
                                     </div>
                                 </button>
 
-                                <div className="flex items-center gap-1.5 text-slate-400 text-[11.5px] animate-in fade-in slide-in-from-bottom-2 duration-700 delay-500">
+                                <div className="flex items-center gap-1.5 text-muted-foreground text-[11.5px] animate-in fade-in slide-in-from-bottom-2 duration-700 delay-500">
                                     <Info size={11} className="shrink-0" />
                                     <span>
-                                        Use o e-mail <span className="text-slate-500">@{ambiente.dominioInstitucional}</span>
+                                        Use o e-mail <span className="text-foreground/60">@{ambiente.dominioInstitucional}</span>
                                     </span>
                                 </div>
                             </div>
@@ -183,17 +183,17 @@ export default function TelaLogin() {
                     </div>
 
                     {/* Divisor Vertical Ultra Sutil */}
-                    <div className="hidden lg:block w-[1px] bg-slate-100 self-stretch my-24 opacity-50" />
+                    <div className="hidden lg:block w-[1px] bg-border self-stretch my-24 opacity-50" />
 
                     {/* Lado Direito: QR Code Integrado */}
                     {!isMobile && (
-                        <div className="flex-1 p-12 flex flex-col items-center justify-center bg-white/50 animate-in fade-in duration-700">
+                        <div className="flex-1 p-12 flex flex-col items-center justify-center bg-accent/5 dark:bg-card/30 animate-in fade-in duration-700">
                             <PainelQRCode />
 
                             <div className="mt-8 text-center space-y-4 px-4 max-w-[340px]">
-                                <h4 className="text-2xl font-black text-slate-900 tracking-tight leading-none">Entrar com QR Code</h4>
-                                <p className="text-[13px] text-slate-400 font-bold leading-relaxed text-center opacity-80">
-                                    No celular, acesse o site ou app da <strong className="text-slate-600 font-black">Fábrica de Software</strong>, escaneie o QR code e faça login em segundos — sem digitar nada.
+                                <h4 className="text-2xl font-black text-foreground tracking-tight leading-none">Entrar com QR Code</h4>
+                                <p className="text-[13px] text-muted-foreground font-bold leading-relaxed text-center opacity-80">
+                                    No celular, acesse o site ou app da <strong className="text-foreground font-black">Fábrica de Software</strong>, escaneie o QR code e faça login em segundos — sem digitar nada.
                                 </p>
                             </div>
                         </div>

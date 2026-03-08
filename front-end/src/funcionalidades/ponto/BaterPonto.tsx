@@ -48,7 +48,7 @@ export function BaterPonto() {
     };
 
     return (
-        <div className="w-full h-full pb-8 space-y-6">
+        <div className="w-full space-y-10 pb-20 animate-in fade-in duration-500">
             <CabecalhoFuncionalidade
                 titulo="Ponto Eletrônico"
                 subtitulo="Registre sua jornada de trabalho com segurança."
@@ -71,7 +71,7 @@ export function BaterPonto() {
                         <BotaoExportarPonto />
                         <button
                             onClick={() => setModalJustificativaAberto(true)}
-                            className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/90 border border-border rounded-lg text-sm text-secondary-foreground transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/90 border border-border rounded-xl text-sm text-secondary-foreground transition-colors"
                         >
                             <Plus className="w-4 h-4" />
                             Nova Justificativa
@@ -127,11 +127,11 @@ export function BaterPonto() {
                                     onClick={handleBaterPonto}
                                     disabled={carregando || salvando || foraDaRede}
                                     className={`
-                        w-full py-4 rounded-xl font-bold flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] relative z-10 text-white
+                        w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] relative z-10 text-white
                         ${foraDaRede ? 'bg-muted text-muted-foreground cursor-not-allowed border border-border' :
                                             proximoTipo === 'entrada'
-                                                ? 'bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-900/50'
-                                                : 'bg-rose-600 hover:bg-rose-500 shadow-lg shadow-rose-900/50'
+                                                ? 'bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/30 dark:shadow-emerald-900/50'
+                                                : 'bg-rose-600 hover:bg-rose-500 shadow-lg shadow-rose-600/30 dark:shadow-rose-900/50'
                                         }
                         ${(carregando || salvando) ? 'opacity-70 pointer-events-none' : ''}
                         `}
@@ -150,12 +150,12 @@ export function BaterPonto() {
 
                                 {/* Efeitos visuais de fundo */}
                                 {!foraDaRede && (
-                                    <div className={`absolute bottom-0 left-0 w-full h-[60%] blur-[100px] pointer-events-none opacity-20 ${proximoTipo === 'entrada' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                                    <div className={`absolute bottom-0 left-0 w-full h-[60%] blur-[100px] pointer-events-none opacity-10 dark:opacity-20 ${proximoTipo === 'entrada' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
                                 )}
                             </div>
 
                             {erroPonto && (
-                                <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 text-sm text-destructive flex items-start gap-2">
+                                <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-3 text-sm text-destructive flex items-start gap-2">
                                     <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
                                     <p>{erroPonto}</p>
                                 </div>
@@ -175,11 +175,11 @@ export function BaterPonto() {
                                     </div>
                                 ) : (
                                     <Table className="w-full text-sm text-left">
-                                        <TableHeader className="bg-muted/50 rounded-t-lg sticky top-0 transition-colors">
+                                        <TableHeader className="bg-muted/50 rounded-t-2xl sticky top-0 transition-colors">
                                             <TableRow className="border-border hover:bg-transparent">
-                                                <TableHead className="px-4 py-3 font-medium rounded-tl-lg text-muted-foreground">Data e Hora</TableHead>
+                                                <TableHead className="px-4 py-3 font-medium rounded-tl-2xl text-muted-foreground">Data e Hora</TableHead>
                                                 <TableHead className="px-4 py-3 font-medium text-muted-foreground">Tipo</TableHead>
-                                                <TableHead className="px-4 py-3 font-medium text-right rounded-tr-lg text-muted-foreground">Rede (IP)</TableHead>
+                                                <TableHead className="px-4 py-3 font-medium text-right rounded-tr-2xl text-muted-foreground">Rede (IP)</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>

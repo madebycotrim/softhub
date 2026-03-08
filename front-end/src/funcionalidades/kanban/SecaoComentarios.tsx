@@ -39,8 +39,8 @@ export function SecaoComentarios({ tarefaId }: SecaoComentariosProps) {
     }
 
     return (
-        <div className="flex flex-col h-full bg-card border border-border shadow-sm rounded-xl mt-6">
-            <div className="p-4 border-b border-border bg-muted/50 rounded-t-xl shrink-0">
+        <div className="flex flex-col h-full bg-card border border-border shadow-sm rounded-2xl mt-6">
+            <div className="p-4 border-b border-border bg-muted/50 rounded-t-2xl shrink-0">
                 <h3 className="text-sm font-semibold text-card-foreground flex items-center gap-2">
                     <MessageSquare className="w-4 h-4 text-muted-foreground" />
                     Comentários da Tarefa ({comentarios.length})
@@ -69,13 +69,13 @@ export function SecaoComentarios({ tarefaId }: SecaoComentariosProps) {
                 )}
             </div>
 
-            <div className="p-4 border-t border-border bg-muted/50 rounded-b-xl shrink-0">
+            <div className="p-4 border-t border-border bg-muted/50 rounded-b-2xl shrink-0">
                 <form onSubmit={handleEnviar} className="relative flex items-end gap-2">
                     <textarea
                         value={novoComentario}
                         onChange={(e) => setNovoComentario(e.target.value)}
                         placeholder="Adicione um comentário..."
-                        className="w-full bg-background border border-input rounded-xl p-3 pr-12 text-sm text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary transition-shadow min-h-[60px]"
+                        className="w-full bg-background border border-input rounded-2xl p-3 pr-12 text-sm text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary transition-shadow min-h-[60px]"
                         onKeyDown={(e) => {
                             if (e.key === 'Enter' && !e.shiftKey) {
                                 e.preventDefault();

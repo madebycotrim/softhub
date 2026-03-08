@@ -45,9 +45,9 @@ export function CabecalhoFuncionalidade({
     const estilo = cores[variante];
 
     return (
-        <div className={`shrink-0 flex items-center justify-between bg-card border ${estilo.border} rounded-2xl p-6 shadow-sm relative overflow-hidden transition-all mb-6`}>
+        <div className={`shrink-0 flex items-center justify-between bg-card border ${estilo.border} rounded-2xl p-6 shadow-sm relative overflow-hidden transition-all`}>
             <div className="relative z-10 flex items-center gap-4">
-                <div className={`p-3 ${estilo.bgIcone} ${estilo.textoIcone} rounded-xl`}>
+                <div className={`p-3 ${estilo.bgIcone} ${estilo.textoIcone} rounded-2xl`}>
                     <Icone className="w-6 h-6" />
                 </div>
                 <div>

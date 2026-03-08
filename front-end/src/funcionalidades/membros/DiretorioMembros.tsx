@@ -109,7 +109,7 @@ export function DiretorioMembros() {
     if (membros.length === 0) return <EstadoVazio titulo="Nenhum membro encontrado." />;
 
     return (
-        <div className="space-y-6">
+        <div className="w-full space-y-10 pb-20 animate-in fade-in duration-500">
             <CabecalhoFuncionalidade
                 titulo="Diretório de Membros"
                 subtitulo="Conheça as equipes e líderes da Fábrica de Software."
@@ -122,7 +122,7 @@ export function DiretorioMembros() {
                     <input
                         type="text"
                         aria-label="Buscar membro por nome ou e-mail"
-                        className="block w-full pl-9 pr-3 py-2 border border-border rounded-xl leading-5 bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-all"
+                        className="block w-full pl-9 pr-3 py-2 border border-border rounded-2xl leading-5 bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-all"
                         placeholder="Buscar por nome ou email..."
                         value={busca}
                         onChange={e => setBusca(e.target.value)}

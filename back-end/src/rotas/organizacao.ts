@@ -13,7 +13,17 @@ const verificarPermissaoAdminLiderGrupo = (role: string) => ['ADMIN', 'LIDER_GRU
 rotasOrganizacao.get('/grupos', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     try {
-        const { results } = await DB.prepare('SELECT * FROM grupos WHERE ativo = 1 ORDER BY nome ASC').all();
+        const query = `
+            SELECT g.*, 
+                   u1.nome as lider_nome, 
+                   u2.nome as sub_lider_nome 
+            FROM grupos g
+            LEFT JOIN usuarios u1 ON g.lider_id = u1.id
+            LEFT JOIN usuarios u2 ON g.sub_lider_id = u2.id
+            WHERE g.ativo = 1 
+            ORDER BY g.nome ASC
+        `;
+        const { results } = await DB.prepare(query).all();
         return c.json(results);
     } catch (e) {
         return c.json({ erro: 'Falha ao buscar grupos' }, 500);
@@ -25,13 +35,13 @@ rotasOrganizacao.post('/grupos', autenticacaoRequerida(), async (c) => {
     const usuario = c.get('usuario');
     if (!verificarPermissaoAdminLiderGrupo(usuario.role)) return c.json({ erro: 'Acesso negado' }, 403);
 
-    const { nome, descricao } = await c.req.json();
+    const { nome, descricao, lider_id, sub_lider_id } = await c.req.json();
     if (!nome) return c.json({ erro: 'Nome é obrigatório' }, 400);
 
     try {
         const id = crypto.randomUUID();
-        await DB.prepare('INSERT INTO grupos (id, nome, descricao) VALUES (?, ?, ?)')
-            .bind(id, nome, descricao || null).run();
+        await DB.prepare('INSERT INTO grupos (id, nome, descricao, lider_id, sub_lider_id) VALUES (?, ?, ?, ?, ?)')
+            .bind(id, nome, descricao || null, lider_id || null, sub_lider_id || null).run();
 
         await registrarLog(DB, {
             usuarioId: usuario.id,
@@ -41,7 +51,7 @@ rotasOrganizacao.post('/grupos', autenticacaoRequerida(), async (c) => {
             ip: c.req.header('CF-Connecting-IP') ?? '',
             entidadeTipo: 'grupos',
             entidadeId: id,
-            dadosNovos: { nome, descricao }
+            dadosNovos: { nome, descricao, lider_id, sub_lider_id }
         });
         return c.json({ sucesso: true, id });
     } catch (e) {
@@ -55,10 +65,10 @@ rotasOrganizacao.patch('/grupos/:id', autenticacaoRequerida(), async (c) => {
     const usuario = c.get('usuario');
     if (!verificarPermissaoAdminLiderGrupo(usuario.role)) return c.json({ erro: 'Acesso negado' }, 403);
 
-    const { nome, descricao } = await c.req.json();
+    const { nome, descricao, lider_id, sub_lider_id } = await c.req.json();
     try {
-        await DB.prepare('UPDATE grupos SET nome = ?, descricao = ? WHERE id = ?')
-            .bind(nome, descricao, id).run();
+        await DB.prepare('UPDATE grupos SET nome = ?, descricao = ?, lider_id = ?, sub_lider_id = ? WHERE id = ?')
+            .bind(nome, descricao, lider_id, sub_lider_id, id).run();
 
         await registrarLog(DB, {
             usuarioId: usuario.id,

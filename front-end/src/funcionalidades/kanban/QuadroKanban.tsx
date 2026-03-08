@@ -108,7 +108,7 @@ export function QuadroKanban({ sprintId, projetoId }: { sprintId?: string, proje
     };
 
     return (
-        <div className="flex flex-col h-full overflow-hidden">
+        <div className="flex flex-col h-full space-y-6 pb-0 animate-in fade-in duration-500">
             <CabecalhoFuncionalidade
                 titulo="Quadro Kanban"
                 subtitulo="Gerencie e acompanhe o fluxo de tarefas do projeto."

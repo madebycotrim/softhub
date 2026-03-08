@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { Search, UserCog, Check, X, Shield, Mail, Trash2, Loader2, UserCheck, UserX, Archive, Users as UsersIcon, ListPlus, CheckSquare, Square, Download, CheckCircle2, AlertCircle, ChevronDown, RotateCcw, Eraser } from 'lucide-react';
+import { Search, UserCog, X, Shield, Mail, Trash2, Loader2, UserCheck, UserX, Archive, Users as UsersIcon, ListPlus, CheckSquare, Square, Download, CheckCircle2, AlertCircle, ChevronDown, RotateCcw, Eraser } from 'lucide-react';
 import { api } from '../../compartilhado/servicos/api';
 import { usarMembros } from '../membros/usarMembros';
 import type { Membro } from '../membros/usarMembros';
@@ -9,7 +9,6 @@ import { usarAutenticacao } from '../autenticacao/usarAutenticacao';
 import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
 import { Modal } from '../../compartilhado/componentes/Modal';
 import { ConfirmacaoExclusao } from '../../compartilhado/componentes/ConfirmacaoExclusao';
-import { usarConfiguracoes } from './usarConfiguracoes';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -127,41 +126,17 @@ function useGerenciarMembros() {
         }
     }, [atualizarMembro, exibirToast, marcarSalvando, desmarcarSalvando]);
 
-    const alterarFuncoes = useCallback(async (membro: Membro, funcoesNovas: string[]) => {
-        // Optimistic update
-        atualizarMembro({ ...membro, funcoes: funcoesNovas });
-        marcarSalvando(membro.id);
-
-        try {
-            await api.patch(`/api/usuarios/${membro.id}/funcoes`, { funcoes: funcoesNovas });
-            exibirToast(`Funções de ${membro.nome} atualizadas.`);
-        } catch (e: unknown) {
-            atualizarMembro(membro);
-            const axiosError = e as { response?: { data?: { erro?: string } } };
-            exibirToast(
-                axiosError.response?.data?.erro ?? 'Erro ao alterar funções.',
-                'erro'
-            );
-        } finally {
-            desmarcarSalvando(membro.id);
-        }
-    }, [atualizarMembro, exibirToast, marcarSalvando, desmarcarSalvando]);
-
     const cadastrarMembro = useCallback(async (
         email: string,
         role: string,
-        funcoes?: string[],
         equipe_id?: string | null
     ): Promise<{ sucesso: boolean; erro?: string }> => {
         const res = await adicionarMembro({
             email: email.toLowerCase().trim(),
             role,
-            funcoes,
             equipe_id
         });
         if (res.sucesso) {
-            // Força refetch para garantir que a lista exibida reflita o banco,
-            // independentemente de qual instância do hook recebeu o insert local.
             await recarregar();
             exibirToast(`Acesso autorizado para ${email}.`);
         } else {
@@ -208,8 +183,6 @@ function useGerenciarMembros() {
         }
     }, [recarregar, exibirToast, marcarSalvando, desmarcarSalvando]);
 
-    const { configuracoes } = usarConfiguracoes();
-    const funcoesDisponiveis = configuracoes?.funcoes_tecnicas || [];
 
     return {
         membros,
@@ -221,11 +194,9 @@ function useGerenciarMembros() {
         toasts,
         alterarRole,
         alternarStatus,
-        alterarFuncoes,
         alterarEquipe,
         cadastrarMembro,
         removerMembro,
-        funcoesDisponiveis,
         limpezaDefinitiva: useCallback(async (membroId: string) => {
             marcarSalvando(membroId);
             try {
@@ -293,7 +264,7 @@ function ModalConvitesEmLote({ aberto, aoFechar, aoCadastrar, recarregar }: Moda
     return (
         <Modal aberto={aberto} aoFechar={aoFechar} titulo="Convites em Lote">
             <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="bg-primary/5 border border-primary/10 rounded-xl p-4">
+                <div className="bg-primary/5 border border-primary/10 rounded-2xl p-4">
                     <p className="text-xs text-muted-foreground leading-relaxed">
                         Cole uma lista de e-mails institucionais (um por linha). O sistema autorizará o acesso de todos automaticamente.
                         <br /><br />
@@ -309,7 +280,7 @@ function ModalConvitesEmLote({ aberto, aoFechar, aoCadastrar, recarregar }: Moda
                         value={texto}
                         onChange={e => setTexto(e.target.value)}
                         placeholder="Ex: mateus@unieuro.com.br&#10;lucia@unieuro.edu.br"
-                        className="w-full h-48 bg-background border border-border rounded-xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all resize-none"
+                        className="w-full h-48 bg-background border border-border rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all resize-none"
                     />
                 </div>
 
@@ -317,14 +288,14 @@ function ModalConvitesEmLote({ aberto, aoFechar, aoCadastrar, recarregar }: Moda
                     <button
                         type="button"
                         onClick={aoFechar}
-                        className="px-4 py-2 rounded-xl text-sm font-bold text-muted-foreground hover:bg-muted transition-all"
+                        className="px-4 py-2 rounded-2xl text-sm font-bold text-muted-foreground hover:bg-muted transition-all"
                     >
                         Cancelar
                     </button>
                     <button
                         type="submit"
                         disabled={enviando || !texto.trim()}
-                        className="bg-primary text-primary-foreground px-6 py-2 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:opacity-90 transition-all flex items-center gap-2 disabled:opacity-50"
+                        className="bg-primary text-primary-foreground px-6 py-2 rounded-2xl text-sm font-bold shadow-lg shadow-primary/20 hover:opacity-90 transition-all flex items-center gap-2 disabled:opacity-50"
                     >
                         {enviando ? (
                             <>
@@ -354,7 +325,7 @@ function ToastContainer({ toasts }: { toasts: ToastState[] }) {
                     role="status"
                     aria-live="polite"
                     className={`
-                        flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg text-sm font-medium
+                        flex items-center gap-3 px-4 py-3 rounded-2xl shadow-lg text-sm font-medium
                         animate-in slide-in-from-bottom-2 fade-in duration-300
                         ${toast.tipo === 'sucesso'
                             ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
@@ -381,13 +352,11 @@ interface LinhaMembroProps {
     selecionado: boolean;
     onToggleSelect: (id: string, isShift?: boolean) => void;
     onAlterarRole: (membro: Membro, role: string) => void;
-    onAlternarFuncoes: (membro: Membro, funcoes: string[]) => void;
     onAlterarEquipe: (membroId: string, equipeId: string | null) => void;
     equipes: any[];
     onAlternarStatus: (membro: Membro) => void;
     onSolicitarExclusao: (membro: Membro) => void;
     onLimpezaDefinitiva: (membro: Membro) => void;
-    funcoesSugeridas: string[];
 }
 
 function LinhaMembro({
@@ -396,16 +365,12 @@ function LinhaMembro({
     selecionado,
     onToggleSelect,
     onAlterarRole,
-    onAlternarFuncoes,
     onAlterarEquipe,
     equipes,
     onAlternarStatus,
     onSolicitarExclusao,
     onLimpezaDefinitiva,
-    funcoesSugeridas,
 }: LinhaMembroProps) {
-    const [menuFuncoesAberto, setMenuFuncoesAberto] = useState(false);
-    const containerRef = useRef<HTMLDivElement>(null);
     const { usuario } = usarAutenticacao();
     const ehOMesmoUsuario = usuario?.id === membro.id;
 
@@ -420,24 +385,6 @@ function LinhaMembro({
     const isGrupoA = idsGrupos[0] && membro.grupo_id === idsGrupos[0];
     const isGrupoB = idsGrupos[1] && membro.grupo_id === idsGrupos[1];
 
-    // Fecha menu ao clicar fora
-    useEffect(() => {
-        function handleClickFora(event: MouseEvent) {
-            if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-                setMenuFuncoesAberto(false);
-            }
-        }
-        document.addEventListener('mousedown', handleClickFora);
-        return () => document.removeEventListener('mousedown', handleClickFora);
-    }, []);
-
-    const toggleFuncao = (funcao: string) => {
-        const jaPossui = membro.funcoes.includes(funcao);
-        const novas = jaPossui
-            ? membro.funcoes.filter(f => f !== funcao)
-            : [...membro.funcoes, funcao];
-        onAlternarFuncoes(membro, novas);
-    };
 
     return (
         <div
@@ -457,7 +404,7 @@ function LinhaMembro({
             </div>
 
             {/* Membro */}
-            <div className="col-span-4 flex items-center gap-3">
+            <div className="col-span-5 flex items-center gap-3">
                 <Avatar nome={membro.nome} fotoPerfil={membro.foto_perfil} tamanho="md" />
                 <div className="min-w-0">
                     <p className="font-semibold text-foreground text-sm leading-tight break-words">
@@ -473,7 +420,7 @@ function LinhaMembro({
             <div className="col-span-1">
                 <select
                     aria-label={`Papel de ${membro.nome}`}
-                    className="w-full bg-muted/20 border border-border/50 rounded-lg px-2 py-1.5 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer"
+                    className="w-full bg-muted/20 border border-border/50 rounded-xl px-2 py-1.5 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer"
                     value={membro.role}
                     onChange={e => onAlterarRole(membro, e.target.value)}
                 >
@@ -485,54 +432,14 @@ function LinhaMembro({
                 </select>
             </div>
 
-            {/* Funcoes */}
-            <div className="col-span-2 relative" ref={containerRef}>
-                <div
-                    onClick={() => setMenuFuncoesAberto(!menuFuncoesAberto)}
-                    className="flex items-center justify-between p-1.5 border border-border/50 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
-                >
-                    <div className="flex flex-wrap gap-1 truncate text-left">
-                        {membro.funcoes.length === 0 ? (
-                            <span className="text-[10px] text-muted-foreground/40 italic">Sem Função</span>
-                        ) : (
-                            membro.funcoes.slice(0, 1).map(f => (
-                                <span key={f} className="bg-primary/5 text-primary text-[9px] font-bold px-1.5 py-0.5 rounded border border-primary/10 uppercase">
-                                    {f}
-                                </span>
-                            ))
-                        )}
-                        {membro.funcoes.length > 1 && <span className="text-[10px] font-bold text-muted-foreground">+{membro.funcoes.length - 1}</span>}
-                    </div>
-                </div>
-
-                {menuFuncoesAberto && (
-                    <div className="absolute top-full left-0 mt-1 w-48 bg-card border border-border shadow-xl rounded-lg p-1 z-50">
-                        <div className="max-h-48 overflow-y-auto custom-scrollbar">
-                            {funcoesSugeridas.map((f: string) => {
-                                const ativo = membro.funcoes.includes(f);
-                                return (
-                                    <button
-                                        key={f}
-                                        onClick={(e) => { e.stopPropagation(); toggleFuncao(f); }}
-                                        className={`w-full text-left px-3 py-1.5 rounded-md text-[11px] font-medium transition-colors flex items-center justify-between ${ativo ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
-                                    >
-                                        {f} {ativo && <Check size={10} />}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
-            </div>
-
             {/* Grupo */}
             <div className="col-span-1 flex justify-center">
-                <div className="flex bg-muted/20 p-0.5 rounded-lg border border-border/50">
+                <div className="flex bg-muted/20 p-0.5 rounded-2xl border border-border/50">
                     <button
                         onClick={() => onAlterarEquipe(membro.id, isGrupoA ? null : (equipeA?.id || null))}
                         title={equipeA?.grupo_nome || 'Grupo A'}
                         disabled={!equipeA}
-                        className={`w-8 py-1 rounded-md text-[10px] font-bold transition-all ${isGrupoA ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted/50'}`}
+                        className={`w-8 py-1 rounded-xl text-[10px] font-bold transition-all ${isGrupoA ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted/50'}`}
                     >
                         A
                     </button>
@@ -540,7 +447,7 @@ function LinhaMembro({
                         onClick={() => onAlterarEquipe(membro.id, isGrupoB ? null : (equipeB?.id || null))}
                         title={equipeB?.grupo_nome || 'Grupo B'}
                         disabled={!equipeB}
-                        className={`w-8 py-1 rounded-md text-[10px] font-bold transition-all ${isGrupoB ? 'bg-indigo-500 text-white shadow-sm' : 'text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted/50'}`}
+                        className={`w-8 py-1 rounded-xl text-[10px] font-bold transition-all ${isGrupoB ? 'bg-indigo-500 text-white shadow-sm' : 'text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted/50'}`}
                     >
                         B
                     </button>
@@ -548,11 +455,11 @@ function LinhaMembro({
             </div>
 
             {/* Status */}
-            <div className="col-span-1 flex justify-center">
+            <div className="col-span-2 flex justify-center">
                 <div className="flex items-center gap-1.5">
                     <div className={`w-1.5 h-1.5 rounded-full ${membro.ativo ? 'bg-emerald-500' : 'bg-muted-foreground/20'}`} />
                     <span className={`text-[9px] font-bold uppercase tracking-wider ${membro.ativo ? 'text-emerald-500' : 'text-muted-foreground/40'}`}>
-                        {membro.ativo ? 'Ativo' : 'Off'}
+                        {membro.ativo ? 'Ativo' : 'Offline'}
                     </span>
                 </div>
             </div>
@@ -564,7 +471,7 @@ function LinhaMembro({
                         <button
                             onClick={membro.ativo ? () => onSolicitarExclusao(membro) : () => onAlternarStatus(membro)}
                             title={membro.ativo ? "Arquivar membro" : "Restaurar membro"}
-                            className={`p-2 rounded-lg transition-all ${membro.ativo
+                            className={`p-2 rounded-xl transition-all ${membro.ativo
                                 ? 'text-muted-foreground/40 hover:text-red-500 hover:bg-red-500/5'
                                 : 'text-emerald-500/60 hover:text-emerald-500 hover:bg-emerald-500/5'}`}
                         >
@@ -581,7 +488,7 @@ function LinhaMembro({
                             <button
                                 onClick={() => onLimpezaDefinitiva(membro)}
                                 title="Limpeza definitiva (sumir do mapa)"
-                                className="p-2 rounded-lg text-muted-foreground/30 hover:text-red-500 hover:bg-red-500/5 transition-all"
+                                className="p-2 rounded-xl text-muted-foreground/30 hover:text-red-500 hover:bg-red-500/5 transition-all"
                             >
                                 <Eraser size={16} />
                             </button>
@@ -626,16 +533,16 @@ function BulkActions({ selecionados, onClear, onBulkUpdate, onExport }: BulkActi
             <div className="flex items-center gap-2">
                 <button
                     onClick={() => onBulkUpdate('arquivados' as any)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition-all"
+                    className="flex items-center gap-2 px-3 py-2 rounded-2xl text-xs font-bold bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition-all"
                 >
                     <Archive size={14} /> Arquivar / Restaurar
                 </button>
 
                 <div className="relative group/bulk-role">
-                    <button className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-primary/10 text-primary hover:bg-primary/20 transition-all">
+                    <button className="flex items-center gap-2 px-3 py-2 rounded-2xl text-xs font-bold bg-primary/10 text-primary hover:bg-primary/20 transition-all">
                         <Shield size={14} /> Alterar Cargo <ChevronDown size={14} />
                     </button>
-                    <div className="absolute bottom-full left-0 mb-2 w-48 bg-card border border-border rounded-xl shadow-xl overflow-hidden hidden group-hover/bulk-role:block animate-in fade-in slide-in-from-bottom-2">
+                    <div className="absolute bottom-full left-0 mb-2 w-48 bg-card border border-border rounded-2xl shadow-xl overflow-hidden hidden group-hover/bulk-role:block animate-in fade-in slide-in-from-bottom-2">
                         {['VISITANTE', 'MEMBRO', 'LIDER_EQUIPE', 'LIDER_GRUPO', 'ADMIN'].map(role => (
                             <button
                                 key={role}
@@ -650,7 +557,7 @@ function BulkActions({ selecionados, onClear, onBulkUpdate, onExport }: BulkActi
 
                 <button
                     onClick={onExport}
-                    className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-accent text-accent-foreground hover:opacity-80 transition-all"
+                    className="flex items-center gap-2 px-3 py-2 rounded-2xl text-xs font-bold bg-accent text-accent-foreground hover:opacity-80 transition-all"
                 >
                     <Download size={14} /> Exportar CSV
                 </button>
@@ -664,17 +571,15 @@ function BulkActions({ selecionados, onClear, onBulkUpdate, onExport }: BulkActi
 interface ModalCadastroProps {
     aberto: boolean;
     aoFechar: () => void;
-    aoCadastrar: (email: string, role: string, funcoes: string[], equipeId: string | null) => Promise<{ sucesso: boolean; erro?: string }>;
+    aoCadastrar: (email: string, role: string, equipeId: string | null) => Promise<{ sucesso: boolean; erro?: string }>;
     equipes: any[];
-    funcoesSugeridas: string[];
 }
 
-function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, equipes, funcoesSugeridas }: ModalCadastroProps) {
+function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, equipes }: ModalCadastroProps) {
     const [passo, setPasso] = useState(1);
     const [usuarioEmail, setUsuarioEmail] = useState('');
     const [dominio, setDominio] = useState('@unieuro.com.br');
     const [role, setRole] = useState('MEMBRO');
-    const [funcoes, setFuncoes] = useState<string[]>([]);
     const [equipeId, setEquipeId] = useState<string | null>(null);
     const [salvando, setSalvando] = useState(false);
     const [erro, setErro] = useState<string | null>(null);
@@ -685,7 +590,6 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, equipes, funcoesSu
             setUsuarioEmail('');
             setDominio('@unieuro.com.br');
             setRole('MEMBRO');
-            setFuncoes([]);
             setEquipeId(null);
             setErro(null);
         }
@@ -705,7 +609,7 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, equipes, funcoesSu
         setErro(null);
 
         const emailCompleto = `${usuarioEmail.trim().toLowerCase()}${dominio}`;
-        const res = await aoCadastrar(emailCompleto, role, funcoes, equipeId);
+        const res = await aoCadastrar(emailCompleto, role, equipeId);
         setSalvando(false);
 
         if (res.sucesso) {
@@ -724,7 +628,7 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, equipes, funcoesSu
                             <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-1">E-mail Institucional</label>
                             <div className="relative group/email">
                                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground transition-colors z-10" />
-                                <div className="flex items-center w-full bg-background border border-border rounded-xl focus-within:ring-2 focus-within:ring-primary/20 transition-all overflow-hidden">
+                                <div className="flex items-center w-full bg-background border border-border rounded-2xl focus-within:ring-2 focus-within:ring-primary/20 transition-all overflow-hidden">
                                     <input
                                         type="text"
                                         placeholder="ex: nome.sobrenome"
@@ -755,7 +659,7 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, equipes, funcoesSu
                                 <select
                                     value={role}
                                     onChange={e => setRole(e.target.value)}
-                                    className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer"
+                                    className="w-full bg-background border border-border rounded-2xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer"
                                 >
                                     <option value="MEMBRO">Membro (Padrão)</option>
                                     <option value="LIDER_EQUIPE">Líder de Equipe</option>
@@ -768,21 +672,6 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, equipes, funcoesSu
                     </>
                 ) : (
                     <>
-                        <div className="space-y-3">
-                            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-1">Funções Técnicas</label>
-                            <div className="flex flex-wrap gap-2 p-1">
-                                {funcoesSugeridas.map((funcao: string) => (
-                                    <button
-                                        key={funcao}
-                                        type="button"
-                                        onClick={() => setFuncoes(prev => prev.includes(funcao) ? prev.filter(f => f !== funcao) : [...prev, funcao])}
-                                        className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-all ${funcoes.includes(funcao) ? 'bg-primary border-primary text-primary-foreground shadow-sm' : 'border-border text-muted-foreground hover:bg-muted'}`}
-                                    >
-                                        {funcao}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
 
                         <div className="space-y-2">
                             <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-1">Alocação de Grupo</label>
@@ -794,7 +683,7 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, equipes, funcoesSu
                                             key={idG}
                                             type="button"
                                             onClick={() => setEquipeId(ex.id)}
-                                            className={`p-3 rounded-xl border text-center transition-all ${equipeId === ex.id ? 'bg-primary/10 border-primary text-primary shadow-sm' : 'border-border text-muted-foreground hover:bg-muted'}`}
+                                            className={`p-3 rounded-2xl border text-center transition-all ${equipeId === ex.id ? 'bg-primary/10 border-primary text-primary shadow-sm' : 'border-border text-muted-foreground hover:bg-muted'}`}
                                         >
                                             <UsersIcon className="w-5 h-5 mx-auto mb-1 opacity-50" />
                                             <span className="text-[11px] font-bold uppercase">{ex.grupo_nome || `Grupo ${ix + 1}`}</span>
@@ -804,7 +693,7 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, equipes, funcoesSu
                                 <button
                                     type="button"
                                     onClick={() => setEquipeId(null)}
-                                    className={`p-3 rounded-xl border text-center transition-all ${equipeId === null ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 shadow-sm' : 'border-border text-muted-foreground hover:bg-muted'}`}
+                                    className={`p-3 rounded-2xl border text-center transition-all ${equipeId === null ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 shadow-sm' : 'border-border text-muted-foreground hover:bg-muted'}`}
                                 >
                                     <UserX className="w-5 h-5 mx-auto mb-1 opacity-50" />
                                     <span className="text-[11px] font-bold uppercase">Sem Grupo</span>
@@ -815,7 +704,7 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, equipes, funcoesSu
                 )}
 
                 {erro && (
-                    <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-xl text-xs flex items-center gap-2 animate-in shake duration-300">
+                    <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-2xl text-xs flex items-center gap-2 animate-in shake duration-300">
                         <AlertCircle className="w-4 h-4 shrink-0" /> {erro}
                     </div>
                 )}
@@ -829,7 +718,7 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, equipes, funcoesSu
                         type="button"
                         disabled={salvando || (passo === 1 && !usuarioEmail.trim())}
                         onClick={handleSubmit}
-                        className="bg-primary text-primary-foreground px-6 py-2 rounded-xl text-sm font-bold hover:bg-primary/90 transition-all shadow-sm disabled:opacity-50 flex items-center gap-2"
+                        className="bg-primary text-primary-foreground px-6 py-2 rounded-2xl text-sm font-bold hover:bg-primary/90 transition-all shadow-sm disabled:opacity-50 flex items-center gap-2"
                     >
                         {salvando ? <Loader2 className="w-4 h-4 animate-spin" /> : passo === 1 ? 'Continuar' : 'Finalizar Cadastro'}
                     </button>
@@ -868,8 +757,8 @@ function StatsCards({ membros }: { membros: Membro[] }) {
                 { label: 'Lideranças', valor: stats.lideres, icone: Shield, cor: 'text-purple-400', bg: 'bg-purple-400/5', detalhe: 'Líderes & Admins' },
                 { label: 'Visitantes', valor: stats.visitantes, icone: Mail, cor: 'text-amber-500', bg: 'bg-amber-500/5', detalhe: 'Aguardando Papel' },
             ].map((card) => (
-                <div key={card.label} className="bg-card border border-border rounded-xl p-5 flex items-center gap-4 shadow-sm">
-                    <div className={`w-10 h-10 rounded-lg ${card.bg} ${card.cor} flex items-center justify-center shrink-0`}>
+                <div key={card.label} className="bg-card border border-border rounded-2xl p-5 flex items-center gap-4 shadow-sm">
+                    <div className={`w-10 h-10 rounded-xl ${card.bg} ${card.cor} flex items-center justify-center shrink-0`}>
                         <card.icone size={20} />
                     </div>
                     <div className="min-w-0">
@@ -900,12 +789,10 @@ export function GerenciarMembros() {
         toasts,
         alterarRole,
         alternarStatus,
-        alterarFuncoes,
         alterarEquipe,
         equipes,
         cadastrarMembro,
         removerMembro,
-        funcoesDisponiveis,
         limpezaDefinitiva,
         esvaziarLixeira
     } = useGerenciarMembros();
@@ -1013,7 +900,7 @@ export function GerenciarMembros() {
     if (erro) return <p className="text-red-400 text-center py-8">{erro}</p>;
 
     return (
-        <div className="space-y-6 flex flex-col h-full bg-background">
+        <div className="w-full space-y-10 flex flex-col h-full bg-background animate-in fade-in duration-500 pb-10">
             <CabecalhoFuncionalidade
                 titulo="Gerenciar Membros"
                 subtitulo="Controle de acesso, papéis e ativação de contas."
@@ -1102,12 +989,11 @@ export function GerenciarMembros() {
                             }
                         </button>
                     </div>
-                    <div className="col-span-4 pl-2">Membro</div>
+                    <div className="col-span-5 pl-2">Membro</div>
                     <div className="col-span-1">Papel</div>
-                    <div className="col-span-2">Função (Múltiplas)</div>
                     <div className="col-span-1 text-center">GRUPO</div>
-                    <div className="col-span-1 text-center">Status</div>
-                    <div className="col-span-2 text-right">Ações</div>
+                    <div className="col-span-2 text-center">Status</div>
+                    <div className="col-span-2 text-right pr-4 tracking-normal">Ações</div>
                 </div>
 
                 {/* Corpo da tabela */}
@@ -1133,13 +1019,11 @@ export function GerenciarMembros() {
                                 selecionado={selecionados.has(membro.id)}
                                 onToggleSelect={toggleSelecionado}
                                 onAlterarRole={alterarRole}
-                                onAlternarFuncoes={alterarFuncoes}
                                 onAlterarEquipe={alterarEquipe}
                                 equipes={equipes}
                                 onAlternarStatus={alternarStatus}
                                 onSolicitarExclusao={setMembroParaExcluir}
                                 onLimpezaDefinitiva={setMembroParaLimpar}
-                                funcoesSugeridas={funcoesDisponiveis}
                             />
                         ))
                     )}
@@ -1151,7 +1035,6 @@ export function GerenciarMembros() {
                 aoFechar={() => setModalAberto(false)}
                 aoCadastrar={cadastrarMembro}
                 equipes={equipes}
-                funcoesSugeridas={funcoesDisponiveis}
             />
 
             <ModalConvitesEmLote

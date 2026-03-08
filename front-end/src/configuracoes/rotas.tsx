@@ -59,7 +59,7 @@ function VisualizacaoBacklog() {
     const abrirEdicaoRetro = (sprint: Sprint) => { setSprintAlvoRetro(sprint); setModalRetroAberto(true); };
 
     return (
-        <div className="flex flex-col gap-6 h-full">
+        <div className="space-y-10 flex flex-col h-full bg-background animate-in fade-in duration-500">
             <CabecalhoFuncionalidade
                 titulo="Gestão de Backlog"
                 subtitulo="Planeje sprints e gerencie o estoque de tarefas do projeto."

@@ -97,7 +97,7 @@ export function CartaoComentario({ comentario, usuarioLogadoId, ehLider, aoExclu
                             autoFocus
                             value={novoConteudo}
                             onChange={(e) => setNovoConteudo(e.target.value)}
-                            className="w-full bg-background border border-input rounded-lg p-3 text-sm text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary min-h-[80px]"
+                            className="w-full bg-background border border-input rounded-xl p-3 text-sm text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary min-h-[80px]"
                         />
                         <div className="flex items-center gap-2 justify-end">
                             <button
@@ -117,7 +117,7 @@ export function CartaoComentario({ comentario, usuarioLogadoId, ehLider, aoExclu
                         </div>
                     </div>
                 ) : (
-                    <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap bg-muted/50 p-3 rounded-lg border border-border inline-block w-full">
+                    <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap bg-muted/50 p-3 rounded-xl border border-border inline-block w-full">
                         {comentario.conteudo}
                     </div>
                 )}

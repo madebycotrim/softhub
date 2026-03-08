@@ -5,6 +5,7 @@ type Tema = "dark" | "light" | "system";
 
 type ContextoTemaTipo = {
     tema: Tema;
+    temaReal: "dark" | "light";
     setTema: (tema: Tema) => void;
 };
 
@@ -25,22 +26,42 @@ export function ProvedorTema({
         () => (localStorage.getItem(ChaveTemaStorage) as Tema) || temaPadrao
     );
 
+    const [temaReal, setTemaReal] = useState<"dark" | "light">(() => {
+        if (tema !== "system") return tema;
+        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    });
+
     useEffect(() => {
         const root = window.document.documentElement;
 
         root.classList.remove("light", "dark");
 
+        let temaAplicado: "dark" | "light";
+
         if (tema === "system") {
-            const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+            temaAplicado = window.matchMedia("(prefers-color-scheme: dark)")
                 .matches
                 ? "dark"
                 : "light";
-
-            root.classList.add(systemTheme);
-            return;
+        } else {
+            temaAplicado = tema;
         }
 
-        root.classList.add(tema);
+        root.classList.add(temaAplicado);
+        setTemaReal(temaAplicado);
+
+        // Listener para mudanças no sistema se estiver em modo system
+        if (tema === "system") {
+            const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+            const handler = (e: MediaQueryListEvent) => {
+                const novoTema = e.matches ? "dark" : "light";
+                root.classList.remove("light", "dark");
+                root.classList.add(novoTema);
+                setTemaReal(novoTema);
+            };
+            mediaQuery.addEventListener("change", handler);
+            return () => mediaQuery.removeEventListener("change", handler);
+        }
     }, [tema]);
 
     const setTema = (novoTema: Tema) => {
@@ -49,7 +70,7 @@ export function ProvedorTema({
     };
 
     return (
-        <ContextoTema.Provider value={{ tema, setTema }}>
+        <ContextoTema.Provider value={{ tema, temaReal, setTema }}>
             {children}
         </ContextoTema.Provider>
     );

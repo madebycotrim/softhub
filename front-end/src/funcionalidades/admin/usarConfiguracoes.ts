@@ -4,6 +4,7 @@ import { api } from '../../compartilhado/servicos/api';
 export interface ConfiguracoesSistema {
     funcoes_tecnicas: string[];
     nome_sistema: string;
+    permissoes_roles: Record<string, Record<string, boolean>>;
 }
 
 export function usarConfiguracoes() {
@@ -15,7 +16,14 @@ export function usarConfiguracoes() {
         setCarregando(true);
         try {
             const res = await api.get('/api/configuracoes');
-            setConfiguracoes(res.data.configuracoes);
+            const dados = res.data.configuracoes;
+
+            // Normalização: garante que campos de array sempre sejam arrays no front
+            if (!Array.isArray(dados.funcoes_tecnicas)) {
+                dados.funcoes_tecnicas = [];
+            }
+
+            setConfiguracoes(dados);
             setErro(null);
         } catch (e: any) {
             setErro(e.response?.data?.erro || 'Erro ao carregar configurações');

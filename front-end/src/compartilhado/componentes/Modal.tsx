@@ -78,7 +78,7 @@ export function Modal({ aberto, aoFechar, titulo, children, largura = 'md' }: Mo
                     </div>
                     <button
                         onClick={aoFechar}
-                        className="p-2 text-muted-foreground/40 hover:text-foreground hover:bg-accent rounded-xl transition-all duration-300 focus:outline-none group"
+                        className="p-2 text-muted-foreground/40 hover:text-foreground hover:bg-accent rounded-2xl transition-all duration-300 focus:outline-none group"
                         aria-label="Fechar modal"
                     >
                         <X className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />

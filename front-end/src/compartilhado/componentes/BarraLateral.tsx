@@ -55,16 +55,16 @@ export function BarraLateral() {
             <Link
                 to={link.path}
                 className={`
-                    group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13.5px] font-medium
+                    group relative flex items-center gap-3 px-3 py-2.5 rounded-2xl text-[13.5px] font-medium
                     transition-all duration-200 select-none
                     ${ativo
                         ? 'text-primary'
-                        : 'text-sidebar-foreground/50 hover:text-sidebar-foreground/90 hover:bg-white/[0.04]'
+                        : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
                     }
                 `}
             >
                 {ativo && (
-                    <span className="absolute inset-0 rounded-xl bg-primary/[0.12] border border-primary/20" />
+                    <span className="absolute inset-0 rounded-2xl bg-primary/[0.12] border border-primary/20" />
                 )}
                 {ativo && (
                     <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full shadow-[0_0_10px_rgba(59,130,246,0.7)]" />
@@ -91,8 +91,8 @@ export function BarraLateral() {
 
             {/* Fundo */}
             <div className="absolute inset-0 bg-sidebar" />
-            <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-white/[0.06] to-transparent" />
-            <div className="absolute top-0 inset-x-0 h-48 bg-gradient-to-b from-primary/[0.05] to-transparent pointer-events-none" />
+            <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-sidebar-border to-transparent" />
+            <div className="absolute top-0 inset-x-0 h-48 bg-gradient-to-b from-sidebar-primary/[0.03] to-transparent pointer-events-none" />
 
             {/* ── Logo ── */}
             <div className="h-16 flex items-center px-4 shrink-0 relative z-10">
@@ -119,13 +119,13 @@ export function BarraLateral() {
                         {/* Separador entre grupos (exceto o primeiro) */}
                         {i > 0 && (
                             <div className="flex items-center gap-2 px-2 my-3">
-                                <div className="h-px flex-1 bg-gradient-to-r from-white/[0.06] to-transparent" />
+                                <div className="h-px flex-1 bg-gradient-to-r from-sidebar-border/50 to-transparent" />
                             </div>
                         )}
 
                         {/* Label do grupo */}
                         <div className="flex items-center gap-2 px-3 mb-1.5">
-                            <span className="text-[10px] font-black text-sidebar-foreground/20 uppercase tracking-[0.22em]">
+                            <span className="text-[10px] font-black text-sidebar-foreground/30 uppercase tracking-[0.22em]">
                                 {grupo.label}
                             </span>
                         </div>
@@ -150,7 +150,7 @@ export function BarraLateral() {
                     </span>
                     <button
                         onClick={() => setTema(tema === 'dark' ? 'light' : 'dark')}
-                        className="p-1.5 rounded-lg text-sidebar-foreground/30 hover:text-primary hover:bg-primary/10 transition-all duration-300 group/theme"
+                        className="p-1.5 rounded-xl text-sidebar-foreground/30 hover:text-primary hover:bg-primary/10 transition-all duration-300 group/theme"
                         title={tema === 'dark' ? "Mudar para modo claro" : "Mudar para modo escuro"}
                     >
                         {tema === 'dark' ? (
@@ -165,9 +165,9 @@ export function BarraLateral() {
                     <>
 
                         {/* Divisor com gradiente */}
-                        <div className="h-px mb-3 bg-gradient-to-r from-transparent via-white/[0.07] to-transparent" />
+                        <div className="h-px mb-3 bg-gradient-to-r from-transparent via-sidebar-border to-transparent" />
 
-                        <div className="flex items-center gap-2.5 px-2 py-2 rounded-xl hover:bg-white/[0.04] transition-colors duration-200">
+                        <div className="flex items-center gap-2.5 px-2 py-2 rounded-2xl hover:bg-sidebar-accent/50 transition-colors duration-200">
 
                             {/* Avatar */}
                             <div className="relative shrink-0 group">
@@ -180,7 +180,7 @@ export function BarraLateral() {
                                 <span className="text-[13px] font-semibold text-sidebar-foreground truncate leading-none tracking-tight">
                                     {usuario.nome}
                                 </span>
-                                <span className="text-[11px] text-sidebar-foreground/35 lowercase truncate leading-none mt-1">
+                                <span className="text-[11px] text-sidebar-foreground/40 lowercase truncate leading-none mt-1">
                                     {usuario.email}
                                 </span>
                             </div>
@@ -189,7 +189,7 @@ export function BarraLateral() {
                             <button
                                 onClick={sair}
                                 title="Sair"
-                                className="shrink-0 p-1.5 rounded-lg text-sidebar-foreground/20 hover:text-red-400 hover:bg-red-400/10 transition-all duration-200 group/logout"
+                                className="shrink-0 p-1.5 rounded-xl text-sidebar-foreground/20 hover:text-red-400 hover:bg-red-400/10 transition-all duration-200 group/logout"
                             >
                                 <LogOut size={14} className="transition-transform duration-200 group-hover/logout:translate-x-0.5" />
                             </button>

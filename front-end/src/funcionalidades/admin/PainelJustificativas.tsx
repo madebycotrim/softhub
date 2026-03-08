@@ -66,7 +66,7 @@ export function PainelJustificativas() {
     }
 
     return (
-        <div className="space-y-6 flex flex-col h-full bg-background">
+        <div className="space-y-10 flex flex-col h-full bg-background animate-in fade-in duration-500 pb-10">
             <CabecalhoFuncionalidade
                 titulo="Caixa de Justificativas"
                 subtitulo="Gerencia justificativas de ausências da sua equipe."

@@ -48,7 +48,7 @@ export function FormularioAviso({ aoSalvar }: FormularioAvisoProps) {
                     id="titulo"
                     type="text"
                     placeholder="Ex: Prazo de entrega do Módulo 1..."
-                    className="w-full bg-background border border-input rounded-xl px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                    className="w-full bg-background border border-input rounded-2xl px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                     {...register('titulo')}
                 />
                 {errors.titulo && (
@@ -64,7 +64,7 @@ export function FormularioAviso({ aoSalvar }: FormularioAvisoProps) {
                     id="conteudo"
                     rows={4}
                     placeholder="Descreva o aviso com detalhes..."
-                    className="w-full bg-background border border-input rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-none"
+                    className="w-full bg-background border border-input rounded-2xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-none"
                     {...register('conteudo')}
                 />
                 {errors.conteudo && (
@@ -79,7 +79,7 @@ export function FormularioAviso({ aoSalvar }: FormularioAvisoProps) {
                     </label>
                     <select
                         id="prioridade"
-                        className="w-full bg-background border border-input rounded-xl px-4 py-2 shrink-0 text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all appearance-none"
+                        className="w-full bg-background border border-input rounded-2xl px-4 py-2 shrink-0 text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all appearance-none"
                         {...register('prioridade')}
                     >
                         <option value="info">💬 Informativo</option>
@@ -98,7 +98,7 @@ export function FormularioAviso({ aoSalvar }: FormularioAvisoProps) {
                     <input
                         id="expira_em"
                         type="datetime-local"
-                        className="w-full bg-background border border-input rounded-xl px-4 py-2 shrink-0 text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                        className="w-full bg-background border border-input rounded-2xl px-4 py-2 shrink-0 text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                         {...register('expira_em')}
                     />
                 </div>
@@ -109,14 +109,14 @@ export function FormularioAviso({ aoSalvar }: FormularioAvisoProps) {
                     type="button"
                     onClick={aoSalvar}
                     disabled={isSubmitting}
-                    className="px-4 py-2 rounded-xl text-sm font-medium border border-border text-muted-foreground hover:bg-accent transition-colors disabled:opacity-50"
+                    className="px-4 py-2 rounded-2xl text-sm font-medium border border-border text-muted-foreground hover:bg-accent transition-colors disabled:opacity-50"
                 >
                     Cancelar
                 </button>
                 <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="px-5 py-2 rounded-xl text-sm font-medium bg-primary hover:bg-primary/90 text-primary-foreground transition-all transform active:scale-95 disabled:opacity-70 disabled:pointer-events-none flex items-center justify-center gap-2 shadow-lg shadow-primary/20 min-w-32"
+                    className="px-5 py-2 rounded-2xl text-sm font-medium bg-primary hover:bg-primary/90 text-primary-foreground transition-all transform active:scale-95 disabled:opacity-70 disabled:pointer-events-none flex items-center justify-center gap-2 shadow-lg shadow-primary/20 min-w-32"
                 >
                     {isSubmitting ? (
                         <>

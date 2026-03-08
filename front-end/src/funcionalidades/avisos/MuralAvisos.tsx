@@ -28,7 +28,7 @@ export function MuralAvisos() {
     if (erro) return <p className="text-destructive text-center py-8">{erro}</p>;
 
     return (
-        <div className="space-y-6">
+        <div className="w-full space-y-10 pb-20 animate-in fade-in duration-500">
             <CabecalhoFuncionalidade
                 titulo="Mural de Avisos"
                 subtitulo="Comunicados importantes para a equipe ou grupos."

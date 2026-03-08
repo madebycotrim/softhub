@@ -75,8 +75,7 @@ export default function PainelEquipes() {
     if (carregandoOrg || carregandoMembros) return <Carregando />;
 
     return (
-        <>
-            <div className="max-w-7xl mx-auto space-y-6">
+        <div className="w-full space-y-10 pb-20 animate-in fade-in duration-500">
                 <CabecalhoFuncionalidade
                     titulo="Gestão de Equipes"
                     subtitulo="Organize os membros em grupos e equipes de trabalho."
@@ -85,13 +84,13 @@ export default function PainelEquipes() {
                 >
                     <button
                         onClick={() => setModalGrupo(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent/80 text-accent-foreground rounded-xl transition-colors border border-border"
+                        className="flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent/80 text-accent-foreground rounded-2xl transition-colors border border-border"
                     >
                         <Plus className="w-4 h-4" /> Novo Grupo
                     </button>
                 </CabecalhoFuncionalidade>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     {/* Árvore de Grupos e Equipes */}
                     <div className="lg:col-span-4 space-y-4">
                         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
@@ -132,17 +131,17 @@ export default function PainelEquipes() {
                                         <button
                                             key={equipe.id}
                                             onClick={() => setModalAlocacao({ aberto: true, equipeId: equipe.id })}
-                                            className={`w-full flex justify-between items-center px-3 py-2 rounded-xl text-sm transition-colors ${modalAlocacao.equipeId === equipe.id ? 'bg-primary/20 text-primary border border-primary/50' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                                            className={`w-full flex justify-between items-center px-3 py-2 rounded-2xl text-sm transition-colors ${modalAlocacao.equipeId === equipe.id ? 'bg-primary/20 text-primary border border-primary/50' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                                                 }`}
                                         >
                                             <span>{equipe.nome}</span>
                                             <div className="flex items-center gap-2">
-                                                <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground">
+                                                <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded-lg text-muted-foreground">
                                                     {membros.filter(m => m.equipe_id === equipe.id).length} membros
                                                 </span>
                                                 <div
                                                     onClick={(e) => { e.stopPropagation(); setExclusao({ tipo: 'equipe', id: equipe.id, aberto: true }); }}
-                                                    className="p-1 hover:bg-destructive/10 rounded text-muted-foreground hover:text-destructive"
+                                                    className="p-1 hover:bg-destructive/10 rounded-lg text-muted-foreground hover:text-destructive"
                                                 >
                                                     <X className="w-3 h-3" />
                                                 </div>
@@ -203,7 +202,7 @@ export default function PainelEquipes() {
                                                 {modalAlocacao.equipeId ? (
                                                     <button
                                                         onClick={() => { handleAlocar(membro.id); }}
-                                                        className="p-2 hover:bg-destructive/10 text-destructive rounded-lg transition-colors"
+                                                        className="p-2 hover:bg-destructive/10 text-destructive rounded-xl transition-colors"
                                                         title="Remover da Equipe"
                                                     >
                                                         <X className="w-4 h-4" />
@@ -211,7 +210,7 @@ export default function PainelEquipes() {
                                                 ) : (
                                                     <div className="flex gap-2 justify-end">
                                                         <select
-                                                            className="bg-background border border-input rounded-lg px-2 py-1 text-xs focus:ring-1 focus:ring-primary text-foreground"
+                                                            className="bg-background border border-input rounded-xl px-2 py-1 text-xs focus:ring-1 focus:ring-primary text-foreground"
                                                             onChange={(e) => {
                                                                 if (e.target.value) {
                                                                     alocarUsuario(membro.id, e.target.value).then(() => recarregarMembros());
@@ -233,7 +232,6 @@ export default function PainelEquipes() {
                             </table>
                         </div>
                     </div>
-                </div>
             </div>
 
             {/* Modais */}
@@ -246,7 +244,7 @@ export default function PainelEquipes() {
                             required
                             value={novoGrupo.nome}
                             onChange={e => setNovoGrupo(prev => ({ ...prev, nome: e.target.value }))}
-                            className="w-full bg-background border border-input rounded-xl px-4 py-2 text-foreground focus:ring-2 focus:ring-primary outline-none"
+                            className="w-full bg-background border border-input rounded-2xl px-4 py-2 text-foreground focus:ring-2 focus:ring-primary outline-none"
                             placeholder="Ex: Desenvolvimento Web"
                         />
                     </div>
@@ -255,13 +253,13 @@ export default function PainelEquipes() {
                         <textarea
                             value={novoGrupo.descricao}
                             onChange={e => setNovoGrupo(prev => ({ ...prev, descricao: e.target.value }))}
-                            className="w-full bg-background border border-input rounded-xl px-4 py-2 text-foreground focus:ring-2 focus:ring-primary outline-none h-20"
+                            className="w-full bg-background border border-input rounded-2xl px-4 py-2 text-foreground focus:ring-2 focus:ring-primary outline-none h-20"
                         />
                     </div>
                     <button
                         type="submit"
                         disabled={submetendo}
-                        className="w-full py-2 bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground rounded-xl font-bold transition-colors"
+                        className="w-full py-2 bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground rounded-2xl font-bold transition-colors"
                     >
                         {submetendo ? 'Criando...' : 'Criar Grupo'}
                     </button>
@@ -277,7 +275,7 @@ export default function PainelEquipes() {
                             required
                             value={novaEquipe.nome}
                             onChange={e => setNovaEquipe(prev => ({ ...prev, nome: e.target.value }))}
-                            className="w-full bg-background border border-input rounded-xl px-4 py-2 text-foreground focus:ring-2 focus:ring-primary outline-none"
+                            className="w-full bg-background border border-input rounded-2xl px-4 py-2 text-foreground focus:ring-2 focus:ring-primary outline-none"
                             placeholder="Ex: Frontend Core"
                         />
                     </div>
@@ -286,13 +284,13 @@ export default function PainelEquipes() {
                         <textarea
                             value={novaEquipe.descricao}
                             onChange={e => setNovaEquipe(prev => ({ ...prev, descricao: e.target.value }))}
-                            className="w-full bg-background border border-input rounded-xl px-4 py-2 text-foreground focus:ring-2 focus:ring-primary outline-none h-20"
+                            className="w-full bg-background border border-input rounded-2xl px-4 py-2 text-foreground focus:ring-2 focus:ring-primary outline-none h-20"
                         />
                     </div>
                     <button
                         type="submit"
                         disabled={submetendo}
-                        className="w-full py-2 bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground rounded-xl font-bold transition-colors"
+                        className="w-full py-2 bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground rounded-2xl font-bold transition-colors"
                     >
                         {submetendo ? 'Criando...' : 'Criar Equipe'}
                     </button>
@@ -308,6 +306,6 @@ export default function PainelEquipes() {
                 carregando={submetendo}
                 textoBotao="Desativar"
             />
-        </>
+        </div>
     );
 }

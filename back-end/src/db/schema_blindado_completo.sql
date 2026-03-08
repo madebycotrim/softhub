@@ -1,0 +1,236 @@
+-- SCHEMA BLINDADO - SoftHub
+-- Este arquivo é a fonte única de verdade para a estrutura do banco de dados (SQLite/D1).
+-- Segue as Regras Absolutas: IDs UUID, Datas ISO 8601 UTC, Soft Delete em tudo.
+
+-- 1. Tabela de Pessoas (Auditores e Donos do Sistema podem ver tudo)
+CREATE TABLE IF NOT EXISTS usuarios (
+    id TEXT NOT NULL PRIMARY KEY,
+    nome TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    role TEXT NOT NULL DEFAULT 'MEMBRO', -- ADMIN, LIDER_GRUPO, LIDER_EQUIPE, MEMBRO, VISITANTE
+    ativo INTEGER NOT NULL DEFAULT 1,
+    foto_perfil TEXT,
+    bio TEXT,
+    funcoes TEXT DEFAULT '[]', -- JSON: ['FRONTEND', 'BACKEND', etc]
+    equipe_id TEXT, -- FK definida após a criação de equipes
+    visivel INTEGER NOT NULL DEFAULT 1,
+    criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_usuarios_email ON usuarios(email);
+CREATE INDEX IF NOT EXISTS idx_usuarios_role ON usuarios(role);
+CREATE INDEX IF NOT EXISTS idx_usuarios_ativo ON usuarios(ativo);
+
+-- 2. Tabela de Estrutura: Grupos (Divisões de alto nível)
+CREATE TABLE IF NOT EXISTS grupos (
+    id TEXT NOT NULL PRIMARY KEY,
+    nome TEXT NOT NULL,
+    descricao TEXT,
+    lider_id TEXT REFERENCES usuarios(id) ON DELETE SET NULL,
+    sub_lider_id TEXT REFERENCES usuarios(id) ON DELETE SET NULL,
+    ativo INTEGER NOT NULL DEFAULT 1,
+    criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+);
+
+-- 3. Tabela de Estrutura: Equipes (Sub-divisões funcionais)
+CREATE TABLE IF NOT EXISTS equipes (
+    id TEXT NOT NULL PRIMARY KEY,
+    grupo_id TEXT NOT NULL REFERENCES grupos(id) ON DELETE CASCADE,
+    nome TEXT NOT NULL,
+    descricao TEXT,
+    ativo INTEGER NOT NULL DEFAULT 1,
+    criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_equipes_grupo ON equipes(grupo_id);
+
+-- 4. Tabela Projetos (Vinculados a sprints)
+CREATE TABLE IF NOT EXISTS projetos (
+    id TEXT NOT NULL PRIMARY KEY,
+    nome TEXT NOT NULL,
+    descricao TEXT,
+    publico INTEGER NOT NULL DEFAULT 0,
+    ativo INTEGER NOT NULL DEFAULT 1,
+    criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+);
+
+-- 5. Tabela Sprints (Gestão de tempo)
+CREATE TABLE IF NOT EXISTS sprints (
+    id TEXT NOT NULL PRIMARY KEY,
+    projeto_id TEXT NOT NULL REFERENCES projetos(id) ON DELETE CASCADE,
+    nome TEXT NOT NULL,
+    objetivo TEXT,
+    status TEXT NOT NULL DEFAULT 'planejada', -- planejada, ativa, encerrada
+    data_inicio TEXT,
+    data_fim TEXT,
+    velocity_planejado INTEGER,
+    velocity_realizado INTEGER,
+    ativo INTEGER NOT NULL DEFAULT 1,
+    criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_sprints_projeto ON sprints(projeto_id);
+CREATE INDEX IF NOT EXISTS idx_sprints_status ON sprints(status);
+
+-- 6. Tabela Tarefas (Nível atômico de trabalho)
+CREATE TABLE IF NOT EXISTS tarefas (
+    id TEXT NOT NULL PRIMARY KEY,
+    projeto_id TEXT NOT NULL REFERENCES projetos(id) ON DELETE CASCADE,
+    sprint_id TEXT REFERENCES sprints(id) ON DELETE SET NULL,
+    titulo TEXT NOT NULL,
+    descricao TEXT,
+    status TEXT NOT NULL DEFAULT 'a_fazer', -- a_fazer, em_andamento, em_revisao, concluido
+    prioridade TEXT NOT NULL DEFAULT 'media', -- baixa, media, alta, urgente
+    pontos INTEGER DEFAULT 1,
+    ativo INTEGER NOT NULL DEFAULT 1,
+    criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+    atualizado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_tarefas_projeto ON tarefas(projeto_id);
+CREATE INDEX IF NOT EXISTS idx_tarefas_sprint ON tarefas(sprint_id);
+CREATE INDEX IF NOT EXISTS idx_tarefas_status ON tarefas(status);
+
+-- 7. Junções e Associações (N:N)
+CREATE TABLE IF NOT EXISTS tarefas_responsaveis (
+    tarefa_id TEXT NOT NULL REFERENCES tarefas(id) ON DELETE CASCADE,
+    usuario_id TEXT NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    PRIMARY KEY (tarefa_id, usuario_id)
+);
+
+CREATE TABLE IF NOT EXISTS projetos_membros (
+    projeto_id TEXT NOT NULL REFERENCES projetos(id) ON DELETE CASCADE,
+    usuario_id TEXT NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    papel_no_projeto TEXT DEFAULT 'MEMBRO',
+    PRIMARY KEY (projeto_id, usuario_id)
+);
+
+-- 8. Ponto Eletrônico (Blindagem de IP e Tempo)
+CREATE TABLE IF NOT EXISTS ponto_registros (
+    id TEXT NOT NULL PRIMARY KEY,
+    usuario_id TEXT NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    tipo TEXT NOT NULL, -- ENTRADA, SAIDA
+    registrado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+    ip_origem TEXT NOT NULL,
+    ativo INTEGER NOT NULL DEFAULT 1
+);
+
+CREATE INDEX IF NOT EXISTS idx_ponto_usuario ON ponto_registros(usuario_id, registrado_em);
+
+CREATE TABLE IF NOT EXISTS justificativas_ponto (
+    id TEXT NOT NULL PRIMARY KEY,
+    usuario_id TEXT NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    data TEXT NOT NULL, -- YYYY-MM-DD
+    tipo TEXT NOT NULL, -- FALTA, ATRASO, SAIDA_ANTECIPADA
+    motivo TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pendente', -- pendente, aprovada, rejeitada
+    motivo_rejeicao TEXT,
+    avaliado_por TEXT REFERENCES usuarios(id),
+    avaliado_em TEXT,
+    ativo INTEGER NOT NULL DEFAULT 1,
+    criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_justificativa_unica ON justificativas_ponto (usuario_id, data);
+
+-- 9. Colaboração: Comentários e Checklists
+CREATE TABLE IF NOT EXISTS comentarios_tarefa (
+    id TEXT NOT NULL PRIMARY KEY,
+    tarefa_id TEXT NOT NULL REFERENCES tarefas(id) ON DELETE CASCADE,
+    autor_id TEXT NOT NULL REFERENCES usuarios(id),
+    conteudo TEXT NOT NULL,
+    ativo INTEGER NOT NULL DEFAULT 1,
+    criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+    atualizado_em TEXT
+);
+
+CREATE TABLE IF NOT EXISTS checklist_tarefa (
+    id TEXT NOT NULL PRIMARY KEY,
+    tarefa_id TEXT NOT NULL REFERENCES tarefas(id) ON DELETE CASCADE,
+    texto TEXT NOT NULL,
+    concluido INTEGER NOT NULL DEFAULT 0,
+    ordem INTEGER NOT NULL DEFAULT 0,
+    criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+);
+
+-- 10. Comunicação e Engajamento
+CREATE TABLE IF NOT EXISTS avisos (
+    id TEXT NOT NULL PRIMARY KEY,
+    titulo TEXT NOT NULL,
+    conteudo TEXT NOT NULL,
+    prioridade TEXT NOT NULL DEFAULT 'info',
+    criado_por TEXT NOT NULL REFERENCES usuarios(id),
+    expira_em TEXT,
+    ativo INTEGER NOT NULL DEFAULT 1,
+    criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+);
+
+CREATE TABLE IF NOT EXISTS notificacoes (
+    id TEXT NOT NULL PRIMARY KEY,
+    usuario_id TEXT NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    tipo TEXT NOT NULL,
+    titulo TEXT NOT NULL,
+    mensagem TEXT NOT NULL,
+    lida INTEGER NOT NULL DEFAULT 0,
+    link_acao TEXT,
+    criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+);
+
+-- 11. Governança e Audit (Blindagem Legal)
+CREATE TABLE IF NOT EXISTS logs (
+    id TEXT NOT NULL PRIMARY KEY,
+    usuario_id TEXT REFERENCES usuarios(id) ON DELETE SET NULL,
+    usuario_nome TEXT,
+    usuario_email TEXT,
+    usuario_role TEXT,
+    acao TEXT NOT NULL,
+    modulo TEXT NOT NULL,
+    descricao TEXT NOT NULL,
+    ip TEXT,
+    entidade_tipo TEXT,
+    entidade_id TEXT,
+    dados_anteriores TEXT, -- JSON
+    dados_novos TEXT, -- JSON
+    criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+);
+
+CREATE TABLE IF NOT EXISTS tarefa_historico (
+    id TEXT NOT NULL PRIMARY KEY,
+    tarefa_id TEXT NOT NULL REFERENCES tarefas(id) ON DELETE CASCADE,
+    usuario_id TEXT NOT NULL REFERENCES usuarios(id),
+    campo_alterado TEXT NOT NULL,
+    valor_antigo TEXT,
+    valor_novo TEXT,
+    alterado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+);
+
+-- 12. Configurações de Negócio Dinâmicas
+CREATE TABLE IF NOT EXISTS configuracoes_sistema (
+    id TEXT NOT NULL PRIMARY KEY,
+    chave TEXT NOT NULL UNIQUE,
+    valor TEXT NOT NULL -- Geralmente JSON
+);
+
+-- 13. Sessões e QR Logic
+CREATE TABLE IF NOT EXISTS sessoes_qr (
+    id TEXT NOT NULL PRIMARY KEY,
+    status TEXT NOT NULL DEFAULT 'pendente',
+    usuario_id TEXT REFERENCES usuarios(id),
+    token_acesso TEXT,
+    ip_origem TEXT,
+    user_agent TEXT,
+    expira_em TEXT NOT NULL,
+    criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+);
+
+-- 14. Agile Tools: Retrospectivas
+CREATE TABLE IF NOT EXISTS retrospectivas (
+    id TEXT NOT NULL PRIMARY KEY,
+    sprint_id TEXT NOT NULL UNIQUE REFERENCES sprints(id) ON DELETE CASCADE,
+    o_que_foi_bem TEXT,
+    o_que_melhorar TEXT,
+    acoes_proxima_sprint TEXT,
+    atualizado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+);
+
+-- FIM DO SCHEMA BLINDADO
