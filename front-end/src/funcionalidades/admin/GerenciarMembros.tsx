@@ -1,15 +1,13 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { Search, UserCog, Check, X, Shield, Mail, Trash2, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Search, UserCog, Check, X, Shield, Mail, Trash2, Loader2, UserCheck, UserX, Archive, Users as UsersIcon, ListPlus, CheckSquare, Square, Download, CheckCircle2, AlertCircle, ChevronDown } from 'lucide-react';
 import { api } from '../../compartilhado/servicos/api';
 import { usarMembros } from '../membros/usarMembros';
 import type { Membro } from '../membros/usarMembros';
 import { Avatar } from '../../compartilhado/componentes/Avatar';
-import { Emblema } from '../../compartilhado/componentes/Emblema';
 import { Carregando } from '../../compartilhado/componentes/Carregando';
 import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
 import { Modal } from '../../compartilhado/componentes/Modal';
 import { ConfirmacaoExclusao } from '../../compartilhado/componentes/ConfirmacaoExclusao';
-import { ambiente } from '@/configuracoes/ambiente';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -126,6 +124,26 @@ function useGerenciarMembros() {
         }
     }, [atualizarMembro, exibirToast, marcarSalvando, desmarcarSalvando]);
 
+    const alterarFuncoes = useCallback(async (membro: Membro, funcoesNovas: string[]) => {
+        // Optimistic update
+        atualizarMembro({ ...membro, funcoes: funcoesNovas });
+        marcarSalvando(membro.id);
+
+        try {
+            await api.patch(`/api/usuarios/${membro.id}/funcoes`, { funcoes: funcoesNovas });
+            exibirToast(`Funções de ${membro.nome} atualizadas.`);
+        } catch (e: unknown) {
+            atualizarMembro(membro);
+            const axiosError = e as { response?: { data?: { erro?: string } } };
+            exibirToast(
+                axiosError.response?.data?.erro ?? 'Erro ao alterar funções.',
+                'erro'
+            );
+        } finally {
+            desmarcarSalvando(membro.id);
+        }
+    }, [atualizarMembro, exibirToast, marcarSalvando, desmarcarSalvando]);
+
     const cadastrarMembro = useCallback(async (
         email: string,
         role: string
@@ -159,8 +177,30 @@ function useGerenciarMembros() {
         return res;
     }, [deletarMembro, recarregar, exibirToast, marcarSalvando, desmarcarSalvando]);
 
+    const [equipes, setEquipes] = useState<any[]>([]);
+
+    useEffect(() => {
+        api.get('/api/organizacao/equipes')
+            .then(res => setEquipes(res.data))
+            .catch(() => console.error('Falha ao buscar equipes.'));
+    }, []);
+
+    const alterarEquipe = useCallback(async (membroId: string, equipeId: string | null) => {
+        marcarSalvando(membroId);
+        try {
+            await api.patch(`/api/organizacao/alocacao/${membroId}`, { equipe_id: equipeId });
+            exibirToast('Alocação de grupo atualizada.');
+            recarregar();
+        } catch (e: any) {
+            exibirToast(e.response?.data?.erro ?? 'Erro ao trocar grupo.', 'erro');
+        } finally {
+            desmarcarSalvando(membroId);
+        }
+    }, [recarregar, exibirToast, marcarSalvando, desmarcarSalvando]);
+
     return {
         membros,
+        equipes,
         carregando,
         erro,
         recarregar,
@@ -168,9 +208,102 @@ function useGerenciarMembros() {
         toasts,
         alterarRole,
         alternarStatus,
+        alterarFuncoes,
+        alterarEquipe,
         cadastrarMembro,
         removerMembro,
     };
+}
+
+// ─── Componente: ModalConvitesEmLote ──────────────────────────────────────────
+
+interface ModalConvitesEmLoteProps {
+    aberto: boolean;
+    aoFechar: () => void;
+    aoCadastrar: (dados: { nome: string; email: string }) => Promise<{ sucesso: boolean; erro?: string }>;
+    recarregar: () => Promise<void>;
+}
+
+function ModalConvitesEmLote({ aberto, aoFechar, aoCadastrar, recarregar }: ModalConvitesEmLoteProps) {
+    const [texto, setTexto] = useState('');
+    const [enviando, setEnviando] = useState(false);
+    const [progresso, setProgresso] = useState<{ total: number; atual: number } | null>(null);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const linhas = texto.split('\n').filter(l => l.trim().includes('@'));
+
+        if (linhas.length === 0) return;
+
+        setEnviando(true);
+        setProgresso({ total: linhas.length, atual: 0 });
+
+        for (const linha of linhas) {
+            const emailMatch = linha.match(/[\w.-]+@[\w.-]+\.[\w.-]+/);
+            if (!emailMatch) continue;
+
+            const email = emailMatch[0].toLowerCase().trim();
+            // O nome será preenchido pelo prefixo do e-mail no backend ou pelo MSAL no login
+            await aoCadastrar({ nome: '', email });
+            setProgresso(prev => prev ? { ...prev, atual: prev.atual + 1 } : null);
+        }
+
+        await recarregar();
+        setEnviando(false);
+        setProgresso(null);
+        setTexto('');
+        aoFechar();
+    };
+
+    return (
+        <Modal aberto={aberto} aoFechar={aoFechar} titulo="Convites em Lote">
+            <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="bg-primary/5 border border-primary/10 rounded-xl p-4">
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                        Cole uma lista de e-mails institucionais (um por linha). O sistema autorizará o acesso de todos automaticamente.
+                        <br /><br />
+                        <strong>Formatos aceitos:</strong>
+                        <br />- nome@unieuro.com.br
+                        <br />- outro@unieuro.edu.br
+                    </p>
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1">Lista de Convites</label>
+                    <textarea
+                        value={texto}
+                        onChange={e => setTexto(e.target.value)}
+                        placeholder="Ex: mateus@unieuro.com.br&#10;lucia@unieuro.edu.br"
+                        className="w-full h-48 bg-background border border-border rounded-xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all resize-none"
+                    />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-2">
+                    <button
+                        type="button"
+                        onClick={aoFechar}
+                        className="px-4 py-2 rounded-xl text-sm font-bold text-muted-foreground hover:bg-muted transition-all"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        type="submit"
+                        disabled={enviando || !texto.trim()}
+                        className="bg-primary text-primary-foreground px-6 py-2 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:opacity-90 transition-all flex items-center gap-2 disabled:opacity-50"
+                    >
+                        {enviando ? (
+                            <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                {progresso ? `Enviando (${progresso.atual}/${progresso.total})` : 'Enviando...'}
+                            </>
+                        ) : (
+                            <>Enviar Convites</>
+                        )}
+                    </button>
+                </div>
+            </form>
+        </Modal>
+    );
 }
 
 // ─── Componente: ToastContainer ───────────────────────────────────────────────
@@ -210,7 +343,12 @@ function ToastContainer({ toasts }: { toasts: ToastState[] }) {
 interface LinhaMembroProps {
     membro: Membro;
     salvando: boolean;
+    selecionado: boolean;
+    onToggleSelect: (id: string, isShift?: boolean) => void;
     onAlterarRole: (membro: Membro, role: string) => void;
+    onAlternarFuncoes: (membro: Membro, funcoes: string[]) => void;
+    onAlterarEquipe: (membroId: string, equipeId: string | null) => void;
+    equipes: any[];
     onAlternarStatus: (membro: Membro) => void;
     onSolicitarExclusao: (membro: Membro) => void;
 }
@@ -218,90 +356,243 @@ interface LinhaMembroProps {
 function LinhaMembro({
     membro,
     salvando,
+    selecionado,
+    onToggleSelect,
     onAlterarRole,
+    onAlternarFuncoes,
+    onAlterarEquipe,
+    equipes,
     onAlternarStatus,
     onSolicitarExclusao,
 }: LinhaMembroProps) {
+    const [menuFuncoesAberto, setMenuFuncoesAberto] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    const funcoesDisponiveis = [
+        'Frontend', 'Backend', 'Fullstack', 'Mobile', 'UI/UX', 'UX Research',
+        'DevOps', 'QA/Testes', 'Product Owner', 'Scrum Master', 'Data Science'
+    ];
+
+    // Encontra equipes que representam Grupo A e Grupo B
+    const equipeA = equipes.find(e => e.grupo_nome?.toLowerCase().includes('grupo a') || e.grupo_nome === 'A');
+    const equipeB = equipes.find(e => e.grupo_nome?.toLowerCase().includes('grupo b') || e.grupo_nome === 'B');
+
+    const isGrupoA = membro.grupo_nome?.toLowerCase().includes('grupo a') || membro.grupo_nome === 'A';
+    const isGrupoB = membro.grupo_nome?.toLowerCase().includes('grupo b') || membro.grupo_nome === 'B';
+
+    // Fecha menu ao clicar fora
+    useEffect(() => {
+        function handleClickFora(event: MouseEvent) {
+            if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+                setMenuFuncoesAberto(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickFora);
+        return () => document.removeEventListener('mousedown', handleClickFora);
+    }, []);
+
+    const toggleFuncao = (funcao: string) => {
+        const jaPossui = membro.funcoes.includes(funcao);
+        const novas = jaPossui
+            ? membro.funcoes.filter(f => f !== funcao)
+            : [...membro.funcoes, funcao];
+        onAlternarFuncoes(membro, novas);
+    };
+
     return (
         <div
-            className={`grid grid-cols-12 gap-4 p-4 items-center hover:bg-accent/50 transition-colors ${salvando ? 'opacity-60 pointer-events-none' : ''}`}
+            className={`grid grid-cols-12 gap-4 p-4 items-center border-b border-border/50 hover:bg-muted/30 transition-colors ${salvando ? 'opacity-60 pointer-events-none' : ''} ${selecionado ? 'bg-primary/5' : ''}`}
             aria-busy={salvando}
         >
+            {/* Seleção */}
+            <div className="col-span-1 flex justify-center">
+                <button
+                    onClick={(e) => onToggleSelect(membro.id, e.shiftKey)}
+                    className="text-muted-foreground/30 hover:text-primary transition-colors focus:outline-none"
+                    aria-label={`Selecionar ${membro.nome}`}
+                >
+                    {selecionado ? <CheckSquare size={18} className="text-primary" /> : <Square size={18} />}
+                </button>
+            </div>
+
             {/* Membro */}
-            <div className="col-span-5 sm:col-span-4 flex items-center gap-3">
+            <div className="col-span-2 flex items-center gap-3">
                 <Avatar nome={membro.nome} fotoPerfil={membro.foto_perfil} tamanho="md" />
                 <div className="min-w-0">
-                    <p className="font-bold text-card-foreground text-sm truncate leading-tight">
+                    <p className="font-semibold text-foreground text-sm truncate leading-tight">
                         {membro.nome}
                     </p>
-                    <div className="flex flex-col gap-0.5 mt-0.5">
-                        <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
-                            <Mail className="w-3 h-3" /> {membro.email}
-                        </p>
-                        {(membro.equipe_nome || membro.grupo_nome) && (
-                            <p className="text-[10px] text-primary font-medium truncate uppercase tracking-tight">
-                                {membro.grupo_nome ?? ''}
-                                {membro.equipe_nome ? ` • ${membro.equipe_nome}` : ''}
-                            </p>
-                        )}
-                    </div>
+                    <p className="text-[11px] text-muted-foreground truncate opacity-70">
+                        {membro.email.split('@')[0]}
+                    </p>
                 </div>
             </div>
 
-            {/* Role */}
-            <div className="col-span-3 sm:col-span-3">
-                <div className="relative w-full max-w-[180px]">
-                    <Shield className="w-3.5 h-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <select
-                        aria-label={`Papel de ${membro.nome}`}
-                        className="w-full bg-background border border-input rounded-lg pl-8 pr-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary hover:border-primary/50 transition-colors appearance-none cursor-pointer"
-                        value={membro.role}
-                        onChange={e => onAlterarRole(membro, e.target.value)}
+            {/* Role / Papel */}
+            <div className="col-span-2">
+                <select
+                    aria-label={`Papel de ${membro.nome}`}
+                    className="w-full bg-muted/20 border border-border/50 rounded-lg px-2 py-1.5 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer"
+                    value={membro.role}
+                    onChange={e => onAlterarRole(membro, e.target.value)}
+                >
+                    <option value="VISITANTE">Visitante</option>
+                    <option value="MEMBRO">Membro</option>
+                    <option value="LIDER_EQUIPE">Líder Equipe</option>
+                    <option value="LIDER_GRUPO">Líder Grupo</option>
+                    <option value="ADMIN">Admin</option>
+                </select>
+            </div>
+
+            {/* Funcoes */}
+            <div className="col-span-2 relative" ref={containerRef}>
+                <div
+                    onClick={() => setMenuFuncoesAberto(!menuFuncoesAberto)}
+                    className="flex items-center justify-between p-1.5 border border-border/50 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                >
+                    <div className="flex flex-wrap gap-1 truncate text-left">
+                        {membro.funcoes.length === 0 ? (
+                            <span className="text-[10px] text-muted-foreground/40 italic">Sem Função</span>
+                        ) : (
+                            membro.funcoes.slice(0, 1).map(f => (
+                                <span key={f} className="bg-primary/5 text-primary text-[9px] font-bold px-1.5 py-0.5 rounded border border-primary/10 uppercase">
+                                    {f}
+                                </span>
+                            ))
+                        )}
+                        {membro.funcoes.length > 1 && <span className="text-[10px] font-bold text-muted-foreground">+{membro.funcoes.length - 1}</span>}
+                    </div>
+                </div>
+
+                {menuFuncoesAberto && (
+                    <div className="absolute top-full left-0 mt-1 w-48 bg-card border border-border shadow-xl rounded-lg p-1 z-50">
+                        <div className="max-h-48 overflow-y-auto custom-scrollbar">
+                            {funcoesDisponiveis.map(f => {
+                                const ativo = membro.funcoes.includes(f);
+                                return (
+                                    <button
+                                        key={f}
+                                        onClick={(e) => { e.stopPropagation(); toggleFuncao(f); }}
+                                        className={`w-full text-left px-3 py-1.5 rounded-md text-[11px] font-medium transition-colors flex items-center justify-between ${ativo ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+                                    >
+                                        {f} {ativo && <Check size={10} />}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Grupo */}
+            <div className="col-span-1 flex justify-center">
+                <div className="flex bg-muted/20 p-0.5 rounded-lg border border-border/50">
+                    <button
+                        onClick={() => onAlterarEquipe(membro.id, isGrupoA ? null : (equipeA?.id || null))}
+                        title={equipeA?.nome || 'Grupo A'}
+                        disabled={!equipeA}
+                        className={`w-8 py-1 rounded-md text-[10px] font-bold transition-all ${isGrupoA ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted/50'}`}
                     >
-                        <option value="VISITANTE">Visitante</option>
-                        <option value="MEMBRO">Membro</option>
-                        <option value="LIDER_EQUIPE">Líder Equipe</option>
-                        <option value="LIDER_GRUPO">Líder Grupo</option>
-                        <option value="ADMIN">Admin Geral</option>
-                    </select>
+                        A
+                    </button>
+                    <button
+                        onClick={() => onAlterarEquipe(membro.id, isGrupoB ? null : (equipeB?.id || null))}
+                        title={equipeB?.nome || 'Grupo B'}
+                        disabled={!equipeB}
+                        className={`w-8 py-1 rounded-md text-[10px] font-bold transition-all ${isGrupoB ? 'bg-indigo-500 text-white shadow-sm' : 'text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted/50'}`}
+                    >
+                        B
+                    </button>
                 </div>
             </div>
 
             {/* Status */}
-            <div className="col-span-2">
-                {membro.ativo
-                    ? <Emblema texto="Ativo" variante="verde" />
-                    : <Emblema texto="Inativo" variante="vermelho" />
-                }
+            <div className="col-span-2 flex justify-center">
+                <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${membro.ativo ? 'bg-emerald-500' : 'bg-muted-foreground/20'}`} />
+                    <span className={`text-[10px] font-medium uppercase tracking-wider ${membro.ativo ? 'text-emerald-500' : 'text-muted-foreground/40'}`}>
+                        {membro.ativo ? 'Ativo' : 'Offline'}
+                    </span>
+                </div>
             </div>
 
             {/* Ações */}
             <div className="col-span-2 flex items-center justify-end gap-2">
                 <button
                     onClick={() => onAlternarStatus(membro)}
-                    aria-label={membro.ativo ? `Pausar ${membro.nome}` : `Ativar ${membro.nome}`}
-                    className={`
-                        min-w-[90px] px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all
-                        ${membro.ativo
-                            ? 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 border border-amber-500/10'
-                            : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/10'
-                        }
-                    `}
+                    className={`min-w-[80px] flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${membro.ativo ? 'bg-amber-500/5 text-amber-500 border-amber-500/10 hover:bg-amber-500/10' : 'bg-emerald-500/5 text-emerald-500 border-emerald-500/10 hover:bg-emerald-500/10'}`}
                 >
-                    {salvando
-                        ? <Loader2 className="w-3 h-3 animate-spin" />
-                        : membro.ativo
-                            ? <><X className="w-3 h-3" /> Pausar</>
-                            : <><Check className="w-3 h-3" /> Ativar</>
-                    }
+                    {salvando ? <Loader2 size={12} className="animate-spin" /> : (membro.ativo ? <X size={12} className="opacity-50" /> : <Check size={12} className="opacity-50" />)}
+                    {membro.ativo ? 'Pausar' : 'Ativar'}
                 </button>
-
                 <button
                     onClick={() => onSolicitarExclusao(membro)}
-                    aria-label={`Remover acesso de ${membro.nome}`}
-                    className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/20 transition-all border border-transparent hover:border-red-500/20"
+                    className="p-1.5 rounded-lg text-muted-foreground/40 hover:text-red-500 hover:bg-red-500/5 transition-colors"
                 >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 size={16} />
+                </button>
+            </div>
+        </div>
+    );
+}
+
+// ─── Componente: BulkActions ──────────────────────────────────────────────────
+
+interface BulkActionsProps {
+    selecionados: Set<string>;
+    onClear: () => void;
+    onBulkUpdate: (tipo: 'arquivar' | 'role', valor?: string) => void;
+    onExport: () => void;
+}
+
+function BulkActions({ selecionados, onClear, onBulkUpdate, onExport }: BulkActionsProps) {
+    if (selecionados.size === 0) return null;
+
+    return (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-card border border-primary/20 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)] rounded-2xl px-6 py-4 flex items-center gap-6 animate-in slide-in-from-bottom-8 duration-500 glassmorphism">
+            <div className="flex items-center gap-3 border-r border-border pr-6">
+                <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">
+                    {selecionados.size}
+                </div>
+                <span className="text-sm font-bold text-foreground">Selecionados</span>
+                <button
+                    onClick={onClear}
+                    className="ml-2 text-xs text-muted-foreground hover:text-primary underline transition-colors"
+                >
+                    Limpar
+                </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+                <button
+                    onClick={() => onBulkUpdate('arquivados' as any)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition-all"
+                >
+                    <Archive size={14} /> Arquivar/Ativar
+                </button>
+
+                <div className="relative group/bulk-role">
+                    <button className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-primary/10 text-primary hover:bg-primary/20 transition-all">
+                        <Shield size={14} /> Alterar Cargo <ChevronDown size={14} />
+                    </button>
+                    <div className="absolute bottom-full left-0 mb-2 w-48 bg-card border border-border rounded-xl shadow-xl overflow-hidden hidden group-hover/bulk-role:block animate-in fade-in slide-in-from-bottom-2">
+                        {['VISITANTE', 'MEMBRO', 'LIDER_EQUIPE', 'LIDER_GRUPO', 'ADMIN'].map(role => (
+                            <button
+                                key={role}
+                                onClick={() => onBulkUpdate('role', role)}
+                                className="w-full text-left px-4 py-2 hover:bg-accent text-xs font-medium transition-colors"
+                            >
+                                {role === 'ADMIN' ? 'Administrador' : role.replace('_', ' ')}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <button
+                    onClick={onExport}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-accent text-accent-foreground hover:opacity-80 transition-all"
+                >
+                    <Download size={14} /> Exportar CSV
                 </button>
             </div>
         </div>
@@ -313,11 +604,12 @@ function LinhaMembro({
 interface ModalCadastroProps {
     aberto: boolean;
     aoFechar: () => void;
-    aoCadastrar: (email: string, role: string) => Promise<{ sucesso: boolean }>;
+    aoCadastrar: (email: string, role: string) => Promise<{ sucesso: boolean; erro?: string }>;
 }
 
 function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar }: ModalCadastroProps) {
-    const [email, setEmail] = useState('');
+    const [usuarioEmail, setUsuarioEmail] = useState('');
+    const [dominio, setDominio] = useState('@unieuro.com.br');
     const [role, setRole] = useState('MEMBRO');
     const [salvando, setSalvando] = useState(false);
     const [erro, setErro] = useState<string | null>(null);
@@ -325,7 +617,8 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar }: ModalCadastroPro
     // Limpa o formulário ao abrir
     useEffect(() => {
         if (aberto) {
-            setEmail('');
+            setUsuarioEmail('');
+            setDominio('@unieuro.com.br');
             setRole('MEMBRO');
             setErro(null);
         }
@@ -333,18 +626,19 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar }: ModalCadastroPro
 
     // Não usa <form> com onSubmit para manter consistência com o padrão shadcn/ui
     const handleSubmit = async () => {
-        if (!email.trim()) return;
+        if (!usuarioEmail.trim()) return;
 
         setSalvando(true);
         setErro(null);
 
-        const res = await aoCadastrar(email, role);
+        const emailCompleto = `${usuarioEmail.trim().toLowerCase()}${dominio}`;
+        const res = await aoCadastrar(emailCompleto, role);
         setSalvando(false);
 
         if (res.sucesso) {
             aoFechar();
         } else {
-            setErro('Erro ao cadastrar membro. Verifique o e-mail e tente novamente.');
+            setErro(res.erro ?? 'Erro ao cadastrar membro. Verifique os dados e tente novamente.');
         }
     };
 
@@ -352,24 +646,33 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar }: ModalCadastroPro
         <Modal aberto={aberto} aoFechar={aoFechar} titulo="Cadastrar Novo Membro" largura="md">
             <div className="space-y-5 py-2">
                 <div className="space-y-2">
-                    <label
-                        htmlFor="email-membro"
-                        className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-1"
-                    >
-                        E-mail Institucional (@{ambiente.dominioInstitucional})
-                    </label>
-                    <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <input
-                            id="email-membro"
-                            type="email"
-                            required
-                            placeholder={`ex: nome.sobrenome@${ambiente.dominioInstitucional}`}
-                            value={email}
-                            onChange={e => setEmail(e.target.value)}
-                            onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-                            className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                        />
+                    <div className="relative group/email">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within/email:text-primary transition-colors z-10" />
+                        <div className="flex items-center w-full bg-background border border-border rounded-xl focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all overflow-hidden">
+                            <input
+                                id="email-membro"
+                                type="text"
+                                required
+                                placeholder="ex: nome.sobrenome"
+                                value={usuarioEmail}
+                                onChange={e => setUsuarioEmail(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+                                className="flex-1 bg-transparent pl-10 pr-2 py-2.5 text-sm focus:outline-none placeholder:text-muted-foreground/40"
+                            />
+                            <div className="flex items-center h-full border-l border-border bg-accent/30 px-3 relative min-w-[130px]">
+                                <select
+                                    value={dominio}
+                                    onChange={e => setDominio(e.target.value)}
+                                    className="bg-transparent text-[13px] text-foreground/70 font-semibold focus:outline-none cursor-pointer appearance-none w-full pr-5"
+                                >
+                                    <option value="@unieuro.com.br">@unieuro.com.br</option>
+                                    <option value="@unieuro.edu.br">@unieuro.edu.br</option>
+                                </select>
+                                <div className="absolute right-2.5 pointer-events-none text-muted-foreground/40">
+                                    <ChevronDown size={14} strokeWidth={2.5} />
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -416,7 +719,7 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar }: ModalCadastroPro
                     </button>
                     <button
                         type="button"
-                        disabled={salvando || !email.trim()}
+                        disabled={salvando || !usuarioEmail.trim()}
                         onClick={handleSubmit}
                         className="bg-primary text-primary-foreground px-6 py-2 rounded-xl text-sm font-bold hover:bg-primary/90 transition-all shadow-sm disabled:opacity-50 flex items-center gap-2"
                     >
@@ -431,6 +734,56 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar }: ModalCadastroPro
     );
 }
 
+// ─── Componente: StatsCards ───────────────────────────────────────────────────
+
+function StatsCards({ membros }: { membros: Membro[] }) {
+    const stats = useMemo(() => {
+        const agora = new Date();
+        const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1);
+
+        const novosEsteMes = membros.filter(m => new Date(m.criado_em) >= inicioMes).length;
+        const totalAtivos = membros.filter(m => m.ativo).length;
+        const totalLideres = membros.filter(m => ['LIDER_EQUIPE', 'LIDER_GRUPO', 'ADMIN'].includes(m.role)).length;
+        const totalVisitantes = membros.filter(m => m.role === 'VISITANTE').length;
+
+        return {
+            total: membros.length,
+            novos: novosEsteMes,
+            ativos: totalAtivos,
+            lideres: totalLideres,
+            visitantes: totalVisitantes
+        };
+    }, [membros]);
+
+    return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {[
+                { label: 'Total de Membros', valor: stats.total, icone: UsersIcon, cor: 'text-primary', bg: 'bg-primary/5', detalhe: stats.novos > 0 ? `+${stats.novos} este mês` : null },
+                { label: 'Membros Ativos', valor: stats.ativos, icone: UserCheck, cor: 'text-emerald-500', bg: 'bg-emerald-500/5', detalhe: stats.total > 0 ? `${Math.round((stats.ativos / stats.total) * 100)}%` : null },
+                { label: 'Lideranças', valor: stats.lideres, icone: Shield, cor: 'text-purple-400', bg: 'bg-purple-400/5', detalhe: 'Líderes & Admins' },
+                { label: 'Visitantes', valor: stats.visitantes, icone: Mail, cor: 'text-amber-500', bg: 'bg-amber-500/5', detalhe: 'Aguardando Papel' },
+            ].map((card) => (
+                <div key={card.label} className="bg-card border border-border rounded-xl p-5 flex items-center gap-4 shadow-sm">
+                    <div className={`w-10 h-10 rounded-lg ${card.bg} ${card.cor} flex items-center justify-center shrink-0`}>
+                        <card.icone size={20} />
+                    </div>
+                    <div className="min-w-0">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">{card.label}</span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-xl font-bold text-foreground">{card.valor}</span>
+                            {card.detalhe && (
+                                <span className="text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                                    {card.detalhe}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
+
 // ─── Componente Principal: GerenciarMembros ───────────────────────────────────
 
 export function GerenciarMembros() {
@@ -442,23 +795,102 @@ export function GerenciarMembros() {
         toasts,
         alterarRole,
         alternarStatus,
+        alterarFuncoes,
+        alterarEquipe,
+        equipes,
         cadastrarMembro,
         removerMembro,
     } = useGerenciarMembros();
 
     const [busca, setBusca] = useState('');
     const buscaDebounced = useDebounce(busca, 300);
+    const [abaAtiva, setAbaAtiva] = useState<'ativos' | 'arquivados'>('ativos');
     const [modalAberto, setModalAberto] = useState(false);
+    const [modalLoteAberto, setModalLoteAberto] = useState(false);
     const [membroParaExcluir, setMembroParaExcluir] = useState<Membro | null>(null);
+    const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
+    const [ultimoIdSelecionado, setUltimoIdSelecionado] = useState<string | null>(null);
 
     const membrosFiltrados = useMemo(() => {
-        if (!buscaDebounced.trim()) return membros;
-        const lower = buscaDebounced.toLowerCase();
-        return membros.filter(m =>
-            (m.nome?.toLowerCase() ?? '').includes(lower) ||
-            (m.email?.toLowerCase() ?? '').includes(lower)
-        );
-    }, [membros, buscaDebounced]);
+        let lista = membros;
+
+        // Filtro por Aba
+        lista = lista.filter(m => abaAtiva === 'ativos' ? m.ativo : !m.ativo);
+
+        // Filtro por Busca
+        if (buscaDebounced.trim()) {
+            const lower = buscaDebounced.toLowerCase();
+            lista = lista.filter(m =>
+                (m.nome?.toLowerCase() ?? '').includes(lower) ||
+                (m.email?.toLowerCase() ?? '').includes(lower)
+            );
+        }
+
+        return lista;
+    }, [membros, buscaDebounced, abaAtiva]);
+
+    const toggleSelecionado = useCallback((id: string, isShiftPressed?: boolean) => {
+        setSelecionados(prev => {
+            const next = new Set(prev);
+
+            if (isShiftPressed && ultimoIdSelecionado) {
+                const idsFiltrados = membrosFiltrados.map(m => m.id);
+                const idxAtual = idsFiltrados.indexOf(id);
+                const idxUltimo = idsFiltrados.indexOf(ultimoIdSelecionado);
+
+                if (idxAtual !== -1 && idxUltimo !== -1) {
+                    const [inicio, fim] = [Math.min(idxAtual, idxUltimo), Math.max(idxAtual, idxUltimo)];
+                    const rangeIds = idsFiltrados.slice(inicio, fim + 1);
+
+                    // Se o último estava selecionado, seleciona o range. Se não, deseleciona.
+                    const selecionando = prev.has(ultimoIdSelecionado);
+                    rangeIds.forEach(rangeId => {
+                        if (selecionando) next.add(rangeId);
+                        else next.delete(rangeId);
+                    });
+
+                    setUltimoIdSelecionado(id);
+                    return next;
+                }
+            }
+
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+
+            setUltimoIdSelecionado(id);
+            return next;
+        });
+    }, [membrosFiltrados, ultimoIdSelecionado]);
+
+    const onBulkUpdate = async (tipo: 'arquivar' | 'role', valor?: string) => {
+        const ids = Array.from(selecionados);
+        const membrosAlvo = membros.filter(m => ids.includes(m.id));
+
+        for (const membro of membrosAlvo) {
+            if (tipo === 'arquivar') await alternarStatus(membro);
+            else if (tipo === 'role' && valor) await alterarRole(membro, valor);
+        }
+        setSelecionados(new Set());
+    };
+
+    const onExportMembers = () => {
+        const ids = Array.from(selecionados);
+        const alvo = membros.filter(m => ids.includes(m.id));
+
+        let csv = 'Nome,Email,Role,Status,Criado Em\n';
+        alvo.forEach(m => {
+            csv += `${m.nome},${m.email},${m.role},${m.ativo ? 'Ativo' : 'Inativo'},${m.criado_em}\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute("download", `membros_selecionados_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
 
     const handleDeletar = async () => {
         if (!membroParaExcluir) return;
@@ -492,28 +924,84 @@ export function GerenciarMembros() {
                     </div>
 
                     <button
+                        onClick={() => setAbaAtiva(prev => prev === 'ativos' ? 'arquivados' : 'ativos')}
+                        title={abaAtiva === 'ativos' ? "Ver Arquivados" : "Ver Ativos"}
+                        className={`
+                            p-2 rounded-xl border transition-all duration-300 relative group/archive
+                            ${abaAtiva === 'arquivados'
+                                ? 'bg-amber-500/10 border-amber-500/30 text-amber-500'
+                                : 'bg-background border-border hover:border-primary/30 text-muted-foreground hover:text-primary'
+                            }
+                        `}
+                    >
+                        <Archive size={18} />
+                        {abaAtiva === 'arquivados' && (
+                            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-500 rounded-full border-2 border-background" />
+                        )}
+                    </button>
+
+                    <button
+                        onClick={() => setModalLoteAberto(true)}
+                        className="w-full sm:w-auto bg-accent hover:bg-accent/80 text-accent-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all"
+                    >
+                        <ListPlus className="w-4 h-4" /> Convites em Lote
+                    </button>
+
+                    <button
                         onClick={() => setModalAberto(true)}
-                        className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-sm"
+                        className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all"
                     >
                         <UserCog className="w-4 h-4" /> Cadastrar Membro
                     </button>
                 </div>
             </CabecalhoFuncionalidade>
 
-            <div className="flex-1 bg-card border border-border rounded-2xl flex flex-col shadow-sm overflow-hidden">
+            <StatsCards membros={membros} />
+
+
+            <div className="flex-1 bg-card border border-border rounded-xl flex flex-col shadow-sm overflow-hidden">
                 {/* Cabeçalho da tabela */}
-                <div className="grid grid-cols-12 gap-4 p-4 border-b border-border bg-muted/80 text-xs font-bold text-muted-foreground uppercase tracking-widest">
-                    <div className="col-span-5 sm:col-span-4">Membro</div>
-                    <div className="col-span-3 sm:col-span-3">Nível de Acesso (Role)</div>
-                    <div className="col-span-2">Status</div>
-                    <div className="col-span-2 text-right">Ações Rápidas</div>
+                <div className="grid grid-cols-12 gap-4 p-4 border-b border-border bg-muted/80 text-xs font-bold text-muted-foreground uppercase tracking-widest items-center">
+                    <div className="col-span-1 flex justify-center">
+                        <button
+                            onClick={() => {
+                                if (selecionados.size === membrosFiltrados.length && membrosFiltrados.length > 0) {
+                                    setSelecionados(new Set());
+                                } else {
+                                    setSelecionados(new Set(membrosFiltrados.map(m => m.id)));
+                                }
+                            }}
+                            className="hover:text-primary transition-colors"
+                        >
+                            {selecionados.size > 0 && selecionados.size === membrosFiltrados.length
+                                ? <CheckSquare size={18} className="text-primary" />
+                                : selecionados.size > 0
+                                    ? <div className="w-[18px] h-[18px] bg-primary rounded flex items-center justify-center text-white"><X size={12} /></div>
+                                    : <Square size={18} />
+                            }
+                        </button>
+                    </div>
+                    <div className="col-span-2 pl-2">Membro</div>
+                    <div className="col-span-2">Papel (Role)</div>
+                    <div className="col-span-2">Função (Múltiplas)</div>
+                    <div className="col-span-1 text-center">GRUPO</div>
+                    <div className="col-span-2 text-center">Status</div>
+                    <div className="col-span-2 text-right">Ações</div>
                 </div>
 
                 {/* Corpo da tabela */}
                 <div className="flex-1 overflow-y-auto divide-y divide-border">
                     {membrosFiltrados.length === 0 ? (
-                        <div className="p-12 text-center text-muted-foreground min-h-[300px] flex flex-col items-center justify-center">
-                            <p>Nenhum membro encontrado na busca.</p>
+                        <div className="p-12 text-center text-muted-foreground min-h-[300px] flex flex-col items-center justify-center gap-3">
+                            <div className="w-12 h-12 rounded-full bg-muted/30 flex items-center justify-center text-muted-foreground/30">
+                                {abaAtiva === 'ativos' ? <UserCheck size={24} /> : <UserX size={24} />}
+                            </div>
+                            <p className="text-sm font-medium">
+                                {busca.trim()
+                                    ? `Nenhum membro encontrado em "${abaAtiva}" para a busca "${busca}".`
+                                    : abaAtiva === 'ativos' ? 'Nenhum membro ativo no sistema.' : 'Nenhum membro arquivado.'
+                                }
+                            </p>
                         </div>
                     ) : (
                         membrosFiltrados.map(membro => (
@@ -521,7 +1009,12 @@ export function GerenciarMembros() {
                                 key={membro.id}
                                 membro={membro}
                                 salvando={salvandoIds.has(membro.id)}
+                                selecionado={selecionados.has(membro.id)}
+                                onToggleSelect={toggleSelecionado}
                                 onAlterarRole={alterarRole}
+                                onAlternarFuncoes={alterarFuncoes}
+                                onAlterarEquipe={alterarEquipe}
+                                equipes={equipes}
                                 onAlternarStatus={alternarStatus}
                                 onSolicitarExclusao={setMembroParaExcluir}
                             />
@@ -536,6 +1029,25 @@ export function GerenciarMembros() {
                 aoCadastrar={cadastrarMembro}
             />
 
+            <ModalConvitesEmLote
+                aberto={modalLoteAberto}
+                aoFechar={() => setModalLoteAberto(false)}
+                aoCadastrar={async (dados) => {
+                    const res = await cadastrarMembro(dados.email, 'MEMBRO');
+                    return res;
+                }}
+                recarregar={async () => {
+                    // O cadastrarMembro já recarrega, mas garantimos
+                }}
+            />
+
+            <BulkActions
+                selecionados={selecionados}
+                onClear={() => setSelecionados(new Set())}
+                onBulkUpdate={onBulkUpdate}
+                onExport={onExportMembers}
+            />
+
             <ConfirmacaoExclusao
                 aberto={!!membroParaExcluir}
                 aoFechar={() => setMembroParaExcluir(null)}
@@ -547,6 +1059,6 @@ export function GerenciarMembros() {
             />
 
             <ToastContainer toasts={toasts} />
-        </div>
+        </div >
     );
 }

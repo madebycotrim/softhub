@@ -16,6 +16,7 @@ export interface Membro {
     equipe_nome: string | null;
     grupo_id: string | null;
     grupo_nome: string | null;
+    funcoes: string[]; // Lista de funções (ex: Frontend, Backend, UX)
 }
 
 export interface ResultadoOperacao {
@@ -43,6 +44,11 @@ function normalizarMembro(m: unknown): Membro {
         equipe_nome: (raw.equipe_nome as string | null) ?? null,
         grupo_id: (raw.grupo_id as string | null) ?? null,
         grupo_nome: (raw.grupo_nome as string | null) ?? null,
+        funcoes: Array.isArray(raw.funcoes)
+            ? raw.funcoes
+            : typeof raw.funcoes === 'string'
+                ? JSON.parse(raw.funcoes || '[]')
+                : [],
     };
 }
 

@@ -3,7 +3,6 @@ import { Search, Mail, Calendar, Users } from 'lucide-react';
 import { Link } from 'react-router';
 import { usarMembros } from './usarMembros';
 import { Avatar } from '../../compartilhado/componentes/Avatar';
-import { Emblema } from '../../compartilhado/componentes/Emblema';
 import { Carregando } from '../../compartilhado/componentes/Carregando';
 import { EstadoVazio } from '../../compartilhado/componentes/EstadoVazio';
 import { formatarDataHora } from '../../utilitarios/formatadores';
@@ -12,13 +11,13 @@ import type { Membro } from './usarMembros';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function getRoleEmblema(role: string) {
+function getRoleLabel(role: string) {
     switch (role) {
-        case 'ADMIN':        return <Emblema texto="Admin"        variante="roxo"     />;
-        case 'LIDER_GRUPO':  return <Emblema texto="Líder Grupo"  variante="amarelo"  />;
-        case 'LIDER_EQUIPE': return <Emblema texto="Líder Equipe" variante="azul"     />;
-        case 'MEMBRO':       return <Emblema texto="Membro"       variante="cinza"    />;
-        default:             return <Emblema texto={role}                              />;
+        case 'ADMIN': return "Administração";
+        case 'LIDER_GRUPO': return "Liderança de Grupo";
+        case 'LIDER_EQUIPE': return "Liderança de Equipe";
+        case 'MEMBRO': return "Membros";
+        default: return "Visitantes";
     }
 }
 
@@ -40,10 +39,6 @@ function CardMembro({ membro }: { membro: Membro }) {
         >
             <div className="flex items-start justify-between mb-4">
                 <Avatar nome={membro.nome} fotoPerfil={membro.foto_perfil} tamanho="lg" />
-                <div className="flex flex-col items-end gap-2">
-                    {getRoleEmblema(membro.role)}
-                    {!membro.ativo && <Emblema texto="Inativo" variante="vermelho" />}
-                </div>
             </div>
 
             <div className="mb-4">
@@ -80,17 +75,37 @@ export function DiretorioMembros() {
     const { membros, carregando, erro } = usarMembros();
     const [busca, setBusca] = useState('');
 
-    const membrosFiltrados = useMemo(() => {
-        if (!busca.trim()) return membros;
-        const lowerBusca = busca.toLowerCase();
-        return membros.filter(m =>
-            m.nome.toLowerCase().includes(lowerBusca) ||
-            m.email.toLowerCase().includes(lowerBusca)
-        );
+    const gruposHierarquia = useMemo(() => {
+        const ordem = ['ADMIN', 'LIDER_GRUPO', 'LIDER_EQUIPE', 'MEMBRO', 'VISITANTE'];
+
+        // 1. Filtrar Ativos e por Busca
+        const ativos = membros.filter(m => m.ativo);
+        const filtrados = busca.trim()
+            ? ativos.filter(m =>
+                m.nome.toLowerCase().includes(busca.toLowerCase()) ||
+                m.email.toLowerCase().includes(busca.toLowerCase())
+            )
+            : ativos;
+
+        // 2. Agrupar por Role
+        const grupos: Record<string, Membro[]> = {};
+        filtrados.forEach(m => {
+            if (!grupos[m.role]) grupos[m.role] = [];
+            grupos[m.role].push(m);
+        });
+
+        // 3. Ordenar chaves pela hierarquia
+        return ordem
+            .filter(role => grupos[role] && grupos[role].length > 0)
+            .map(role => ({
+                role,
+                titulo: getRoleLabel(role),
+                membros: grupos[role]
+            }));
     }, [membros, busca]);
 
     if (carregando) return <Carregando />;
-    if (erro)       return <p className="text-destructive text-center py-8">{erro}</p>;
+    if (erro) return <p className="text-destructive text-center py-8">{erro}</p>;
     if (membros.length === 0) return <EstadoVazio titulo="Nenhum membro encontrado." />;
 
     return (
@@ -115,15 +130,30 @@ export function DiretorioMembros() {
                 </div>
             </CabecalhoFuncionalidade>
 
-            {membrosFiltrados.length === 0 ? (
+            {gruposHierarquia.length === 0 ? (
                 <EstadoVazio
                     titulo="Nenhum resultado"
-                    descricao={`Nenhum membro encontrado com o termo "${busca}".`}
+                    descricao={membros.filter(m => m.ativo).length === 0 ? "Nenhum membro ativo no sistema." : `Nenhum membro encontrado com o termo "${busca}".`}
                 />
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {membrosFiltrados.map(membro => (
-                        <CardMembro key={membro.id} membro={membro} />
+                <div className="space-y-12">
+                    {gruposHierarquia.map(grupo => (
+                        <div key={grupo.role} className="space-y-6">
+                            <div className="flex items-center gap-4">
+                                <h3 className="text-sm font-black text-muted-foreground uppercase tracking-[0.2em] whitespace-nowrap">
+                                    {grupo.titulo}
+                                </h3>
+                                <div className="h-px w-full bg-gradient-to-r from-border/60 to-transparent" />
+                                <span className="bg-muted px-2 py-0.5 rounded-md text-[10px] font-bold text-muted-foreground">
+                                    {grupo.membros.length}
+                                </span>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                                {grupo.membros.map(membro => (
+                                    <CardMembro key={membro.id} membro={membro} />
+                                ))}
+                            </div>
+                        </div>
                     ))}
                 </div>
             )}

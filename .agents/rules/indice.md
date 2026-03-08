@@ -21,12 +21,12 @@ trigger: always_on
 5. workflows-03.md   ← fluxos 17 a 23 (perfil, dashboard, retrospectiva, permissão, constantes, tema, logs)
 6. workflows-04.md   ← fluxos 24 a 27 (justificativas de ponto, comentários em tarefas, filtros kanban, gestão de equipes/grupos)
 7. workflows-05.md   ← fluxos 28 a 31 (bootstrap admin, histórico de tarefa, exportação CSV, checklist)
-8. gamificacao.md    ← XP, níveis, streak, badges — implementar só após sistema interno completo
 ```
 
 **Antes de escrever qualquer código:** leia rules.md e rules-contexto.md.
 **Antes de implementar um módulo:** leia o workflow correspondente.
-**Gamificação:** implementar por último — o sistema interno precisa estar completo antes.
+**Antes de escrever qualquer código:** leia rules.md e rules-contexto.md.
+**Antes de implementar um módulo:** leia o workflow correspondente.
 
 ---
 
@@ -41,7 +41,7 @@ trigger: always_on
 | `workflows-03.md` | Fluxos 17–23: editar perfil, dashboard, retrospectiva, usarPermissao, constantes visuais, dark/light mode, painel de logs |
 | `workflows-04.md` | Fluxos 24–27: justificativas de ponto, comentários em tarefas, filtros e busca no kanban, gestão de equipes e grupos |
 | `workflows-05.md` | Fluxos 28–31: bootstrap do primeiro admin, histórico visível da tarefa, exportação CSV de ponto, checklist de tarefas |
-| `gamificacao.md` | XP, níveis, streak, badges, ranking, rotas e hooks de gamificação — implementar após sistema interno completo |
+| `workflows-05.md` | Fluxos 28–31: bootstrap do primeiro admin, histórico visível da tarefa, exportação CSV de ponto, checklist de tarefas |
 
 ---
 
@@ -67,11 +67,6 @@ Fábrica de Software
     ├── 🏢 Grupos e Equipes
     ├── 📢 Avisos + Notificações
     ├── 📊 Dashboard + Gráficos
-    ├── 🎮 Gamificação (implementar por último)
-    │   ├── XP + Níveis (Trainee → Tech Lead)
-    │   ├── Streak de pontualidade/produtividade
-    │   ├── Badges / Conquistas
-    │   └── Ranking mensal por equipe
     └── 🛡️ Admin
         ├── Gerenciar Membros
         ├── Publicar Projetos

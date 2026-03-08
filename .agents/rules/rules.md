@@ -210,22 +210,10 @@ ADMIN > LIDER_GRUPO > LIDER_EQUIPE > MEMBRO > VISITANTE
 ❌ WebSocket (polling a cada 30s resolve)
 ❌ Multi-tenant
 ❌ Upload de arquivos (use links externos)
+❌ Gamificação (XP, níveis, ranking e conquistas)
 ```
 
 ---
-
-## REGRA 15 — Gamificação: sempre no backend
-
-XP, níveis, streak e conquistas são calculados e concedidos **sempre no backend** via `servico-gamificacao.ts`.
-Frontend apenas exibe os valores — nunca calcula, nunca concede.
-
-- `concederXP()` → chamado nas rotas de tarefas (concluir) e ponto (entrada)
-- `atualizarStreak()` → chamado junto com `concederXP()`
-- `verificarConquistas()` → chamado após `concederXP()`, nunca isoladamente
-- Badge desbloqueado é **permanente** — `conquistas_usuarios` é imutável (sem UPDATE, sem DELETE)
-- Gamificação de desenvolvedores (por contribuição de código) fica adiada até integração com GitHub
-
-> Ver `gamificacao.md` para especificação completa.
 
 ---
 
@@ -249,8 +237,6 @@ Frontend apenas exibe os valores — nunca calcula, nunca concede.
 [ ] Três estados tratados no frontend (carregando, erro, vazio)?
 [ ] Mensagem de erro amigável em PT-BR na UI?
 [ ] Nenhuma notificação criada no frontend?
-[ ] XP/nível/streak calculados no backend (nunca no frontend)?
-[ ] conquistas_usuarios não sofreu UPDATE ou DELETE?
 [ ] Comentários notificam responsáveis e quem já comentou (sem duplicatas, sem notificar o autor)?
 [ ] Justificativa de ponto notifica líder ao enviar e membro ao processar?
 [ ] Exportação CSV gerada no backend — nunca no frontend?

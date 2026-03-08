@@ -29,27 +29,27 @@ export function ConfirmacaoExclusao({
 }: ConfirmacaoExclusaoProps) {
     return (
         <Modal aberto={aberto} aoFechar={aoFechar} titulo={titulo} largura="md">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
-                <div className="flex shrink-0 items-center justify-center w-12 h-12 rounded-full bg-destructive/10 sm:h-10 sm:w-10">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 mb-8">
+                <div className="flex shrink-0 items-center justify-center w-12 h-12 rounded-2xl bg-destructive/10 sm:h-12 sm:w-12 border border-destructive/20 shadow-inner">
                     <AlertTriangle className="h-6 w-6 text-destructive shrink-0" aria-hidden="true" />
                 </div>
                 <div>
-                    <p className="text-muted-foreground text-sm">{descricao}</p>
+                    <p className="text-muted-foreground text-[13.5px] leading-relaxed font-medium">{descricao}</p>
                 </div>
             </div>
 
             {children && (
-                <div className="mb-6 w-full text-left">
+                <div className="mb-8 w-full text-left bg-accent/20 p-4 rounded-2xl border border-border/40">
                     {children}
                 </div>
             )}
 
-            <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end mt-6">
+            <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end mt-4">
                 <button
                     type="button"
                     onClick={aoFechar}
                     disabled={carregando}
-                    className="inline-flex justify-center w-full sm:w-auto px-4 py-2 text-sm font-medium text-muted-foreground bg-transparent border border-border rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-background transition-colors disabled:opacity-50"
+                    className="inline-flex justify-center w-full sm:w-auto px-6 py-2.5 text-sm font-bold text-muted-foreground bg-transparent border border-border/60 rounded-xl hover:bg-accent hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all disabled:opacity-50"
                 >
                     Cancelar
                 </button>
@@ -57,7 +57,7 @@ export function ConfirmacaoExclusao({
                     type="button"
                     onClick={aoConfirmar}
                     disabled={carregando}
-                    className="inline-flex justify-center items-center w-full sm:w-auto px-4 py-2 text-sm font-medium text-destructive-foreground bg-destructive rounded-md hover:bg-destructive/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-destructive focus:ring-offset-background transition-colors disabled:opacity-50"
+                    className="inline-flex justify-center items-center w-full sm:w-auto px-6 py-2.5 text-sm font-bold text-white bg-destructive rounded-xl hover:bg-destructive/90 hover:scale-[1.02] shadow-[0_10px_20px_-5px_rgba(239,68,68,0.3)] focus:outline-none focus:ring-2 focus:ring-destructive/20 transition-all active:scale-[0.98] disabled:opacity-50"
                 >
                     {carregando ? (
                         <>

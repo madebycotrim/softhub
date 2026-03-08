@@ -222,6 +222,11 @@ rotasUsuarios.post('/', async (c, next) => {
 
     const emailLimpo = email.toLowerCase().trim();
 
+    // Validação de domínio obrigatória (Regra de Negócio)
+    if (!emailLimpo.endsWith('@unieuro.com.br') && !emailLimpo.endsWith('@unieuro.edu.br')) {
+        return c.json({ erro: 'Apenas e-mails @unieuro.com.br ou @unieuro.edu.br são permitidos.' }, 400);
+    }
+
     try {
         const existente = await DB.prepare('SELECT id FROM usuarios WHERE email = ?')
             .bind(emailLimpo)
@@ -233,10 +238,12 @@ rotasUsuarios.post('/', async (c, next) => {
 
         const novoId = crypto.randomUUID();
 
+        const nomePadrao = emailLimpo.split('@')[0];
+
         const insertResult = await DB.prepare(
             'INSERT INTO usuarios (id, nome, email, role, ativo) VALUES (?, ?, ?, ?, 1)'
         )
-            .bind(novoId, 'Convidado', emailLimpo, role)
+            .bind(novoId, nomePadrao, emailLimpo, role)
             .run();
 
         console.log('[POST /usuarios] INSERT meta:', JSON.stringify(insertResult.meta));
@@ -275,7 +282,7 @@ rotasUsuarios.post('/', async (c, next) => {
             sucesso: true,
             usuario: {
                 id: novoId,
-                nome: 'Convidado',
+                nome: nomePadrao,
                 email: emailLimpo,
                 role,
                 ativo: true,
@@ -286,11 +293,60 @@ rotasUsuarios.post('/', async (c, next) => {
                 equipe_nome: null,
                 grupo_id: null,
                 grupo_nome: null,
+                funcoes: [],
             },
         }, 201);
     } catch (erro) {
         console.error('[ERRO DB] POST /api/usuarios', erro);
         return c.json({ erro: 'Falha ao cadastrar membro.' }, 500);
+    }
+});
+
+// ─── PATCH /:id/funcoes — Alterar Funções (apenas ADMIN) ─────────────────────
+
+rotasUsuarios.patch('/:id/funcoes', autenticacaoRequerida(), async (c) => {
+    const { DB } = c.env;
+    const usuarioLogado = c.get('usuario') as any;
+    const id = c.req.param('id');
+
+    if (usuarioLogado.role !== 'ADMIN') {
+        return c.json({ erro: 'Acesso negado.' }, 403);
+    }
+
+    let funcoes: string[];
+    try {
+        const body = await c.req.json();
+        funcoes = body.funcoes;
+    } catch {
+        return c.json({ erro: 'Corpo da requisição inválido.' }, 400);
+    }
+
+    if (!Array.isArray(funcoes)) {
+        return c.json({ erro: 'O campo "funcoes" deve ser um array.' }, 400);
+    }
+
+    try {
+        const funcoesJson = JSON.stringify(funcoes);
+        await DB.prepare('UPDATE usuarios SET funcoes = ? WHERE id = ?').bind(funcoesJson, id).run();
+
+        await registrarLog(DB, {
+            usuarioId: usuarioLogado.id,
+            usuarioNome: usuarioLogado.nome,
+            usuarioEmail: usuarioLogado.email,
+            usuarioRole: usuarioLogado.role,
+            acao: 'MEMBRO_FUNCOES_ALTERADAS',
+            modulo: 'admin',
+            descricao: `Funções do membro ${id} atualizadas: ${funcoes.join(', ')}`,
+            ip: c.req.header('CF-Connecting-IP') ?? '',
+            entidadeTipo: 'usuarios',
+            entidadeId: id,
+            dadosNovos: { funcoes },
+        });
+
+        return c.json({ sucesso: true });
+    } catch (erro) {
+        console.error('[ERRO DB] PATCH /api/usuarios/:id/funcoes', erro);
+        return c.json({ erro: 'Não foi possível alterar as funções.' }, 500);
     }
 });
 

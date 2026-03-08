@@ -1,30 +1,40 @@
+const ChaveTemaStorage = "vite-ui-theme";
+
 /**
  * Lê do localStorage e aplica a classe 'dark' no <html> para gerenciar
  * renderização inicial (pode ser chamado do main.tsx para prevenção de flash of unstyled content)
  */
 export function aplicarTemaSalvo(): void {
-    const isDark = localStorage.getItem('tema_escuro') === 'true'; // Padrão agora é claro
+    const tema = localStorage.getItem(ChaveTemaStorage) || 'system';
 
-    if (isDark) {
-        document.documentElement.classList.add('dark');
-    } else {
-        document.documentElement.classList.remove('dark');
+    const root = window.document.documentElement;
+    root.classList.remove("light", "dark");
+
+    if (tema === "system") {
+        const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+            .matches
+            ? "dark"
+            : "light";
+
+        root.classList.add(systemTheme);
+        return;
     }
+
+    root.classList.add(tema);
 }
 
 /**
  * Alterna modo escuro/claro e salva escolha do usuário, aplicando a classe CSS.
+ * Nota: Esta função é um fallback, o ideal é usar o setTema do ContextoTema.
  */
-export function alternarTema(): boolean {
-    const hasDark = document.documentElement.classList.contains('dark');
+export function alternarTema(): string {
+    const root = window.document.documentElement;
+    const isDark = root.classList.contains('dark');
+    const novoTema = isDark ? 'light' : 'dark';
 
-    if (hasDark) {
-        document.documentElement.classList.remove('dark');
-        localStorage.setItem('tema_escuro', 'false');
-        return false; // Agora está no modo claro
-    } else {
-        document.documentElement.classList.add('dark');
-        localStorage.setItem('tema_escuro', 'true');
-        return true; // Agora está no modo escuro
-    }
+    root.classList.remove('light', 'dark');
+    root.classList.add(novoTema);
+    localStorage.setItem(ChaveTemaStorage, novoTema);
+
+    return novoTema;
 }

@@ -1,6 +1,7 @@
-import { FolderKanban, Clock, Users, Megaphone, LayoutDashboard, Database, Settings, LogOut, Layers } from 'lucide-react';
+import { FolderKanban, Clock, Users, Megaphone, LayoutDashboard, Database, Settings, LogOut, Layers, Sun, Moon } from 'lucide-react';
 import { useLocation, Link } from 'react-router';
 import { usarAutenticacao } from '../../funcionalidades/autenticacao/usarAutenticacao';
+import { usarTema } from '../../contexto/ContextoTema';
 import { Avatar } from './Avatar';
 import logoUnieuro from '../../assets/logo-unieuro.png';
 import { useState } from 'react';
@@ -11,6 +12,7 @@ export function BarraLateral() {
     const location = useLocation();
     const currentPath = location.pathname;
     const { usuario, sair } = usarAutenticacao();
+    const { tema, setTema } = usarTema();
     const [scannerAberto, setScannerAberto] = useState(false);
 
     const grupos = [
@@ -139,42 +141,62 @@ export function BarraLateral() {
             </nav>
 
             {/* ── Footer / Usuário ── */}
-            {usuario && (
-                <div className="relative z-10 p-3">
-
-                    {/* Divisor com gradiente */}
-                    <div className="h-px mb-3 bg-gradient-to-r from-transparent via-white/[0.07] to-transparent" />
-
-                    <div className="flex items-center gap-2.5 px-2 py-2 rounded-xl hover:bg-white/[0.04] transition-colors duration-200">
-
-                        {/* Avatar */}
-                        <div className="relative shrink-0 group">
-                            <Avatar nome={usuario.nome} fotoPerfil={usuario.foto_perfil || null} tamanho="md" />
-                            <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-sidebar shadow-[0_0_6px_rgba(34,197,94,0.6)]" />
-                        </div>
-
-                        {/* Texto */}
-                        <div className="flex flex-col min-w-0 flex-1">
-                            <span className="text-[13px] font-semibold text-sidebar-foreground truncate leading-none tracking-tight">
-                                {usuario.nome}
-                            </span>
-                            <span className="text-[11px] text-sidebar-foreground/35 lowercase truncate leading-none mt-1">
-                                {usuario.email}
-                            </span>
-                        </div>
-
-                        {/* Sair */}
-                        <button
-                            onClick={sair}
-                            title="Sair"
-                            className="shrink-0 p-1.5 rounded-lg text-sidebar-foreground/20 hover:text-red-400 hover:bg-red-400/10 transition-all duration-200 group/logout"
-                        >
-                            <LogOut size={14} className="transition-transform duration-200 group-hover/logout:translate-x-0.5" />
-                        </button>
-
-                    </div>
+            <div className="relative z-10 p-3">
+                {/* Alternar Tema (Sidebar sync) */}
+                <div className="flex items-center justify-between px-2 mb-3">
+                    <span className="text-[10px] font-black text-sidebar-foreground/20 uppercase tracking-[0.22em]">
+                        Tema
+                    </span>
+                    <button
+                        onClick={() => setTema(tema === 'dark' ? 'light' : 'dark')}
+                        className="p-1.5 rounded-lg text-sidebar-foreground/30 hover:text-primary hover:bg-primary/10 transition-all duration-300 group/theme"
+                        title={tema === 'dark' ? "Mudar para modo claro" : "Mudar para modo escuro"}
+                    >
+                        {tema === 'dark' ? (
+                            <Sun size={14} className="group-hover/theme:rotate-90 transition-transform duration-500" />
+                        ) : (
+                            <Moon size={14} className="group-hover/theme:-rotate-12 transition-transform duration-500" />
+                        )}
+                    </button>
                 </div>
-            )}
+
+                {usuario && (
+                    <>
+
+                        {/* Divisor com gradiente */}
+                        <div className="h-px mb-3 bg-gradient-to-r from-transparent via-white/[0.07] to-transparent" />
+
+                        <div className="flex items-center gap-2.5 px-2 py-2 rounded-xl hover:bg-white/[0.04] transition-colors duration-200">
+
+                            {/* Avatar */}
+                            <div className="relative shrink-0 group">
+                                <Avatar nome={usuario.nome} fotoPerfil={usuario.foto_perfil || null} tamanho="md" />
+                                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-sidebar shadow-[0_0_6px_rgba(34,197,94,0.6)]" />
+                            </div>
+
+                            {/* Texto */}
+                            <div className="flex flex-col min-w-0 flex-1">
+                                <span className="text-[13px] font-semibold text-sidebar-foreground truncate leading-none tracking-tight">
+                                    {usuario.nome}
+                                </span>
+                                <span className="text-[11px] text-sidebar-foreground/35 lowercase truncate leading-none mt-1">
+                                    {usuario.email}
+                                </span>
+                            </div>
+
+                            {/* Sair */}
+                            <button
+                                onClick={sair}
+                                title="Sair"
+                                className="shrink-0 p-1.5 rounded-lg text-sidebar-foreground/20 hover:text-red-400 hover:bg-red-400/10 transition-all duration-200 group/logout"
+                            >
+                                <LogOut size={14} className="transition-transform duration-200 group-hover/logout:translate-x-0.5" />
+                            </button>
+
+                        </div>
+                    </>
+                )}
+            </div>
 
             {/* Modal Scanner */}
             <Modal
