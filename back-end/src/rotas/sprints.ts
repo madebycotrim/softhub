@@ -5,7 +5,7 @@ import { registrarLog } from '../servicos/servico-logs';
 const rotasSprints = new Hono<{ Bindings: Env, Variables: { usuario: any } }>();
 
 // Listar sprints de um projeto
-rotasSprints.get('/', autenticacaoRequerida, async (c) => {
+rotasSprints.get('/', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const projetoId = c.req.query('projetoId') || 'p1';
 
@@ -43,7 +43,7 @@ rotasSprints.get('/', autenticacaoRequerida, async (c) => {
 });
 
 // Criar Sprint (Workflow 10)
-rotasSprints.post('/', autenticacaoRequerida, async (c) => {
+rotasSprints.post('/', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const usuario = c.get('usuario') as any;
     const { projeto_id, nome, objetivo, data_inicio, data_fim, velocity_planejado } = await c.req.json();
@@ -88,7 +88,7 @@ rotasSprints.post('/', autenticacaoRequerida, async (c) => {
 });
 
 // Encerrar Sprint
-rotasSprints.post('/:id/encerrar', autenticacaoRequerida, async (c) => {
+rotasSprints.post('/:id/encerrar', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const id = c.req.param('id');
     const usuario = c.get('usuario') as any;
@@ -142,7 +142,7 @@ rotasSprints.post('/:id/encerrar', autenticacaoRequerida, async (c) => {
 });
 
 // Atualizar Retrospectiva (Workflow 19)
-rotasSprints.patch('/:id/retrospectiva', autenticacaoRequerida, async (c) => {
+rotasSprints.patch('/:id/retrospectiva', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const id = c.req.param('id');
     const usuario = c.get('usuario') as any;

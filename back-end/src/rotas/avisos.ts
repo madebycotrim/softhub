@@ -6,7 +6,7 @@ import { criarNotificacoes } from '../servicos/servico-notificacoes';
 const rotasAvisos = new Hono<{ Bindings: Env, Variables: { usuario: any } }>();
 
 // Listar avisos ativos
-rotasAvisos.get('/', autenticacaoRequerida, async (c) => {
+rotasAvisos.get('/', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
 
     try {
@@ -43,7 +43,7 @@ rotasAvisos.get('/', autenticacaoRequerida, async (c) => {
 });
 
 // Criar aviso (Requer líder ou admin, validado em Etapa Superior ou frontend mock)
-rotasAvisos.post('/', autenticacaoRequerida, async (c) => {
+rotasAvisos.post('/', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const usuario = c.get('usuario') as any;
     const { titulo, conteudo, prioridade, expira_em } = await c.req.json();
@@ -87,7 +87,7 @@ rotasAvisos.post('/', autenticacaoRequerida, async (c) => {
 });
 
 // Remover aviso (Soft delete)
-rotasAvisos.delete('/:id', autenticacaoRequerida, async (c) => {
+rotasAvisos.delete('/:id', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const id = c.req.param('id');
     const usuario = c.get('usuario') as any;

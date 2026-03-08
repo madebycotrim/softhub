@@ -8,7 +8,7 @@ const rotasTarefasDetalhes = new Hono<{ Bindings: Env, Variables: { usuario: any
 
 // === COMENTÁRIOS DA TAREFA ===
 
-rotasTarefasDetalhes.get('/:id/comentarios', autenticacaoRequerida, async (c) => {
+rotasTarefasDetalhes.get('/:id/comentarios', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const tarefaId = c.req.param('id');
     try {
@@ -28,7 +28,7 @@ rotasTarefasDetalhes.get('/:id/comentarios', autenticacaoRequerida, async (c) =>
     }
 });
 
-rotasTarefasDetalhes.post('/:id/comentarios', autenticacaoRequerida, async (c) => {
+rotasTarefasDetalhes.post('/:id/comentarios', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const tarefaId = c.req.param('id');
     const { conteudo } = await c.req.json();
@@ -85,7 +85,7 @@ rotasTarefasDetalhes.post('/:id/comentarios', autenticacaoRequerida, async (c) =
     }
 });
 
-rotasTarefasDetalhes.patch('/comentarios/:id', autenticacaoRequerida, async (c) => {
+rotasTarefasDetalhes.patch('/comentarios/:id', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const comentarioId = c.req.param('id');
     const { conteudo } = await c.req.json();
@@ -121,7 +121,7 @@ rotasTarefasDetalhes.patch('/comentarios/:id', autenticacaoRequerida, async (c) 
     }
 });
 
-rotasTarefasDetalhes.delete('/comentarios/:id', autenticacaoRequerida, async (c) => {
+rotasTarefasDetalhes.delete('/comentarios/:id', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const comentarioId = c.req.param('id');
     const usuario = c.get('usuario') as any;
@@ -157,7 +157,7 @@ rotasTarefasDetalhes.delete('/comentarios/:id', autenticacaoRequerida, async (c)
 
 // === Workflow 29: Histórico da Tarefa ===
 
-rotasTarefasDetalhes.get('/:id/historico', autenticacaoRequerida, async (c) => {
+rotasTarefasDetalhes.get('/:id/historico', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const tarefaId = c.req.param('id');
 
@@ -179,7 +179,7 @@ rotasTarefasDetalhes.get('/:id/historico', autenticacaoRequerida, async (c) => {
 // === Workflow 31: Checklist de Tarefas ===
 
 // Listar itens do checklist
-rotasTarefasDetalhes.get('/:id/checklist', autenticacaoRequerida, async (c) => {
+rotasTarefasDetalhes.get('/:id/checklist', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const tarefaId = c.req.param('id');
     try {
@@ -191,7 +191,7 @@ rotasTarefasDetalhes.get('/:id/checklist', autenticacaoRequerida, async (c) => {
 });
 
 // Adicionar item ao checklist
-rotasTarefasDetalhes.post('/:id/checklist', autenticacaoRequerida, async (c) => {
+rotasTarefasDetalhes.post('/:id/checklist', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const tarefaId = c.req.param('id');
     const { texto } = await c.req.json();
@@ -215,7 +215,7 @@ rotasTarefasDetalhes.post('/:id/checklist', autenticacaoRequerida, async (c) => 
 });
 
 // Atualizar item (concluir/desconcluir ou editar texto)
-rotasTarefasDetalhes.patch('/:tarefaId/checklist/:itemId', autenticacaoRequerida, async (c) => {
+rotasTarefasDetalhes.patch('/:tarefaId/checklist/:itemId', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const { concluido, texto } = await c.req.json();
     const itemId = c.req.param('itemId');
@@ -234,7 +234,7 @@ rotasTarefasDetalhes.patch('/:tarefaId/checklist/:itemId', autenticacaoRequerida
 });
 
 // Remover item do checklist (DELETE real conforme regra)
-rotasTarefasDetalhes.delete('/:tarefaId/checklist/:itemId', autenticacaoRequerida, async (c) => {
+rotasTarefasDetalhes.delete('/:tarefaId/checklist/:itemId', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const itemId = c.req.param('itemId');
     const usuario = c.get('usuario') as any;

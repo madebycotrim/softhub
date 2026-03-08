@@ -5,6 +5,7 @@ import { api } from '../../compartilhado/servicos/api';
 import { usarAutenticacaoContexto } from '../../contexto/ContextoAutenticacao';
 import { useNavigate } from 'react-router';
 import logoUnieuroSemTexto from '../../assets/logo-unieuro-sem-texto-branca.png';
+import { usarDispositivo } from '../../compartilhado/hooks/usarDispositivo';
 
 /**
  * Componente que gera e exibe o QR Code na tela de login desktop.
@@ -15,8 +16,10 @@ export default function PainelQRCode() {
     const [status, setStatus] = useState<'gerando' | 'pendente' | 'autorizado' | 'expirado' | 'erro'>('gerando');
     const { entrar } = usarAutenticacaoContexto();
     const navigate = useNavigate();
+    const { isMobile } = usarDispositivo();
 
     const gerarNovoQR = async () => {
+        if (isMobile) return;
         try {
             setStatus('gerando');
             const res = await api.post('/api/auth/qr/gerar');
@@ -29,8 +32,10 @@ export default function PainelQRCode() {
     };
 
     useEffect(() => {
-        gerarNovoQR();
-    }, []);
+        if (!isMobile) {
+            gerarNovoQR();
+        }
+    }, [isMobile]);
 
     useEffect(() => {
         if (status !== 'pendente' || !sessao) return;

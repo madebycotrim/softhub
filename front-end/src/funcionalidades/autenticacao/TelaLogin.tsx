@@ -8,6 +8,7 @@ import { usarAutenticacaoContexto } from '../../contexto/ContextoAutenticacao';
 import logoUnieuro from '../../assets/logo-unieuro-branca.png';
 import { loginRequest } from '../../configuracoes/msal';
 import PainelQRCode from './PainelQRCode';
+import { usarDispositivo } from '../../compartilhado/hooks/usarDispositivo';
 
 /**
  * Tela de login com estética Discord-Style (Minimalista e Funcional).
@@ -17,6 +18,7 @@ export default function TelaLogin() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const { entrar } = usarAutenticacaoContexto();
+    const { isMobile } = usarDispositivo();
 
     const [carregando, setCarregando] = useState(false);
     const [erroLocal, setErroLocal] = useState<string | null>(null);
@@ -182,16 +184,18 @@ export default function TelaLogin() {
                     <div className="hidden lg:block w-[1px] bg-slate-100 self-stretch my-24 opacity-50" />
 
                     {/* Lado Direito: QR Code Integrado */}
-                    <div className="flex-1 p-12 flex flex-col items-center justify-center bg-white/50">
-                        <PainelQRCode />
+                    {!isMobile && (
+                        <div className="flex-1 p-12 flex flex-col items-center justify-center bg-white/50 animate-in fade-in duration-700">
+                            <PainelQRCode />
 
-                        <div className="mt-8 text-center space-y-4 px-4 max-w-[340px]">
-                            <h4 className="text-2xl font-black text-slate-900 tracking-tight leading-none">Entrar com QR Code</h4>
-                            <p className="text-[13px] text-slate-400 font-bold leading-relaxed text-center opacity-80">
-                                No celular, acesse o site ou app da <strong className="text-slate-600 font-black">Fábrica de Software</strong>, escaneie o QR code e faça login em segundos — sem digitar nada.
-                            </p>
+                            <div className="mt-8 text-center space-y-4 px-4 max-w-[340px]">
+                                <h4 className="text-2xl font-black text-slate-900 tracking-tight leading-none">Entrar com QR Code</h4>
+                                <p className="text-[13px] text-slate-400 font-bold leading-relaxed text-center opacity-80">
+                                    No celular, acesse o site ou app da <strong className="text-slate-600 font-black">Fábrica de Software</strong>, escaneie o QR code e faça login em segundos — sem digitar nada.
+                                </p>
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
             </div>
         </div>

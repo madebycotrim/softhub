@@ -4,7 +4,7 @@ import { autenticacaoRequerida } from '../middleware/auth';
 const rotasLogs = new Hono<{ Bindings: Env, Variables: { usuario: any } }>();
 
 // Listar logs paginados (Somente ADMIN, validação feita ou a ser feita no middleware, mock básico aqui)
-rotasLogs.get('/', autenticacaoRequerida, async (c) => {
+rotasLogs.get('/', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const usuario = c.get('usuario') as any;
 
@@ -82,7 +82,7 @@ rotasLogs.get('/', autenticacaoRequerida, async (c) => {
     }
 });
 
-rotasLogs.get('/estatisticas', autenticacaoRequerida, async (c) => {
+rotasLogs.get('/estatisticas', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const usuario = c.get('usuario') as any;
 

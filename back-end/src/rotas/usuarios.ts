@@ -24,7 +24,7 @@ rotasUsuarios.get('/ping', async (c) => {
 
 // ─── GET / — Listar Diretório de Membros ──────────────────────────────────────
 
-rotasUsuarios.get('/', autenticacaoRequerida, async (c) => {
+rotasUsuarios.get('/', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
 
     try {
@@ -61,7 +61,7 @@ rotasUsuarios.get('/', autenticacaoRequerida, async (c) => {
 
 // ─── PATCH /perfil — Editar Próprio Perfil ────────────────────────────────────
 
-rotasUsuarios.patch('/perfil', autenticacaoRequerida, async (c) => {
+rotasUsuarios.patch('/perfil', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const usuario = c.get('usuario') as any;
 
@@ -104,7 +104,7 @@ rotasUsuarios.patch('/perfil', autenticacaoRequerida, async (c) => {
 
 // ─── PATCH /:id/role — Alterar Role (apenas ADMIN) ───────────────────────────
 
-rotasUsuarios.patch('/:id/role', autenticacaoRequerida, async (c) => {
+rotasUsuarios.patch('/:id/role', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const usuarioLogado = c.get('usuario') as any;
     const id = c.req.param('id');
@@ -150,7 +150,7 @@ rotasUsuarios.patch('/:id/role', autenticacaoRequerida, async (c) => {
 
 // ─── PATCH /:id/status — Ativar / Desativar (apenas ADMIN) ───────────────────
 
-rotasUsuarios.patch('/:id/status', autenticacaoRequerida, async (c) => {
+rotasUsuarios.patch('/:id/status', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const usuarioLogado = c.get('usuario') as any;
     const id = c.req.param('id');
@@ -199,7 +199,7 @@ rotasUsuarios.patch('/:id/status', autenticacaoRequerida, async (c) => {
 rotasUsuarios.post('/', async (c, next) => {
     console.log('[POST /usuarios] >>> ROTA ATINGIDA, headers:', JSON.stringify(Object.fromEntries(c.req.raw.headers)));
     await next();
-}, autenticacaoRequerida, async (c) => {
+}, autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const usuarioLogado = c.get('usuario') as any;
 

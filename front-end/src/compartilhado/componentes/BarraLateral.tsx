@@ -1,4 +1,4 @@
-import { FolderKanban, Clock, Users, Megaphone, LayoutDashboard, Database, Settings, LogOut, Smartphone, Layers } from 'lucide-react';
+import { FolderKanban, Clock, Users, Megaphone, LayoutDashboard, Database, Settings, LogOut, Layers } from 'lucide-react';
 import { useLocation, Link } from 'react-router';
 import { usarAutenticacao } from '../../funcionalidades/autenticacao/usarAutenticacao';
 import { Avatar } from './Avatar';
@@ -151,13 +151,6 @@ export function BarraLateral() {
                         <div className="relative shrink-0 group">
                             <Avatar nome={usuario.nome} fotoPerfil={usuario.foto_perfil || null} tamanho="md" />
                             <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-sidebar shadow-[0_0_6px_rgba(34,197,94,0.6)]" />
-                            <button
-                                onClick={() => setScannerAberto(true)}
-                                className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 z-10 shadow-lg scale-75 group-hover:scale-100"
-                                title="Conectar via QR Code"
-                            >
-                                <Smartphone size={9} />
-                            </button>
                         </div>
 
                         {/* Texto */}

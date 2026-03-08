@@ -10,7 +10,7 @@ const verificarPermissaoAdminLiderGrupo = (role: string) => ['ADMIN', 'LIDER_GRU
 
 // === GRUPOS ===
 
-rotasOrganizacao.get('/grupos', autenticacaoRequerida, async (c) => {
+rotasOrganizacao.get('/grupos', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     try {
         const { results } = await DB.prepare('SELECT * FROM grupos WHERE ativo = 1 ORDER BY nome ASC').all();
@@ -20,7 +20,7 @@ rotasOrganizacao.get('/grupos', autenticacaoRequerida, async (c) => {
     }
 });
 
-rotasOrganizacao.post('/grupos', autenticacaoRequerida, async (c) => {
+rotasOrganizacao.post('/grupos', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const usuario = c.get('usuario');
     if (!verificarPermissaoAdminLiderGrupo(usuario.role)) return c.json({ erro: 'Acesso negado' }, 403);
@@ -49,7 +49,7 @@ rotasOrganizacao.post('/grupos', autenticacaoRequerida, async (c) => {
     }
 });
 
-rotasOrganizacao.patch('/grupos/:id', autenticacaoRequerida, async (c) => {
+rotasOrganizacao.patch('/grupos/:id', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const id = c.req.param('id');
     const usuario = c.get('usuario');
@@ -76,7 +76,7 @@ rotasOrganizacao.patch('/grupos/:id', autenticacaoRequerida, async (c) => {
     }
 });
 
-rotasOrganizacao.delete('/grupos/:id', autenticacaoRequerida, async (c) => {
+rotasOrganizacao.delete('/grupos/:id', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const id = c.req.param('id');
     const usuario = c.get('usuario');
@@ -103,7 +103,7 @@ rotasOrganizacao.delete('/grupos/:id', autenticacaoRequerida, async (c) => {
 
 // === EQUIPES ===
 
-rotasOrganizacao.get('/equipes', autenticacaoRequerida, async (c) => {
+rotasOrganizacao.get('/equipes', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     try {
         const query = `
@@ -120,7 +120,7 @@ rotasOrganizacao.get('/equipes', autenticacaoRequerida, async (c) => {
     }
 });
 
-rotasOrganizacao.post('/equipes', autenticacaoRequerida, async (c) => {
+rotasOrganizacao.post('/equipes', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const usuario = c.get('usuario');
     if (!verificarPermissaoAdminLiderGrupo(usuario.role)) return c.json({ erro: 'Acesso negado' }, 403);
@@ -149,7 +149,7 @@ rotasOrganizacao.post('/equipes', autenticacaoRequerida, async (c) => {
     }
 });
 
-rotasOrganizacao.patch('/equipes/:id', autenticacaoRequerida, async (c) => {
+rotasOrganizacao.patch('/equipes/:id', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const id = c.req.param('id');
     const usuario = c.get('usuario');
@@ -176,7 +176,7 @@ rotasOrganizacao.patch('/equipes/:id', autenticacaoRequerida, async (c) => {
     }
 });
 
-rotasOrganizacao.delete('/equipes/:id', autenticacaoRequerida, async (c) => {
+rotasOrganizacao.delete('/equipes/:id', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const id = c.req.param('id');
     const usuario = c.get('usuario');
@@ -205,7 +205,7 @@ rotasOrganizacao.delete('/equipes/:id', autenticacaoRequerida, async (c) => {
 
 // === ALOCAÇÃO ===
 
-rotasOrganizacao.patch('/alocacao/:usuarioId', autenticacaoRequerida, async (c) => {
+rotasOrganizacao.patch('/alocacao/:usuarioId', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const reqUserId = c.req.param('usuarioId');
     const usuario = c.get('usuario');

@@ -84,7 +84,7 @@ rotasAuthQr.get('/qr/verificar/:id', async (c) => {
 });
 
 // ── QR Code: Autorizar (Chamado pelo Celular) ────────────────────────────────
-rotasAuthQr.post('/qr/autorizar', autenticacaoRequerida, async (c) => {
+rotasAuthQr.post('/qr/autorizar', autenticacaoRequerida(), async (c) => {
     const { DB, JWT_SECRET } = c.env;
     const usuario = c.get('usuario' as any) as any; // Extraído pelo middleware auth
 

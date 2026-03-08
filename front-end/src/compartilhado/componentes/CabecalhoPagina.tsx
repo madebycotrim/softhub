@@ -2,6 +2,11 @@ import { Bell, Moon, Sun, Menu, Monitor } from 'lucide-react';
 import { usarTema } from '../../contexto/ContextoTema';
 import { AuthenticatedTemplate, UnauthenticatedTemplate } from '@azure/msal-react';
 import { useLocation, Link } from 'react-router';
+import { useState } from 'react';
+import { Smartphone } from 'lucide-react';
+import { usarDispositivo } from '../../compartilhado/hooks/usarDispositivo';
+import { Modal } from './Modal';
+import ScannerQR from '../../funcionalidades/autenticacao/ScannerQR';
 
 /**
  * Cabeçalho do sistema interno. Exibe nome/foto do usuário e botões de ação global.
@@ -9,6 +14,8 @@ import { useLocation, Link } from 'react-router';
 export function CabecalhoPagina() {
     const { tema, setTema } = usarTema();
     const location = useLocation();
+    const { isMobile } = usarDispositivo();
+    const [scannerAberto, setScannerAberto] = useState(false);
 
     const alternarTema = () => {
         if (tema === 'dark') setTema('light');
@@ -48,6 +55,17 @@ export function CabecalhoPagina() {
                     <button className="p-2 text-muted-foreground/50 hover:text-primary hover:bg-primary/10 rounded-xl lg:hidden transition-all duration-300">
                         <Menu size={20} />
                     </button>
+
+                    {/* Botão Scanner Mobile */}
+                    {isMobile && (
+                        <button
+                            onClick={() => setScannerAberto(true)}
+                            className="p-2 text-primary bg-primary/10 hover:bg-primary/20 rounded-xl lg:hidden transition-all duration-300 flex items-center gap-2"
+                        >
+                            <Smartphone size={18} />
+                            <span className="text-[10px] font-black uppercase tracking-tight">Scanner</span>
+                        </button>
+                    )}
 
                     <nav className="hidden md:flex items-center text-[11px] font-black uppercase tracking-[0.15em] select-none">
                         <span className="text-muted-foreground/40">Fábrica</span>
@@ -120,6 +138,18 @@ export function CabecalhoPagina() {
                     </UnauthenticatedTemplate>
                 </div>
             </div>
+
+            {/* Modal Scanner - Mobile Only Trigger */}
+            {isMobile && (
+                <Modal
+                    aberto={scannerAberto}
+                    aoFechar={() => setScannerAberto(false)}
+                    titulo="Conectar via QR Code"
+                    largura="sm"
+                >
+                    <ScannerQR aoFechar={() => setScannerAberto(false)} />
+                </Modal>
+            )}
         </header>
     );
 }

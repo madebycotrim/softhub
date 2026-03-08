@@ -5,7 +5,7 @@ import { autenticacaoRequerida } from '../middleware/auth';
 const rotasDashboard = new Hono<{ Bindings: Env }>();
 
 // Obter dados agregados do dashboard
-rotasDashboard.get('/', autenticacaoRequerida, async (c) => {
+rotasDashboard.get('/', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const projetoId = c.req.query('projetoId') || 'p1';
 

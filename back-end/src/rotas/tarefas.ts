@@ -8,7 +8,7 @@ import { criarNotificacoes } from '../servicos/servico-notificacoes';
 const rotasTarefas = new Hono<{ Bindings: Env, Variables: { usuario: any } }>();
 
 // Listar Tarefas (Backlog ou Sprint)
-rotasTarefas.get('/', autenticacaoRequerida, async (c) => {
+rotasTarefas.get('/', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const sprintId = c.req.query('sprintId');
     const projetoId = c.req.query('projetoId') || 'p1';
@@ -72,7 +72,7 @@ rotasTarefas.get('/', autenticacaoRequerida, async (c) => {
 });
 
 // Mover Tarefa
-rotasTarefas.patch('/:id/mover', autenticacaoRequerida, async (c) => {
+rotasTarefas.patch('/:id/mover', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const id = c.req.param('id');
     const { status: colunaDestino } = await c.req.json();
@@ -146,7 +146,7 @@ rotasTarefas.patch('/:id/mover', autenticacaoRequerida, async (c) => {
 });
 
 // Atribuir Responsável (WF 13)
-rotasTarefas.post('/:id/responsaveis', autenticacaoRequerida, async (c) => {
+rotasTarefas.post('/:id/responsaveis', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const id = c.req.param('id');
     const { usuario_id } = await c.req.json();

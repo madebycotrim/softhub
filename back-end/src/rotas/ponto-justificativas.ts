@@ -11,7 +11,7 @@ const rotasPontoJustificativas = new Hono<{ Bindings: Env, Variables: { usuario:
 // ==========================================
 
 // 1. Membro enviando justificativa
-rotasPontoJustificativas.post('/justificativas', autenticacaoRequerida, async (c) => {
+rotasPontoJustificativas.post('/justificativas', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const { data, tipo, motivo } = await c.req.json();
     const usuario = c.get('usuario') as any;
@@ -70,7 +70,7 @@ rotasPontoJustificativas.post('/justificativas', autenticacaoRequerida, async (c
 });
 
 // 2. Membro buscando suas próprias justificativas
-rotasPontoJustificativas.get('/justificativas', autenticacaoRequerida, async (c) => {
+rotasPontoJustificativas.get('/justificativas', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const usuario = c.get('usuario') as any;
 
@@ -99,7 +99,7 @@ rotasPontoJustificativas.get('/justificativas', autenticacaoRequerida, async (c)
 });
 
 // 3. Admin listando todas as justificativas pendentes ou filtradas
-rotasPontoJustificativas.get('/admin/justificativas', autenticacaoRequerida, async (c) => {
+rotasPontoJustificativas.get('/admin/justificativas', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const usuario = c.get('usuario') as any;
 
@@ -119,7 +119,7 @@ rotasPontoJustificativas.get('/admin/justificativas', autenticacaoRequerida, asy
 });
 
 // 4. Admin Aprovando Justificativa
-rotasPontoJustificativas.patch('/admin/justificativas/:id/aprovar', autenticacaoRequerida, async (c) => {
+rotasPontoJustificativas.patch('/admin/justificativas/:id/aprovar', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const justificativaId = c.req.param('id');
     const usuario = c.get('usuario') as any;
@@ -162,7 +162,7 @@ rotasPontoJustificativas.patch('/admin/justificativas/:id/aprovar', autenticacao
 });
 
 // 5. Admin Rejeitando Justificativa
-rotasPontoJustificativas.patch('/admin/justificativas/:id/rejeitar', autenticacaoRequerida, async (c) => {
+rotasPontoJustificativas.patch('/admin/justificativas/:id/rejeitar', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const justificativaId = c.req.param('id');
     const { motivoRejeicao } = await c.req.json();
@@ -206,7 +206,7 @@ rotasPontoJustificativas.patch('/admin/justificativas/:id/rejeitar', autenticaca
 });
 
 // 6. Exportação de Relatório CSV (Workflow 30)
-rotasPontoJustificativas.get('/exportar', autenticacaoRequerida, async (c) => {
+rotasPontoJustificativas.get('/exportar', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const usuario = c.get('usuario') as any;
 

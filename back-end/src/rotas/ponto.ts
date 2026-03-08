@@ -8,7 +8,7 @@ import { criarNotificacoes } from '../servicos/servico-notificacoes';
 const rotasPonto = new Hono<{ Bindings: Env, Variables: { usuario: any } }>();
 
 // Listar histórico de ponto do usuário
-rotasPonto.get('/', autenticacaoRequerida, async (c) => {
+rotasPonto.get('/', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     const usuario = c.get('usuario') as any;
 
@@ -37,7 +37,7 @@ rotasPonto.get('/', autenticacaoRequerida, async (c) => {
 });
 
 // Bater ponto - Requer Rede Local (Workflow 9)
-rotasPonto.post('/', autenticacaoRequerida, validarRedeLocal, async (c) => {
+rotasPonto.post('/', autenticacaoRequerida(), validarRedeLocal, async (c) => {
     const { DB } = c.env;
     const { tipo } = await c.req.json();
 
