@@ -228,7 +228,7 @@ formatarHoras(125)                          // → "2h 5min"
 ```env
 VITE_MSAL_CLIENT_ID=        # pegar com TI da UNIEURO
 VITE_MSAL_TENANT_ID=        # pegar com TI da UNIEURO
-VITE_API_URL=               # URL do Worker (ex: https://fabrica-api.workers.dev)
+VITE_API_URL=               # URL do Worker (ex: https://softhub-api.workers.dev)
 VITE_DOMINIO_INSTITUCIONAL=unieuro.edu.br
 ```
 
@@ -255,6 +255,6 @@ wrangler deploy      # deploy para produção
 wrangler tail        # logs em tempo real
 
 # Banco D1
-wrangler d1 execute fabrica-db --file=src/db/migrations/001_tabelas_base.sql
-wrangler d1 execute fabrica-db --command="SELECT * FROM usuarios LIMIT 5"
+wrangler d1 execute softhub_db --file=src/db/migrations/001_tabelas_base.sql
+wrangler d1 execute softhub_db --command="SELECT * FROM usuarios LIMIT 5"
 ```
