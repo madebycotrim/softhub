@@ -24,7 +24,9 @@ type HonoEnv = { Bindings: Env; Variables: { usuario: UsuarioAutenticado } };
  * 7. Busca usuário no banco (garante que role alterado pelo ADMIN vale imediatamente)
  * 8. Expõe { id, role, email, nome } em c.get('usuario') para os handlers
  */
-export function autenticacaoRequerida() {
+const HIERARQUIA_ROLES = ['VISITANTE', 'MEMBRO', 'LIDER_EQUIPE', 'LIDER_GRUPO', 'ADMIN'] as const;
+
+export function autenticacaoRequerida(roleMinimoRequerido?: string) {
     return async (c: Context<HonoEnv>, next: Next) => {
 
         // ── Passo 1: Extrai o token do header ─────────────────────────────────
@@ -42,7 +44,6 @@ export function autenticacaoRequerida() {
         }
 
         // ── Passo 3: Verifica assinatura do JWT interno ───────────────────────
-        // O algoritmo HS256 é fixado — o mesmo usado no sign() da rota /msal.
         let payload: { id: string; role: string; email: string; exp: number };
         try {
             payload = await verify(token, segredo, 'HS256') as typeof payload;
@@ -56,8 +57,6 @@ export function autenticacaoRequerida() {
         }
 
         // ── Passo 5: Busca usuário no banco ───────────────────────────────────
-        // Garante que: usuário ainda existe, está ativo, e usa o role ATUAL do banco.
-        // Se um ADMIN alterou o role após o login, a mudança vale imediatamente.
         const usuario = await c.env.DB
             .prepare('SELECT id, nome, email, role, ativo FROM usuarios WHERE id = ?')
             .bind(payload.id)
@@ -72,9 +71,20 @@ export function autenticacaoRequerida() {
             return c.json({ erro: 'Conta desativada. Contate o suporte.' }, 403);
         }
 
+        // ── Passo 6: Verifica Role Mínimo (SE PROVIDO) ────────────────────────
+        if (roleMinimoRequerido) {
+            const indiceUsuario = HIERARQUIA_ROLES.indexOf(usuario.role as any);
+            const indiceRequerido = HIERARQUIA_ROLES.indexOf(roleMinimoRequerido as any);
+
+            if (indiceUsuario === -1 || indiceRequerido === -1 || indiceUsuario < indiceRequerido) {
+                console.warn(`[AUTH] Acesso negado: Usuário ${usuario.nome} tentou acessar recurso que exige ${roleMinimoRequerido}`);
+                return c.json({ erro: 'Permissão insuficiente.' }, 403);
+            }
+        }
+
         console.log(`[AUTH] Usuário autenticado: ${usuario.nome} (${usuario.role})`);
 
-        // ── Passo 6: Expõe dados reais do banco para os handlers ──────────────
+        // ── Passo 7: Expõe dados reais do banco para os handlers ──────────────
         c.set('usuario', {
             id: usuario.id,
             role: usuario.role,

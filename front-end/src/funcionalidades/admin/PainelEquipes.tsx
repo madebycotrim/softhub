@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { LayoutPrincipal } from '../../compartilhado/componentes/LayoutPrincipal';
 import { usarOrganizacao } from './usarOrganizacao';
 import { usarMembros } from '../membros/usarMembros';
 import { Carregando } from '../../compartilhado/componentes/Carregando';
@@ -73,10 +72,10 @@ export default function PainelEquipes() {
         }
     };
 
-    if (carregandoOrg || carregandoMembros) return <LayoutPrincipal><Carregando /></LayoutPrincipal>;
+    if (carregandoOrg || carregandoMembros) return <Carregando />;
 
     return (
-        <LayoutPrincipal>
+        <>
             <div className="max-w-7xl mx-auto space-y-6">
                 <CabecalhoFuncionalidade
                     titulo="Gestão de Equipes"
@@ -309,6 +308,6 @@ export default function PainelEquipes() {
                 carregando={submetendo}
                 textoBotao="Desativar"
             />
-        </LayoutPrincipal>
+        </>
     );
 }

@@ -9,6 +9,7 @@ import { usarAutenticacao } from '../autenticacao/usarAutenticacao';
 import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
 import { Modal } from '../../compartilhado/componentes/Modal';
 import { ConfirmacaoExclusao } from '../../compartilhado/componentes/ConfirmacaoExclusao';
+import { usarConfiguracoes } from './usarConfiguracoes';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -20,10 +21,6 @@ interface ToastState {
     id: number;
 }
 
-const FUNCOES_DISPONIVEIS = [
-    'Frontend', 'Backend', 'Fullstack', 'Mobile', 'UI/UX', 'UX Research',
-    'DevOps', 'QA/Testes', 'Product Owner', 'Scrum Master', 'Data Science'
-];
 
 // ─── Hook: useDebounce ────────────────────────────────────────────────────────
 
@@ -211,6 +208,9 @@ function useGerenciarMembros() {
         }
     }, [recarregar, exibirToast, marcarSalvando, desmarcarSalvando]);
 
+    const { configuracoes } = usarConfiguracoes();
+    const funcoesDisponiveis = configuracoes?.funcoes_tecnicas || [];
+
     return {
         membros,
         equipes,
@@ -225,6 +225,7 @@ function useGerenciarMembros() {
         alterarEquipe,
         cadastrarMembro,
         removerMembro,
+        funcoesDisponiveis,
         limpezaDefinitiva: useCallback(async (membroId: string) => {
             marcarSalvando(membroId);
             try {
@@ -386,6 +387,7 @@ interface LinhaMembroProps {
     onAlternarStatus: (membro: Membro) => void;
     onSolicitarExclusao: (membro: Membro) => void;
     onLimpezaDefinitiva: (membro: Membro) => void;
+    funcoesSugeridas: string[];
 }
 
 function LinhaMembro({
@@ -400,13 +402,13 @@ function LinhaMembro({
     onAlternarStatus,
     onSolicitarExclusao,
     onLimpezaDefinitiva,
+    funcoesSugeridas,
 }: LinhaMembroProps) {
     const [menuFuncoesAberto, setMenuFuncoesAberto] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const { usuario } = usarAutenticacao();
     const ehOMesmoUsuario = usuario?.id === membro.id;
 
-    const funcoesDisponiveis = FUNCOES_DISPONIVEIS;
 
     // Identifica os dois grupos disponíveis dinamicamente (os dois primeiros encontrados)
     const idsGrupos = Array.from(new Set(equipes.map(e => e.grupo_id)));
@@ -506,7 +508,7 @@ function LinhaMembro({
                 {menuFuncoesAberto && (
                     <div className="absolute top-full left-0 mt-1 w-48 bg-card border border-border shadow-xl rounded-lg p-1 z-50">
                         <div className="max-h-48 overflow-y-auto custom-scrollbar">
-                            {funcoesDisponiveis.map(f => {
+                            {funcoesSugeridas.map((f: string) => {
                                 const ativo = membro.funcoes.includes(f);
                                 return (
                                     <button
@@ -664,9 +666,10 @@ interface ModalCadastroProps {
     aoFechar: () => void;
     aoCadastrar: (email: string, role: string, funcoes: string[], equipeId: string | null) => Promise<{ sucesso: boolean; erro?: string }>;
     equipes: any[];
+    funcoesSugeridas: string[];
 }
 
-function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, equipes }: ModalCadastroProps) {
+function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, equipes, funcoesSugeridas }: ModalCadastroProps) {
     const [passo, setPasso] = useState(1);
     const [usuarioEmail, setUsuarioEmail] = useState('');
     const [dominio, setDominio] = useState('@unieuro.com.br');
@@ -768,7 +771,7 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, equipes }: ModalCa
                         <div className="space-y-3">
                             <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-1">Funções Técnicas</label>
                             <div className="flex flex-wrap gap-2 p-1">
-                                {FUNCOES_DISPONIVEIS.map(funcao => (
+                                {funcoesSugeridas.map((funcao: string) => (
                                     <button
                                         key={funcao}
                                         type="button"
@@ -902,6 +905,7 @@ export function GerenciarMembros() {
         equipes,
         cadastrarMembro,
         removerMembro,
+        funcoesDisponiveis,
         limpezaDefinitiva,
         esvaziarLixeira
     } = useGerenciarMembros();
@@ -1135,6 +1139,7 @@ export function GerenciarMembros() {
                                 onAlternarStatus={alternarStatus}
                                 onSolicitarExclusao={setMembroParaExcluir}
                                 onLimpezaDefinitiva={setMembroParaLimpar}
+                                funcoesSugeridas={funcoesDisponiveis}
                             />
                         ))
                     )}
@@ -1146,6 +1151,7 @@ export function GerenciarMembros() {
                 aoFechar={() => setModalAberto(false)}
                 aoCadastrar={cadastrarMembro}
                 equipes={equipes}
+                funcoesSugeridas={funcoesDisponiveis}
             />
 
             <ModalConvitesEmLote

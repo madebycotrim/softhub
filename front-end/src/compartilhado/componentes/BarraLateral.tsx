@@ -41,6 +41,7 @@ export function BarraLateral() {
             label: 'Gestão',
             links: [
                 { label: 'Administração', path: '/app/admin/membros', icon: Settings },
+                ...(usuario?.role === 'ADMIN' ? [{ label: 'Configurações', path: '/app/admin/configuracoes', icon: Settings }] : []),
                 { label: 'Painel de Logs', path: '/app/logs', icon: Database },
             ],
         },
