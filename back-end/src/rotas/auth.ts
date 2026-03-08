@@ -25,14 +25,19 @@ rotasAuth.post('/msal', async (c) => {
         // 1. Validar assinatura RS256 com JWKS da Microsoft
         let payload: AzureAdClaims;
         try {
+            if (!MSAL_TENANT_ID) throw new Error('MSAL_TENANT_ID não configurado no ambiente.');
+
             const rawPayload = await verifyWithJwks(idToken, {
                 jwks_uri: getJwksUri(MSAL_TENANT_ID),
                 allowedAlgorithms: ['RS256']
             });
             payload = rawPayload as unknown as AzureAdClaims;
-        } catch (e) {
-            console.warn('[Auth] Falha na verificação do idToken:', e);
-            return c.json({ erro: 'Token inválido ou expirado.' }, 401);
+        } catch (e: any) {
+            console.warn('[Auth] Falha na verificação do idToken:', e.message);
+            return c.json({
+                erro: 'Token inválido ou falha na comunicação com Microsoft.',
+                detalhe: e.message
+            }, 401);
         }
 
         // 2. Validar claims de negócio
@@ -49,11 +54,26 @@ rotasAuth.post('/msal', async (c) => {
         const email = (payload.upn || payload.preferred_username || '').toLowerCase();
         const nome = payload.name || email;
 
-        // 4. Upsert do usuário (Whitelist - Regra 13)
-        let usuario = await DB
-            .prepare('SELECT id, nome, email, role, ativo FROM usuarios WHERE email = ?')
-            .bind(email)
-            .first<{ id: string; nome: string; email: string; role: string; ativo: number }>();
+        // 4. Verificação de DB
+        if (!DB) {
+            console.error('[Auth] Erro: Binding "DB" não encontrado.');
+            return c.json({ erro: 'Erro interno: Banco de dados não configurado.' }, 500);
+        }
+
+        // 5. Upsert do usuário (Whitelist - Regra 13)
+        let usuario;
+        try {
+            usuario = await DB
+                .prepare('SELECT id, nome, email, role, ativo FROM usuarios WHERE email = ?')
+                .bind(email)
+                .first<{ id: string; nome: string; email: string; role: string; ativo: number }>();
+        } catch (e: any) {
+            console.error('[Auth] Erro ao consultar banco:', e.message);
+            return c.json({
+                erro: 'Erro ao consultar banco de dados. Verifique se o SCHEMA.sql foi executado.',
+                detalhe: e.message
+            }, 500);
+        }
 
         let isNew = false;
 
@@ -63,9 +83,13 @@ rotasAuth.post('/msal', async (c) => {
             if (bootstrapEmail && email === bootstrapEmail) {
                 // Primeiro Admin via bootstrap
                 const novoId = crypto.randomUUID();
-                await DB.prepare('INSERT INTO usuarios (id, nome, email, role, ativo) VALUES (?, ?, ?, "ADMIN", 1)')
-                    .bind(novoId, nome, email)
-                    .run();
+                try {
+                    await DB.prepare('INSERT INTO usuarios (id, nome, email, role, ativo) VALUES (?, ?, ?, "ADMIN", 1)')
+                        .bind(novoId, nome, email)
+                        .run();
+                } catch (e: any) {
+                    return c.json({ erro: 'Falha ao criar usuário de bootstrap.', detalhe: e.message }, 500);
+                }
 
                 usuario = { id: novoId, nome, email, role: 'ADMIN', ativo: 1 };
                 isNew = true;
@@ -78,8 +102,12 @@ rotasAuth.post('/msal', async (c) => {
             }
         } else {
             // Atualiza nome se mudou no Azure
-            await DB.prepare('UPDATE usuarios SET nome = ? WHERE id = ?').bind(nome, usuario.id).run();
-            usuario.nome = nome;
+            try {
+                await DB.prepare('UPDATE usuarios SET nome = ? WHERE id = ?').bind(nome, usuario.id).run();
+                usuario.nome = nome;
+            } catch (e: any) {
+                console.warn('[Auth] Falha ao atualizar nome do usuário (não crítico):', e.message);
+            }
         }
 
         if (usuario.ativo === 0) {
@@ -89,7 +117,7 @@ rotasAuth.post('/msal', async (c) => {
         // 5. Gerar JWT Interno
         if (!JWT_SECRET) {
             console.error('[Auth] JWT_SECRET não definido.');
-            return c.json({ erro: 'Erro interno de configuração.' }, 500);
+            return c.json({ erro: 'Erro interno de configuração: JWT_SECRET ausente.' }, 500);
         }
 
         const tokenLocal = await sign(
@@ -115,8 +143,8 @@ rotasAuth.post('/msal', async (c) => {
         return c.json({ token: tokenLocal, usuario });
 
     } catch (e: any) {
-        console.error('[Auth] Erro crítico:', e);
-        return c.json({ erro: 'Erro interno ao processar login: ' + e.message }, 500);
+        console.error('[Auth] Erro crítico inesperado:', e);
+        return c.json({ erro: 'Erro interno crítico: ' + (e.message || 'Erro desconhecido') }, 500);
     }
 });
 

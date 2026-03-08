@@ -57,8 +57,10 @@ export default function TelaLogin() {
                         entrar(res.data.usuario, res.data.token);
                         navigate('/app/dashboard', { replace: true });
                     }
-                } catch (e) {
-                    setErroLocal('Falha ao autenticar.');
+                } catch (e: any) {
+                    console.error('[Login] Erro no redirect/auth:', e);
+                    const mensagem = e.response?.data?.erro || e.response?.data?.detalhe || 'Falha ao autenticar no servidor.';
+                    setErroLocal(mensagem);
                     setCarregando(false);
                 }
             }
