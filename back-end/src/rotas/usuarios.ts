@@ -37,6 +37,7 @@ rotasUsuarios.get('/', autenticacaoRequerida(), async (c) => {
             FROM usuarios u
             LEFT JOIN equipes e ON u.equipe_id = e.id
             LEFT JOIN grupos  g ON e.grupo_id  = g.id
+            WHERE u.visivel = 1
             ORDER BY u.nome ASC
         `;
 
@@ -160,6 +161,10 @@ rotasUsuarios.patch('/:id/status', autenticacaoRequerida(), async (c) => {
         return c.json({ erro: 'Acesso negado. Apenas administradores podem alterar o status.' }, 403);
     }
 
+    if (usuarioLogado.id === id) {
+        return c.json({ erro: 'Você não pode desativar ou excluir sua própria conta.' }, 400);
+    }
+
     let ativo: boolean;
     try {
         ({ ativo } = await c.req.json());
@@ -192,6 +197,75 @@ rotasUsuarios.patch('/:id/status', autenticacaoRequerida(), async (c) => {
     } catch (erro) {
         console.error('[ERRO DB] PATCH /api/usuarios/:id/status', erro);
         return c.json({ erro: 'Não foi possível alterar o status.' }, 500);
+    }
+});
+
+// ─── PATCH /:id/limpar — Ocultar Permanentemente (apenas ADMIN) ────────────────
+
+rotasUsuarios.patch('/:id/limpar', autenticacaoRequerida(), async (c) => {
+    const { DB } = c.env;
+    const usuarioLogado = c.get('usuario') as any;
+    const id = c.req.param('id');
+
+    if (usuarioLogado.role !== 'ADMIN') {
+        return c.json({ erro: 'Acesso negado.' }, 403);
+    }
+
+    if (usuarioLogado.id === id) {
+        return c.json({ erro: 'Você não pode excluir sua própria conta.' }, 400);
+    }
+
+    try {
+        await DB.prepare('UPDATE usuarios SET visivel = 0, ativo = 0 WHERE id = ?').bind(id).run();
+
+        await registrarLog(DB, {
+            usuarioId: usuarioLogado.id,
+            usuarioNome: usuarioLogado.nome,
+            usuarioEmail: usuarioLogado.email,
+            usuarioRole: usuarioLogado.role,
+            acao: 'MEMBRO_OCULTADO_DEFINITIVO',
+            modulo: 'admin',
+            descricao: `Membro ${id} foi removido permanentemente da interface (limpeza)`,
+            ip: c.req.header('CF-Connecting-IP') ?? '',
+            entidadeTipo: 'usuarios',
+            entidadeId: id
+        });
+
+        return c.json({ sucesso: true });
+    } catch (erro) {
+        console.error('[ERRO DB] PATCH /api/usuarios/:id/limpar', erro);
+        return c.json({ erro: 'Erro ao realizar limpeza definitiva.' }, 500);
+    }
+});
+
+// ─── POST /limpeza-geral — Esvaziar Lixeira (apenas ADMIN) ────────────────────
+
+rotasUsuarios.post('/limpeza-geral', autenticacaoRequerida(), async (c) => {
+    const { DB } = c.env;
+    const usuarioLogado = c.get('usuario') as any;
+
+    if (usuarioLogado.role !== 'ADMIN') {
+        return c.json({ erro: 'Acesso negado.' }, 403);
+    }
+
+    try {
+        // Oculta todos que já estão inativos (arquivados)
+        const { meta } = await DB.prepare('UPDATE usuarios SET visivel = 0 WHERE ativo = 0 AND id != ?')
+            .bind(usuarioLogado.id)
+            .run();
+
+        await registrarLog(DB, {
+            usuarioId: usuarioLogado.id,
+            acao: 'LIMPEZA_GERAL_MEMBROS',
+            modulo: 'admin',
+            descricao: `Realizada limpeza geral. ${meta.changes} membros movidos para o limbo.`,
+            ip: c.req.header('CF-Connecting-IP') ?? '',
+        });
+
+        return c.json({ sucesso: true, removidos: meta.changes });
+    } catch (erro) {
+        console.error('[ERRO DB] POST /api/usuarios/limpeza-geral', erro);
+        return c.json({ erro: 'Erro ao realizar limpeza geral.' }, 500);
     }
 });
 

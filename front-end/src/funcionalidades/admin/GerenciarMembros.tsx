@@ -1,10 +1,11 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { Search, UserCog, Check, X, Shield, Mail, Trash2, Loader2, UserCheck, UserX, Archive, Users as UsersIcon, ListPlus, CheckSquare, Square, Download, CheckCircle2, AlertCircle, ChevronDown } from 'lucide-react';
+import { Search, UserCog, Check, X, Shield, Mail, Trash2, Loader2, UserCheck, UserX, Archive, Users as UsersIcon, ListPlus, CheckSquare, Square, Download, CheckCircle2, AlertCircle, ChevronDown, RotateCcw, Eraser } from 'lucide-react';
 import { api } from '../../compartilhado/servicos/api';
 import { usarMembros } from '../membros/usarMembros';
 import type { Membro } from '../membros/usarMembros';
 import { Avatar } from '../../compartilhado/componentes/Avatar';
 import { Carregando } from '../../compartilhado/componentes/Carregando';
+import { usarAutenticacao } from '../autenticacao/usarAutenticacao';
 import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
 import { Modal } from '../../compartilhado/componentes/Modal';
 import { ConfirmacaoExclusao } from '../../compartilhado/componentes/ConfirmacaoExclusao';
@@ -212,6 +213,27 @@ function useGerenciarMembros() {
         alterarEquipe,
         cadastrarMembro,
         removerMembro,
+        limpezaDefinitiva: useCallback(async (membroId: string) => {
+            marcarSalvando(membroId);
+            try {
+                await api.patch(`/api/usuarios/${membroId}/limpar`);
+                exibirToast('Membro removido definitivamente.');
+                await recarregar();
+            } catch (e: any) {
+                exibirToast(e.response?.data?.erro ?? 'Erro na limpeza definitiva.', 'erro');
+            } finally {
+                desmarcarSalvando(membroId);
+            }
+        }, [recarregar, exibirToast, marcarSalvando, desmarcarSalvando]),
+        esvaziarLixeira: useCallback(async () => {
+            try {
+                const res = await api.post('/api/usuarios/limpeza-geral');
+                exibirToast(`${res.data.removidos} membros removidos definitivamente.`);
+                await recarregar();
+            } catch (e: any) {
+                exibirToast(e.response?.data?.erro ?? 'Erro ao esvaziar lixeira.', 'erro');
+            }
+        }, [recarregar, exibirToast])
     };
 }
 
@@ -351,6 +373,7 @@ interface LinhaMembroProps {
     equipes: any[];
     onAlternarStatus: (membro: Membro) => void;
     onSolicitarExclusao: (membro: Membro) => void;
+    onLimpezaDefinitiva: (membro: Membro) => void;
 }
 
 function LinhaMembro({
@@ -364,9 +387,12 @@ function LinhaMembro({
     equipes,
     onAlternarStatus,
     onSolicitarExclusao,
+    onLimpezaDefinitiva,
 }: LinhaMembroProps) {
     const [menuFuncoesAberto, setMenuFuncoesAberto] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
+    const { usuario } = usarAutenticacao();
+    const ehOMesmoUsuario = usuario?.id === membro.id;
 
     const funcoesDisponiveis = [
         'Frontend', 'Backend', 'Fullstack', 'Mobile', 'UI/UX', 'UX Research',
@@ -410,8 +436,9 @@ function LinhaMembro({
             {/* Seleção */}
             <div className="col-span-1 flex justify-center">
                 <button
-                    onClick={(e) => onToggleSelect(membro.id, e.shiftKey)}
-                    className="text-muted-foreground/30 hover:text-primary transition-colors focus:outline-none"
+                    onClick={(e) => !ehOMesmoUsuario && onToggleSelect(membro.id, e.shiftKey)}
+                    className={`transition-colors focus:outline-none ${ehOMesmoUsuario ? 'cursor-not-allowed text-muted-foreground/10' : 'text-muted-foreground/30 hover:text-primary'}`}
+                    disabled={ehOMesmoUsuario}
                     aria-label={`Selecionar ${membro.nome}`}
                 >
                     {selecionado ? <CheckSquare size={18} className="text-primary" /> : <Square size={18} />}
@@ -419,20 +446,20 @@ function LinhaMembro({
             </div>
 
             {/* Membro */}
-            <div className="col-span-2 flex items-center gap-3">
+            <div className="col-span-4 flex items-center gap-3">
                 <Avatar nome={membro.nome} fotoPerfil={membro.foto_perfil} tamanho="md" />
                 <div className="min-w-0">
-                    <p className="font-semibold text-foreground text-sm truncate leading-tight">
+                    <p className="font-semibold text-foreground text-sm leading-tight break-words">
                         {membro.nome}
                     </p>
-                    <p className="text-[11px] text-muted-foreground truncate opacity-70">
-                        {membro.email.split('@')[0]}
+                    <p className="text-[11px] text-muted-foreground opacity-70 break-all leading-tight mt-0.5">
+                        {membro.email}
                     </p>
                 </div>
             </div>
 
             {/* Role / Papel */}
-            <div className="col-span-2">
+            <div className="col-span-1">
                 <select
                     aria-label={`Papel de ${membro.nome}`}
                     className="w-full bg-muted/20 border border-border/50 rounded-lg px-2 py-1.5 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer"
@@ -510,30 +537,49 @@ function LinhaMembro({
             </div>
 
             {/* Status */}
-            <div className="col-span-2 flex justify-center">
-                <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${membro.ativo ? 'bg-emerald-500' : 'bg-muted-foreground/20'}`} />
-                    <span className={`text-[10px] font-medium uppercase tracking-wider ${membro.ativo ? 'text-emerald-500' : 'text-muted-foreground/40'}`}>
-                        {membro.ativo ? 'Ativo' : 'Offline'}
+            <div className="col-span-1 flex justify-center">
+                <div className="flex items-center gap-1.5">
+                    <div className={`w-1.5 h-1.5 rounded-full ${membro.ativo ? 'bg-emerald-500' : 'bg-muted-foreground/20'}`} />
+                    <span className={`text-[9px] font-bold uppercase tracking-wider ${membro.ativo ? 'text-emerald-500' : 'text-muted-foreground/40'}`}>
+                        {membro.ativo ? 'Ativo' : 'Off'}
                     </span>
                 </div>
             </div>
 
             {/* Ações */}
             <div className="col-span-2 flex items-center justify-end gap-2">
-                <button
-                    onClick={() => onAlternarStatus(membro)}
-                    className={`min-w-[80px] flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${membro.ativo ? 'bg-amber-500/5 text-amber-500 border-amber-500/10 hover:bg-amber-500/10' : 'bg-emerald-500/5 text-emerald-500 border-emerald-500/10 hover:bg-emerald-500/10'}`}
-                >
-                    {salvando ? <Loader2 size={12} className="animate-spin" /> : (membro.ativo ? <X size={12} className="opacity-50" /> : <Check size={12} className="opacity-50" />)}
-                    {membro.ativo ? 'Pausar' : 'Ativar'}
-                </button>
-                <button
-                    onClick={() => onSolicitarExclusao(membro)}
-                    className="p-1.5 rounded-lg text-muted-foreground/40 hover:text-red-500 hover:bg-red-500/5 transition-colors"
-                >
-                    <Trash2 size={16} />
-                </button>
+                {!ehOMesmoUsuario && (
+                    <>
+                        <button
+                            onClick={membro.ativo ? () => onSolicitarExclusao(membro) : () => onAlternarStatus(membro)}
+                            title={membro.ativo ? "Arquivar membro" : "Restaurar membro"}
+                            className={`p-2 rounded-lg transition-all ${membro.ativo
+                                ? 'text-muted-foreground/40 hover:text-red-500 hover:bg-red-500/5'
+                                : 'text-emerald-500/60 hover:text-emerald-500 hover:bg-emerald-500/5'}`}
+                        >
+                            {salvando ? (
+                                <Loader2 size={16} className="animate-spin" />
+                            ) : membro.ativo ? (
+                                <Trash2 size={16} />
+                            ) : (
+                                <RotateCcw size={16} />
+                            )}
+                        </button>
+
+                        {!membro.ativo && (
+                            <button
+                                onClick={() => onLimpezaDefinitiva(membro)}
+                                title="Limpeza definitiva (sumir do mapa)"
+                                className="p-2 rounded-lg text-muted-foreground/30 hover:text-red-500 hover:bg-red-500/5 transition-all"
+                            >
+                                <Eraser size={16} />
+                            </button>
+                        )}
+                    </>
+                )}
+                {ehOMesmoUsuario && (
+                    <span className="text-[10px] text-muted-foreground/40 font-medium italic pr-2">você</span>
+                )}
             </div>
         </div>
     );
@@ -571,7 +617,7 @@ function BulkActions({ selecionados, onClear, onBulkUpdate, onExport }: BulkActi
                     onClick={() => onBulkUpdate('arquivados' as any)}
                     className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition-all"
                 >
-                    <Archive size={14} /> Arquivar/Ativar
+                    <Archive size={14} /> Arquivar / Restaurar
                 </button>
 
                 <div className="relative group/bulk-role">
@@ -803,7 +849,12 @@ export function GerenciarMembros() {
         equipes,
         cadastrarMembro,
         removerMembro,
+        limpezaDefinitiva,
+        esvaziarLixeira
     } = useGerenciarMembros();
+
+    const [modalLimpagemAberta, setModalLimpagemAberta] = useState(false);
+    const [membroParaLimpar, setMembroParaLimpar] = useState<Membro | null>(null);
 
     const [busca, setBusca] = useState('');
     const buscaDebounced = useDebounce(busca, 300);
@@ -943,12 +994,22 @@ export function GerenciarMembros() {
                         )}
                     </button>
 
+                    {abaAtiva === 'arquivados' && membrosFiltrados.length > 0 && (
+                        <button
+                            onClick={() => setModalLimpagemAberta(true)}
+                            className="w-full sm:w-auto bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 px-4 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all border border-amber-500/20"
+                        >
+                            <Trash2 className="w-4 h-4" /> Esvaziar Lixeira
+                        </button>
+                    )}
+
                     <button
                         onClick={() => setModalLoteAberto(true)}
                         className="w-full sm:w-auto bg-accent hover:bg-accent/80 text-accent-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all"
                     >
                         <ListPlus className="w-4 h-4" /> Convites em Lote
                     </button>
+
 
                     <button
                         onClick={() => setModalAberto(true)}
@@ -984,11 +1045,11 @@ export function GerenciarMembros() {
                             }
                         </button>
                     </div>
-                    <div className="col-span-2 pl-2">Membro</div>
-                    <div className="col-span-2">Papel (Role)</div>
+                    <div className="col-span-4 pl-2">Membro</div>
+                    <div className="col-span-1">Papel</div>
                     <div className="col-span-2">Função (Múltiplas)</div>
                     <div className="col-span-1 text-center">GRUPO</div>
-                    <div className="col-span-2 text-center">Status</div>
+                    <div className="col-span-1 text-center">Status</div>
                     <div className="col-span-2 text-right">Ações</div>
                 </div>
 
@@ -1020,6 +1081,7 @@ export function GerenciarMembros() {
                                 equipes={equipes}
                                 onAlternarStatus={alternarStatus}
                                 onSolicitarExclusao={setMembroParaExcluir}
+                                onLimpezaDefinitiva={setMembroParaLimpar}
                             />
                         ))
                     )}
@@ -1059,6 +1121,33 @@ export function GerenciarMembros() {
                 descricao={`Esta ação desativará o acesso de ${membroParaExcluir?.nome ?? 'membro'} (@${membroParaExcluir?.email}) imediatamente. Os dados de histórico e logs serão preservados no sistema.`}
                 textoBotao="Sim, Remover Acesso"
                 carregando={salvandoIds.has(membroParaExcluir?.id ?? '')}
+            />
+
+            <ConfirmacaoExclusao
+                aberto={!!membroParaLimpar}
+                aoFechar={() => setMembroParaLimpar(null)}
+                aoConfirmar={async () => {
+                    if (membroParaLimpar) {
+                        await limpezaDefinitiva(membroParaLimpar.id);
+                        setMembroParaLimpar(null);
+                    }
+                }}
+                titulo="Limpar registro definitivamente?"
+                descricao={`Esta ação removerá ${membroParaLimpar?.nome} totalmente da interface administrativa. O registro permanecerá no banco de dados para auditoria, mas não poderá mais ser visto ou restaurado por aqui.`}
+                textoBotao="Limpar do Mapa"
+                carregando={salvandoIds.has(membroParaLimpar?.id ?? '')}
+            />
+
+            <ConfirmacaoExclusao
+                aberto={modalLimpagemAberta}
+                aoFechar={() => setModalLimpagemAberta(false)}
+                aoConfirmar={async () => {
+                    await esvaziarLixeira();
+                    setModalLimpagemAberta(false);
+                }}
+                titulo="Esvaziar Lixeira?"
+                descricao={`Todos os ${membrosFiltrados.length} membros arquivados sumirão definitivamente desta visualização. Esta ação é voltada para limpeza da interface e NÃO pode ser desfeita.`}
+                textoBotao="Esvaziar Agora"
             />
 
             <ToastContainer toasts={toasts} />

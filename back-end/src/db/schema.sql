@@ -31,6 +31,7 @@ CREATE TABLE usuarios (
   bio TEXT,
   funcoes TEXT DEFAULT '[]',
   equipe_id TEXT REFERENCES equipes(id) ON DELETE SET NULL,
+  visivel INTEGER NOT NULL DEFAULT 1,
   criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 

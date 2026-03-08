@@ -172,9 +172,11 @@ export default function TelaLogin() {
                                     </div>
                                 </button>
 
-                                <div className="flex items-center justify-center gap-2 text-slate-500 font-bold text-[13px] animate-in fade-in slide-in-from-bottom-2 duration-700 delay-500">
-                                    <Info size={15} className="text-slate-400" />
-                                    <span>Use seu e-mail institucional @{ambiente.dominioInstitucional} ou @unieuro.com.br</span>
+                                <div className="flex items-center gap-1.5 text-slate-400 text-[11.5px] animate-in fade-in slide-in-from-bottom-2 duration-700 delay-500">
+                                    <Info size={11} className="shrink-0" />
+                                    <span>
+                                        Use o e-mail <span className="text-slate-500">@{ambiente.dominioInstitucional}</span>
+                                    </span>
                                 </div>
                             </div>
                         </div>
