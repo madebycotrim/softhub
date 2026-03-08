@@ -32,7 +32,8 @@ rotasUsuarios.get('/', autenticacaoRequerida(), async (c) => {
             SELECT
                 u.*,
                 e.nome  AS equipe_nome,
-                g.nome  AS grupo_nome
+                g.nome  AS grupo_nome,
+                g.id    AS grupo_id
             FROM usuarios u
             LEFT JOIN equipes e ON u.equipe_id = e.id
             LEFT JOIN grupos  g ON e.grupo_id  = g.id

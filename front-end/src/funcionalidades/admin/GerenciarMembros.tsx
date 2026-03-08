@@ -373,12 +373,15 @@ function LinhaMembro({
         'DevOps', 'QA/Testes', 'Product Owner', 'Scrum Master', 'Data Science'
     ];
 
-    // Encontra equipes que representam Grupo A e Grupo B
-    const equipeA = equipes.find(e => e.grupo_nome?.toLowerCase().includes('grupo a') || e.grupo_nome === 'A');
-    const equipeB = equipes.find(e => e.grupo_nome?.toLowerCase().includes('grupo b') || e.grupo_nome === 'B');
+    // Identifica os dois grupos disponíveis dinamicamente (os dois primeiros encontrados)
+    const idsGrupos = Array.from(new Set(equipes.map(e => e.grupo_id)));
 
-    const isGrupoA = membro.grupo_nome?.toLowerCase().includes('grupo a') || membro.grupo_nome === 'A';
-    const isGrupoB = membro.grupo_nome?.toLowerCase().includes('grupo b') || membro.grupo_nome === 'B';
+    // Equipe representante de cada grupo (para poder alocar o membro)
+    const equipeA = equipes.find(e => e.grupo_id === idsGrupos[0]);
+    const equipeB = equipes.find(e => e.grupo_id === idsGrupos[1]);
+
+    const isGrupoA = idsGrupos[0] && membro.grupo_id === idsGrupos[0];
+    const isGrupoB = idsGrupos[1] && membro.grupo_id === idsGrupos[1];
 
     // Fecha menu ao clicar fora
     useEffect(() => {
@@ -489,7 +492,7 @@ function LinhaMembro({
                 <div className="flex bg-muted/20 p-0.5 rounded-lg border border-border/50">
                     <button
                         onClick={() => onAlterarEquipe(membro.id, isGrupoA ? null : (equipeA?.id || null))}
-                        title={equipeA?.nome || 'Grupo A'}
+                        title={equipeA?.grupo_nome || 'Grupo A'}
                         disabled={!equipeA}
                         className={`w-8 py-1 rounded-md text-[10px] font-bold transition-all ${isGrupoA ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted/50'}`}
                     >
@@ -497,7 +500,7 @@ function LinhaMembro({
                     </button>
                     <button
                         onClick={() => onAlterarEquipe(membro.id, isGrupoB ? null : (equipeB?.id || null))}
-                        title={equipeB?.nome || 'Grupo B'}
+                        title={equipeB?.grupo_nome || 'Grupo B'}
                         disabled={!equipeB}
                         className={`w-8 py-1 rounded-md text-[10px] font-bold transition-all ${isGrupoB ? 'bg-indigo-500 text-white shadow-sm' : 'text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted/50'}`}
                     >
