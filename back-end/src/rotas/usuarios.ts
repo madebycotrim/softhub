@@ -56,8 +56,13 @@ rotasUsuarios.get('/', autenticacaoRequerida(), async (c) => {
             },
         });
     } catch (erro: any) {
-        console.error('[ERRO DB] GET /api/usuarios', erro);
-        return c.json({ erro: 'Falha ao buscar membros', detalhe: erro.message }, 500);
+        console.error('[ERRO FATAL] GET /api/usuarios:', erro.message, erro.stack);
+        return c.json({
+            erro: 'Falha ao buscar membros',
+            mensagem: erro.message,
+            stack: erro.stack,
+            contexto: 'GET /api/usuarios'
+        }, 500);
     }
 });
 
