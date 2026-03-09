@@ -178,6 +178,7 @@ rotasAuthQr.post('/qr/autorizar', autenticacaoRequerida(), async (c) => {
 
         await registrarLog(DB, {
             usuarioId: usuario.id,
+            usuarioNome: usuario.nome,
             usuarioEmail: usuario.email,
             acao: 'LOGIN_QR_AUTORIZADO',
             modulo: 'auth',

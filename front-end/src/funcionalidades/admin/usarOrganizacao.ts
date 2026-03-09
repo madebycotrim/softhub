@@ -32,8 +32,8 @@ export function usarOrganizacao() {
         setErro(null);
         try {
             const [resGrupos, resEquipes] = await Promise.all([
-                api.get('/organizacao/grupos'),
-                api.get('/organizacao/equipes')
+                api.get('/api/organizacao/grupos'),
+                api.get('/api/organizacao/equipes')
             ]);
             setGrupos(resGrupos.data);
             setEquipes(resEquipes.data);
@@ -50,7 +50,7 @@ export function usarOrganizacao() {
 
     const criarGrupo = async (dados: { nome: string, descricao?: string, lider_id?: string, sub_lider_id?: string }) => {
         try {
-            await api.post('/organizacao/grupos', dados);
+            await api.post('/api/organizacao/grupos', dados);
             await carregarDados();
         } catch (e: any) {
             throw new Error(e.response?.data?.erro || 'Falha ao criar grupo');
@@ -59,7 +59,7 @@ export function usarOrganizacao() {
 
     const editarGrupo = async (id: string, dados: { nome: string, descricao?: string, lider_id?: string, sub_lider_id?: string }) => {
         try {
-            await api.patch(`/organizacao/grupos/${id}`, dados);
+            await api.patch(`/api/organizacao/grupos/${id}`, dados);
             await carregarDados();
         } catch (e: any) {
             throw new Error(e.response?.data?.erro || 'Falha ao editar grupo');
@@ -68,7 +68,7 @@ export function usarOrganizacao() {
 
     const criarEquipe = async (dados: { grupo_id: string, nome: string, descricao?: string }) => {
         try {
-            await api.post('/organizacao/equipes', dados);
+            await api.post('/api/organizacao/equipes', dados);
             await carregarDados();
         } catch (e: any) {
             throw new Error(e.response?.data?.erro || 'Falha ao criar equipe');
@@ -77,7 +77,7 @@ export function usarOrganizacao() {
 
     const excluirGrupo = async (id: string) => {
         try {
-            await api.delete(`/organizacao/grupos/${id}`);
+            await api.delete(`/api/organizacao/grupos/${id}`);
             await carregarDados();
         } catch (e: any) {
             throw new Error(e.response?.data?.erro || 'Falha ao excluir grupo');
@@ -86,7 +86,7 @@ export function usarOrganizacao() {
 
     const excluirEquipe = async (id: string) => {
         try {
-            await api.delete(`/organizacao/equipes/${id}`);
+            await api.delete(`/api/organizacao/equipes/${id}`);
             await carregarDados();
         } catch (e: any) {
             throw new Error(e.response?.data?.erro || 'Falha ao excluir equipe');
@@ -95,7 +95,7 @@ export function usarOrganizacao() {
 
     const alocarUsuario = async (usuarioId: string, equipeId: string | null) => {
         try {
-            await api.patch(`/organizacao/alocacao/${usuarioId}`, { equipe_id: equipeId });
+            await api.patch(`/api/organizacao/alocacao/${usuarioId}`, { equipe_id: equipeId });
         } catch (e: any) {
             throw new Error(e.response?.data?.erro || 'Falha ao alocar usuário');
         }

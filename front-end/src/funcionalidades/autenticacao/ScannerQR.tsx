@@ -132,48 +132,71 @@ export default function ScannerQR({ aoFechar }: ScannerQRProps) {
         <div className="flex flex-col items-center justify-center space-y-8 pt-4 min-h-[500px]">
             
             {(status === 'ocioso' || status === 'pedindo_permissao') && (
-                <div className="text-center space-y-8 px-6 animate-in fade-in duration-500">
-                    <div className="w-24 h-24 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto text-slate-900 border border-slate-200 relative shadow-sm">
-                        <Camera size={40} strokeWidth={1.5} />
+                <div className="text-center space-y-10 px-8 animate-in fade-in slide-in-from-top-4 duration-700">
+                    <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center mx-auto text-blue-600 border border-slate-200 relative shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] transition-transform hover:scale-105 duration-500">
+                        <Camera size={48} strokeWidth={1.5} />
                         {status === 'pedindo_permissao' && (
-                            <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-3xl animate-spin" />
+                            <div className="absolute inset-0 border-[3px] border-blue-600 border-t-transparent rounded-2xl animate-spin" />
                         )}
+                        {/* Glow effect */}
+                        <div className="absolute -inset-4 bg-blue-500/5 rounded-[2.5rem] -z-10 blur-xl" />
                     </div>
                     
-                    <div className="space-y-3">
-                        <h3 className="text-2xl font-black text-slate-900 tracking-tight">Autorizar Acesso</h3>
-                        <p className="text-[15px] text-slate-500 font-medium leading-relaxed">
-                            Aponte para o código na tela do computador para entrar. Usaremos apenas a câmera.
+                    <div className="space-y-4">
+                        <div className="space-y-1">
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600/60">Acesso Rápido</span>
+                            <h3 className="text-3xl font-black text-slate-900 tracking-tight">QR Login</h3>
+                        </div>
+                        <p className="text-[15px] text-slate-500 font-medium leading-relaxed max-w-[240px] mx-auto">
+                            Digitalize para entrar instantaneamente. Sua câmera será usada apenas para leitura.
                         </p>
                     </div>
 
-                    <button
-                        onClick={pedirPermissao}
-                        disabled={status === 'pedindo_permissao'}
-                        className="w-full h-14 bg-slate-900 text-white font-bold rounded-2xl shadow-xl shadow-slate-200 active:scale-95 transition-all flex items-center justify-center gap-2"
-                    >
-                        {status === 'pedindo_permissao' ? <Loader2 className="animate-spin" /> : 'Começar Leitura'}
-                    </button>
-                    <button onClick={aoFechar} className="text-xs text-slate-400 font-black uppercase tracking-widest">Agora não</button>
+                    <div className="flex flex-col gap-4 w-full">
+                        <button
+                            onClick={pedirPermissao}
+                            disabled={status === 'pedindo_permissao'}
+                            className="w-full h-15 bg-slate-900 text-white font-bold rounded-2xl shadow-xl shadow-slate-200 active:scale-95 transition-all flex items-center justify-center gap-2 text-lg"
+                        >
+                            {status === 'pedindo_permissao' ? <Loader2 className="animate-spin" /> : 'Abrir Câmera'}
+                        </button>
+                        <button onClick={aoFechar} className="py-2 text-xs text-slate-400 font-black uppercase tracking-widest hover:text-slate-600 transition-colors">Cancelar</button>
+                    </div>
                 </div>
             )}
 
             {status === 'scaneando' && (
-                <div className="w-full flex flex-col items-center space-y-8 px-4 animate-in zoom-in-95 duration-500">
-                    <div className="text-center space-y-1">
-                        <h3 className="text-lg font-black text-slate-900">Escanear</h3>
-                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest animate-pulse">Buscando QR Code...</p>
+                <div className="w-full flex flex-col items-center space-y-10 px-4 animate-in zoom-in-95 duration-500">
+                    <div className="text-center space-y-2">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full mb-2">
+                            <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse" />
+                            <span className="text-[10px] font-black uppercase tracking-wider">Câmera Ativa</span>
+                        </div>
+                        <h3 className="text-2xl font-black text-slate-900 tracking-tight">Escanear Código</h3>
+                        <p className="text-sm text-slate-400 font-medium">Aponte para o QR Code no seu computador</p>
                     </div>
                     
-                    <div className="w-full max-w-[320px] aspect-square rounded-[3rem] border-[12px] border-slate-100/50 shadow-2xl bg-black relative overflow-hidden">
+                    <div className="w-full max-w-[280px] aspect-square rounded-2xl border-[8px] border-white shadow-[0_0_50px_-12px_rgba(0,0,0,0.3)] bg-black relative overflow-hidden group ring-1 ring-slate-200">
+                        {/* Container do Vídeo */}
                         <div id="leitor-qr" className="w-full h-full object-cover"></div>
+                        
+                        {/* Linha de Scan de Alta Tecnologia */}
+                        <div className="absolute inset-0 pointer-events-none z-10">
+                            <div className="w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent shadow-[0_0_15px_rgba(59,130,246,0.8)] absolute top-0 animate-scan-line" />
+                            
+                            {/* Cantos Estilizados */}
+                            <div className="absolute top-4 left-4 w-6 h-6 border-t-4 border-l-4 border-white/80 rounded-tl-sm" />
+                            <div className="absolute top-4 right-4 w-6 h-6 border-t-4 border-r-4 border-white/80 rounded-tr-sm" />
+                            <div className="absolute bottom-4 left-4 w-6 h-6 border-b-4 border-l-4 border-white/80 rounded-bl-sm" />
+                            <div className="absolute bottom-4 right-4 w-6 h-6 border-b-4 border-r-4 border-white/80 rounded-br-sm" />
+                        </div>
                     </div>
 
                     <button 
                         onClick={aoFechar}
-                        className="p-4 bg-slate-900 text-white rounded-full active:scale-90 transition-all font-bold shadow-xl"
+                        className="w-14 h-14 bg-white/80 backdrop-blur-md border border-slate-200 text-slate-900 rounded-full active:scale-90 transition-all flex items-center justify-center shadow-xl mb-4"
                     >
-                        <X size={24} />
+                        <X size={24} strokeWidth={2.5} />
                     </button>
                 </div>
             )}

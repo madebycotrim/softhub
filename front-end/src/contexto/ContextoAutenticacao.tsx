@@ -1,6 +1,5 @@
 import { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
-import { msalInstance } from '../configuracoes/msal';
 
 export interface Usuario {
     id: string;
@@ -72,10 +71,8 @@ export function ProvedorAutenticacao({ children }: { children: ReactNode }) {
         localStorage.removeItem(CHAVE_TOKEN);
         localStorage.removeItem(CHAVE_USUARIO);
 
-        // Limpa também a sessão no Azure AD via redirect
-        msalInstance.logoutRedirect({
-            postLogoutRedirectUri: window.location.origin + '/login',
-        }).catch(() => null);
+        // Apenas redireciona localmente, sem deslogar da conta Microsoft global
+        window.location.href = '/login';
     }, []);
 
     const atualizarUsuarioLocalmente = useCallback((atualizado: Usuario) => {

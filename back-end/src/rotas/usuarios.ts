@@ -261,6 +261,9 @@ rotasUsuarios.post('/limpeza-geral', autenticacaoRequerida(), async (c) => {
 
         await registrarLog(DB, {
             usuarioId: usuarioLogado.id,
+            usuarioNome: usuarioLogado.nome,
+            usuarioEmail: usuarioLogado.email,
+            usuarioRole: usuarioLogado.role,
             acao: 'LIMPEZA_GERAL_MEMBROS',
             modulo: 'admin',
             descricao: `Realizada limpeza geral. ${meta.changes} membros movidos para o limbo.`,

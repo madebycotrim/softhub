@@ -11,7 +11,7 @@ rotasConfiguracoes.get('/', autenticacaoRequerida('ADMIN'), async (c) => {
     const { DB } = c.env;
 
     try {
-        const { results } = await DB.prepare('SELECT chave, valor, descricao, atualizado_em FROM configuracoes').all();
+        const { results } = await DB.prepare('SELECT chave, valor FROM configuracoes_sistema').all();
 
         // Mapeia para um objeto chave-valor para facilitar o uso no front
         const config: Record<string, any> = {};
@@ -43,7 +43,6 @@ rotasConfiguracoes.patch('/:chave', autenticacaoRequerida('ADMIN'), async (c) =>
     const { DB } = c.env;
     const { chave } = c.req.param();
     const { valor } = await c.req.json();
-    const usuarioId = c.get('usuario').id;
 
     if (valor === undefined) {
         return c.json({ erro: 'Valor é obrigatório' }, 400);
@@ -52,21 +51,31 @@ rotasConfiguracoes.patch('/:chave', autenticacaoRequerida('ADMIN'), async (c) =>
     try {
         const valorString = JSON.stringify(valor);
 
+        // O schema não possui atualizado_em, então removemos
         const res = await DB.prepare(`
-            UPDATE configuracoes 
-            SET valor = ?, atualizado_em = (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+            UPDATE configuracoes_sistema 
+            SET valor = ?
             WHERE chave = ?
         `).bind(valorString, chave).run();
 
         if (res.meta.changes === 0) {
-            return c.json({ erro: 'Configuração não encontrada' }, 404);
+            // Se não existe, tenta inserir (Upsert básico com UUID)
+            await DB.prepare(`
+                INSERT INTO configuracoes_sistema (id, chave, valor)
+                VALUES (?, ?, ?)
+            `).bind(crypto.randomUUID(), chave, valorString).run();
         }
 
+        const usuario = c.get('usuario');
         await registrarLog(DB, {
-            usuarioId,
+            usuarioId: usuario.id,
+            usuarioNome: usuario.nome,
+            usuarioEmail: usuario.email,
+            usuarioRole: usuario.role,
             acao: 'ATUALIZAR_CONFIG',
             modulo: 'ADMIN',
-            descricao: `Configuração "${chave}" atualizada.`
+            descricao: `Configuração "${chave}" atualizada.`,
+            ip: c.req.header('CF-Connecting-IP') ?? ''
         });
 
         return c.json({ sucesso: true });

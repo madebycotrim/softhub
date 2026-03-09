@@ -136,3 +136,24 @@
     @apply antialiased selection:bg-primary/20 transition-colors duration-300;
   }
 }
+
+@layer utilities {
+  .animate-scan-line {
+    animation: scan-line 2s linear infinite;
+  }
+
+  .animate-infinite-scroll {
+    animation: infinite-scroll 3s linear infinite;
+  }
+
+  @keyframes scan-line {
+    0% { top: 0; }
+    50% { top: 100%; }
+    100% { top: 0; }
+  }
+
+  @keyframes infinite-scroll {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(200%); }
+  }
+}
