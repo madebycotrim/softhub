@@ -1,12 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { usarConfiguracoes } from './usarConfiguracoes';
 import { Carregando } from '../../compartilhado/componentes/Carregando';
+import { usarPermissaoAcesso } from '../../compartilhado/hooks/usarPermissao';
 import { 
     Plus, Lock, ShieldCheck, Crown,
     UserCircle, MessageSquare,
     Settings2, Info, Trash2,
     FolderKanban, Clock, LayoutDashboard,
-    LayoutGrid, FileText, Database
+    LayoutGrid, FileText, Database, Globe
 } from 'lucide-react';
 import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
 
@@ -110,23 +111,28 @@ const PERMISSOES_SISTEMA = [
     },
 ] as const;
 
+/** Cargos que nunca podem ser removidos */
+const CARGOS_FIXOS = ['ADMIN', 'TODOS'];
+
 /**
  * Página de Configurações & Governança.
  * Gestão de cargos e matriz de permissões completa com todas as funções reais do sistema.
  */
 export function PaginaConfiguracoes() {
     const { configuracoes, carregando, erro, atualizarConfiguracao } = usarConfiguracoes();
-    
+
+    const podeEditar = usarPermissaoAcesso('configuracoes:editar');
+
     const [novoCargo, setNovoCargo] = useState('');
     const [salvando, setSalvando] = useState<string | null>(null);
 
-    /** Lista de roles/cargos cadastrados para a matriz — exclui ADMIN (permissões totais, imutáveis) */
+    /** Lista de roles/cargos — ADMIN e TODOS sempre presentes */
     const roles = useMemo(() => {
         const baseRoles = configuracoes?.permissoes_roles ? Object.keys(configuracoes.permissoes_roles) : [];
-        return Array.from(new Set(['ADMIN', ...baseRoles]));
+        return Array.from(new Set(['ADMIN', 'TODOS', ...baseRoles]));
     }, [configuracoes]);
 
-    /** Roles exibidos na matriz de permissões (ADMIN oculto — tem acesso total por padrão) */
+    /** Roles exibidos na matriz (ADMIN oculto — acesso total por padrão) */
     const rolesMatriz = useMemo(() => roles.filter(r => r !== 'ADMIN'), [roles]);
 
     if (carregando) return <Carregando />;
@@ -137,7 +143,6 @@ export function PaginaConfiguracoes() {
         if (!configuracoes) return;
         const chave = `permissoes_roles.${role}.${permissao}`;
         setSalvando(chave);
-        
         try {
             const novasPermissoes = { ...configuracoes.permissoes_roles };
             novasPermissoes[role] = { ...novasPermissoes[role], [permissao]: !novasPermissoes[role]?.[permissao] };
@@ -151,28 +156,24 @@ export function PaginaConfiguracoes() {
     const handleAddCargo = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!novoCargo || !configuracoes) return;
-        
-        const novasPermissoes = { 
-            ...configuracoes.permissoes_roles, 
-            [novoCargo.toUpperCase()]: { 
-                "tarefas:visualizar": true,
-                "ponto:registrar": true,
-                "membros:visualizar": true,
-                "membros:editar_perfil": true,
-                "avisos:visualizar": true,
-                "dashboard:visualizar": true,
-            } 
+        const novasPermissoes = {
+            ...configuracoes.permissoes_roles,
+            [novoCargo.toUpperCase()]: {
+                'tarefas:visualizar': true,
+                'ponto:registrar': true,
+                'membros:visualizar': true,
+                'membros:editar_perfil': true,
+                'avisos:visualizar': true,
+                'dashboard:visualizar': true,
+            },
         };
-
         const res = await atualizarConfiguracao('permissoes_roles', novasPermissoes);
-        if (res.sucesso) {
-            setNovoCargo('');
-        }
+        if (res.sucesso) setNovoCargo('');
     };
 
-    /** Remove um cargo (exceto ADMIN) */
+    /** Remove um cargo (exceto os fixos: ADMIN e TODOS) */
     const handleRemoverCargo = async (role: string) => {
-        if (!configuracoes || role === 'ADMIN') return;
+        if (!configuracoes || CARGOS_FIXOS.includes(role)) return;
         const novasPermissoes = { ...configuracoes.permissoes_roles };
         delete novasPermissoes[role];
         await atualizarConfiguracao('permissoes_roles', novasPermissoes);
@@ -187,10 +188,8 @@ export function PaginaConfiguracoes() {
             />
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                {/* Coluna Lateral: Gestão de Cargos Inline */}
+                {/* Coluna Lateral: Gestão de Cargos */}
                 <div className="lg:col-span-3 space-y-6">
-                    
-                    {/* Seção: Cargos */}
                     <div className="bg-card/40 backdrop-blur-md border border-border/40 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all space-y-5">
                         <div className="flex items-center gap-3">
                             <div className="p-2.5 bg-indigo-500/10 rounded-xl text-indigo-500">
@@ -202,44 +201,53 @@ export function PaginaConfiguracoes() {
                             </div>
                         </div>
 
-                        {/* Formulário para adicionar cargo */}
-                        <form onSubmit={handleAddCargo} className="flex gap-2">
-                            <input 
-                                required
-                                value={novoCargo}
-                                onChange={e => setNovoCargo(e.target.value)}
-                                placeholder="EX: LIDER_TECH"
-                                className="flex-1 min-w-0 bg-muted/20 border border-border/40 rounded-xl px-3 py-2.5 text-[11px] font-bold outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all uppercase placeholder:text-muted-foreground/30"
-                            />
-                            <button 
-                                type="submit"
-                                className="p-2.5 bg-indigo-500 text-white rounded-xl shadow-lg shadow-indigo-500/20 active:scale-95 transition-all hover:bg-indigo-600 shrink-0"
-                            >
-                                <Plus size={16} strokeWidth={3} />
-                            </button>
-                        </form>
+                        {/* Formulário para adicionar cargo — apenas para quem pode editar */}
+                        {podeEditar && (
+                            <form onSubmit={handleAddCargo} className="flex gap-2">
+                                <input
+                                    required
+                                    value={novoCargo}
+                                    onChange={e => setNovoCargo(e.target.value)}
+                                    placeholder="EX: LIDER_TECH"
+                                    className="flex-1 min-w-0 bg-muted/20 border border-border/40 rounded-xl px-3 py-2.5 text-[11px] font-bold outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all uppercase placeholder:text-muted-foreground/30"
+                                />
+                                <button
+                                    type="submit"
+                                    className="p-2.5 bg-indigo-500 text-white rounded-xl shadow-lg shadow-indigo-500/20 active:scale-95 transition-all hover:bg-indigo-600 shrink-0"
+                                >
+                                    <Plus size={16} strokeWidth={3} />
+                                </button>
+                            </form>
+                        )}
 
                         {/* Lista de cargos existentes */}
                         <div className="space-y-1.5 pt-2">
                             <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/30 px-1">Cargos</label>
                             <div className="space-y-1 max-h-[400px] overflow-y-auto pr-1">
-                                {roles.map(role => (
-                                    <div 
-                                        key={role} 
+                                {roles.filter(r => r !== 'TODOS').map(role => (
+                                    <div
+                                        key={role}
                                         className="flex items-center justify-between p-3 rounded-xl border border-border/30 hover:bg-muted/10 transition-colors group"
                                     >
                                         <div className="flex items-center gap-2.5">
                                             <div className={`w-6 h-6 rounded-md flex items-center justify-center ${
-                                                role === 'ADMIN' ? 'bg-amber-500/10 text-amber-600' : 'bg-muted text-muted-foreground/60'
+                                                role === 'ADMIN' ? 'bg-amber-500/10 text-amber-600'
+                                                : 'bg-muted text-muted-foreground/60'
                                             }`}>
-                                                {role === 'ADMIN' ? <Crown size={12} /> : <ShieldCheck size={12} />}
+                                                {role === 'ADMIN' ? <Crown size={12} />
+                                                : <ShieldCheck size={12} />}
                                             </div>
-                                            <span className={`text-[12px] font-medium tracking-tight ${role === 'ADMIN' ? 'text-amber-600' : 'text-foreground/80'}`}>
-                                                {role}
-                                            </span>
+                                            <div className="flex flex-col">
+                                                <span className={`text-[12px] font-medium tracking-tight ${
+                                                    role === 'ADMIN' ? 'text-amber-600'
+                                                    : 'text-foreground/80'
+                                                }`}>
+                                                    {role}
+                                                </span>
+                                            </div>
                                         </div>
-                                        {role !== 'ADMIN' && (
-                                            <button 
+                                        {!CARGOS_FIXOS.includes(role) && podeEditar && (
+                                            <button
                                                 onClick={() => handleRemoverCargo(role)}
                                                 className="p-1.5 text-muted-foreground/20 hover:text-red-500 hover:bg-red-500/5 rounded-lg transition-all opacity-0 group-hover:opacity-100"
                                             >
@@ -258,7 +266,8 @@ export function PaginaConfiguracoes() {
                             <span className="text-[10px] font-black uppercase tracking-widest">Dica Admin</span>
                         </div>
                         <p className="text-[10px] text-muted-foreground font-medium leading-relaxed">
-                            Alterações nesta página afetam o acesso de todos os membros em tempo real. Use com cautela.
+                            Ative uma permissão na coluna <span className="text-emerald-600 font-bold">TODOS</span> para concedê-la a qualquer membro, independente do cargo.
+                            Alterações afetam todos em tempo real.
                         </p>
                     </div>
                 </div>
@@ -288,8 +297,17 @@ export function PaginaConfiguracoes() {
                                             Funcionalidade
                                         </th>
                                         {rolesMatriz.map(role => (
-                                            <th key={role} className="px-4 py-3 text-center text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 min-w-[90px]">
-                                                {role}
+                                            <th key={role} className={`px-4 py-3 text-center text-[9px] font-black uppercase tracking-widest min-w-[90px] ${
+                                                role === 'TODOS'
+                                                    ? 'text-emerald-600 bg-emerald-500/5'
+                                                    : 'text-muted-foreground/50'
+                                            }`}>
+                                                {role === 'TODOS' ? (
+                                                    <span className="flex flex-col items-center gap-0.5">
+                                                        <Globe size={11} className="text-emerald-500" />
+                                                        {role}
+                                                    </span>
+                                                ) : role}
                                             </th>
                                         ))}
                                     </tr>
@@ -325,21 +343,37 @@ export function PaginaConfiguracoes() {
                                                         </td>
                                                         {rolesMatriz.map(role => {
                                                             const ativa = configuracoes?.permissoes_roles[role]?.[perm.chave] ?? false;
+                                                            const universal = configuracoes?.permissoes_roles['TODOS']?.[perm.chave] ?? false;
                                                             const salvandoEste = salvando === `permissoes_roles.${role}.${perm.chave}`;
+                                                            // Se TODOS tem a permissão, demais cargos ficam com check automático (bloqueado)
+                                                            const forcadoPorTodos = role !== 'TODOS' && universal;
 
                                                             return (
-                                                                <td key={`${role}-${perm.chave}`} className="px-4 py-3 text-center">
+                                                                <td key={`${role}-${perm.chave}`} className={`px-4 py-3 text-center ${role === 'TODOS' ? 'bg-emerald-500/[0.03]' : ''}`}>
                                                                     <div className="flex justify-center items-center">
                                                                         <button
-                                                                            disabled={salvandoEste}
-                                                                            onClick={() => handleTogglePermissao(role, perm.chave)}
-                                                                            className={`w-5 h-5 rounded flex items-center justify-center transition-all cursor-pointer active:scale-95 ${
-                                                                                ativa
-                                                                                    ? 'bg-primary text-white shadow-sm'
-                                                                                    : 'bg-muted/30 border border-border/60 text-transparent hover:border-primary/60'
+                                                                            disabled={salvandoEste || !podeEditar || forcadoPorTodos}
+                                                                            onClick={() => podeEditar && !forcadoPorTodos && handleTogglePermissao(role, perm.chave)}
+                                                                            title={
+                                                                                forcadoPorTodos ? 'Concedido via coluna TODOS'
+                                                                                : !podeEditar ? 'Sem permissão para editar'
+                                                                                : undefined
+                                                                            }
+                                                                            className={`w-5 h-5 rounded flex items-center justify-center transition-all ${
+                                                                                forcadoPorTodos
+                                                                                    ? 'bg-emerald-500/20 text-emerald-600 cursor-not-allowed border border-emerald-500/30'
+                                                                                    : podeEditar ? 'cursor-pointer active:scale-95' : 'cursor-not-allowed opacity-60'
+                                                                            } ${
+                                                                                !forcadoPorTodos && ativa
+                                                                                    ? role === 'TODOS'
+                                                                                        ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-500/30'
+                                                                                        : 'bg-primary text-white shadow-sm'
+                                                                                    : !forcadoPorTodos
+                                                                                        ? 'bg-muted/30 border border-border/60 text-transparent hover:border-primary/60'
+                                                                                        : ''
                                                                             } ${salvandoEste ? 'animate-pulse' : ''}`}
                                                                         >
-                                                                            {ativa && <ShieldCheck size={9} strokeWidth={3} />}
+                                                                            {(ativa || forcadoPorTodos) && <ShieldCheck size={9} strokeWidth={3} />}
                                                                         </button>
                                                                     </div>
                                                                 </td>

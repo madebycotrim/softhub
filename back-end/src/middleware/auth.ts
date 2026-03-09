@@ -153,7 +153,10 @@ export function verificarPermissao(permissao: string) {
             }
 
             const permissoesRoles = JSON.parse(config.valor);
-            const temPermissao = permissoesRoles[usuario.role]?.[permissao] === true;
+            
+            // Cargo universal: se 'TODOS' tem a permissão, qualquer um tem.
+            const universal = permissoesRoles['TODOS']?.[permissao] === true;
+            const temPermissao = universal || (permissoesRoles[usuario.role]?.[permissao] === true);
 
             if (!temPermissao) {
                 console.warn(`[PERMISSAO] Acesso negado: Usuário ${usuario.nome} (${usuario.role}) não possui permissão ${permissao}`);

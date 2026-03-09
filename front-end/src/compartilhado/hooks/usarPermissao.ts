@@ -73,7 +73,8 @@ export function usarPermissaoAcesso(chavePermissao: string): boolean {
             
             // Cache válido por 1 minuto para evitar spam na API (60000ms)
             if (configuracoesCache && (agora - ultimaBusca < 60000)) {
-                setPermissoesAtivas(configuracoesCache.permissoes_roles?.[role]?.[chavePermissao] ?? false);
+                const universal = configuracoesCache.permissoes_roles?.['TODOS']?.[chavePermissao] ?? false;
+                setPermissoesAtivas(universal || (configuracoesCache.permissoes_roles?.[role]?.[chavePermissao] ?? false));
                 return;
             }
 
@@ -88,7 +89,14 @@ export function usarPermissaoAcesso(chavePermissao: string): boolean {
                 if (configRecord) {
                     configuracoesCache = configRecord.valor;
                     ultimaBusca = agora;
-                    setPermissoesAtivas(configuracoesCache?.permissoes_roles?.[role]?.[chavePermissao] ?? false);
+
+                    // Cargo universal: se TODOS tem a permissão, qualquer role tem
+                    const universal = configuracoesCache?.permissoes_roles?.['TODOS']?.[chavePermissao] ?? false;
+                    if (universal) {
+                        setPermissoesAtivas(true);
+                    } else {
+                        setPermissoesAtivas(configuracoesCache?.permissoes_roles?.[role]?.[chavePermissao] ?? false);
+                    }
                 }
             } catch (e) {
                 console.warn('[usarPermissaoAcesso] Falha ao buscar permissões:', e);

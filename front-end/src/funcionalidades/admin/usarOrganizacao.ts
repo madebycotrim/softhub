@@ -53,9 +53,9 @@ export function usarOrganizacao() {
         setErro(null);
         try {
             const [resGrupos, resEquipes, resMembros] = await Promise.all([
-                api.get('/organizacao/grupos'),
-                api.get('/organizacao/equipes'),
-                api.get('/usuarios'),
+                api.get('/api/organizacao/grupos'),
+                api.get('/api/organizacao/equipes'),
+                api.get('/api/usuarios'),
             ]);
             setGrupos(resGrupos.data.grupos ?? []);
             setEquipes(resEquipes.data.equipes ?? []);
@@ -71,43 +71,43 @@ export function usarOrganizacao() {
 
     /** Cria um novo grupo. */
     const criarGrupo = async (dados: { nome: string; descricao: string | null; lider_id: string | null; sub_lider_id: string | null }) => {
-        await api.post('/organizacao/grupos', dados);
+        await api.post('/api/organizacao/grupos', dados);
         await carregar();
     };
 
     /** Edita um grupo existente. */
     const editarGrupo = async (id: string, dados: { nome: string; descricao: string | null; lider_id: string | null; sub_lider_id: string | null }) => {
-        await api.patch(`/organizacao/grupos/${id}`, dados);
+        await api.patch(`/api/organizacao/grupos/${id}`, dados);
         await carregar();
     };
 
     /** Desativa um grupo (soft delete). */
     const desativarGrupo = async (id: string) => {
-        await api.delete(`/organizacao/grupos/${id}`);
+        await api.delete(`/api/organizacao/grupos/${id}`);
         await carregar();
     };
 
     /** Cria uma nova equipe. */
     const criarEquipe = async (dados: { nome: string; descricao: string | null; lider_id: string | null; sub_lider_id: string | null }) => {
-        await api.post('/organizacao/equipes', dados);
+        await api.post('/api/organizacao/equipes', dados);
         await carregar();
     };
 
     /** Edita uma equipe existente. */
     const editarEquipe = async (id: string, dados: { nome: string; descricao: string | null; lider_id: string | null; sub_lider_id: string | null }) => {
-        await api.patch(`/organizacao/equipes/${id}`, dados);
+        await api.patch(`/api/organizacao/equipes/${id}`, dados);
         await carregar();
     };
 
     /** Desativa uma equipe (soft delete). */
     const desativarEquipe = async (id: string) => {
-        await api.delete(`/organizacao/equipes/${id}`);
+        await api.delete(`/api/organizacao/equipes/${id}`);
         await carregar();
     };
 
     /** Aloca um membro em grupo + equipe. Desvincula se null. */
     const alocarMembro = async (membroId: string, equipe_id: string | null, grupo_id: string | null) => {
-        await api.patch(`/organizacao/membros/${membroId}/alocar`, { equipe_id, grupo_id });
+        await api.patch(`/api/organizacao/membros/${membroId}/alocar`, { equipe_id, grupo_id });
         await carregar();
     };
 
