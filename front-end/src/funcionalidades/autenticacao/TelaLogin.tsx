@@ -102,7 +102,7 @@ export default function TelaLogin() {
 
     return (
         <div className="light min-h-screen bg-slate-50 flex items-center justify-center p-0 sm:p-6 lg:p-8 selection:bg-red-500/20 transition-colors duration-500">
-            <div className="w-full max-w-7xl bg-card sm:rounded-2xl shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] overflow-hidden flex flex-col lg:flex-row min-h-screen sm:min-h-[750px] border-none sm:border border-border animate-in fade-in zoom-in-95 duration-700">
+            <div className="w-full max-w-7xl bg-white sm:rounded-2xl shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] overflow-hidden flex flex-col lg:flex-row min-h-screen sm:min-h-[750px] border-none sm:border border-border animate-in fade-in zoom-in-95 duration-700">
 
                 {/* Lado Esquerdo Institucional */}
                 <div className="lg:w-[42%] bg-[#001a33] p-8 pt-12 pb-14 lg:p-16 flex flex-col justify-between text-white relative overflow-hidden group shrink-0">
@@ -117,9 +117,7 @@ export default function TelaLogin() {
 
                     <div className="relative z-10 space-y-12 lg:space-y-16">
                         <div className="flex items-center gap-5">
-
                             <img src={logoUnieuro} alt="Logo Unieuro" className="w-10 h-10 lg:w-12 lg:h-12 object-contain" />
-
                             <div className="space-y-1.5">
                                 <h1 className="text-xl lg:text-[24px] font-[900] leading-none tracking-tight">FÁBRICA DE SOFTWARE</h1>
                                 <div className="inline-flex items-center px-2 py-0.5 bg-red-600/20 rounded-md border border-red-500/20">
@@ -159,7 +157,7 @@ export default function TelaLogin() {
                 </div>
 
                 {/* Área de Acesso (Login Microsoft + Prompt PWA) */}
-                <div className="flex-1 flex flex-col lg:flex-row items-stretch bg-card -mt-8 lg:mt-0 rounded-t-[32px] lg:rounded-none relative z-20">
+                <div className="flex-1 flex flex-col lg:flex-row items-stretch bg-white -mt-8 lg:mt-0 rounded-t-[32px] lg:rounded-none relative z-20">
 
                     {/* Lado Central: Acesso Microsoft */}
                     <div className="flex-1 p-8 lg:p-12 flex flex-col items-center justify-center">
@@ -237,7 +235,7 @@ export default function TelaLogin() {
                                 <div className="text-center space-y-3 max-w-[280px]">
                                     <h4 className="text-2xl font-black text-foreground tracking-tight leading-none">Entrar com QR Code</h4>
                                     <p className="text-[13px] text-muted-foreground font-bold leading-relaxed opacity-60">
-                                        Escaneie com o app e faça login instantaneamente.
+                                        Abra o app ou site da plataforma no celular, escaneie o código e faça login em segundos.
                                     </p>
                                 </div>
                             </div>
