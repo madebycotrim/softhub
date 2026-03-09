@@ -97,7 +97,6 @@ export function autenticacaoRequerida(roleMinimoRequerido?: string) {
             email: usuario.email,
             nome: usuario.nome,
         });
-
         await next();
     };
 }
@@ -115,5 +114,54 @@ export function verificarRole(rolesPermitidos: string[]) {
         }
 
         await next();
+    };
+}
+
+/**
+ * Middleware granular que verifica se o role do usuário possui uma permissão específica
+ * na tabela configuracoes_sistema (matriz de permissões).
+ * 
+ * @param permissao Chave da permissão (ex: 'tarefas:criar')
+ */
+export function verificarPermissao(permissao: string) {
+    return async (c: Context<HonoEnv>, next: Next) => {
+        const usuario = c.get('usuario');
+        const { DB } = c.env;
+
+        if (!usuario) {
+            return c.json({ erro: 'Usuário não autenticado.' }, 401);
+        }
+
+        // ADMIN ignora qualquer trava de permissão
+        if (usuario.role === 'ADMIN') {
+            await next();
+            return;
+        }
+
+        try {
+            // Busca a matriz de permissões
+            const config = await DB.prepare('SELECT valor FROM configuracoes_sistema WHERE chave = ?')
+                .bind('permissoes_roles')
+                .first<{ valor: string }>();
+
+            if (!config) {
+                // Se não houver configuração, por segurança, nega para não-admins
+                console.warn(`[PERMISSAO] Matriz de permissões não encontrada no banco.`);
+                return c.json({ erro: 'Acesso negado: Matriz de permissões não configurada.' }, 403);
+            }
+
+            const permissoesRoles = JSON.parse(config.valor);
+            const temPermissao = permissoesRoles[usuario.role]?.[permissao] === true;
+
+            if (!temPermissao) {
+                console.warn(`[PERMISSAO] Acesso negado: Usuário ${usuario.nome} (${usuario.role}) não possui permissão ${permissao}`);
+                return c.json({ erro: `Você não tem permissão para realizar esta ação (${permissao}).` }, 403);
+            }
+
+            await next();
+        } catch (e: any) {
+            console.error('[PERMISSAO] Erro ao validar permissão:', e.message);
+            return c.json({ erro: 'Erro interno ao validar permissões.' }, 500);
+        }
     };
 }

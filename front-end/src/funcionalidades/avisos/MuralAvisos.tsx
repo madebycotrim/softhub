@@ -4,7 +4,7 @@ import { Avatar } from '../../compartilhado/componentes/Avatar';
 import { Emblema } from '../../compartilhado/componentes/Emblema';
 import { Carregando } from '../../compartilhado/componentes/Carregando';
 import { formatarDataHora } from '../../utilitarios/formatadores';
-import { usarPermissao } from '../../compartilhado/hooks/usarPermissao';
+import { usarPermissao, usarPermissaoAcesso } from '../../compartilhado/hooks/usarPermissao';
 import { useState } from 'react';
 import { Modal } from '../../compartilhado/componentes/Modal';
 import { FormularioAviso } from './FormularioAviso';
@@ -13,7 +13,9 @@ import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/Cabecal
 
 export function MuralAvisos() {
     const { avisos, carregando, erro } = usarAvisos();
-    const podeCriar = usarPermissao('LIDER_EQUIPE');
+    const podeCriar = usarPermissaoAcesso('avisos:criar');
+    const podeRemoverGeral = usarPermissaoAcesso('avisos:remover');
+    const isAdmin = usarPermissao('ADMIN');
     const [modalAberto, setModalAberto] = useState(false);
     // const { usuario } = usarAutenticacao();
     const usuarioIdMock = 'u1';
@@ -55,7 +57,7 @@ export function MuralAvisos() {
                 ) : (
                     avisosOrdenados.map(aviso => {
                         // Lideres podem apagar os próprios
-                        const podeDeletar = usarPermissao('ADMIN') || usuarioIdMock === aviso.criado_por.id;
+                        const podeDeletar = isAdmin || podeRemoverGeral || usuarioIdMock === aviso.criado_por.id;
                         const IconePrioridade = aviso.prioridade === 'urgente' ? Megaphone : null; // Destaque extra
 
                         return (

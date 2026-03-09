@@ -1,6 +1,6 @@
-import { Hono } from 'hono';
+import { Hono, Context } from 'hono';
 import { Env } from '../index';
-import { autenticacaoRequerida } from '../middleware/auth';
+import { autenticacaoRequerida, verificarPermissao } from '../middleware/auth';
 import { registrarLog } from '../servicos/servico-logs';
 import { criarNotificacoes } from '../servicos/servico-notificacoes';
 
@@ -11,7 +11,7 @@ const rotasPontoJustificativas = new Hono<{ Bindings: Env, Variables: { usuario:
 // ==========================================
 
 // 1. Membro enviando justificativa
-rotasPontoJustificativas.post('/justificativas', autenticacaoRequerida(), async (c) => {
+rotasPontoJustificativas.post('/justificativas', autenticacaoRequerida(), verificarPermissao('ponto:justificar'), async (c: Context) => {
     const { DB } = c.env;
     const { data, tipo, motivo } = await c.req.json();
     const usuario = c.get('usuario') as any;
@@ -36,12 +36,13 @@ rotasPontoJustificativas.post('/justificativas', autenticacaoRequerida(), async 
         `).bind(justId, usuario.id, data, tipo, motivo).run();
 
         // Notificar Lideres (Pegamos ADMINs e Lideres de Equipe/Grupo)
-        const lideres = await DB.prepare(`
+        const lideresRes = await DB.prepare(`
             SELECT id FROM usuarios WHERE role IN ('LIDER_EQUIPE', 'LIDER_GRUPO', 'ADMIN') AND ativo = 1
-        `).all<{ id: string }>();
-
-        if (lideres.results.length > 0) {
-            for (const l of lideres.results) {
+        `).all();
+        const resultadosLideres = lideresRes.results as any[];
+        
+        if (resultadosLideres.length > 0) {
+            for (const l of resultadosLideres) {
                 await criarNotificacoes(DB, {
                     usuarioId: l.id,
                     tipo: 'sistema',
@@ -70,7 +71,7 @@ rotasPontoJustificativas.post('/justificativas', autenticacaoRequerida(), async 
 });
 
 // 2. Membro buscando suas próprias justificativas
-rotasPontoJustificativas.get('/justificativas', autenticacaoRequerida(), async (c) => {
+rotasPontoJustificativas.get('/justificativas', autenticacaoRequerida(), verificarPermissao('ponto:visualizar'), async (c: Context) => {
     const { DB } = c.env;
     const usuario = c.get('usuario') as any;
 
@@ -80,8 +81,8 @@ rotasPontoJustificativas.get('/justificativas', autenticacaoRequerida(), async (
 
     try {
         const resContagem = await DB.prepare(`SELECT COUNT(*) as total FROM justificativas_ponto WHERE usuario_id = ?`)
-            .bind(usuario.id).first<{ total: number }>();
-        const total = resContagem?.total || 0;
+            .bind(usuario.id).first();
+        const total = (resContagem as any)?.total || 0;
 
         const { results } = await DB.prepare(`
             SELECT * FROM justificativas_ponto 
@@ -99,7 +100,7 @@ rotasPontoJustificativas.get('/justificativas', autenticacaoRequerida(), async (
 });
 
 // 3. Admin listando todas as justificativas pendentes ou filtradas
-rotasPontoJustificativas.get('/admin/justificativas', autenticacaoRequerida(), async (c) => {
+rotasPontoJustificativas.get('/admin/justificativas', autenticacaoRequerida(), verificarPermissao('ponto:aprovar_justificativa'), async (c: Context) => {
     const { DB } = c.env;
     const usuario = c.get('usuario') as any;
 
@@ -119,14 +120,15 @@ rotasPontoJustificativas.get('/admin/justificativas', autenticacaoRequerida(), a
 });
 
 // 4. Admin Aprovando Justificativa
-rotasPontoJustificativas.patch('/admin/justificativas/:id/aprovar', autenticacaoRequerida(), async (c) => {
+rotasPontoJustificativas.patch('/admin/justificativas/:id/aprovar', autenticacaoRequerida(), verificarPermissao('ponto:aprovar_justificativa'), async (c: Context) => {
     const { DB } = c.env;
     const justificativaId = c.req.param('id');
     const usuario = c.get('usuario') as any;
 
     if (usuario.role === 'MEMBRO' || usuario.role === 'VISITANTE') return c.json({ erro: 'Acesso negado' }, 403);
 
-    const alvar = await DB.prepare(`SELECT * FROM justificativas_ponto WHERE id = ?`).bind(justificativaId).first<any>();
+    const resAlvar = await DB.prepare(`SELECT * FROM justificativas_ponto WHERE id = ?`).bind(justificativaId).first();
+    const alvar = resAlvar as any;
     if (!alvar) return c.json({ erro: 'Justificativa não encontrada.' }, 404);
     if (alvar.status !== 'pendente') return c.json({ erro: 'Justificativa já foi processada.' }, 400);
 
@@ -162,7 +164,7 @@ rotasPontoJustificativas.patch('/admin/justificativas/:id/aprovar', autenticacao
 });
 
 // 5. Admin Rejeitando Justificativa
-rotasPontoJustificativas.patch('/admin/justificativas/:id/rejeitar', autenticacaoRequerida(), async (c) => {
+rotasPontoJustificativas.patch('/admin/justificativas/:id/rejeitar', autenticacaoRequerida(), verificarPermissao('ponto:aprovar_justificativa'), async (c: Context) => {
     const { DB } = c.env;
     const justificativaId = c.req.param('id');
     const { motivoRejeicao } = await c.req.json();
@@ -170,7 +172,8 @@ rotasPontoJustificativas.patch('/admin/justificativas/:id/rejeitar', autenticaca
 
     if (usuario.role === 'MEMBRO' || usuario.role === 'VISITANTE') return c.json({ erro: 'Acesso negado' }, 403);
 
-    const alvar = await DB.prepare(`SELECT * FROM justificativas_ponto WHERE id = ?`).bind(justificativaId).first<any>();
+    const resAlvar = await DB.prepare(`SELECT * FROM justificativas_ponto WHERE id = ?`).bind(justificativaId).first();
+    const alvar = resAlvar as any;
     if (!alvar) return c.json({ erro: 'Justificativa não encontrada.' }, 404);
     if (alvar.status !== 'pendente') return c.json({ erro: 'Justificativa já foi processada.' }, 400);
 
@@ -206,7 +209,7 @@ rotasPontoJustificativas.patch('/admin/justificativas/:id/rejeitar', autenticaca
 });
 
 // 6. Exportação de Relatório CSV (Workflow 30)
-rotasPontoJustificativas.get('/exportar', autenticacaoRequerida(), async (c) => {
+rotasPontoJustificativas.get('/exportar', autenticacaoRequerida(), verificarPermissao('ponto:exportar_csv'), async (c: Context) => {
     const { DB } = c.env;
     const usuario = c.get('usuario') as any;
 

@@ -1,6 +1,6 @@
-import { Hono } from 'hono';
+import { Hono, Context } from 'hono';
 import { Env } from '../index';
-import { autenticacaoRequerida } from '../middleware/auth';
+import { autenticacaoRequerida, verificarPermissao } from '../middleware/auth';
 import { registrarLog } from '../servicos/servico-logs';
 import { D1Database } from '@cloudflare/workers-types';
 import { criarNotificacoes } from '../servicos/servico-notificacoes';
@@ -8,7 +8,7 @@ import { criarNotificacoes } from '../servicos/servico-notificacoes';
 const rotasTarefas = new Hono<{ Bindings: Env, Variables: { usuario: any } }>();
 
 // Listar Tarefas do Projeto
-rotasTarefas.get('/', autenticacaoRequerida(), async (c) => {
+rotasTarefas.get('/', autenticacaoRequerida(), verificarPermissao('tarefas:visualizar'), async (c: Context) => {
     const { DB } = c.env;
     const projetoId = c.req.query('projetoId') || 'p1';
 
@@ -45,7 +45,7 @@ rotasTarefas.get('/', autenticacaoRequerida(), async (c) => {
         const { results: tarefas } = await DB.prepare(query).bind(...params).all();
 
         // Buscar responsáveis 
-        for (const tarefa of tarefas) {
+        for (const tarefa of (tarefas as any[])) {
             const resp = await DB.prepare(`
         SELECT u.id, u.nome, u.foto_perfil as foto
         FROM usuarios u
@@ -64,7 +64,7 @@ rotasTarefas.get('/', autenticacaoRequerida(), async (c) => {
 });
 
 // Mover Tarefa
-rotasTarefas.patch('/:id/mover', autenticacaoRequerida(), async (c) => {
+rotasTarefas.patch('/:id/mover', autenticacaoRequerida(), verificarPermissao('tarefas:mover'), async (c: Context) => {
     const { DB } = c.env;
     const id = c.req.param('id');
     const { status: colunaDestino } = await c.req.json();
@@ -138,7 +138,7 @@ rotasTarefas.patch('/:id/mover', autenticacaoRequerida(), async (c) => {
 });
 
 // Atribuir Responsável (WF 13)
-rotasTarefas.post('/:id/responsaveis', autenticacaoRequerida(), async (c) => {
+rotasTarefas.post('/:id/responsaveis', autenticacaoRequerida(), verificarPermissao('tarefas:editar'), async (c: Context) => {
     const { DB } = c.env;
     const id = c.req.param('id');
     const { usuario_id } = await c.req.json();
@@ -157,7 +157,8 @@ rotasTarefas.post('/:id/responsaveis', autenticacaoRequerida(), async (c) => {
             return c.json({ erro: 'Apenas liderança ou os responsáveis atuais da tarefa.' }, 403);
         }
 
-        const tarefa = await DB.prepare('SELECT titulo FROM tarefas WHERE id = ?').bind(id).first<{ titulo: string }>();
+        const resTarefa = await DB.prepare('SELECT titulo FROM tarefas WHERE id = ?').bind(id).first();
+        const tarefa = resTarefa as any;
         if (!tarefa) return c.json({ erro: 'Tarefa não encontrada' }, 404);
 
         await DB.prepare('INSERT OR IGNORE INTO tarefas_responsaveis (tarefa_id, usuario_id) VALUES (?, ?)').bind(id, usuario_id).run();

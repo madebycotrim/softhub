@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { usarChecklist } from './usarChecklist';
-import { usarPermissao } from '../../compartilhado/hooks/usarPermissao';
+import { usarPermissaoAcesso } from '../../compartilhado/hooks/usarPermissao';
 import { Plus, Trash2, CheckSquare, Square, Loader2 } from 'lucide-react';
 
 interface SecaoChecklistProps {
@@ -9,7 +9,7 @@ interface SecaoChecklistProps {
 
 export function SecaoChecklist({ tarefaId }: SecaoChecklistProps) {
     const { itens, carregando, adicionarItem, alternarItem, removerItem, totalConcluidos, totalItens, progresso } = usarChecklist(tarefaId);
-    const podeGerenciar = usarPermissao('LIDER_EQUIPE');
+    const podeGerenciar = usarPermissaoAcesso('tarefas:checklist');
     const [novoTexto, setNovoTexto] = useState('');
     const [enviando, setEnviando] = useState(false);
 

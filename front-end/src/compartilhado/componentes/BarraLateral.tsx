@@ -2,6 +2,7 @@ import { FolderKanban, Clock, Users, Megaphone, LayoutDashboard, Database, Setti
 import { useLocation, Link } from 'react-router';
 import { usarAutenticacao } from '../../funcionalidades/autenticacao/usarAutenticacao';
 import { usarTema } from '../../contexto/ContextoTema';
+import { usarPermissaoAcesso } from '../hooks/usarPermissao';
 import { Avatar } from './Avatar';
 import logoUnieuro from '../../assets/logo-unieuro.png';
 
@@ -16,38 +17,55 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
     const { usuario, sair } = usarAutenticacao();
     const { tema, setTema } = usarTema();
 
-    const grupos = [
+    // Permissões de Visualização
+    const podeVerDashboard = usarPermissaoAcesso('dashboard:visualizar');
+    const podeVerKanban = usarPermissaoAcesso('kanban:visualizar');
+    const podeVerPonto = usarPermissaoAcesso('ponto:visualizar');
+    const podeVerDiretorio = usarPermissaoAcesso('membros:visualizar');
+    const podeVerAvisos = usarPermissaoAcesso('avisos:visualizar');
+    const podeVerMembrosAdmin = usarPermissaoAcesso('membros:gerenciar'); // Geralmente quem gerencia pode ver a lista admin
+    const podeVerOrganizacao = usarPermissaoAcesso('organizacao:visualizar');
+    const podeVerRelatorios = usarPermissaoAcesso('relatorios:visualizar');
+    const podeVerLogs = usarPermissaoAcesso('logs:visualizar');
+
+    const gruposBrutos = [
         {
             label: 'Visão Geral',
             links: [
-                { label: 'Dashboard', path: '/app/dashboard', icon: LayoutDashboard },
+                { label: 'Dashboard', path: '/app/dashboard', icon: LayoutDashboard, visivel: podeVerDashboard },
             ],
         },
         {
             label: 'Projetos',
             links: [
-                { label: 'Kanban', path: '/app/kanban', icon: FolderKanban },
+                { label: 'Kanban', path: '/app/kanban', icon: FolderKanban, visivel: podeVerKanban },
             ],
         },
         {
             label: 'Equipe',
             links: [
-                { label: 'Ponto Eletrônico', path: '/app/ponto', icon: Clock },
-                { label: 'Diretório', path: '/app/membros', icon: Users },
-                { label: 'Avisos', path: '/app/avisos', icon: Megaphone },
+                { label: 'Ponto Eletrônico', path: '/app/ponto', icon: Clock, visivel: podeVerPonto },
+                { label: 'Diretório', path: '/app/membros', icon: Users, visivel: podeVerDiretorio },
+                { label: 'Avisos', path: '/app/avisos', icon: Megaphone, visivel: podeVerAvisos },
             ],
         },
         {
             label: 'Gestão',
             links: [
-                { label: 'Membros', path: '/app/admin/membros', icon: Users },
-                { label: 'Estrutura', path: '/app/admin/organizacao', icon: LayoutGrid },
-                { label: 'Relatórios', path: '/app/admin/relatorios', icon: FileText },
-                ...(usuario?.role === 'ADMIN' ? [{ label: 'Configurações', path: '/app/admin/configuracoes', icon: Settings }] : []),
-                { label: 'Painel de Logs', path: '/app/logs', icon: Database },
+                { label: 'Membros', path: '/app/admin/membros', icon: Users, visivel: podeVerMembrosAdmin },
+                { label: 'Estrutura', path: '/app/admin/organizacao', icon: LayoutGrid, visivel: podeVerOrganizacao },
+                { label: 'Relatórios', path: '/app/admin/relatorios', icon: FileText, visivel: podeVerRelatorios },
+                { label: 'Configurações', path: '/app/admin/configuracoes', icon: Settings, visivel: usuario?.role === 'ADMIN' },
+                { label: 'Painel de Logs', path: '/app/logs', icon: Database, visivel: podeVerLogs },
             ],
         },
     ];
+
+    // Filtra apenas grupos que possuem pelo menos um link visível
+    const grupos = gruposBrutos.map(g => ({
+        ...g,
+        links: g.links.filter(l => l.visivel)
+    })).filter(g => g.links.length > 0);
 
     const NavLink = ({ link }: { link: { label: string; path: string; icon: any } }) => {
         const ativo = currentPath.startsWith(link.path);

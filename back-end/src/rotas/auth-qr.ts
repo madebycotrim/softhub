@@ -38,11 +38,12 @@ rotasAuthQr.get('/qr/verificar/:id', async (c) => {
     const id = c.req.param('id');
 
     try {
-        const sessao = await DB.prepare(
+        const resSessao = await DB.prepare(
             'SELECT * FROM sessoes_qr WHERE id = ?'
         )
             .bind(id)
-            .first<{ status: string; expira_em: string; usuario_id: string; token_acesso: string }>();
+            .first();
+        const sessao = resSessao as any;
 
         if (!sessao) {
             return c.json({ erro: 'Sessão não encontrada.' }, 404);
@@ -105,9 +106,10 @@ rotasAuthQr.post('/qr/identificar', autenticacaoRequerida(), async (c) => {
         const { sessaoId } = await c.req.json();
         if (!sessaoId) return c.json({ erro: 'ID da sessão ausente.' }, 400);
 
-        const sessao = await DB.prepare('SELECT status FROM sessoes_qr WHERE id = ?')
+        const resSessao = await DB.prepare('SELECT status FROM sessoes_qr WHERE id = ?')
             .bind(sessaoId)
-            .first<{ status: string }>();
+            .first();
+        const sessao = resSessao as any;
 
         if (!sessao) return c.json({ erro: 'Sessão não encontrada.' }, 404);
         if (sessao.status !== 'pendente') return c.json({ erro: 'Sessão não está mais disponível.' }, 400);
@@ -134,9 +136,10 @@ rotasAuthQr.post('/qr/autorizar', autenticacaoRequerida(), async (c) => {
         const { sessaoId } = await c.req.json();
         if (!sessaoId) return c.json({ erro: 'ID da sessão ausente.' }, 400);
 
-        const sessao = await DB.prepare('SELECT status, expira_em FROM sessoes_qr WHERE id = ?')
+        const resSessao = await DB.prepare('SELECT status, expira_em FROM sessoes_qr WHERE id = ?')
             .bind(sessaoId)
-            .first<{ status: string; expira_em: string }>();
+            .first();
+        const sessao = resSessao as any;
 
         if (!sessao) return c.json({ erro: 'Sessão não encontrada.' }, 404);
         
@@ -152,9 +155,10 @@ rotasAuthQr.post('/qr/autorizar', autenticacaoRequerida(), async (c) => {
         }
 
         // Incrementa a versão do token para desconectar outras sessões (Regra: Nova conexão desconecta anterior)
-        const resVersao = await DB.prepare(
+        const resVersaoRaw = await DB.prepare(
             'UPDATE usuarios SET versao_token = versao_token + 1 WHERE id = ? RETURNING versao_token'
-        ).bind(usuario.id).first<{ versao_token: number }>();
+        ).bind(usuario.id).first();
+        const resVersao = resVersaoRaw as any;
         
         const novaVersao = resVersao?.versao_token || 1;
 

@@ -1,6 +1,6 @@
-import { Hono } from 'hono';
+import { Hono, Context } from 'hono';
 import { Env } from '../index';
-import { autenticacaoRequerida } from '../middleware/auth';
+import { autenticacaoRequerida, verificarPermissao } from '../middleware/auth';
 import { registrarLog } from '../servicos/servico-logs';
 
 const rotasUsuarios = new Hono<{ Bindings: Env; Variables: { usuario: any } }>();
@@ -24,7 +24,8 @@ rotasUsuarios.get('/ping', async (c) => {
 
 // ─── GET / — Listar Diretório de Membros ──────────────────────────────────────
 
-rotasUsuarios.get('/', autenticacaoRequerida(), async (c) => {
+// ─── GET / — Listar Diretório de Membros ──────────────────────────────────────
+rotasUsuarios.get('/', autenticacaoRequerida(), verificarPermissao('membros:visualizar'), async (c: Context) => {
     const { DB } = c.env;
 
     try {
@@ -109,16 +110,11 @@ rotasUsuarios.patch('/perfil', autenticacaoRequerida(), async (c) => {
     }
 });
 
-// ─── PATCH /:id/role — Alterar Role (apenas ADMIN) ───────────────────────────
-
-rotasUsuarios.patch('/:id/role', autenticacaoRequerida(), async (c) => {
+// ─── PATCH /:id/role — Alterar Role ──────────────────────────────────────────
+rotasUsuarios.patch('/:id/role', autenticacaoRequerida(), verificarPermissao('membros:alterar_role'), async (c: Context) => {
     const { DB } = c.env;
     const usuarioLogado = c.get('usuario') as any;
     const id = c.req.param('id');
-
-    if (usuarioLogado.role !== 'ADMIN') {
-        return c.json({ erro: 'Acesso negado. Apenas administradores podem alterar papéis.' }, 403);
-    }
 
     let role: string;
     try {
@@ -155,16 +151,11 @@ rotasUsuarios.patch('/:id/role', autenticacaoRequerida(), async (c) => {
     }
 });
 
-// ─── PATCH /:id/status — Ativar / Desativar (apenas ADMIN) ───────────────────
-
-rotasUsuarios.patch('/:id/status', autenticacaoRequerida(), async (c) => {
+// ─── PATCH /:id/status — Ativar / Desativar ───────────────────
+rotasUsuarios.patch('/:id/status', autenticacaoRequerida(), verificarPermissao('membros:desativar'), async (c: Context) => {
     const { DB } = c.env;
     const usuarioLogado = c.get('usuario') as any;
     const id = c.req.param('id');
-
-    if (usuarioLogado.role !== 'ADMIN') {
-        return c.json({ erro: 'Acesso negado. Apenas administradores podem alterar o status.' }, 403);
-    }
 
     if (usuarioLogado.id === id) {
         return c.json({ erro: 'Você não pode desativar ou excluir sua própria conta.' }, 400);
@@ -205,16 +196,11 @@ rotasUsuarios.patch('/:id/status', autenticacaoRequerida(), async (c) => {
     }
 });
 
-// ─── PATCH /:id/limpar — Ocultar Permanentemente (apenas ADMIN) ────────────────
-
-rotasUsuarios.patch('/:id/limpar', autenticacaoRequerida(), async (c) => {
+// ─── PATCH /:id/limpar — Ocultar Permanentemente ────────────────
+rotasUsuarios.patch('/:id/limpar', autenticacaoRequerida(), verificarPermissao('membros:desativar'), async (c: Context) => {
     const { DB } = c.env;
     const usuarioLogado = c.get('usuario') as any;
     const id = c.req.param('id');
-
-    if (usuarioLogado.role !== 'ADMIN') {
-        return c.json({ erro: 'Acesso negado.' }, 403);
-    }
 
     if (usuarioLogado.id === id) {
         return c.json({ erro: 'Você não pode excluir sua própria conta.' }, 400);
@@ -243,15 +229,10 @@ rotasUsuarios.patch('/:id/limpar', autenticacaoRequerida(), async (c) => {
     }
 });
 
-// ─── POST /limpeza-geral — Esvaziar Lixeira (apenas ADMIN) ────────────────────
-
-rotasUsuarios.post('/limpeza-geral', autenticacaoRequerida(), async (c) => {
+// ─── POST /limpeza-geral — Esvaziar Lixeira ────────────────────
+rotasUsuarios.post('/limpeza-geral', autenticacaoRequerida(), verificarPermissao('membros:desativar'), async (c: Context) => {
     const { DB } = c.env;
     const usuarioLogado = c.get('usuario') as any;
-
-    if (usuarioLogado.role !== 'ADMIN') {
-        return c.json({ erro: 'Acesso negado.' }, 403);
-    }
 
     try {
         // Oculta todos que já estão inativos (arquivados)
@@ -277,18 +258,10 @@ rotasUsuarios.post('/limpeza-geral', autenticacaoRequerida(), async (c) => {
     }
 });
 
-// ─── POST / — Pré-cadastro de Membro (apenas ADMIN) ──────────────────────────
-
-rotasUsuarios.post('/', async (c, next) => {
-    console.log('[POST /usuarios] >>> ROTA ATINGIDA, headers:', JSON.stringify(Object.fromEntries(c.req.raw.headers)));
-    await next();
-}, autenticacaoRequerida(), async (c) => {
+// ─── POST / — Pré-cadastro de Membro ──────────────────────────
+rotasUsuarios.post('/', autenticacaoRequerida(), verificarPermissao('membros:gerenciar'), async (c: Context) => {
     const { DB } = c.env;
     const usuarioLogado = c.get('usuario') as any;
-
-    if (usuarioLogado.role !== 'ADMIN') {
-        return c.json({ erro: 'Acesso negado. Apenas administradores podem cadastrar membros.' }, 403);
-    }
 
     let email: string;
     let role: string;
@@ -387,16 +360,11 @@ rotasUsuarios.post('/', async (c, next) => {
     }
 });
 
-// ─── PATCH /:id/funcoes — Alterar Funções (apenas ADMIN) ─────────────────────
-
-rotasUsuarios.patch('/:id/funcoes', autenticacaoRequerida(), async (c) => {
+// ─── PATCH /:id/funcoes — Alterar Funções ─────────────────────
+rotasUsuarios.patch('/:id/funcoes', autenticacaoRequerida(), verificarPermissao('membros:gerenciar'), async (c: Context) => {
     const { DB } = c.env;
     const usuarioLogado = c.get('usuario') as any;
     const id = c.req.param('id');
-
-    if (usuarioLogado.role !== 'ADMIN') {
-        return c.json({ erro: 'Acesso negado.' }, 403);
-    }
 
     let funcoes: string[];
     try {

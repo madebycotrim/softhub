@@ -1,6 +1,6 @@
-import { Hono } from 'hono';
+import { Hono, Context } from 'hono';
 import { Env } from '../index';
-import { autenticacaoRequerida } from '../middleware/auth';
+import { autenticacaoRequerida, verificarPermissao } from '../middleware/auth';
 import { validarRedeLocal } from '../middleware/rede';
 import { registrarLog } from '../servicos/servico-logs';
 import { criarNotificacoes } from '../servicos/servico-notificacoes';
@@ -8,7 +8,7 @@ import { criarNotificacoes } from '../servicos/servico-notificacoes';
 const rotasPonto = new Hono<{ Bindings: Env, Variables: { usuario: any } }>();
 
 // Listar histórico de ponto do usuário
-rotasPonto.get('/', autenticacaoRequerida(), async (c) => {
+rotasPonto.get('/', autenticacaoRequerida(), verificarPermissao('ponto:visualizar'), async (c: Context) => {
     const { DB } = c.env;
     const usuario = c.get('usuario') as any;
 
@@ -37,7 +37,7 @@ rotasPonto.get('/', autenticacaoRequerida(), async (c) => {
 });
 
 // Bater ponto - Requer Rede Local (Workflow 9)
-rotasPonto.post('/', autenticacaoRequerida(), validarRedeLocal, async (c) => {
+rotasPonto.post('/', autenticacaoRequerida(), verificarPermissao('ponto:registrar'), validarRedeLocal, async (c: Context) => {
     const { DB } = c.env;
     const { tipo } = await c.req.json();
 
@@ -50,7 +50,7 @@ rotasPonto.post('/', autenticacaoRequerida(), validarRedeLocal, async (c) => {
             SELECT tipo FROM ponto_registros
             WHERE usuario_id = ? AND DATE(registrado_em) = DATE('now')
             ORDER BY registrado_em DESC LIMIT 1
-        `).bind(usuario.id).first<{ tipo: string }>();
+        `).bind(usuario.id).first() as any;
 
         if (ultimo?.tipo === tipo) {
             return c.json({ erro: `Você já registrou sua ${tipo}.` }, 400);

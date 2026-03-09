@@ -1,6 +1,6 @@
-import { Hono } from 'hono';
+import { Hono, Context } from 'hono';
 import { Env } from '../index';
-import { autenticacaoRequerida } from '../middleware/auth';
+import { autenticacaoRequerida, verificarPermissao } from '../middleware/auth';
 import { registrarLog } from '../servicos/servico-logs';
 import { criarNotificacoes } from '../servicos/servico-notificacoes';
 
@@ -8,7 +8,7 @@ const rotasTarefasDetalhes = new Hono<{ Bindings: Env, Variables: { usuario: any
 
 // === COMENTÁRIOS DA TAREFA ===
 
-rotasTarefasDetalhes.get('/:id/comentarios', autenticacaoRequerida(), async (c) => {
+rotasTarefasDetalhes.get('/:id/comentarios', autenticacaoRequerida(), verificarPermissao('tarefas:visualizar'), async (c: Context) => {
     const { DB } = c.env;
     const tarefaId = c.req.param('id');
     try {
@@ -28,7 +28,7 @@ rotasTarefasDetalhes.get('/:id/comentarios', autenticacaoRequerida(), async (c) 
     }
 });
 
-rotasTarefasDetalhes.post('/:id/comentarios', autenticacaoRequerida(), async (c) => {
+rotasTarefasDetalhes.post('/:id/comentarios', autenticacaoRequerida(), verificarPermissao('tarefas:comentar'), async (c: Context) => {
     const { DB } = c.env;
     const tarefaId = c.req.param('id');
     const { conteudo } = await c.req.json();
@@ -37,7 +37,8 @@ rotasTarefasDetalhes.post('/:id/comentarios', autenticacaoRequerida(), async (c)
     try {
         if (!conteudo || !conteudo.trim()) return c.json({ erro: 'Conteúdo vazio' }, 400);
 
-        const tarefaData = await DB.prepare('SELECT titulo FROM tarefas WHERE id = ?').bind(tarefaId).first<{ titulo: string }>();
+        const resTarefa = await DB.prepare('SELECT titulo FROM tarefas WHERE id = ?').bind(tarefaId).first();
+        const tarefaData = resTarefa as any;
         if (!tarefaData) return c.json({ erro: 'Tarefa não encontrada' }, 404);
 
         const idComentario = crypto.randomUUID();
@@ -49,8 +50,8 @@ rotasTarefasDetalhes.post('/:id/comentarios', autenticacaoRequerida(), async (c)
         const comentaristasReq = await DB.prepare('SELECT DISTINCT autor_id FROM comentarios_tarefa WHERE tarefa_id = ? AND ativo = 1').bind(tarefaId).all();
 
         const usuariosParaNotificar = new Set<string>();
-        responsaveisReq.results.forEach(r => usuariosParaNotificar.add(r.usuario_id as string));
-        comentaristasReq.results.forEach(cm => usuariosParaNotificar.add(cm.autor_id as string));
+        responsaveisReq.results.forEach((r: any) => usuariosParaNotificar.add(r.usuario_id as string));
+        comentaristasReq.results.forEach((cm: any) => usuariosParaNotificar.add(cm.autor_id as string));
 
         usuariosParaNotificar.delete(usuario.id); // O autor não é notificado da sua própria ação
 
@@ -85,7 +86,7 @@ rotasTarefasDetalhes.post('/:id/comentarios', autenticacaoRequerida(), async (c)
     }
 });
 
-rotasTarefasDetalhes.patch('/comentarios/:id', autenticacaoRequerida(), async (c) => {
+rotasTarefasDetalhes.patch('/comentarios/:id', autenticacaoRequerida(), verificarPermissao('tarefas:comentar'), async (c: Context) => {
     const { DB } = c.env;
     const comentarioId = c.req.param('id');
     const { conteudo } = await c.req.json();
@@ -94,7 +95,8 @@ rotasTarefasDetalhes.patch('/comentarios/:id', autenticacaoRequerida(), async (c
     try {
         if (!conteudo || !conteudo.trim()) return c.json({ erro: 'Conteúdo vazio' }, 400);
 
-        const comentarioRow = await DB.prepare('SELECT autor_id, tarefa_id FROM comentarios_tarefa WHERE id = ? AND ativo = 1').bind(comentarioId).first<{ autor_id: string, tarefa_id: string }>();
+        const resComentario = await DB.prepare('SELECT autor_id, tarefa_id FROM comentarios_tarefa WHERE id = ? AND ativo = 1').bind(comentarioId).first();
+        const comentarioRow = resComentario as any;
         if (!comentarioRow) return c.json({ erro: 'Comentário não encontrado' }, 404);
 
         if (comentarioRow.autor_id !== usuario.id) {
@@ -121,13 +123,14 @@ rotasTarefasDetalhes.patch('/comentarios/:id', autenticacaoRequerida(), async (c
     }
 });
 
-rotasTarefasDetalhes.delete('/comentarios/:id', autenticacaoRequerida(), async (c) => {
+rotasTarefasDetalhes.delete('/comentarios/:id', autenticacaoRequerida(), verificarPermissao('tarefas:comentar'), async (c: Context) => {
     const { DB } = c.env;
     const comentarioId = c.req.param('id');
     const usuario = c.get('usuario') as any;
 
     try {
-        const comentarioRow = await DB.prepare('SELECT autor_id, tarefa_id FROM comentarios_tarefa WHERE id = ? AND ativo = 1').bind(comentarioId).first<{ autor_id: string, tarefa_id: string }>();
+        const resComRow = await DB.prepare('SELECT autor_id, tarefa_id FROM comentarios_tarefa WHERE id = ? AND ativo = 1').bind(comentarioId).first();
+        const comentarioRow = resComRow as any;
         if (!comentarioRow) return c.json({ erro: 'Comentário não encontrado' }, 404);
 
         const ehAdminOuLider = ['ADMIN', 'LIDER_GRUPO', 'LIDER_EQUIPE'].includes(usuario.role);
@@ -157,7 +160,7 @@ rotasTarefasDetalhes.delete('/comentarios/:id', autenticacaoRequerida(), async (
 
 // === Workflow 29: Histórico da Tarefa ===
 
-rotasTarefasDetalhes.get('/:id/historico', autenticacaoRequerida(), async (c) => {
+rotasTarefasDetalhes.get('/:id/historico', autenticacaoRequerida(), verificarPermissao('tarefas:visualizar'), async (c: Context) => {
     const { DB } = c.env;
     const tarefaId = c.req.param('id');
 
@@ -179,7 +182,7 @@ rotasTarefasDetalhes.get('/:id/historico', autenticacaoRequerida(), async (c) =>
 // === Workflow 31: Checklist de Tarefas ===
 
 // Listar itens do checklist
-rotasTarefasDetalhes.get('/:id/checklist', autenticacaoRequerida(), async (c) => {
+rotasTarefasDetalhes.get('/:id/checklist', autenticacaoRequerida(), verificarPermissao('tarefas:visualizar'), async (c: Context) => {
     const { DB } = c.env;
     const tarefaId = c.req.param('id');
     try {
@@ -191,7 +194,7 @@ rotasTarefasDetalhes.get('/:id/checklist', autenticacaoRequerida(), async (c) =>
 });
 
 // Adicionar item ao checklist
-rotasTarefasDetalhes.post('/:id/checklist', autenticacaoRequerida(), async (c) => {
+rotasTarefasDetalhes.post('/:id/checklist', autenticacaoRequerida(), verificarPermissao('tarefas:checklist'), async (c: Context) => {
     const { DB } = c.env;
     const tarefaId = c.req.param('id');
     const { texto } = await c.req.json();
@@ -215,7 +218,7 @@ rotasTarefasDetalhes.post('/:id/checklist', autenticacaoRequerida(), async (c) =
 });
 
 // Atualizar item (concluir/desconcluir ou editar texto)
-rotasTarefasDetalhes.patch('/:tarefaId/checklist/:itemId', autenticacaoRequerida(), async (c) => {
+rotasTarefasDetalhes.patch('/:tarefaId/checklist/:itemId', autenticacaoRequerida(), verificarPermissao('tarefas:visualizar'), async (c: Context) => {
     const { DB } = c.env;
     const { concluido, texto } = await c.req.json();
     const itemId = c.req.param('itemId');
@@ -234,7 +237,7 @@ rotasTarefasDetalhes.patch('/:tarefaId/checklist/:itemId', autenticacaoRequerida
 });
 
 // Remover item do checklist (DELETE real conforme regra)
-rotasTarefasDetalhes.delete('/:tarefaId/checklist/:itemId', autenticacaoRequerida(), async (c) => {
+rotasTarefasDetalhes.delete('/:tarefaId/checklist/:itemId', autenticacaoRequerida(), verificarPermissao('tarefas:checklist'), async (c: Context) => {
     const { DB } = c.env;
     const itemId = c.req.param('itemId');
     const usuario = c.get('usuario') as any;

@@ -63,10 +63,11 @@ rotasAuth.post('/msal', async (c) => {
         // 5. Upsert do usuário (Whitelist - Regra 13)
         let usuario;
         try {
-            usuario = await DB
+            const resUsuario = await DB
                 .prepare('SELECT id, nome, email, role, ativo, versao_token FROM usuarios WHERE email = ?')
                 .bind(email)
-                .first<{ id: string; nome: string; email: string; role: string; ativo: number; versao_token: number }>();
+                .first();
+            usuario = resUsuario as any;
         } catch (e: any) {
             console.error('[Auth] Erro ao consultar banco:', e.message);
             return c.json({

@@ -1,11 +1,11 @@
-import { Hono } from 'hono';
+import { Hono, Context } from 'hono';
 import { Env } from '../index';
-import { autenticacaoRequerida } from '../middleware/auth';
+import { autenticacaoRequerida, verificarPermissao } from '../middleware/auth';
 
-const rotasDashboard = new Hono<{ Bindings: Env }>();
+const rotasDashboard = new Hono<{ Bindings: Env, Variables: { usuario: any } }>();
 
 // Obter dados agregados do dashboard
-rotasDashboard.get('/', autenticacaoRequerida(), async (c) => {
+rotasDashboard.get('/', autenticacaoRequerida(), verificarPermissao('dashboard:visualizar'), async (c: Context) => {
     const { DB } = c.env;
     const projetoId = c.req.query('projetoId') || 'p1';
 

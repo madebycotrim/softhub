@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { usarJornalTarefa } from './usarJornalTarefa';
 import { usarComentarios } from './usarComentarios';
 import { formatarTempoAtras, formatarEventoHistorico } from '../../utilitarios/formatadores';
+import { usarPermissaoAcesso } from '../../compartilhado/hooks/usarPermissao';
 import { History, Send, Layout, UserPlus, Tag, CheckCircle2 } from 'lucide-react';
 import { Avatar } from '../../compartilhado/componentes/Avatar';
 import { Carregando } from '../../compartilhado/componentes/Carregando';
@@ -16,6 +17,7 @@ export function JornalTarefa({ tarefaId }: JornalTarefaProps) {
     const { entradas, carregando, erro, recarregar } = usarJornalTarefa(tarefaId);
     const { enviarComentario } = usarComentarios(tarefaId);
     const contextoAuth = useContext(ContextoAutenticacao);
+    const podeComentar = usarPermissaoAcesso('tarefas:comentar');
     const [novoComentario, setNovoComentario] = useState('');
     const [enviando, setEnviando] = useState(false);
 
@@ -45,34 +47,36 @@ export function JornalTarefa({ tarefaId }: JornalTarefaProps) {
             </h3>
 
             {/* Formulário de Comentário Estilo Social */}
-            <div className="flex gap-3">
-                <Avatar 
-                    nome={contextoAuth?.usuario?.nome || ''} 
-                    fotoPerfil={contextoAuth?.usuario?.foto_perfil || null} 
-                    tamanho="md"
-                />
-                <form onSubmit={handleEnviar} className="flex-1 relative">
-                    <textarea
-                        value={novoComentario}
-                        onChange={(e) => setNovoComentario(e.target.value)}
-                        placeholder="Escreva um comentário ou atualização..."
-                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3 pr-12 text-sm text-slate-900 resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all min-h-[80px]"
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                                e.preventDefault();
-                                handleEnviar(e);
-                            }
-                        }}
+            {podeComentar && (
+                <div className="flex gap-3">
+                    <Avatar 
+                        nome={contextoAuth?.usuario?.nome || ''} 
+                        fotoPerfil={contextoAuth?.usuario?.foto_perfil || null} 
+                        tamanho="md"
                     />
-                    <button
-                        type="submit"
-                        disabled={!novoComentario.trim() || enviando}
-                        className="absolute right-2 bottom-2 p-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition-colors disabled:opacity-30 flex items-center justify-center shadow-lg"
-                    >
-                        {enviando ? <Carregando tamanho="sm" /> : <Send className="w-4 h-4" />}
-                    </button>
-                </form>
-            </div>
+                    <form onSubmit={handleEnviar} className="flex-1 relative">
+                        <textarea
+                            value={novoComentario}
+                            onChange={(e) => setNovoComentario(e.target.value)}
+                            placeholder="Escreva um comentário ou atualização..."
+                            className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3 pr-12 text-sm text-slate-900 resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all min-h-[80px]"
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleEnviar(e);
+                                }
+                            }}
+                        />
+                        <button
+                            type="submit"
+                            disabled={!novoComentario.trim() || enviando}
+                            className="absolute right-2 bottom-2 p-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition-colors disabled:opacity-30 flex items-center justify-center shadow-lg"
+                        >
+                            {enviando ? <Carregando tamanho="sm" /> : <Send className="w-4 h-4" />}
+                        </button>
+                    </form>
+                </div>
+            )}
 
             {/* Feed Chronológico */}
             <div className="relative space-y-8 pl-1">

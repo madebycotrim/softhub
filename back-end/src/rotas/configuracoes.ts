@@ -1,13 +1,13 @@
-import { Hono } from 'hono';
+import { Hono, Context } from 'hono';
 import { Env } from '../index';
-import { autenticacaoRequerida } from '../middleware/auth';
+import { autenticacaoRequerida, verificarPermissao } from '../middleware/auth';
 import { registrarLog } from '../servicos/servico-logs';
 
 const rotasConfiguracoes = new Hono<{ Bindings: Env; Variables: { usuario: any } }>();
 
 // ─── GET / — Buscar todas as configurações ─────────────────────────────────────
 
-rotasConfiguracoes.get('/', autenticacaoRequerida('ADMIN'), async (c) => {
+rotasConfiguracoes.get('/', autenticacaoRequerida(), verificarPermissao('configuracoes:visualizar'), async (c: Context) => {
     const { DB } = c.env;
 
     try {
@@ -39,7 +39,7 @@ rotasConfiguracoes.get('/', autenticacaoRequerida('ADMIN'), async (c) => {
 
 // ─── PATCH /:chave — Atualizar uma configuração ────────────────────────────────
 
-rotasConfiguracoes.patch('/:chave', autenticacaoRequerida('ADMIN'), async (c) => {
+rotasConfiguracoes.patch('/:chave', autenticacaoRequerida(), verificarPermissao('configuracoes:editar'), async (c: Context) => {
     const { DB } = c.env;
     const { chave } = c.req.param();
     const { valor } = await c.req.json();

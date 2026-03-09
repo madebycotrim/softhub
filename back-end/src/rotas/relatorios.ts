@@ -1,14 +1,14 @@
-import { Hono } from 'hono';
+import { Hono, Context } from 'hono';
 import { Env } from '../index';
-import { autenticacaoRequerida, verificarRole } from '../middleware/auth';
+import { autenticacaoRequerida, verificarPermissao } from '../middleware/auth';
 
-const rotasRelatorios = new Hono<{ Bindings: Env }>();
+const rotasRelatorios = new Hono<{ Bindings: Env, Variables: { usuario: any } }>();
 
 /**
  * 📊 RELATÓRIO DE ESTRUTURA ORGANIZACIONAL
  * Retorna contagem de membros por grupo e equipe, além de lideranças.
  */
-rotasRelatorios.get('/organizacao', autenticacaoRequerida(), verificarRole(['ADMIN', 'LIDER_GRUPO']), async (c) => {
+rotasRelatorios.get('/organizacao', autenticacaoRequerida(), verificarPermissao('relatorios:visualizar'), async (c: Context) => {
     const { DB } = c.env;
 
     try {
@@ -52,7 +52,7 @@ rotasRelatorios.get('/organizacao', autenticacaoRequerida(), verificarRole(['ADM
  * 📅 RELATÓRIO GERAL DE FREQUÊNCIA
  * Retorna métricas agregadas de presença e justificativas.
  */
-rotasRelatorios.get('/frequencia/geral', autenticacaoRequerida(), verificarRole(['ADMIN', 'LIDER_GRUPO']), async (c) => {
+rotasRelatorios.get('/frequencia/geral', autenticacaoRequerida(), verificarPermissao('relatorios:visualizar'), async (c: Context) => {
     const { DB } = c.env;
 
     try {
@@ -103,7 +103,7 @@ rotasRelatorios.get('/frequencia/geral', autenticacaoRequerida(), verificarRole(
  * 👤 RELATÓRIO DE FREQUÊNCIA POR MEMBRO
  * Retorna o histórico resumido de cada membro.
  */
-rotasRelatorios.get('/frequencia/membros', autenticacaoRequerida(), verificarRole(['ADMIN', 'LIDER_GRUPO', 'LIDER_EQUIPE']), async (c) => {
+rotasRelatorios.get('/frequencia/membros', autenticacaoRequerida(), verificarPermissao('relatorios:visualizar'), async (c: Context) => {
     const { DB } = c.env;
 
     try {

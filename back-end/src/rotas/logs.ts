@@ -1,17 +1,12 @@
-import { Hono } from 'hono';
+import { Hono, Context } from 'hono';
 import { Env } from '../index';
-import { autenticacaoRequerida } from '../middleware/auth';
+import { autenticacaoRequerida, verificarPermissao } from '../middleware/auth';
 const rotasLogs = new Hono<{ Bindings: Env, Variables: { usuario: any } }>();
 
 // Listar logs paginados (Somente ADMIN, validação feita ou a ser feita no middleware, mock básico aqui)
-rotasLogs.get('/', autenticacaoRequerida(), async (c) => {
+rotasLogs.get('/', autenticacaoRequerida(), verificarPermissao('logs:visualizar'), async (c: Context) => {
     const { DB } = c.env;
     const usuario = c.get('usuario') as any;
-
-    // Ideal: Validar se é ADMIN (regra 12).
-    if (usuario.role !== 'ADMIN') {
-        return c.json({ erro: 'Acesso negado' }, 403);
-    }
 
     const pagina = Number(c.req.query('pagina') ?? 1);
     const itensPorPagina = Math.min(Number(c.req.query('itensPorPagina') ?? 20), 100);
@@ -51,8 +46,9 @@ rotasLogs.get('/', autenticacaoRequerida(), async (c) => {
     try {
         const queryCount = `SELECT COUNT(*) as total FROM logs ${whereClause}`;
         const stmtCount = DB.prepare(queryCount);
-        const resCount = await (bParams.length > 0 ? stmtCount.bind(...bParams) : stmtCount).all<{ total: number }>();
-        const total = resCount.results && resCount.results[0] ? resCount.results[0].total : 0;
+        const resCount = await (bParams.length > 0 ? stmtCount.bind(...bParams) : stmtCount).all();
+        const resultsCount = resCount.results as any;
+        const total = resultsCount && resultsCount[0] ? resultsCount[0].total : 0;
 
         const querySelect = `
             SELECT id, usuario_id, usuario_nome as nome, usuario_email as email, usuario_role as role, 
@@ -82,13 +78,9 @@ rotasLogs.get('/', autenticacaoRequerida(), async (c) => {
     }
 });
 
-rotasLogs.get('/estatisticas', autenticacaoRequerida(), async (c) => {
+rotasLogs.get('/estatisticas', autenticacaoRequerida(), verificarPermissao('logs:visualizar'), async (c: Context) => {
     const { DB } = c.env;
     const usuario = c.get('usuario') as any;
-
-    if (usuario.role !== 'ADMIN') {
-        return c.json({ erro: 'Acesso negado' }, 403);
-    }
 
     try {
         const resModulos = await DB.prepare(`
@@ -96,7 +88,7 @@ rotasLogs.get('/estatisticas', autenticacaoRequerida(), async (c) => {
             FROM logs 
             GROUP BY modulo 
             ORDER BY quantidade DESC
-        `).all<{ modulo: string, quantidade: number }>();
+        `).all();
 
         return c.json({
             modulos: resModulos.results || [],

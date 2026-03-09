@@ -6,6 +6,7 @@ import type { Membro } from '../membros/usarMembros';
 import { Avatar } from '../../compartilhado/componentes/Avatar';
 import { Carregando } from '../../compartilhado/componentes/Carregando';
 import { usarAutenticacao } from '../autenticacao/usarAutenticacao';
+import { usarPermissaoAcesso } from '../../compartilhado/hooks/usarPermissao';
 import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
 import { Modal } from '../../compartilhado/componentes/Modal';
 import { ConfirmacaoExclusao } from '../../compartilhado/componentes/ConfirmacaoExclusao';
@@ -373,6 +374,8 @@ function LinhaMembro({
 }: LinhaMembroProps) {
     const { usuario } = usarAutenticacao();
     const ehOMesmoUsuario = usuario?.id === membro.id;
+    const podeAlterarRole = usarPermissaoAcesso('membros:alterar_role');
+    const podeDesativar = usarPermissaoAcesso('membros:desativar');
 
 
     // Identifica os dois grupos disponíveis dinamicamente (os dois primeiros encontrados)
@@ -430,9 +433,10 @@ function LinhaMembro({
                     <div className="relative">
                         <select
                             aria-label={`Papel de ${membro.nome}`}
-                            className="w-full bg-muted/20 border border-border/50 rounded-xl px-2 py-1.5 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer"
+                            className={`w-full bg-muted/20 border border-border/50 rounded-xl px-2 py-1.5 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none ${!podeAlterarRole ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
                             value={membro.role}
                             onChange={e => onAlterarRole(membro, e.target.value)}
+                            disabled={!podeAlterarRole}
                         >
                             <option value="VISITANTE">Visitante</option>
                             <option value="MEMBRO">Membro</option>
@@ -480,7 +484,7 @@ function LinhaMembro({
 
             {/* Ações */}
             <div className="flex items-center justify-end gap-2 w-full lg:w-auto lg:col-span-2 pt-3 lg:pt-0 border-t border-border/40 lg:border-0">
-                {!ehOMesmoUsuario && (
+                {!ehOMesmoUsuario && podeDesativar && (
                     <>
                         <button
                             onClick={membro.ativo ? () => onSolicitarExclusao(membro) : () => onAlternarStatus(membro)}
@@ -534,6 +538,9 @@ interface BulkActionsProps {
 }
 
 function BulkActions({ selecionados, onClear, onBulkUpdate, onExport }: BulkActionsProps) {
+    const podeDesativar = usarPermissaoAcesso('membros:desativar');
+    const podeAlterarRole = usarPermissaoAcesso('membros:alterar_role');
+
     if (selecionados.size === 0) return null;
 
     return (
@@ -554,29 +561,33 @@ function BulkActions({ selecionados, onClear, onBulkUpdate, onExport }: BulkActi
             </div>
 
             <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none no-scrollbar">
-                <button
-                    onClick={() => onBulkUpdate('arquivados' as any)}
-                    className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition-all border border-amber-500/20"
-                >
-                    <Archive size={14} /> Arquivar
-                </button>
-
-                <div className="relative group/bulk-role shrink-0">
-                    <button className="flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest bg-primary/10 text-primary hover:bg-primary/20 transition-all border border-primary/20">
-                        <Shield size={14} /> Cargo <ChevronDown size={14} />
+                {podeDesativar && (
+                    <button
+                        onClick={() => onBulkUpdate('arquivados' as any)}
+                        className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition-all border border-amber-500/20"
+                    >
+                        <Archive size={14} /> Arquivar
                     </button>
-                    <div className="absolute bottom-full left-0 mb-3 w-44 bg-card border border-border rounded-2xl shadow-2xl overflow-hidden hidden group-hover/bulk-role:block animate-in fade-in slide-in-from-bottom-2 z-[60]">
-                        {['VISITANTE', 'MEMBRO', 'LIDER_EQUIPE', 'LIDER_GRUPO', 'ADMIN'].map(role => (
-                            <button
-                                key={role}
-                                onClick={() => onBulkUpdate('role', role)}
-                                className="w-full text-left px-4 py-3 hover:bg-accent text-[11px] font-black uppercase tracking-widest transition-colors border-b border-border/50 last:border-0"
-                            >
-                                {role === 'ADMIN' ? 'Administrador' : role.replace('_', ' ')}
-                            </button>
-                        ))}
+                )}
+
+                {podeAlterarRole && (
+                    <div className="relative group/bulk-role shrink-0">
+                        <button className="flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest bg-primary/10 text-primary hover:bg-primary/20 transition-all border border-primary/20">
+                            <Shield size={14} /> Cargo <ChevronDown size={14} />
+                        </button>
+                        <div className="absolute bottom-full left-0 mb-3 w-44 bg-card border border-border rounded-2xl shadow-2xl overflow-hidden hidden group-hover/bulk-role:block animate-in fade-in slide-in-from-bottom-2 z-[60]">
+                            {['VISITANTE', 'MEMBRO', 'LIDER_EQUIPE', 'LIDER_GRUPO', 'ADMIN'].map(role => (
+                                <button
+                                    key={role}
+                                    onClick={() => onBulkUpdate('role', role)}
+                                    className="w-full text-left px-4 py-3 hover:bg-accent text-[11px] font-black uppercase tracking-widest transition-colors border-b border-border/50 last:border-0"
+                                >
+                                    {role === 'ADMIN' ? 'Administrador' : role.replace('_', ' ')}
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                </div>
+                )}
 
                 <button
                     onClick={onExport}
@@ -832,6 +843,9 @@ export function GerenciarMembros() {
     const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
     const [ultimoIdSelecionado, setUltimoIdSelecionado] = useState<string | null>(null);
 
+    const podeCadastrar = usarPermissaoAcesso('membros:gerenciar');
+    const podeDesativar = usarPermissaoAcesso('membros:desativar');
+
     const membrosFiltrados = useMemo(() => {
         let lista = membros;
 
@@ -961,7 +975,7 @@ export function GerenciarMembros() {
                         )}
                     </button>
 
-                    {abaAtiva === 'arquivados' && membrosFiltrados.length > 0 && (
+                    {abaAtiva === 'arquivados' && membrosFiltrados.length > 0 && podeDesativar && (
                         <button
                             onClick={() => setModalLimpagemAberta(true)}
                             className="w-full sm:w-auto bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 px-4 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all border border-amber-500/20"
@@ -970,20 +984,24 @@ export function GerenciarMembros() {
                         </button>
                     )}
 
-                    <button
-                        onClick={() => setModalLoteAberto(true)}
-                        className="w-full sm:w-auto bg-accent hover:bg-accent/80 text-accent-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all"
-                    >
-                        <ListPlus className="w-4 h-4" /> Convites em Lote
-                    </button>
+                    {podeCadastrar && (
+                        <>
+                            <button
+                                onClick={() => setModalLoteAberto(true)}
+                                className="w-full sm:w-auto bg-accent hover:bg-accent/80 text-accent-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all"
+                            >
+                                <ListPlus className="w-4 h-4" /> Convites em Lote
+                            </button>
 
 
-                    <button
-                        onClick={() => setModalAberto(true)}
-                        className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all"
-                    >
-                        <UserCog className="w-4 h-4" /> Cadastrar Membro
-                    </button>
+                            <button
+                                onClick={() => setModalAberto(true)}
+                                className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all"
+                            >
+                                <UserCog className="w-4 h-4" /> Cadastrar Membro
+                            </button>
+                        </>
+                    )}
                 </div>
             </CabecalhoFuncionalidade>
 

@@ -17,6 +17,7 @@ import type { ColunaKanban } from '../../utilitarios/constantes';
 import { usarKanban } from './usarKanban';
 import type { Tarefa, FiltrosKanban } from './usarKanban';
 import { CartaoTarefa } from './CartaoTarefa';
+import { usarPermissaoAcesso } from '../../compartilhado/hooks/usarPermissao';
 import { Carregando } from '../../compartilhado/componentes/Carregando';
 import { EstadoVazio } from '../../compartilhado/componentes/EstadoVazio';
 import { ModalDetalhesTarefa } from './ModalDetalhesTarefa';
@@ -74,6 +75,8 @@ export function QuadroKanban({ projetoId = 'p1' }: { projetoId?: string }) {
     const [activeTarefa, setActiveTarefa] = useState<Tarefa | null>(null);
     const [tarefaDetalhes, setTarefaDetalhes] = useState<Tarefa | null>(null);
 
+    const podeMover = usarPermissaoAcesso('tarefas:mover');
+
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), // Exige mover 5px para ativar drag
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
@@ -84,12 +87,14 @@ export function QuadroKanban({ projetoId = 'p1' }: { projetoId?: string }) {
     if (tarefas.length === 0) return <EstadoVazio titulo="Nenhuma tarefa encontrada." descricao="Crie tarefas para começar seu fluxo de trabalho no projeto." />;
 
     const handleDragStart = (event: DragStartEvent) => {
+        if (!podeMover) return;
         const { active } = event;
         const tarefa = tarefas.find(t => t.id === active.id);
         if (tarefa) setActiveTarefa(tarefa);
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
+        if (!podeMover) return;
         const { active, over } = event;
         setActiveTarefa(null);
 

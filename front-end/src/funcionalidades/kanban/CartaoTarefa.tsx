@@ -3,6 +3,7 @@ import { Emblema } from '../../compartilhado/componentes/Emblema';
 import { CORES_PRIORIDADE, LABELS_PRIORIDADE } from '../../utilitarios/constantes';
 import type { Tarefa } from './usarKanban';
 import { useDraggable } from '@dnd-kit/core';
+import { usarPermissaoAcesso } from '../../compartilhado/hooks/usarPermissao';
 import { usarChecklist } from './usarChecklist';
 import { CheckCircle2 } from 'lucide-react';
 
@@ -17,6 +18,7 @@ interface CartaoTarefaProps {
 export function CartaoTarefa({ tarefa, aoClicar }: CartaoTarefaProps) {
     const isUrgente = tarefa.prioridade === 'urgente';
     const { totalConcluidos, totalItens } = usarChecklist(tarefa.id);
+    const podeMover = usarPermissaoAcesso('tarefas:mover');
 
     // Configuração DnD Kit
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
@@ -24,7 +26,8 @@ export function CartaoTarefa({ tarefa, aoClicar }: CartaoTarefaProps) {
         data: {
             type: 'Task',
             tarefa,
-        }
+        },
+        disabled: !podeMover
     });
 
     const style = transform ? {
@@ -38,7 +41,8 @@ export function CartaoTarefa({ tarefa, aoClicar }: CartaoTarefaProps) {
             {...listeners}
             {...attributes}
             className={`
-        bg-card p-3 rounded-2xl border flex flex-col gap-3 shadow-sm select-none cursor-grab active:cursor-grabbing hover:border-primary/50 hover:shadow-md transition-all duration-200
+        bg-card p-3 rounded-2xl border flex flex-col gap-3 shadow-sm select-none transition-all duration-200
+        ${podeMover ? 'cursor-grab active:cursor-grabbing hover:border-primary/50 hover:shadow-md' : 'cursor-default opacity-80'}
         ${isDragging ? 'opacity-50 ring-2 ring-primary z-50 scale-105' : ''}
         ${isUrgente ? 'border-destructive/30 bg-destructive/5' : 'border-border'}
       `}

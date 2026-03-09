@@ -11,8 +11,7 @@ import {
 import { Modal } from '../../compartilhado/componentes/Modal';
 import { ConfirmacaoExclusao } from '../../compartilhado/componentes/ConfirmacaoExclusao';
 import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
-
-
+import { usarPermissaoAcesso } from '../../compartilhado/hooks/usarPermissao';
 
 export default function PainelEquipes() {
     const { 
@@ -31,6 +30,11 @@ export default function PainelEquipes() {
     
     const [submetendo, setSubmetendo] = useState(false);
     const [exclusao, setExclusao] = useState<{ tipo: 'grupo' | 'equipe', id: string, aberto: boolean } | null>(null);
+
+    const podeCriarGrupo = usarPermissaoAcesso('organizacao:criar_grupo');
+    const podeEditarGrupo = usarPermissaoAcesso('organizacao:editar_grupo');
+    const podeCriarEquipe = usarPermissaoAcesso('organizacao:criar_equipe');
+    const podeEditarEquipe = usarPermissaoAcesso('organizacao:editar_equipe');
 
     const handleCriarGrupo = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -84,18 +88,22 @@ export default function PainelEquipes() {
                 icone={LayoutGrid}
             >
                 <div className="flex gap-3">
-                    <button
-                        onClick={() => setModalEquipe(true)}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-purple-500 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-purple-500/20 hover:scale-105 active:scale-95 transition-all"
-                    >
-                        <Plus className="w-4 h-4 stroke-[3]" /> Nova Equipe
-                    </button>
-                    <button
-                        onClick={() => setModalGrupo(true)}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
-                    >
-                        <Plus className="w-4 h-4 stroke-[3]" /> Novo Grupo
-                    </button>
+                    {podeCriarEquipe && (
+                        <button
+                            onClick={() => setModalEquipe(true)}
+                            className="flex items-center gap-2 px-5 py-2.5 bg-purple-500 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-purple-500/20 hover:scale-105 active:scale-95 transition-all"
+                        >
+                            <Plus className="w-4 h-4 stroke-[3]" /> Nova Equipe
+                        </button>
+                    )}
+                    {podeCriarGrupo && (
+                        <button
+                            onClick={() => setModalGrupo(true)}
+                            className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+                        >
+                            <Plus className="w-4 h-4 stroke-[3]" /> Novo Grupo
+                        </button>
+                    )}
                 </div>
             </CabecalhoFuncionalidade>
 
@@ -121,12 +129,14 @@ export default function PainelEquipes() {
                                             <span className="text-[10px] font-black text-muted-foreground/60 uppercase">{membros.filter(m => m.equipe_id === equipe.id).length} Membros</span>
                                         </div>
                                     </div>
-                                    <button 
-                                        onClick={() => setExclusao({ tipo: 'equipe', id: equipe.id, aberto: true })}
-                                        className="p-2 text-muted-foreground/20 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all opacity-0 group-hover:opacity-100"
-                                    >
-                                        <Trash size={16} />
-                                    </button>
+                                    {podeEditarEquipe && (
+                                        <button 
+                                            onClick={() => setExclusao({ tipo: 'equipe', id: equipe.id, aberto: true })}
+                                            className="p-2 text-muted-foreground/20 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                                        >
+                                            <Trash size={16} />
+                                        </button>
+                                    )}
                                 </div>
 
                                 <div className="space-y-4">
@@ -138,13 +148,14 @@ export default function PainelEquipes() {
                                                 <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 leading-none">Líder da Equipe</label>
                                             </div>
                                             <select 
+                                                disabled={!podeEditarEquipe}
                                                 value={equipe.lider_id || 'none'}
                                                 onChange={e => editarEquipe(equipe.id, { 
                                                     nome: equipe.nome, 
                                                     lider_id: e.target.value === 'none' ? undefined : e.target.value,
                                                     sub_lider_id: equipe.sub_lider_id || undefined
                                                 })}
-                                                className="w-full bg-purple-500/5 border border-purple-500/10 rounded-2xl px-4 py-2.5 text-[12px] font-black outline-none text-foreground/80 focus:ring-4 focus:ring-purple-500/5 transition-all transition-all appearance-none"
+                                                className={`w-full bg-purple-500/5 border border-purple-500/10 rounded-2xl px-4 py-2.5 text-[12px] font-black outline-none text-foreground/80 focus:ring-4 focus:ring-purple-500/5 transition-all appearance-none ${!podeEditarEquipe ? 'opacity-70 cursor-not-allowed' : ''}`}
                                             >
                                                 <option value="none">Selecione o Líder...</option>
                                                 {membros.map(m => <option key={m.id} value={m.id}>{m.nome}</option>)}
@@ -157,13 +168,14 @@ export default function PainelEquipes() {
                                                 <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 leading-none">Sub-Líder</label>
                                             </div>
                                             <select 
+                                                disabled={!podeEditarEquipe}
                                                 value={equipe.sub_lider_id || 'none'}
                                                 onChange={e => editarEquipe(equipe.id, { 
                                                     nome: equipe.nome, 
                                                     sub_lider_id: e.target.value === 'none' ? undefined : e.target.value,
                                                     lider_id: equipe.lider_id || undefined
                                                 })}
-                                                className="w-full bg-purple-500/5 border border-purple-500/10 rounded-2xl px-4 py-2.5 text-[12px] font-black outline-none text-foreground/80 focus:ring-4 focus:ring-purple-500/5 transition-all appearance-none"
+                                                className={`w-full bg-purple-500/5 border border-purple-500/10 rounded-2xl px-4 py-2.5 text-[12px] font-black outline-none text-foreground/80 focus:ring-4 focus:ring-purple-500/5 transition-all appearance-none ${!podeEditarEquipe ? 'opacity-70 cursor-not-allowed' : ''}`}
                                             >
                                                 <option value="none">Selecione o Sub...</option>
                                                 {membros.map(m => <option key={m.id} value={m.id}>{m.nome}</option>)}
@@ -242,12 +254,14 @@ export default function PainelEquipes() {
                                                                 </div>
                                                                 <span className="text-[12px] font-bold text-foreground/80">{m.nome}</span>
                                                             </div>
-                                                            <button 
-                                                                onClick={() => alocarUsuario(m.id, null, null).then(recarregarMembros)}
-                                                                className="p-1.5 text-muted-foreground/20 hover:text-red-500 transition-colors"
-                                                            >
-                                                                <X size={14} />
-                                                            </button>
+                                                            {(podeEditarGrupo || podeEditarEquipe) && (
+                                                                <button 
+                                                                    onClick={() => alocarUsuario(m.id, null, null).then(recarregarMembros)}
+                                                                    className="p-1.5 text-muted-foreground/20 hover:text-red-500 transition-colors"
+                                                                >
+                                                                    <X size={14} />
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     ))}
                                                 </div>
@@ -270,7 +284,9 @@ export default function PainelEquipes() {
                                                 {membros.filter(m => m.grupo_id === grupo.id && !m.equipe_id).map(m => (
                                                     <div key={m.id} className="px-3 py-1.5 bg-amber-500/5 border border-amber-500/10 rounded-full text-[10px] font-bold text-amber-600/60 flex items-center gap-2">
                                                         {m.nome}
-                                                        <X size={10} className="cursor-pointer" onClick={() => alocarUsuario(m.id, null, null).then(recarregarMembros)} />
+                                                        {(podeEditarGrupo || podeEditarEquipe) && (
+                                                            <X size={10} className="cursor-pointer" onClick={() => alocarUsuario(m.id, null, null).then(recarregarMembros)} />
+                                                        )}
                                                     </div>
                                                 ))}
                                             </div>
@@ -325,7 +341,8 @@ export default function PainelEquipes() {
                                             </td>
                                             <td className="px-10 py-5 md:table-cell hidden">
                                                 <select
-                                                    className="w-full max-w-[180px] bg-purple-500/5 border border-purple-500/10 rounded-[16px] px-4 py-2 text-[11px] font-black outline-none focus:ring-4 focus:ring-purple-500/5 transition-all text-foreground"
+                                                    className={`w-full max-w-[180px] bg-purple-500/5 border border-purple-500/10 rounded-[16px] px-4 py-2 text-[11px] font-black outline-none focus:ring-4 focus:ring-purple-500/5 transition-all text-foreground ${!podeEditarEquipe ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                                    disabled={!podeEditarEquipe}
                                                     onChange={async (e) => {
                                                         await alocarUsuario(membro.id, e.target.value === 'none' ? null : e.target.value, undefined);
                                                         recarregarMembros();
@@ -340,7 +357,8 @@ export default function PainelEquipes() {
                                             </td>
                                             <td className="px-10 py-5">
                                                 <select
-                                                    className="w-full max-w-[180px] bg-primary/5 border border-primary/10 rounded-[16px] px-4 py-2 text-[11px] font-black outline-none focus:ring-4 focus:ring-primary/5 transition-all text-foreground"
+                                                    className={`w-full max-w-[180px] bg-primary/5 border border-primary/10 rounded-[16px] px-4 py-2 text-[11px] font-black outline-none focus:ring-4 focus:ring-primary/5 transition-all text-foreground ${!podeEditarGrupo ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                                    disabled={!podeEditarGrupo}
                                                     onChange={async (e) => {
                                                         await alocarUsuario(membro.id, undefined, e.target.value === 'none' ? null : e.target.value);
                                                         recarregarMembros();
@@ -354,13 +372,15 @@ export default function PainelEquipes() {
                                                 </select>
                                             </td>
                                             <td className="px-10 py-5 text-right">
-                                                <button 
-                                                    onClick={() => alocarUsuario(membro.id, null, null).then(recarregarMembros)}
-                                                    className="p-3 text-muted-foreground/10 hover:text-red-500 hover:bg-red-500/10 rounded-[18px] transition-all"
-                                                    title="Limpar Alocações"
-                                                >
-                                                    <ArrowRightLeft size={16} />
-                                                </button>
+                                                { (podeEditarGrupo || podeEditarEquipe) && (
+                                                    <button 
+                                                        onClick={() => alocarUsuario(membro.id, null, null).then(recarregarMembros)}
+                                                        className="p-3 text-muted-foreground/10 hover:text-red-500 hover:bg-red-500/10 rounded-[18px] transition-all"
+                                                        title="Limpar Alocações"
+                                                    >
+                                                        <ArrowRightLeft size={16} />
+                                                    </button>
+                                                )}
                                             </td>
                                         </tr>
                                     ))}

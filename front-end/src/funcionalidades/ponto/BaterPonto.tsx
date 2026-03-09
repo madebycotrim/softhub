@@ -10,6 +10,7 @@ import { FormularioJustificativa } from './FormularioJustificativa';
 import { BotaoExportarPonto } from './BotaoExportarPonto';
 import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
 import { Watch } from 'lucide-react';
+import { usarPermissaoAcesso } from '../../compartilhado/hooks/usarPermissao';
 
 /**
  * Interface de registro e visualização diária do ponto.
@@ -22,6 +23,10 @@ export function BaterPonto() {
     const [salvando, setSalvando] = useState(false);
     const [erroPonto, setErroPonto] = useState<string | null>(null);
     const [modalJustificativaAberto, setModalJustificativaAberto] = useState(false);
+
+    const podeRegistrar = usarPermissaoAcesso('ponto:registrar');
+    const podeJustificar = usarPermissaoAcesso('ponto:justificar');
+    const podeExportarCsv = usarPermissaoAcesso('ponto:exportar_csv');
 
     // Calcula qual é o próximo tipo baseado no último registro de hoje
     const ultimoRegistro = useMemo(() => {
@@ -68,16 +73,20 @@ export function BaterPonto() {
                     </TabsList>
 
                     <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-                        <div className="flex-1 sm:flex-none">
-                            <BotaoExportarPonto />
-                        </div>
-                        <button
-                            onClick={() => setModalJustificativaAberto(true)}
-                            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-primary/10 hover:bg-primary/20 border border-primary/20 rounded-2xl text-[11px] font-black uppercase tracking-widest text-primary transition-all active:scale-95"
-                        >
-                            <Plus className="w-4 h-4" />
-                            Nova Justificativa
-                        </button>
+                        {podeExportarCsv && (
+                            <div className="flex-1 sm:flex-none">
+                                <BotaoExportarPonto />
+                            </div>
+                        )}
+                        {podeJustificar && (
+                            <button
+                                onClick={() => setModalJustificativaAberto(true)}
+                                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-primary/10 hover:bg-primary/20 border border-primary/20 rounded-2xl text-[11px] font-black uppercase tracking-widest text-primary transition-all active:scale-95"
+                            >
+                                <Plus className="w-4 h-4" />
+                                Nova Justificativa
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -127,10 +136,10 @@ export function BaterPonto() {
 
                                 <button
                                     onClick={handleBaterPonto}
-                                    disabled={carregando || salvando || foraDaRede}
+                                    disabled={carregando || salvando || foraDaRede || !podeRegistrar}
                                     className={`
                         w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] relative z-10 text-white
-                        ${foraDaRede ? 'bg-muted text-muted-foreground cursor-not-allowed border border-border' :
+                        ${(foraDaRede || !podeRegistrar) ? 'bg-muted text-muted-foreground cursor-not-allowed border border-border' :
                                             proximoTipo === 'entrada'
                                                 ? 'bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/30 dark:shadow-emerald-900/50'
                                                 : 'bg-rose-600 hover:bg-rose-500 shadow-lg shadow-rose-600/30 dark:shadow-rose-900/50'
@@ -142,6 +151,8 @@ export function BaterPonto() {
                                         <span className="animate-pulse">Registrando...</span>
                                     ) : foraDaRede ? (
                                         <span>Rede Incompatível</span>
+                                    ) : !podeRegistrar ? (
+                                        <span>Sem Permissão</span>
                                     ) : (
                                         <>
                                             {proximoTipo === 'entrada' ? <LogIn className="w-5 h-5" /> : <LogOut className="w-5 h-5" />}
