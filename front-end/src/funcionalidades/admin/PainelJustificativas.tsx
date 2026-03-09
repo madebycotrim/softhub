@@ -1,28 +1,32 @@
 import { useState } from 'react';
-import { Bot, CheckCircle, XCircle } from 'lucide-react';
+import { Bot, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { formatarDataHora } from '../../utilitarios/formatadores';
 import { Emblema } from '../../compartilhado/componentes/Emblema';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar } from '../../compartilhado/componentes/Avatar';
 import { ConfirmacaoExclusao } from '../../compartilhado/componentes/ConfirmacaoExclusao';
-import { Textarea } from '@/components/ui/textarea';
 import { usarJustificativasAdmin } from './usarJustificativasAdmin';
 import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
+import { Modal } from '../../compartilhado/componentes/Modal';
 
+/** Mapeia o tipo técnico para rótulo amigável. */
+const formatarTipo = (tipo: string): string => {
+    const mapa: Record<string, string> = {
+        ausencia: 'Ausência (Atestado/Falta)',
+        esquecimento: 'Esquecimento de Batida',
+        problema_sistema: 'Falha no Sistema',
+    };
+    return mapa[tipo] ?? tipo;
+};
+
+/**
+ * Painel de revisão de justificativas de ponto.
+ * Usa tabela semântica padronizada.
+ */
 export function PainelJustificativas() {
     const { justificativas, carregando, erro, aprovar, rejeitar } = usarJustificativasAdmin();
     const [processandoAcao, setProcessandoAcao] = useState<string | null>(null);
     const [justificativaSelecionada, setJustificativaSelecionada] = useState<string | null>(null);
     const [motivoRejeicao, setMotivoRejeicao] = useState('');
-
-    const formatarTipo = (tipo: string) => {
-        const mapa: Record<string, string> = {
-            'ausencia': 'Ausência (Atestado/Falta)',
-            'esquecimento': 'Esquecimento de Batida',
-            'problema_sistema': 'Falha no Sistema'
-        };
-        return mapa[tipo] || tipo;
-    };
 
     const handleAprovar = async (id: string) => {
         setProcessandoAcao(id);
@@ -75,8 +79,7 @@ export function PainelJustificativas() {
             />
 
             <div className="bg-card border border-border rounded-2xl flex flex-col flex-1 overflow-hidden shadow-sm">
-
-                <div className="flex-1 overflow-y-auto min-w-0">
+                <div className="flex-1 overflow-auto">
                     {justificativas.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
                             <Bot className="w-12 h-12 mb-4 opacity-20" />
@@ -84,116 +87,160 @@ export function PainelJustificativas() {
                             <p className="text-sm mt-1">Nenhuma justificativa aguardando auditoria.</p>
                         </div>
                     ) : (
-                        <Table className="w-full text-sm text-left">
-                            <TableHeader className="bg-muted/50 sticky top-0 border-border/50 shadow-sm z-10 text-xs">
-                                <TableRow className="border-border/50 hover:bg-transparent">
-                                    <TableHead className="px-5 py-4 font-semibold text-muted-foreground">Membro</TableHead>
-                                    <TableHead className="px-5 py-4 font-semibold text-muted-foreground">Status & Data</TableHead>
-                                    <TableHead className="px-5 py-4 font-semibold text-muted-foreground">Tipo & Motivo</TableHead>
-                                    <TableHead className="px-5 py-4 text-center font-semibold text-muted-foreground w-36">Ações</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody className="divide-y divide-border/50 border-t border-border/50">
-                                {justificativas.map((just, idx) => (
-                                    <TableRow key={just.id} className={`${idx % 2 === 0 ? 'bg-transparent' : 'bg-accent/20'} border-transparent hover:bg-accent/50 transition-colors group cursor-default`}>
-                                        <TableCell className="px-5 py-4 align-top">
+                        <table className="w-full border-collapse">
+                            <thead>
+                                <tr className="border-b border-border/60 bg-muted/30">
+                                    <th className="px-5 py-3 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 w-[25%]">
+                                        Membro
+                                    </th>
+                                    <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 w-[18%]">
+                                        Status & Data
+                                    </th>
+                                    <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">
+                                        Tipo & Motivo
+                                    </th>
+                                    <th className="px-3 py-3 text-right text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 w-[120px]">
+                                        Ações
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border/40">
+                                {justificativas.map(just => (
+                                    <tr key={just.id} className="hover:bg-muted/20 transition-colors group">
+                                        {/* Membro */}
+                                        <td className="px-5 py-4 align-top">
                                             <div className="flex items-center gap-3">
                                                 <Avatar nome={just.usuario_nome} fotoPerfil={just.usuario_foto} tamanho="sm" />
                                                 <div>
-                                                    <p className="font-medium text-foreground">{just.usuario_nome}</p>
-                                                    <p className="text-xs text-muted-foreground">{just.usuario_email}</p>
+                                                    <p className="font-medium text-foreground text-sm truncate max-w-[160px]">
+                                                        {just.usuario_nome}
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground truncate max-w-[160px]">
+                                                        {just.usuario_email}
+                                                    </p>
                                                 </div>
                                             </div>
-                                        </TableCell>
+                                        </td>
 
-                                        <TableCell className="px-5 py-4 align-top">
+                                        {/* Status & Data */}
+                                        <td className="px-3 py-4 align-top">
                                             <div className="flex flex-col items-start gap-1.5">
                                                 {just.status === 'pendente' && <Emblema texto="Pendente" variante="amarelo" />}
                                                 {just.status === 'aprovada' && <Emblema texto="Aprovada" variante="verde" />}
                                                 {just.status === 'rejeitada' && <Emblema texto="Rejeitada" variante="vermelho" />}
-                                                <span className="font-mono text-xs text-muted-foreground font-medium whitespace-nowrap bg-muted px-2 py-0.5 rounded ml-0.5">
+                                                <span className="font-mono text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
                                                     {just.data}
                                                 </span>
-                                                <span className="text-[10px] text-muted-foreground font-mono tracking-tighter">
+                                                <span className="text-[10px] text-muted-foreground/60 font-mono">
                                                     {formatarDataHora(just.criado_em)}
                                                 </span>
                                             </div>
-                                        </TableCell>
+                                        </td>
 
-                                        <TableCell className="px-5 py-4 align-top w-[40%]">
-                                            <div className="flex flex-col gap-1 w-full max-w-sm">
-                                                <span className="text-xs font-semibold tracking-wide text-primary uppercase">
+                                        {/* Tipo & Motivo */}
+                                        <td className="px-3 py-4 align-top">
+                                            <div className="flex flex-col gap-1 max-w-sm">
+                                                <span className="text-xs font-bold tracking-wide text-primary uppercase">
                                                     {formatarTipo(just.tipo)}
                                                 </span>
-                                                <span className="text-sm text-foreground line-clamp-2 md:line-clamp-4 leading-relaxed group-hover:text-foreground transition-colors">
+                                                <span className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
                                                     {just.motivo}
                                                 </span>
                                                 {just.status === 'rejeitada' && just.motivo_rejeicao && (
-                                                    <div className="mt-2 p-2 bg-destructive/10 border border-destructive/20 rounded-md text-xs text-destructive">
-                                                        <span className="font-semibold">Reprovação:</span> {just.motivo_rejeicao}
+                                                    <div className="mt-1 p-2 bg-destructive/10 border border-destructive/20 rounded-lg text-xs text-destructive">
+                                                        <span className="font-bold">Reprovação:</span> {just.motivo_rejeicao}
                                                     </div>
                                                 )}
                                             </div>
-                                        </TableCell>
+                                        </td>
 
-                                        <TableCell className="px-5 py-4 align-middle">
-                                            <div className="flex items-center justify-end gap-2 pr-2">
+                                        {/* Ações */}
+                                        <td className="px-3 py-4 align-middle">
+                                            <div className="flex items-center justify-end gap-2">
                                                 {just.status === 'pendente' ? (
                                                     <>
                                                         <button
                                                             onClick={() => handleAprovar(just.id)}
                                                             disabled={processandoAcao === just.id}
-                                                            className="w-10 h-10 rounded-full flex items-center justify-center bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-colors border border-emerald-500/20 disabled:opacity-50"
+                                                            className="w-9 h-9 rounded-full flex items-center justify-center bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-colors border border-emerald-500/20 disabled:opacity-50"
                                                             aria-label="Aprovar"
                                                             title="Aprovar Justificativa"
                                                         >
-                                                            <CheckCircle className="w-5 h-5" />
+                                                            {processandoAcao === just.id
+                                                                ? <Loader2 className="w-4 h-4 animate-spin" />
+                                                                : <CheckCircle className="w-4 h-4" />
+                                                            }
                                                         </button>
                                                         <button
                                                             onClick={() => setJustificativaSelecionada(just.id)}
                                                             disabled={processandoAcao === just.id}
-                                                            className="w-10 h-10 rounded-full flex items-center justify-center bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-colors border border-rose-500/20 disabled:opacity-50"
+                                                            className="w-9 h-9 rounded-full flex items-center justify-center bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-colors border border-rose-500/20 disabled:opacity-50"
                                                             aria-label="Rejeitar"
                                                             title="Rejeitar Justificativa"
                                                         >
-                                                            <XCircle className="w-5 h-5" />
+                                                            <XCircle className="w-4 h-4" />
                                                         </button>
                                                     </>
                                                 ) : (
-                                                    <span className="text-xs text-muted-foreground font-medium px-2 py-1 bg-muted rounded">Auditoria fechada</span>
+                                                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest px-2 py-1 bg-muted rounded-lg">
+                                                        Fechado
+                                                    </span>
                                                 )}
                                             </div>
-                                        </TableCell>
-                                    </TableRow>
+                                        </td>
+                                    </tr>
                                 ))}
-                            </TableBody>
-                        </Table>
+                            </tbody>
+                        </table>
                     )}
                 </div>
-
-                <ConfirmacaoExclusao
-                    aberto={!!justificativaSelecionada}
-                    aoFechar={() => {
-                        setJustificativaSelecionada(null);
-                        setMotivoRejeicao('');
-                    }}
-                    aoConfirmar={handleRejeitar}
-                    titulo="Reprovar Justificativa"
-                    descricao={`Você está prestes a reprovar este pedido. Para manter a transparência e cumprir com a política da equipe, por favor descreva o motivo.`}
-                    textoBotao={processandoAcao ? "Processando..." : "Confirmar Reprovação"}
-                    carregando={!!processandoAcao}
-                >
-                    <div className="mt-4 pb-2">
-                        <Textarea
-                            placeholder="Motivo obrigatório de rejeição"
-                            required
-                            className="bg-background border-input text-sm h-24 text-foreground"
-                            value={motivoRejeicao}
-                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setMotivoRejeicao(e.target.value)}
-                        />
-                    </div>
-                </ConfirmacaoExclusao>
             </div>
+
+            {/* Modal de Rejeição */}
+            <Modal
+                titulo="Reprovar Justificativa"
+                aberto={!!justificativaSelecionada}
+                aoFechar={() => { setJustificativaSelecionada(null); setMotivoRejeicao(''); }}
+                largura="sm"
+            >
+                <div className="space-y-4 py-2">
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                        Para manter a transparência, descreva o motivo da reprovação.
+                    </p>
+                    <textarea
+                        placeholder="Motivo obrigatório de rejeição..."
+                        required
+                        className="w-full h-28 bg-background border border-border rounded-2xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none"
+                        value={motivoRejeicao}
+                        onChange={(e) => setMotivoRejeicao(e.target.value)}
+                    />
+                    <div className="flex justify-end gap-3 pt-2">
+                        <button
+                            type="button"
+                            onClick={() => { setJustificativaSelecionada(null); setMotivoRejeicao(''); }}
+                            className="px-4 py-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleRejeitar}
+                            disabled={!!processandoAcao || !motivoRejeicao.trim()}
+                            className="bg-destructive text-destructive-foreground px-6 py-2 rounded-2xl text-sm font-bold hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2"
+                        >
+                            {processandoAcao ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmar Reprovação'}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
+            <ConfirmacaoExclusao
+                aberto={false}
+                aoFechar={() => {}}
+                aoConfirmar={() => {}}
+                titulo=""
+                descricao=""
+            />
         </div>
     );
 }

@@ -208,47 +208,47 @@ export default function PaginaRelatorios() {
                         </div>
 
                         <div className="overflow-x-auto">
-                            <table className="w-full text-left">
+                            <table className="w-full border-collapse">
                                 <thead>
-                                    <tr className="border-b border-border/10">
-                                        <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Membro</th>
-                                        <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Alocação</th>
-                                        <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 text-center">Dias Presentes</th>
-                                        <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 text-center">Justificativas</th>
-                                        <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 text-right">Última Atividade</th>
+                                    <tr className="border-b border-border/60 bg-muted/30">
+                                        <th className="px-4 py-3 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">Membro</th>
+                                        <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">Alocação</th>
+                                        <th className="px-3 py-3 text-center text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">Dias Presentes</th>
+                                        <th className="px-3 py-3 text-center text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">Justificativas</th>
+                                        <th className="px-3 py-3 text-right text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">Última Atividade</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-border/10">
+                                <tbody className="divide-y divide-border/40">
                                     {membrosFiltrados.map((m: RelatorioFrequenciaMembro) => (
-                                        <tr key={m.id} className="group hover:bg-muted/5 transition-colors">
-                                            <td className="py-5">
+                                        <tr key={m.id} className="hover:bg-muted/20 transition-colors">
+                                            <td className="px-4 py-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-[11px] font-black text-primary">
+                                                    <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-[11px] font-black text-primary shrink-0">
                                                         {m.nome.charAt(0)}
                                                     </div>
-                                                    <div>
-                                                        <p className="text-[13px] font-bold text-foreground">{m.nome}</p>
-                                                        <p className="text-[10px] text-muted-foreground font-medium">{m.email}</p>
+                                                    <div className="min-w-0">
+                                                        <p className="text-[13px] font-bold text-foreground truncate max-w-[160px]">{m.nome}</p>
+                                                        <p className="text-[10px] text-muted-foreground font-medium truncate max-w-[160px]">{m.email}</p>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="py-5">
+                                            <td className="px-3 py-4">
                                                 <div className="space-y-0.5">
                                                     <p className="text-[11px] font-black uppercase text-primary/60">{m.equipe_nome || 'Sem Equipe'}</p>
                                                     <p className="text-[10px] text-muted-foreground font-medium uppercase truncate max-w-[150px]">{m.grupo_nome || 'Sem Grupo'}</p>
                                                 </div>
                                             </td>
-                                            <td className="py-5 text-center">
+                                            <td className="px-3 py-4 text-center">
                                                 <span className="px-3 py-1 bg-primary/5 border border-primary/10 rounded-lg text-xs font-black text-primary">
                                                     {m.dias_presentes}
                                                 </span>
                                             </td>
-                                            <td className="py-5 text-center">
+                                            <td className="px-3 py-4 text-center">
                                                 <span className={`px-3 py-1 bg-amber-500/5 border border-amber-500/10 rounded-lg text-xs font-black ${m.justificativas_aprovadas > 3 ? 'text-red-400' : 'text-amber-500'}`}>
                                                     {m.justificativas_aprovadas}
                                                 </span>
                                             </td>
-                                            <td className="py-5 text-right">
+                                            <td className="px-3 py-4 text-right">
                                                 <p className="text-xs font-bold text-foreground/70">
                                                     {m.ultima_batida ? formatarDataHora(m.ultima_batida) : 'Nenhum registro'}
                                                 </p>

@@ -2,8 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { usarConfiguracoes } from './usarConfiguracoes';
 import { Carregando } from '../../compartilhado/componentes/Carregando';
 import { 
-    Plus, Lock, ShieldCheck, 
-    Crown, UserCircle, MessageSquare,
+    Plus, Lock, ShieldCheck, Crown,
+    UserCircle, MessageSquare,
     Settings2, Info, Trash2,
     FolderKanban, Clock, LayoutDashboard,
     LayoutGrid, FileText, Database
@@ -120,12 +120,14 @@ export function PaginaConfiguracoes() {
     const [novoCargo, setNovoCargo] = useState('');
     const [salvando, setSalvando] = useState<string | null>(null);
 
-    /** Lista de roles/cargos cadastrados - Sempre garante que ADMIN esteja no topo */
+    /** Lista de roles/cargos cadastrados para a matriz — exclui ADMIN (permissões totais, imutáveis) */
     const roles = useMemo(() => {
         const baseRoles = configuracoes?.permissoes_roles ? Object.keys(configuracoes.permissoes_roles) : [];
-        const listaUnica = Array.from(new Set(['ADMIN', ...baseRoles]));
-        return listaUnica;
+        return Array.from(new Set(['ADMIN', ...baseRoles]));
     }, [configuracoes]);
+
+    /** Roles exibidos na matriz de permissões (ADMIN oculto — tem acesso total por padrão) */
+    const rolesMatriz = useMemo(() => roles.filter(r => r !== 'ADMIN'), [roles]);
 
     if (carregando) return <Carregando />;
     if (erro) return <div className="p-10 text-center text-red-500 font-bold uppercase tracking-widest">{erro}</div>;
@@ -250,29 +252,6 @@ export function PaginaConfiguracoes() {
                         </div>
                     </div>
 
-                    {/* Legenda */}
-                    <div className="bg-card/30 border border-border/30 rounded-2xl p-5 space-y-4">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 px-1">Guia Visual</span>
-                        <div className="space-y-3">
-                            <div className="flex items-center gap-3">
-                                <div className="w-5 h-5 rounded bg-blue-600 flex items-center justify-center">
-                                    <ShieldCheck size={10} className="text-white" strokeWidth={3} />
-                                </div>
-                                <span className="text-[11px] text-muted-foreground/60 font-medium">Ativo</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <div className="w-5 h-5 rounded border border-border/60 bg-muted/20" />
-                                <span className="text-[11px] text-muted-foreground/60 font-medium">Inativo</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <div className="w-5 h-5 rounded bg-amber-600 flex items-center justify-center">
-                                    <Crown size={10} className="text-white" strokeWidth={3} />
-                                </div>
-                                <span className="text-[11px] text-muted-foreground/60 font-medium">Admin Global</span>
-                            </div>
-                        </div>
-                    </div>
-
                     <div className="p-6 bg-primary/5 rounded-2xl border border-primary/10 space-y-3">
                         <div className="flex items-center gap-2 text-primary">
                             <Info size={14} />
@@ -302,21 +281,15 @@ export function PaginaConfiguracoes() {
                         </div>
 
                         <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
+                            <table className="w-full border-collapse">
                                 <thead>
-                                    <tr className="bg-muted/10">
-                                        <th className="sticky left-0 bg-muted/5 backdrop-blur-sm z-20 px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 border-b border-border/20 min-w-[250px]">
+                                    <tr className="border-b border-border/60 bg-muted/30">
+                                        <th className="sticky left-0 bg-muted/30 backdrop-blur-sm z-20 px-8 py-3 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 min-w-[250px]">
                                             Funcionalidade
                                         </th>
-                                        {roles.map(role => (
-                                            <th key={role} className="px-4 py-5 text-center border-b border-border/20 min-w-[90px]">
-                                                <div className="flex flex-col items-center gap-1">
-                                                    <span className={`text-[10px] font-bold tracking-widest uppercase ${
-                                                        role === 'ADMIN' ? 'text-amber-600/60' : 'text-foreground/40'
-                                                    }`}>
-                                                        {role}
-                                                    </span>
-                                                </div>
+                                        {rolesMatriz.map(role => (
+                                            <th key={role} className="px-4 py-3 text-center text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 min-w-[90px]">
+                                                {role}
                                             </th>
                                         ))}
                                     </tr>
@@ -326,15 +299,15 @@ export function PaginaConfiguracoes() {
                                         const IconeModulo = grupo.icone;
                                         return (
                                             <React.Fragment key={grupo.modulo}>
-                                                {/* Header do módulo */}
-                                                <tr key={`header-${grupo.modulo}`} className="bg-muted/5">
-                                                    <td 
-                                                        colSpan={1 + roles.length} 
-                                                        className="px-8 py-3 border-y border-border/10"
+                                                {/* Separador de módulo */}
+                                                <tr className="bg-muted/10">
+                                                    <td
+                                                        colSpan={1 + rolesMatriz.length}
+                                                        className="px-8 py-2.5 border-y border-border/20"
                                                     >
-                                                        <div className="flex items-center gap-2.5 opacity-60">
-                                                            <IconeModulo size={14} className="text-muted-foreground" />
-                                                            <span className="text-[11px] font-bold uppercase tracking-widest text-foreground/70">
+                                                        <div className="flex items-center gap-2.5">
+                                                            <IconeModulo size={13} className="text-muted-foreground/50" />
+                                                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
                                                                 {grupo.label}
                                                             </span>
                                                         </div>
@@ -343,36 +316,30 @@ export function PaginaConfiguracoes() {
 
                                                 {/* Linhas de permissão */}
                                                 {grupo.permissoes.map((perm) => (
-                                                    <tr key={`${grupo.modulo}-${perm.chave}`} className="group border-b border-border/5">
-                                                        <td className="sticky left-0 bg-background/50 backdrop-blur-md z-10 px-8 py-3.5">
+                                                    <tr key={`${grupo.modulo}-${perm.chave}`} className="border-b border-border/40 hover:bg-muted/20 transition-colors group">
+                                                        <td className="sticky left-0 bg-card/95 backdrop-blur-md z-10 px-8 py-3">
                                                             <div className="flex items-center gap-3 pl-4">
-                                                                <div className="w-1.5 h-1.5 rounded-full bg-border group-hover:bg-primary/40 transition-colors" />
-                                                                <span className="text-[12px] font-medium text-foreground/50 group-hover:text-foreground/80 transition-colors">{perm.label}</span>
+                                                                <div className="w-1.5 h-1.5 rounded-full bg-border/60 group-hover:bg-primary/40 transition-colors" />
+                                                                <span className="text-xs font-medium text-foreground/50 group-hover:text-foreground/80 transition-colors">{perm.label}</span>
                                                             </div>
                                                         </td>
-                                                        {roles.map(role => {
-                                                            const ativa = role === 'ADMIN' ? true : (configuracoes?.permissoes_roles[role]?.[perm.chave] ?? false);
+                                                        {rolesMatriz.map(role => {
+                                                            const ativa = configuracoes?.permissoes_roles[role]?.[perm.chave] ?? false;
                                                             const salvandoEste = salvando === `permissoes_roles.${role}.${perm.chave}`;
 
                                                             return (
                                                                 <td key={`${role}-${perm.chave}`} className="px-4 py-3 text-center">
                                                                     <div className="flex justify-center items-center">
-                                                                        <button 
-                                                                            disabled={role === 'ADMIN' || salvandoEste}
+                                                                        <button
+                                                                            disabled={salvandoEste}
                                                                             onClick={() => handleTogglePermissao(role, perm.chave)}
-                                                                            className={`w-5 h-5 rounded flex items-center justify-center transition-all ${
-                                                                                ativa 
-                                                                                    ? role === 'ADMIN' 
-                                                                                        ? 'bg-amber-600 text-white shadow-sm'
-                                                                                        : 'bg-blue-600 text-white shadow-sm' 
+                                                                            className={`w-5 h-5 rounded flex items-center justify-center transition-all cursor-pointer active:scale-95 ${
+                                                                                ativa
+                                                                                    ? 'bg-primary text-white shadow-sm'
                                                                                     : 'bg-muted/30 border border-border/60 text-transparent hover:border-primary/60'
-                                                                            } ${salvandoEste ? 'animate-pulse' : ''} ${role === 'ADMIN' ? 'cursor-default' : 'cursor-pointer active:scale-95'}`}
+                                                                            } ${salvandoEste ? 'animate-pulse' : ''}`}
                                                                         >
-                                                                            {ativa && (
-                                                                                role === 'ADMIN' 
-                                                                                    ? <Crown size={9} strokeWidth={3} />
-                                                                                    : <ShieldCheck size={9} strokeWidth={3} />
-                                                                            )}
+                                                                            {ativa && <ShieldCheck size={9} strokeWidth={3} />}
                                                                         </button>
                                                                     </div>
                                                                 </td>

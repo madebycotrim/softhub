@@ -19,6 +19,7 @@ import { GerenciarMembros } from '../funcionalidades/admin/GerenciarMembros';
 
 import { PaginaConfiguracoes } from '../funcionalidades/admin/PaginaConfiguracoes';
 import PaginaRelatorios from '../funcionalidades/admin/PaginaRelatorios';
+import { GerenciarOrganizacao } from '../funcionalidades/admin/GerenciarOrganizacao';
 
 /**
  * Layout raiz — renderizado em TODAS as rotas.
@@ -58,11 +59,12 @@ export const rotas = createBrowserRouter([
             { path: '/app/membros', element: <RotaProtegida><LayoutPrincipal><DiretorioMembros /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/membro/:id', element: <RotaProtegida><LayoutPrincipal><PerfilDinamico /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/avisos', element: <RotaProtegida><LayoutPrincipal><MuralAvisos /></LayoutPrincipal></RotaProtegida> },
-            { path: '/app/logs', element: <RotaProtegida roleMinimo="ADMIN"><LayoutPrincipal><PainelLogs /></LayoutPrincipal></RotaProtegida> },
+            { path: '/app/admin/logs', element: <RotaProtegida roleMinimo="ADMIN"><LayoutPrincipal><PainelLogs /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/admin/membros', element: <RotaProtegida roleMinimo="ADMIN"><LayoutPrincipal><GerenciarMembros /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/admin/justificativas', element: <RotaProtegida roleMinimo="SUBLIDER"><LayoutPrincipal><PainelJustificativas /></LayoutPrincipal></RotaProtegida> },
 
             { path: '/app/admin/relatorios', element: <RotaProtegida roleMinimo="SUBLIDER"><LayoutPrincipal><PaginaRelatorios /></LayoutPrincipal></RotaProtegida> },
+            { path: '/app/admin/organizacao', element: <RotaProtegida roleMinimo="LIDER"><LayoutPrincipal><GerenciarOrganizacao /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/admin/configuracoes', element: <RotaProtegida roleMinimo="ADMIN"><LayoutPrincipal><PaginaConfiguracoes /></LayoutPrincipal></RotaProtegida> },
             { path: '*', element: <div className="p-6 text-destructive text-center text-xl font-bold">404 - Página não encontrada</div> },
         ],

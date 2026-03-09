@@ -253,6 +253,10 @@ interface LinhaMembroProps {
     rolesDisponiveis: string[];
 }
 
+/**
+ * Linha de um membro na tabela de gerenciamento.
+ * Renderiza uma <tr> semântica com células para seleção, identificação, papel, status e ações.
+ */
 function LinhaMembro({
     membro,
     salvando,
@@ -269,126 +273,146 @@ function LinhaMembro({
     const podeAlterarRole = usarPermissaoAcesso('membros:alterar_role');
     const podeDesativar = usarPermissaoAcesso('membros:desativar');
 
-
     return (
-        <div
-            className={`flex flex-col lg:grid lg:grid-cols-12 gap-4 p-4 items-start lg:items-center border-b border-border/50 hover:bg-muted/30 transition-colors ${salvando ? 'opacity-60 pointer-events-none' : ''} ${selecionado ? 'bg-primary/5 ring-1 ring-inset ring-primary/10 lg:ring-0' : ''}`}
+        <tr
+            className={`border-b border-border/50 transition-colors ${
+                salvando ? 'opacity-60 pointer-events-none' : 'hover:bg-muted/30'
+            } ${selecionado ? 'bg-primary/5' : ''}`}
             aria-busy={salvando}
         >
-            {/* Seleção e Identificação */}
-            <div className="flex items-center gap-3 w-full lg:col-span-6">
-                <div className="flex shrink-0">
+            {/* Seleção + Identificação */}
+            <td className="px-4 py-3">
+                <div className="flex items-center gap-3">
                     <button
                         onClick={(e) => !ehOMesmoUsuario && onToggleSelect(membro.id, e.shiftKey)}
-                        className={`transition-colors focus:outline-none p-2 -m-2 ${ehOMesmoUsuario ? 'cursor-not-allowed text-muted-foreground/5' : 'text-muted-foreground/30 hover:text-primary'}`}
+                        className={`shrink-0 transition-colors focus:outline-none p-1 -m-1 ${
+                            ehOMesmoUsuario
+                                ? 'cursor-not-allowed text-muted-foreground/10'
+                                : 'text-muted-foreground/30 hover:text-primary'
+                        }`}
                         disabled={ehOMesmoUsuario}
                         aria-label={`Selecionar ${membro.nome}`}
                     >
-                        {selecionado ? <CheckSquare size={20} className="text-primary" /> : <Square size={20} />}
+                        {selecionado
+                            ? <CheckSquare size={18} className="text-primary" />
+                            : <Square size={18} />}
                     </button>
-                </div>
 
-                <div className="flex items-center gap-3 min-w-0 flex-1">
                     <Avatar nome={membro.nome} fotoPerfil={membro.foto_perfil} tamanho="md" />
+
                     <div className="min-w-0">
-                        <p className="font-bold text-foreground text-sm leading-tight truncate">
-                            {membro.nome}
+                        <p className="font-bold text-foreground text-sm leading-tight truncate max-w-[180px]">
+                            {membro.nome || <span className="italic text-muted-foreground/50 font-normal">Sem nome</span>}
                         </p>
-                        <p className="text-[11px] text-muted-foreground opacity-70 truncate leading-tight mt-0.5">
+                        <p className="text-[11px] text-muted-foreground/60 truncate leading-tight mt-0.5 max-w-[180px]">
                             {membro.email}
                         </p>
                     </div>
-                </div>
 
-                {/* Status Mobile */}
-                <div className="lg:hidden shrink-0 ml-auto flex items-center gap-1.5">
-                    <div className={`w-1.5 h-1.5 rounded-full ${membro.ativo ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-muted-foreground/20'}`} />
+                    {ehOMesmoUsuario && (
+                        <span className="text-[9px] text-primary/60 font-black uppercase tracking-widest italic select-none shrink-0">
+                            Você
+                        </span>
+                    )}
                 </div>
-            </div>
+            </td>
 
-            {/* Role / Papel */}
-            <div className="lg:col-span-1">
-                <label className="lg:hidden text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 mb-1 block">Papel</label>
+            {/* Papel / Role */}
+            <td className="px-3 py-3">
                 <div className="relative">
                     <select
                         aria-label={`Papel de ${membro.nome}`}
-                        className={`w-full bg-muted/20 border border-border/50 rounded-xl px-2 py-1.5 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none ${!podeAlterarRole ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
+                        className={`w-full bg-muted/20 border border-border/50 rounded-xl px-2 py-1.5 pr-6 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none ${
+                            !podeAlterarRole ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+                        }`}
                         value={membro.role}
                         onChange={e => onAlterarRole(membro, e.target.value)}
                         disabled={!podeAlterarRole}
                     >
                         {rolesDisponiveis.map(role => (
                             <option key={role} value={role}>
-                                {role === 'ADMIN' ? 'Administrador' : role.charAt(0) + role.slice(1).toLowerCase().replace('_', ' ')}
+                                {role === 'ADMIN'
+                                    ? 'Admin'
+                                    : role.charAt(0) + role.slice(1).toLowerCase().replace('_', ' ')}
                             </option>
                         ))}
                     </select>
-                    <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-40 lg:hidden" />
+                    <ChevronDown size={11} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-40" />
                 </div>
-            </div>
+            </td>
 
-            {/* Status Desktop */}
-            <div className="hidden lg:flex lg:col-span-2 justify-center">
-                <div className="flex items-center gap-1.5">
-                    <div className={`w-1.5 h-1.5 rounded-full ${membro.ativo ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-muted-foreground/20'}`} />
-                    <span className={`text-[9px] font-black uppercase tracking-wider ${membro.ativo ? 'text-emerald-500' : 'text-muted-foreground/40'}`}>
-                        {membro.ativo ? 'Ativo' : 'Offline'}
+            {/* Equipe */}
+            <td className="px-3 py-3 hidden xl:table-cell">
+                <span className="text-xs text-muted-foreground/60 truncate max-w-[120px] block">
+                    {(membro as any).equipe_nome ?? '—'}
+                </span>
+            </td>
+
+            {/* Status */}
+            <td className="px-3 py-3 text-center">
+                <div className="flex items-center justify-center gap-1.5">
+                    <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                        membro.ativo
+                            ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
+                            : 'bg-muted-foreground/20'
+                    }`} />
+                    <span className={`text-[9px] font-black uppercase tracking-wider hidden sm:block ${
+                        membro.ativo ? 'text-emerald-500' : 'text-muted-foreground/40'
+                    }`}>
+                        {membro.ativo ? 'Ativo' : 'Inativo'}
                     </span>
                 </div>
-            </div>
+            </td>
 
             {/* Ações */}
-            <div className="flex items-center justify-end gap-2 w-full lg:w-auto lg:col-span-3 pt-3 lg:pt-0 border-t border-border/40 lg:border-0">
-                <Link
-                    to={`/app/membro/${membro.id}`}
-                    title="Ver perfil completo"
-                    className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-3 py-2 lg:p-2 rounded-xl transition-all text-[11px] font-black uppercase tracking-widest text-primary hover:bg-primary/5"
-                >
-                    <User size={16} />
-                    <span className="lg:hidden">Ver Perfil</span>
-                </Link>
+            <td className="px-3 py-3">
+                <div className="flex items-center justify-end gap-1">
+                    <Link
+                        to={`/app/membro/${membro.id}`}
+                        title="Ver perfil"
+                        className="p-2 rounded-xl transition-all text-primary hover:bg-primary/5"
+                    >
+                        <User size={15} />
+                    </Link>
 
-                {!ehOMesmoUsuario && podeDesativar && (
-                    <>
-                        <button
-                            onClick={membro.ativo ? () => onSolicitarExclusao(membro) : () => onAlternarStatus(membro)}
-                            title={membro.ativo ? "Arquivar membro" : "Restaurar membro"}
-                            className={`flex-1 lg:flex-none flex items-center justify-center gap-2 px-3 py-2 lg:p-2 rounded-xl transition-all text-[11px] font-black uppercase tracking-widest ${membro.ativo
-                                ? 'text-muted-foreground/60 hover:text-red-500 hover:bg-red-500/5'
-                                : 'text-emerald-500 hover:bg-emerald-500/5'}`}
-                        >
-                            {salvando ? (
-                                <Loader2 size={16} className="animate-spin" />
-                            ) : membro.ativo ? (
-                                <>
-                                    <Trash2 size={16} />
-                                    <span className="lg:hidden">Arquivar</span>
-                                </>
-                            ) : (
-                                <>
-                                    <RotateCcw size={16} />
-                                    <span className="lg:hidden">Restaurar</span>
-                                </>
-                            )}
-                        </button>
-
-                        {!membro.ativo && (
+                    {!ehOMesmoUsuario && podeDesativar && (
+                        <>
                             <button
-                                onClick={() => onLimpezaDefinitiva(membro)}
-                                title="Limpeza definitiva"
-                                className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-3 py-2 lg:p-2 rounded-xl text-muted-foreground/40 hover:text-red-500 hover:bg-red-500/5 transition-all text-[11px] font-black uppercase tracking-widest"
+                                onClick={
+                                    membro.ativo
+                                        ? () => onSolicitarExclusao(membro)
+                                        : () => onAlternarStatus(membro)
+                                }
+                                title={membro.ativo ? 'Arquivar membro' : 'Restaurar membro'}
+                                className={`p-2 rounded-xl transition-all ${
+                                    membro.ativo
+                                        ? 'text-muted-foreground/50 hover:text-red-500 hover:bg-red-500/5'
+                                        : 'text-emerald-500 hover:bg-emerald-500/5'
+                                }`}
                             >
-                                <Eraser size={16} />
-                                <span className="lg:hidden">Excluir</span>
+                                {salvando ? (
+                                    <Loader2 size={15} className="animate-spin" />
+                                ) : membro.ativo ? (
+                                    <Trash2 size={15} />
+                                ) : (
+                                    <RotateCcw size={15} />
+                                )}
                             </button>
-                        )}
-                    </>
-                )}
-                {ehOMesmoUsuario && (
-                    <span className="hidden lg:block text-[9px] text-primary/50 font-black uppercase tracking-widest italic pr-1 select-none">Você</span>
-                )}
-            </div>
-        </div>
+
+                            {!membro.ativo && (
+                                <button
+                                    onClick={() => onLimpezaDefinitiva(membro)}
+                                    title="Excluir definitivamente"
+                                    className="p-2 rounded-xl text-muted-foreground/30 hover:text-red-500 hover:bg-red-500/5 transition-all"
+                                >
+                                    <Eraser size={15} />
+                                </button>
+                            )}
+                        </>
+                    )}
+                </div>
+            </td>
+        </tr>
     );
 }
 
@@ -794,8 +818,7 @@ export function GerenciarMembros() {
 
             <div className="bg-card border border-border rounded-3xl overflow-hidden shadow-sm">
 
-
-                {/* Tabela de Membros */}
+                {/* Tabela semântica de membros */}
                 <div className="overflow-x-auto min-h-[400px]">
                     {erro ? (
                         <div className="flex flex-col items-center justify-center py-20 text-center px-4">
@@ -804,7 +827,12 @@ export function GerenciarMembros() {
                             </div>
                             <h3 className="text-lg font-bold text-foreground">Erro ao carregar dados</h3>
                             <p className="text-sm text-muted-foreground max-w-xs mt-2">{erro}</p>
-                            <button onClick={() => recarregar()} className="mt-6 px-6 py-2 bg-primary text-primary-foreground rounded-2xl text-sm font-bold">Tentar Novamente</button>
+                            <button
+                                onClick={() => recarregar()}
+                                className="mt-6 px-6 py-2 bg-primary text-primary-foreground rounded-2xl text-sm font-bold"
+                            >
+                                Tentar Novamente
+                            </button>
                         </div>
                     ) : listaFiltrada.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-24 text-center opacity-40">
@@ -813,20 +841,43 @@ export function GerenciarMembros() {
                             <p className="text-xs mt-1">Tente ajustar sua busca ou filtros.</p>
                         </div>
                     ) : (
-                        listaPaginada.map(membro => (
-                            <LinhaMembro
-                                key={membro.id}
-                                membro={membro}
-                                salvando={salvandoIds.has(membro.id)}
-                                selecionado={selecionados.has(membro.id)}
-                                onToggleSelect={toggleSelecionado}
-                                onAlterarRole={alterarRole}
-                                onAlternarStatus={alternarStatus}
-                                onSolicitarExclusao={setMembroParaExcluir}
-                                onLimpezaDefinitiva={setMembroParaLimpar}
-                                rolesDisponiveis={rolesDisponiveis}
-                            />
-                        ))
+                        <table className="w-full border-collapse">
+                            <thead>
+                                <tr className="border-b border-border/60 bg-muted/30">
+                                    <th className="px-4 py-3 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 w-[45%]">
+                                        Membro
+                                    </th>
+                                    <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 w-[14%]">
+                                        Papel
+                                    </th>
+                                    <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 w-[14%] hidden xl:table-cell">
+                                        Equipe
+                                    </th>
+                                    <th className="px-3 py-3 text-center text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 w-[12%]">
+                                        Status
+                                    </th>
+                                    <th className="px-3 py-3 text-right text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 w-[15%]">
+                                        Ações
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {listaPaginada.map(membro => (
+                                    <LinhaMembro
+                                        key={membro.id}
+                                        membro={membro}
+                                        salvando={salvandoIds.has(membro.id)}
+                                        selecionado={selecionados.has(membro.id)}
+                                        onToggleSelect={toggleSelecionado}
+                                        onAlterarRole={alterarRole}
+                                        onAlternarStatus={alternarStatus}
+                                        onSolicitarExclusao={setMembroParaExcluir}
+                                        onLimpezaDefinitiva={setMembroParaLimpar}
+                                        rolesDisponiveis={rolesDisponiveis}
+                                    />
+                                ))}
+                            </tbody>
+                        </table>
                     )}
                 </div>
 

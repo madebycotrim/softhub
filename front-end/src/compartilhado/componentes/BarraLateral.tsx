@@ -1,4 +1,4 @@
-import { FolderKanban, Clock, Users, Megaphone, LayoutDashboard, Database, Settings, LogOut, Sun, Moon, QrCode, FileText, ClipboardCheck } from 'lucide-react';
+import { FolderKanban, Clock, Users, Megaphone, LayoutDashboard, Database, Settings, LogOut, Sun, Moon, QrCode, FileText, ClipboardCheck, LayoutGrid } from 'lucide-react';
 import { useLocation, Link } from 'react-router';
 import { usarAutenticacao } from '../../funcionalidades/autenticacao/usarAutenticacao';
 import { usarTema } from '../../contexto/ContextoTema';
@@ -28,6 +28,7 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
 
     const podeVerRelatorios = usarPermissaoAcesso('relatorios:visualizar');
     const podeVerLogs = usarPermissaoAcesso('logs:visualizar');
+    const podeVerOrganizacao = usarPermissaoAcesso('organizacao:visualizar');
 
     const gruposBrutos = [
         {
@@ -55,9 +56,10 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
             links: [
                 { label: 'Membros', path: '/app/admin/membros', icon: Users, visivel: podeVerMembrosAdmin },
                 { label: 'Justificativas', path: '/app/admin/justificativas', icon: ClipboardCheck, visivel: podeVerJustificativas },
+                { label: 'Organização', path: '/app/admin/organizacao', icon: LayoutGrid, visivel: podeVerOrganizacao },
                 { label: 'Relatórios', path: '/app/admin/relatorios', icon: FileText, visivel: podeVerRelatorios },
                 { label: 'Configurações', path: '/app/admin/configuracoes', icon: Settings, visivel: usuario?.role === 'ADMIN' },
-                { label: 'Painel de Logs', path: '/app/logs', icon: Database, visivel: podeVerLogs },
+                { label: 'Painel de Logs', path: '/app/admin/logs', icon: Database, visivel: podeVerLogs },
             ],
         },
     ];

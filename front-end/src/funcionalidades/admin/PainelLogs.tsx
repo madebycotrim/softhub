@@ -9,6 +9,7 @@ import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/Cabecal
 import { Modal } from '../../compartilhado/componentes/Modal';
 import type { LogSistema } from './usarLogs';
 
+/** Painel de auditoria com tabela semântica padronizada. */
 export function PainelLogs() {
     const {
         logs, carregando, pagina, setPagina, totalPaginas, totalRegistros,
@@ -19,7 +20,6 @@ export function PainelLogs() {
 
     const [modalInspecao, setModalInspecao] = useState<LogSistema | null>(null);
 
-    // Função helper para colorir tags de ação
     const getVarianteAcao = (acao: string) => {
         if (acao.includes('DELETAR') || acao.includes('REMOVER')) return 'vermelho';
         if (acao.includes('CRIAR') || acao.includes('NOVO')) return 'verde';
@@ -38,12 +38,9 @@ export function PainelLogs() {
                 variante="perigo"
             />
 
-
-            {/* Barra de Filtros Compacta - Linha Única */}
+            {/* Barra de Filtros */}
             <div className="bg-card border border-border p-3 rounded-2xl shadow-sm">
                 <div className="flex flex-col xl:flex-row items-end gap-3">
-
-                    {/* Busca Textual - Ganha mais espaço */}
                     <div className="flex-1 w-full relative group">
                         <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-2 mb-1 block">Pesquisa Global</label>
                         <div className="relative">
@@ -58,10 +55,7 @@ export function PainelLogs() {
                         </div>
                     </div>
 
-                    {/* Controles Menores */}
                     <div className="flex flex-wrap lg:flex-nowrap items-end gap-3 w-full xl:w-auto">
-
-                        {/* Módulo */}
                         <div className="min-w-[140px] flex-1 lg:flex-none">
                             <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1 mb-1 block">Módulo</label>
                             <select
@@ -78,7 +72,6 @@ export function PainelLogs() {
                             </select>
                         </div>
 
-                        {/* Ação em Lista (Refinamento) */}
                         <div className="min-w-[140px] flex-1 lg:flex-none">
                             <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1 mb-1 block">Ação</label>
                             <select
@@ -99,7 +92,6 @@ export function PainelLogs() {
                             </select>
                         </div>
 
-                        {/* Datas */}
                         <div className="flex items-center gap-2 flex-1 lg:flex-none">
                             <div className="min-w-[130px]">
                                 <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1 mb-1 block">Início</label>
@@ -127,7 +119,6 @@ export function PainelLogs() {
                             </div>
                         </div>
 
-                        {/* Botão de Reset (Mais discreto) */}
                         {(busca || filtroModulo || filtroAcao || dataInicio || dataFim) && (
                             <button
                                 onClick={() => {
@@ -148,74 +139,90 @@ export function PainelLogs() {
                 </div>
             </div>
 
+            {/* Tabela Semântica */}
             <div className="flex-1 min-h-0 bg-card border border-border rounded-2xl flex flex-col shadow-sm overflow-hidden">
-
-                {/* Header Table */}
-                <div className="grid grid-cols-12 gap-4 p-4 border-b border-border bg-muted/80 text-xs font-bold text-muted-foreground uppercase tracking-widest sticky top-0 z-10">
-                    <div className="col-span-2">Data/Hora</div>
-                    <div className="col-span-2">Ação</div>
-                    <div className="col-span-3">Usuário</div>
-                    <div className="col-span-3">Detalhes</div>
-                    <div className="col-span-2">Ref/Tabela</div>
-                </div>
-
-                {/* Body */}
-                <div className="flex-1 overflow-y-auto">
-                    {carregando ? (
-                        <div className="py-12"><Carregando /></div>
-                    ) : logs.length === 0 ? (
+                <div className="flex-1 overflow-auto">
+                    {logs.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                             <Activity className="w-12 h-12 mb-4 opacity-30" />
                             <p>Nenhum log encontrado nesta página.</p>
                         </div>
                     ) : (
-                        <div className="divide-y divide-border">
-                            {logs.map(log => (
-                                <div key={log.id} className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-accent/50 transition-colors text-sm">
-                                    <div className="col-span-2 text-muted-foreground font-mono text-xs">
-                                        {formatarDataHora(log.criado_em)}
-                                    </div>
-                                    <div className="col-span-2">
-                                        <Emblema texto={log.acao} variante={getVarianteAcao(log.acao)} />
-                                    </div>
-                                    <div className="col-span-3">
-                                        {log.usuario_id || log.email ? (
-                                            <div>
-                                                <p className="font-medium text-foreground truncate">{log.nome || 'Usuário Deletado'}</p>
-                                                <p className="text-xs text-muted-foreground truncate">{log.email}</p>
-                                            </div>
-                                        ) : (
-                                            <span className="text-muted-foreground italic">Sistema/Anônimo</span>
-                                        )}
-                                    </div>
-                                    <div className="col-span-3 text-muted-foreground truncate pr-4" title={log.descricao}>
-                                        {log.descricao}
-                                    </div>
-                                    <div className="col-span-2 flex items-center justify-between text-muted-foreground text-xs font-mono truncate">
-                                        <div className="flex items-center gap-2 truncate">
-                                            {log.entidade_tipo ? (
-                                                <>
-                                                    <FileText className="w-3.5 h-3.5" />
-                                                    <span className="truncate" title={`${log.entidade_tipo} -> ${log.entidade_id}`}>{log.entidade_tipo}</span>
-                                                </>
+                        <table className="w-full border-collapse">
+                            <thead>
+                                <tr className="border-b border-border/60 bg-muted/30 sticky top-0 z-10">
+                                    <th className="px-4 py-3 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 w-[14%]">
+                                        Data / Hora
+                                    </th>
+                                    <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 w-[12%]">
+                                        Ação
+                                    </th>
+                                    <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 w-[22%]">
+                                        Usuário
+                                    </th>
+                                    <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 w-[34%]">
+                                        Detalhes
+                                    </th>
+                                    <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 w-[18%]">
+                                        Ref / Tabela
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border/40">
+                                {logs.map(log => (
+                                    <tr key={log.id} className="hover:bg-muted/20 transition-colors">
+                                        <td className="px-4 py-3 text-muted-foreground font-mono text-xs">
+                                            {formatarDataHora(log.criado_em)}
+                                        </td>
+                                        <td className="px-3 py-3">
+                                            <Emblema texto={log.acao} variante={getVarianteAcao(log.acao)} />
+                                        </td>
+                                        <td className="px-3 py-3">
+                                            {log.usuario_id || log.email ? (
+                                                <div>
+                                                    <p className="text-sm font-medium text-foreground truncate max-w-[180px]">
+                                                        {log.nome || 'Usuário Deletado'}
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground truncate max-w-[180px]">
+                                                        {log.email}
+                                                    </p>
+                                                </div>
                                             ) : (
-                                                <span className="italic">—</span>
+                                                <span className="text-muted-foreground italic text-xs">Sistema/Anônimo</span>
                                             )}
-                                        </div>
-                                        <button
-                                            onClick={() => setModalInspecao(log)}
-                                            className="ml-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground px-2 py-1 rounded"
-                                        >
-                                            Ver JSON
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                                        </td>
+                                        <td className="px-3 py-3 text-sm text-muted-foreground truncate max-w-[280px]" title={log.descricao}>
+                                            {log.descricao}
+                                        </td>
+                                        <td className="px-3 py-3">
+                                            <div className="flex items-center justify-between gap-2">
+                                                <div className="flex items-center gap-1.5 text-muted-foreground text-xs font-mono truncate">
+                                                    {log.entidade_tipo ? (
+                                                        <>
+                                                            <FileText className="w-3.5 h-3.5 shrink-0" />
+                                                            <span className="truncate" title={`${log.entidade_tipo} → ${log.entidade_id}`}>
+                                                                {log.entidade_tipo}
+                                                            </span>
+                                                        </>
+                                                    ) : (
+                                                        <span className="italic">—</span>
+                                                    )}
+                                                </div>
+                                                <button
+                                                    onClick={() => setModalInspecao(log)}
+                                                    className="shrink-0 bg-muted hover:bg-muted/80 text-muted-foreground px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors"
+                                                >
+                                                    JSON
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     )}
                 </div>
 
-                {/* Paginação Avançada */}
                 <Paginacao
                     paginaAtual={pagina}
                     totalPaginas={totalPaginas}
@@ -226,7 +233,6 @@ export function PainelLogs() {
                     aoMudarItensPorPagina={(num) => { setItensPorPagina(num); setPagina(1); }}
                     desabilitado={carregando}
                 />
-
             </div>
 
             {/* Modal de Detalhes JSON */}
@@ -244,7 +250,6 @@ export function PainelLogs() {
                     </div>
                 </Modal>
             )}
-
         </div>
     );
 }

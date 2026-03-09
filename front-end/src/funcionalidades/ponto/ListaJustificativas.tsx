@@ -6,59 +6,89 @@ interface ListaJustificativasProps {
     justificativas: JustificativaPonto[];
 }
 
+/** Mapeia o tipo técnico para rótulo amigável. */
+const formatarTipo = (tipo: string): string => {
+    const mapa: Record<string, string> = {
+        ausencia: 'Ausência (Atestado/Falta)',
+        esquecimento: 'Esquecimento de Batida',
+        problema_sistema: 'Falha no Sistema',
+    };
+    return mapa[tipo] ?? tipo;
+};
+
+/**
+ * Lista de justificativas do próprio usuário em formato de tabela padronizada.
+ * Exibida no painel de ponto eletrônico.
+ */
 export function ListaJustificativas({ justificativas }: ListaJustificativasProps) {
     if (justificativas.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-10 bg-card border border-border rounded-2xl shadow-sm">
-                <p className="text-muted-foreground text-sm">Você ainda não enviou justificativas.</p>
+            <div className="flex flex-col items-center justify-center py-10 text-center opacity-40">
+                <p className="text-sm font-bold uppercase tracking-widest">Sem justificativas</p>
+                <p className="text-xs mt-1">Você ainda não enviou nenhuma.</p>
             </div>
         );
     }
 
-    const formatarTipo = (tipo: string) => {
-        const mapa: Record<string, string> = {
-            'ausencia': 'Ausência (Atestado/Falta)',
-            'esquecimento': 'Esquecimento de Batida',
-            'problema_sistema': 'Falha no Sistema'
-        };
-        return mapa[tipo] || tipo;
-    };
-
-    const StatusBadge = ({ status }: { status: string }) => {
-        switch (status) {
-            case 'aprovada': return <Emblema texto="Aprovada" variante="verde" />;
-            case 'rejeitada': return <Emblema texto="Rejeitada" variante="vermelho" />;
-            default: return <Emblema texto="Pendente" variante="amarelo" />;
-        }
-    };
-
     return (
-        <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
-            <div className="divide-y divide-border">
-                {justificativas.map(just => (
-                    <div key={just.id} className="p-4 hover:bg-accent/50 transition-colors">
-                        <div className="flex justify-between items-start mb-2">
-                            <div className="flex flex-col gap-1">
-                                <span className="font-bold text-card-foreground tracking-tight">
-                                    Referente a: {just.data}
-                                </span>
-                                <span className="text-xs font-semibold text-muted-foreground">
+        <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+                <thead>
+                    <tr className="border-b border-border/60 bg-muted/30">
+                        <th className="px-3 py-2.5 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">
+                            Data
+                        </th>
+                        <th className="px-3 py-2.5 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">
+                            Tipo
+                        </th>
+                        <th className="px-3 py-2.5 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 hidden sm:table-cell">
+                            Motivo
+                        </th>
+                        <th className="px-3 py-2.5 text-center text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">
+                            Status
+                        </th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-border/40">
+                    {justificativas.map(just => (
+                        <tr key={just.id} className="hover:bg-muted/20 transition-colors">
+                            {/* Data */}
+                            <td className="px-3 py-3 align-top">
+                                <p className="text-xs font-bold text-foreground">{just.data}</p>
+                                <p className="text-[10px] text-muted-foreground/60 font-mono mt-0.5">
+                                    {formatarDataHora(just.criado_em)}
+                                </p>
+                            </td>
+
+                            {/* Tipo */}
+                            <td className="px-3 py-3 align-top">
+                                <span className="text-[11px] font-bold text-primary/70 uppercase tracking-wide">
                                     {formatarTipo(just.tipo)}
                                 </span>
-                            </div>
-                            <StatusBadge status={just.status} />
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-3 whitespace-pre-wrap">{just.motivo}</p>
+                            </td>
 
-                        <div className="mt-4 pt-3 flex items-center justify-between border-t border-border text-xs text-muted-foreground">
-                            <span>Enviado em {formatarDataHora(just.criado_em)}</span>
-                            {just.status === 'rejeitada' && just.motivo_rejeicao && (
-                                <span className="text-destructive font-medium">Motivo: {just.motivo_rejeicao}</span>
-                            )}
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div >
+                            {/* Motivo */}
+                            <td className="px-3 py-3 align-top hidden sm:table-cell">
+                                <p className="text-xs text-muted-foreground line-clamp-2 max-w-[200px]">
+                                    {just.motivo}
+                                </p>
+                                {just.status === 'rejeitada' && just.motivo_rejeicao && (
+                                    <p className="text-[10px] text-destructive mt-1 font-medium">
+                                        Reprovação: {just.motivo_rejeicao}
+                                    </p>
+                                )}
+                            </td>
+
+                            {/* Status */}
+                            <td className="px-3 py-3 align-top text-center">
+                                {just.status === 'aprovada' && <Emblema texto="Aprovada" variante="verde" />}
+                                {just.status === 'rejeitada' && <Emblema texto="Rejeitada" variante="vermelho" />}
+                                {just.status === 'pendente' && <Emblema texto="Pendente" variante="amarelo" />}
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
     );
 }
