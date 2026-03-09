@@ -5,7 +5,7 @@ compatibility_date = '2024-03-05'
 [vars]
 MSAL_TENANT_ID = "42914ade-3afa-4add-b06f-11c68f45a379"
 MSAL_CLIENT_ID = "da147183-fe1b-486f-a3e5-a41fdd9cd66e"
-DOMINIO_INSTITUCIONAL = "unieuro.edu.br"
+DOMINIO_INSTITUCIONAL = "unieuro.com.br"
 BOOTSTRAP_ADMIN_EMAIL = "mateus099803@unieuro.com.br"
 
 # Database binding para Cloudflare D1

@@ -10,6 +10,7 @@ import { usarPermissaoAcesso } from '../../compartilhado/hooks/usarPermissao';
 import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
 import { Modal } from '../../compartilhado/componentes/Modal';
 import { ConfirmacaoExclusao } from '../../compartilhado/componentes/ConfirmacaoExclusao';
+import { ambiente } from '../../configuracoes/ambiente';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -269,9 +270,8 @@ function ModalConvitesEmLote({ aberto, aoFechar, aoCadastrar, recarregar }: Moda
                     <p className="text-xs text-muted-foreground leading-relaxed">
                         Cole uma lista de e-mails institucionais (um por linha). O sistema autorizará o acesso de todos automaticamente.
                         <br /><br />
-                        <strong>Formatos aceitos:</strong>
-                        <br />- nome@unieuro.com.br
-                        <br />- outro@unieuro.edu.br
+                        <strong>Formato aceito:</strong>
+                        <br />- nome@{ambiente.dominioInstitucional}
                     </p>
                 </div>
 
@@ -280,7 +280,7 @@ function ModalConvitesEmLote({ aberto, aoFechar, aoCadastrar, recarregar }: Moda
                     <textarea
                         value={texto}
                         onChange={e => setTexto(e.target.value)}
-                        placeholder="Ex: mateus@unieuro.com.br&#10;lucia@unieuro.edu.br"
+                        placeholder={`Ex: mateus@${ambiente.dominioInstitucional}`}
                         className="w-full h-48 bg-background border border-border rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all resize-none"
                     />
                 </div>
@@ -678,8 +678,7 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, equipes }: ModalCa
                                             onChange={e => setDominio(e.target.value)}
                                             className="bg-transparent text-[13px] font-semibold focus:outline-none cursor-pointer appearance-none pr-5"
                                         >
-                                            <option value="@unieuro.com.br">@unieuro.com.br</option>
-                                            <option value="@unieuro.edu.br">@unieuro.edu.br</option>
+                                            <option value={`@${ambiente.dominioInstitucional}`}>@{ambiente.dominioInstitucional}</option>
                                         </select>
                                         <ChevronDown size={14} className="absolute right-2.5 pointer-events-none opacity-40" />
                                     </div>

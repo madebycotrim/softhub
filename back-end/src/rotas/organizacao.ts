@@ -63,7 +63,7 @@ rotasOrganizacao.patch('/grupos/:id', autenticacaoRequerida(), verificarPermissa
     const { nome, descricao, lider_id, sub_lider_id } = await c.req.json();
     try {
         await DB.prepare('UPDATE grupos SET nome = ?, descricao = ?, lider_id = ?, sub_lider_id = ? WHERE id = ?')
-            .bind(nome, descricao, lider_id, sub_lider_id, id).run();
+            .bind(nome, descricao || null, lider_id || null, sub_lider_id || null, id).run();
 
         await registrarLog(DB, {
             usuarioId: usuario.id,
@@ -77,7 +77,7 @@ rotasOrganizacao.patch('/grupos/:id', autenticacaoRequerida(), verificarPermissa
         });
         return c.json({ sucesso: true });
     } catch (e: any) {
-        console.error('[ERRO EDITAR GRUPO]', e);
+        console.error('[ERRO EDITAR GRUPO]', e.message, e.stack);
         return c.json({ erro: 'Falha ao editar grupo', detalhe: e.message }, 500);
     }
 });
@@ -164,7 +164,7 @@ rotasOrganizacao.patch('/equipes/:id', autenticacaoRequerida(), verificarPermiss
     const { nome, descricao, lider_id, sub_lider_id } = await c.req.json();
     try {
         await DB.prepare('UPDATE equipes SET nome = ?, descricao = ?, lider_id = ?, sub_lider_id = ? WHERE id = ?')
-            .bind(nome, descricao, lider_id, sub_lider_id, id).run();
+            .bind(nome, descricao || null, lider_id || null, sub_lider_id || null, id).run();
 
         await registrarLog(DB, {
             usuarioId: usuario.id,
@@ -177,8 +177,9 @@ rotasOrganizacao.patch('/equipes/:id', autenticacaoRequerida(), verificarPermiss
             dadosNovos: { nome, descricao, lider_id, sub_lider_id }
         });
         return c.json({ sucesso: true });
-    } catch (e) {
-        return c.json({ erro: 'Falha ao editar equipe' }, 500);
+    } catch (e: any) {
+        console.error('[ERRO EDITAR EQUIPE]', e.message, e.stack);
+        return c.json({ erro: 'Falha ao editar equipe', detalhe: e.message }, 500);
     }
 });
 

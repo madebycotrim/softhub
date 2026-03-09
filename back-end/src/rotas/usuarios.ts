@@ -279,7 +279,7 @@ rotasUsuarios.post('/', autenticacaoRequerida(), verificarPermissao('membros:ger
 
     // Validação de domínio obrigatória (Regra de Negócio)
     if (!emailLimpo.endsWith('@unieuro.com.br') && !emailLimpo.endsWith('@unieuro.edu.br')) {
-        return c.json({ erro: 'Apenas e-mails @unieuro.com.br ou @unieuro.edu.br são permitidos.' }, 400);
+        return c.json({ erro: 'Apenas e-mails institucionais da UNIEURO são permitidos.' }, 400);
     }
 
     try {

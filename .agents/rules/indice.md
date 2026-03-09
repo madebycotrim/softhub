@@ -17,7 +17,7 @@ trigger: always_on
 1. rules.md          ← regras absolutas + checklist final
 2. rules-contexto.md ← estrutura de pastas, layout, componentes, API, formatadores
 3. workflows-01.md   ← fluxos 0 a 7  (rotas, hooks, componentes, formulários, permissão, notificação, log)
-4. workflows-02.md   ← fluxos 8 a 16 (kanban, ponto, sprint, aviso, atribuição, paginação, auth, migration)
+4. workflows-02.md   ← fluxos 8 a 16 (kanban, ponto, aviso, atribuição, paginação, auth, migration)
 5. workflows-03.md   ← fluxos 17 a 23 (perfil, dashboard, retrospectiva, permissão, constantes, tema, logs)
 6. workflows-04.md   ← fluxos 24 a 27 (justificativas de ponto, comentários em tarefas, filtros kanban, gestão de equipes/grupos)
 7. workflows-05.md   ← fluxos 28 a 31 (bootstrap admin, histórico de tarefa, exportação CSV, checklist)
@@ -37,10 +37,9 @@ trigger: always_on
 | `rules.md` | Língua PT-BR, nomenclatura, stack, estado, erros, IDs, banco, segurança, roles, módulos, proibições, checklist |
 | `rules-contexto.md` | Estrutura de pastas, layout compartilhado, componentes reutilizáveis, serviço de API, formatadores, variáveis de ambiente, comandos |
 | `workflows-01.md` | Fluxos 0–7: setup inicial, rota backend, hook, componente, formulário, permissão, notificação, log |
-| `workflows-02.md` | Fluxos 8–16: mover card, registrar ponto, criar sprint, encerrar sprint, criar aviso, atribuir responsável, paginação, autenticação, migration |
+| `workflows-02.md` | Fluxos 8–16: mover card, registrar ponto, criar aviso, atribuir responsável, paginação, autenticação, migration |
 | `workflows-03.md` | Fluxos 17–23: editar perfil, dashboard, retrospectiva, usarPermissao, constantes visuais, dark/light mode, painel de logs |
 | `workflows-04.md` | Fluxos 24–27: justificativas de ponto, comentários em tarefas, filtros e busca no kanban, gestão de equipes e grupos |
-| `workflows-05.md` | Fluxos 28–31: bootstrap do primeiro admin, histórico visível da tarefa, exportação CSV de ponto, checklist de tarefas |
 | `workflows-05.md` | Fluxos 28–31: bootstrap do primeiro admin, histórico visível da tarefa, exportação CSV de ponto, checklist de tarefas |
 
 ---
@@ -54,7 +53,7 @@ Fábrica de Software
 │   └── Projetos com publico = true
 │
 └── 🔒 Sistema Interno (login @unieuro.edu.br)
-    ├── 📋 Kanban + Backlog + Sprints
+    ├── 📋 Kanban (Fluxo Contínuo)
     │   ├── Filtros por status, prioridade, responsável
     │   ├── Comentários em tarefas
     │   ├── Checklist por tarefa
@@ -79,7 +78,7 @@ Fábrica de Software
 ## Hierarquia de roles (referência rápida)
 
 ```
-ADMIN > LIDER_GRUPO > LIDER_EQUIPE > MEMBRO > VISITANTE
+ADMIN > COORDENADOR > GESTOR > LIDER > SUBLIDER > MEMBRO
 ```
 
 ---

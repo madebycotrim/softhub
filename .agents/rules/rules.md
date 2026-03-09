@@ -167,36 +167,36 @@ A tabela `logs` é **imutável** — nunca `UPDATE` ou `DELETE`.
 ## REGRA 12 — Hierarquia de roles
 
 ```
-ADMIN > LIDER_GRUPO > LIDER_EQUIPE > MEMBRO > VISITANTE
+ADMIN > COORDENADOR > GESTOR > LIDER > SUBLIDER > MEMBRO
 ```
 
 | Role | Pode fazer |
 |------|-----------|
 | `ADMIN` | Tudo |
-| `LIDER_GRUPO` | Tudo do seu Grupo |
-| `LIDER_EQUIPE` | Tarefas e membros da sua equipe |
+| `COORDENADOR` / `GESTOR` | Visão macro de todos os grupos e relatórios |
+| `LIDER` | Gestão de um grupo específico e suas equipes |
+| `SUBLIDER` | Auxílio na gestão de grupo e aprovação de justificativas |
 | `MEMBRO` | Próprio perfil, tarefas atribuídas, bater ponto |
-| `VISITANTE` | Apenas portfolio público |
 
 ---
 
 ## REGRA 13 — Regras específicas por módulo
 
-**Kanban:** tarefa sem `sprint_id` fica só no backlog. Nunca deletar tarefas. Todo movimento registra em `tarefa_historico`. Máximo uma sprint ativa por projeto. Filtros por status, prioridade, responsável e busca por texto.
+**Kanban:** Todas as tarefas ativas do projeto aparecem no quadro. Nunca deletar tarefas. Todo movimento registra em `tarefa_historico`. Filtros por status, prioridade, responsável e busca por texto. Fluxo contínuo (sem sprints).
 
-**Comentários:** qualquer membro autenticado pode comentar em tarefas. Autor pode editar/remover o próprio. `LIDER_EQUIPE` ou acima pode remover qualquer um. Notificar responsáveis e quem já comentou — excluir o autor da lista. Tabela `comentarios_tarefa` usa soft delete.
+**Comentários:** qualquer membro autenticado pode comentar em tarefas. Autor pode editar/remover o próprio. Liderança ou acima pode remover qualquer um. Notificar responsáveis e quem já comentou — excluir o autor da lista. Tabela `comentarios_tarefa` usa soft delete.
 
-**Checklist:** itens informativos dentro de tarefas — não bloqueiam movimentação. Qualquer membro pode marcar/desmarcar. Apenas `LIDER_EQUIPE` ou acima adiciona/remove itens. Progresso exibido no card do kanban.
+**Checklist:** itens informativos dentro de tarefas — não bloqueiam movimentação. Qualquer membro pode marcar/desmarcar. Liderança ou acima adiciona/remove itens. Progresso exibido no card do kanban.
 
-**Ponto:** verificação de IP obrigatória no backend. Não permitir duas entradas ou duas saídas seguidas. Confirmar IPs reais com o TI antes do deploy. Justificativas de ponto aprovadas por `LIDER_EQUIPE` ou acima.
+**Ponto:** verificação de IP obrigatória no backend. Não permitir duas entradas ou duas saídas seguidas. Confirmar IPs reais com o TI antes do deploy. Justificativas de ponto aprovadas por `SUBLIDER` ou acima.
 
-**Portfolio:** rota `/api/projetos/publicos` é pública. Projeto aparece só com `publico = 1`. Apenas `ADMIN` e `LIDER_GRUPO` publicam/despublicam.
+**Portfolio:** rota `/api/projetos/publicos` é pública. Projeto aparece só com `publico = 1`. Apenas `ADMIN` e `GESTOR` publicam/despublicam.
 
-**Membros:** primeiro login cria com `role = 'MEMBRO'`. Só `ADMIN` altera role. Desativados têm `ativo = 0` — nunca deletar. Primeiro ADMIN definido via variável de ambiente `BOOTSTRAP_ADMIN_EMAIL` (ver Workflow 28).
+**Membros:** primeiro login cria com `role = 'MEMBRO'`. Só `ADMIN` altera role. Desativados têm `ativo = 0` — nunca deletar. Primeiro ADMIN definido via variável de ambiente `BOOTSTRAP_ADMIN_EMAIL`.
 
-**Equipes e Grupos:** membro pertence a apenas UMA equipe por vez. Ao trocar de equipe, atualizar `usuarios.equipe_id`. Desativar grupo desativa todas as equipes do grupo. Apenas `LIDER_GRUPO` ou `ADMIN` cria/edita grupos e equipes.
+**Equipes e Grupos:** membro pertence a apenas UMA equipe por vez. Ao trocar de equipe, atualizar `usuarios.equipe_id`. Desativar grupo desativa todas as equipes do grupo. Apenas `LIDER` ou acima cria/edita grupos e equipes.
 
-**Avisos:** apenas `LIDER_EQUIPE`, `LIDER_GRUPO` e `ADMIN` criam avisos. Expirados não aparecem. Só criador, líderes superiores ou `ADMIN` removem.
+**Avisos:** apenas `SUBLIDER` ou acima criam avisos. Expirados não aparecem. Só criador, liderança superior ou `ADMIN` removem.
 
 ---
 

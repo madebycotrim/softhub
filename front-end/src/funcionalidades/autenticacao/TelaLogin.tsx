@@ -6,6 +6,7 @@ import { ambiente } from '../../configuracoes/ambiente';
 import { api } from '../../compartilhado/servicos/api';
 import { usarAutenticacaoContexto } from '../../contexto/ContextoAutenticacao';
 import logoUnieuro from '../../assets/logo-unieuro-branca.png';
+import bgCampus from '../../assets/login-bg.png';
 import { loginRequest } from '../../configuracoes/msal';
 import PainelQRCode from './PainelQRCode';
 import { usarDispositivo } from '../../compartilhado/hooks/usarDispositivo';
@@ -44,7 +45,7 @@ export default function TelaLogin() {
 
     const erroRedirect = searchParams.get('erro');
     const mensagemErroRedirect: Record<string, string> = {
-        'dominio': `Conta não autorizada. Use seu email @${ambiente.dominioInstitucional} ou @unieuro.com.br.`,
+        'dominio': `Conta não autorizada. Use seu email @${ambiente.dominioInstitucional}.`,
         'nao-autorizado': 'Acesso negado. Conta não cadastrada ou desativada.',
         'backend': 'Falha ao validar sua conta. Tente novamente.',
     };
@@ -58,12 +59,11 @@ export default function TelaLogin() {
                     if (response && response.account) {
                         const emailUsuario = response.account.username ?? '';
                         const emailMinusculo = emailUsuario.toLowerCase();
-                        const dominiosValidos = [`@${ambiente.dominioInstitucional}`, '@unieuro.com.br'];
-                        const ehValido = dominiosValidos.some(d => emailMinusculo.endsWith(d));
+                        const ehValido = emailMinusculo.endsWith(`@${ambiente.dominioInstitucional}`);
 
                         if (!ehValido) {
                             await instance.logoutRedirect({ account: response.account });
-                            setErroLocal(`Use seu email @${ambiente.dominioInstitucional} ou @unieuro.com.br.`);
+                            setErroLocal(`Use seu email @${ambiente.dominioInstitucional}.`);
                             return;
                         }
                         setCarregando(true);
@@ -108,7 +108,8 @@ export default function TelaLogin() {
                 <div className="lg:w-[42%] bg-[#001a33] p-8 pt-12 pb-14 lg:p-16 flex flex-col justify-between text-white relative overflow-hidden group shrink-0">
                     {/* Imagem do Campus em Background Cinematico */}
                     <div className="absolute inset-0 z-0">
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#001a33] via-transparent to-transparent opacity-80" />
+                        <img src={bgCampus} alt="Campus" className="w-full h-full object-cover scale-105 group-hover:scale-100 transition-transform duration-[10000ms] ease-out opacity-60" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#001a33] via-[#001a33]/60 to-transparent" />
                         <div className="absolute inset-0 bg-blue-900/10 pointer-events-none" />
                     </div>
 
@@ -183,18 +184,20 @@ export default function TelaLogin() {
                                 <button
                                     onClick={handleLogin}
                                     disabled={carregando || inProgress !== 'none'}
-                                    className="w-full flex items-center justify-center h-14 bg-[#2F2F2F] hover:bg-[#3F3F3F] active:bg-[#1F1F1F] transition-all shadow-xl shadow-black/10 disabled:opacity-50 group px-4 rounded-2xl active:scale-[0.98]"
-                                    style={{ fontFamily: "Segoe UI, Frutiger, Frutiger Linotype, Dejavu Sans, Helvetica Neue, Arial, sans-serif" }}
+                                    className="w-full flex items-center h-[41px] bg-[#2F2F2F] hover:bg-[#3F3F3F] active:bg-[#1F1F1F] transition-all disabled:opacity-50 group rounded-none active:scale-[0.98] px-[12px] gap-[12px] border border-transparent"
+                                    style={{ 
+                                        fontFamily: "'Segoe UI', 'Segoe UI Web (West European)', 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif" 
+                                    }}
                                 >
-                                    <div className="flex items-center gap-3">
-                                        <svg className="w-5 h-5 lg:w-[21px] lg:h-[21px]" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <div className="flex shrink-0">
+                                        <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <rect x="0" y="0" width="10" height="10" fill="#F25022" />
                                             <rect x="11" y="0" width="10" height="10" fill="#7FBA00" />
                                             <rect x="0" y="11" width="10" height="10" fill="#00A4EF" />
                                             <rect x="11" y="11" width="10" height="10" fill="#FFB900" />
                                         </svg>
-                                        <span className="text-[15px] lg:text-[16px] font-semibold text-white whitespace-nowrap">Entrar com a Microsoft</span>
                                     </div>
+                                    <span className="text-[15px] font-semibold text-white leading-none whitespace-nowrap">Entrar com Microsoft</span>
                                 </button>
 
                                 <div className="flex items-center justify-center lg:justify-start gap-1.5 text-slate-500 text-[11px] lg:text-[11.5px] font-medium">
