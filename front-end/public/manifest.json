@@ -55,6 +55,8 @@
   ],
   "start_url": "/app/dashboard",
   "display": "standalone",
-  "background_color": "#020617",
-  "theme_color": "#dc2626"
+  "background_color": "#001a33",
+  "theme_color": "#001a33",
+  "scope": "/",
+  "orientation": "portrait"
 }
