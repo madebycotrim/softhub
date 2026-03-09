@@ -101,7 +101,7 @@ export default function TelaLogin() {
     };
 
     return (
-        <div className="min-h-screen bg-[#020617] lg:bg-background flex items-center justify-center p-0 sm:p-6 lg:p-8 selection:bg-red-500/20 transition-colors duration-500">
+        <div className="light min-h-screen bg-[#020617] lg:bg-slate-50 flex items-center justify-center p-0 sm:p-6 lg:p-8 selection:bg-red-500/20 transition-colors duration-500">
             <div className="w-full max-w-7xl bg-card sm:rounded-2xl shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] overflow-hidden flex flex-col lg:flex-row min-h-screen sm:min-h-[750px] border-none sm:border border-border animate-in fade-in zoom-in-95 duration-700">
 
                 {/* Lado Esquerdo Institucional */}
