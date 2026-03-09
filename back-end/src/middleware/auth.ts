@@ -44,7 +44,7 @@ export function autenticacaoRequerida(roleMinimoRequerido?: string) {
         }
 
         // ── Passo 3: Verifica assinatura do JWT interno ───────────────────────
-        let payload: { id: string; role: string; email: string; exp: number };
+        let payload: { id: string; role: string; email: string; exp: number; versao_token?: number };
         try {
             payload = await verify(token, segredo, 'HS256') as typeof payload;
         } catch {
@@ -58,12 +58,18 @@ export function autenticacaoRequerida(roleMinimoRequerido?: string) {
 
         // ── Passo 5: Busca usuário no banco ───────────────────────────────────
         const usuario = await c.env.DB
-            .prepare('SELECT id, nome, email, role, ativo FROM usuarios WHERE id = ?')
+            .prepare('SELECT id, nome, email, role, ativo, versao_token FROM usuarios WHERE id = ?')
             .bind(payload.id)
-            .first<{ id: string; nome: string; email: string; role: string; ativo: number }>();
+            .first<{ id: string; nome: string; email: string; role: string; ativo: number; versao_token: number }>();
 
         if (!usuario) {
             return c.json({ erro: 'Usuário não encontrado.' }, 401);
+        }
+
+        // Validação de Versão do Token (Desconectar sessões anteriores)
+        if (payload.versao_token !== undefined && usuario.versao_token !== payload.versao_token) {
+            console.warn(`[AUTH] Sessão invalidada: Versão do token (${payload.versao_token}) não coincide com o banco (${usuario.versao_token})`);
+            return c.json({ erro: 'Sua sessão foi encerrada porque você entrou em outro dispositivo.' }, 401);
         }
 
         if (usuario.ativo === 0) {

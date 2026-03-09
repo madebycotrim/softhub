@@ -151,12 +151,20 @@ rotasAuthQr.post('/qr/autorizar', autenticacaoRequerida(), async (c) => {
             return c.json({ erro: 'Sessão expirada.' }, 400);
         }
 
-        // Gera novo token para o desktop
+        // Incrementa a versão do token para desconectar outras sessões (Regra: Nova conexão desconecta anterior)
+        const resVersao = await DB.prepare(
+            'UPDATE usuarios SET versao_token = versao_token + 1 WHERE id = ? RETURNING versao_token'
+        ).bind(usuario.id).first<{ versao_token: number }>();
+        
+        const novaVersao = resVersao?.versao_token || 1;
+
+        // Gera novo token para o desktop com a NOVA versão
         const tokenDesktop = await sign(
             {
                 id: usuario.id,
                 role: usuario.role,
                 email: usuario.email,
+                versao_token: novaVersao,
                 exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7, // 7 dias
             },
             JWT_SECRET,

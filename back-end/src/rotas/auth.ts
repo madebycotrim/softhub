@@ -64,9 +64,9 @@ rotasAuth.post('/msal', async (c) => {
         let usuario;
         try {
             usuario = await DB
-                .prepare('SELECT id, nome, email, role, ativo FROM usuarios WHERE email = ?')
+                .prepare('SELECT id, nome, email, role, ativo, versao_token FROM usuarios WHERE email = ?')
                 .bind(email)
-                .first<{ id: string; nome: string; email: string; role: string; ativo: number }>();
+                .first<{ id: string; nome: string; email: string; role: string; ativo: number; versao_token: number }>();
         } catch (e: any) {
             console.error('[Auth] Erro ao consultar banco:', e.message);
             return c.json({
@@ -84,14 +84,14 @@ rotasAuth.post('/msal', async (c) => {
                 // Primeiro Admin via bootstrap
                 const novoId = crypto.randomUUID();
                 try {
-                    await DB.prepare('INSERT INTO usuarios (id, nome, email, role, ativo) VALUES (?, ?, ?, "ADMIN", 1)')
+                    await DB.prepare('INSERT INTO usuarios (id, nome, email, role, ativo, versao_token) VALUES (?, ?, ?, "ADMIN", 1, 1)')
                         .bind(novoId, nome, email)
                         .run();
                 } catch (e: any) {
                     return c.json({ erro: 'Falha ao criar usuário de bootstrap.', detalhe: e.message }, 500);
                 }
 
-                usuario = { id: novoId, nome, email, role: 'ADMIN', ativo: 1 };
+                usuario = { id: novoId, nome, email, role: 'ADMIN', ativo: 1, versao_token: 1 };
                 isNew = true;
             } else {
                 // Acesso negado se não estiver pré-cadastrado
@@ -125,6 +125,7 @@ rotasAuth.post('/msal', async (c) => {
                 id: usuario.id,
                 role: usuario.role,
                 email: usuario.email,
+                versao_token: usuario.versao_token || 1,
                 exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30, // 30 dias (Estratégia PWA)
             },
             JWT_SECRET
