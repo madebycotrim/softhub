@@ -29,12 +29,12 @@ export function ConfirmacaoExclusao({
 }: ConfirmacaoExclusaoProps) {
     return (
         <Modal aberto={aberto} aoFechar={aoFechar} titulo={titulo} largura="md">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 mb-8">
-                <div className="flex shrink-0 items-center justify-center w-12 h-12 rounded-2xl bg-destructive/10 sm:h-12 sm:w-12 border border-destructive/20 shadow-inner">
-                    <AlertTriangle className="h-6 w-6 text-destructive shrink-0" aria-hidden="true" />
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 mb-10">
+                <div className="flex shrink-0 items-center justify-center w-14 h-14 rounded-2xl bg-rose-50 border border-rose-100 shadow-sm">
+                    <AlertTriangle className="h-6 w-6 text-rose-600 shrink-0" aria-hidden="true" />
                 </div>
                 <div>
-                    <p className="text-muted-foreground text-[13.5px] leading-relaxed font-medium">{descricao}</p>
+                    <p className="text-slate-500 text-sm leading-relaxed font-medium">{descricao}</p>
                 </div>
             </div>
 
@@ -44,12 +44,12 @@ export function ConfirmacaoExclusao({
                 </div>
             )}
 
-            <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end mt-4">
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <button
                     type="button"
                     onClick={aoFechar}
                     disabled={carregando}
-                    className="inline-flex justify-center w-full sm:w-auto px-6 py-2.5 text-sm font-bold text-muted-foreground bg-transparent border border-border/60 rounded-2xl hover:bg-accent hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all disabled:opacity-50"
+                    className="flex-1 px-6 py-4 bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-2xl text-xs font-black uppercase tracking-widest transition-all"
                 >
                     Cancelar
                 </button>
@@ -57,7 +57,7 @@ export function ConfirmacaoExclusao({
                     type="button"
                     onClick={aoConfirmar}
                     disabled={carregando}
-                    className="inline-flex justify-center items-center w-full sm:w-auto px-6 py-2.5 text-sm font-bold text-white bg-destructive rounded-2xl hover:bg-destructive/90 hover:scale-[1.02] shadow-[0_10px_20px_-5px_rgba(239,68,68,0.3)] focus:outline-none focus:ring-2 focus:ring-destructive/20 transition-all active:scale-[0.98] disabled:opacity-50"
+                    className="flex-[2] px-6 py-4 bg-rose-600 text-white hover:bg-black rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-rose-100 disabled:opacity-50 active:scale-95 flex items-center justify-center gap-2"
                 >
                     {carregando ? (
                         <>

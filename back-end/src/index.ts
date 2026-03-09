@@ -10,7 +10,7 @@ import rotasDashboard from './rotas/dashboard';
 import rotasLogs from './rotas/logs';
 import rotasAuth from './rotas/auth';
 import rotasAuthQr from './rotas/auth-qr';
-import rotasOrganizacao from './rotas/organizacao';
+
 import rotasConfiguracoes from './rotas/configuracoes';
 import rotasRelatorios from './rotas/relatorios';
 import { lidarExcecao } from './middleware/erros';
@@ -20,6 +20,8 @@ export type Env = {
     JWT_SECRET: string;
     MSAL_TENANT_ID: string;
     MSAL_CLIENT_ID: string;
+    DOMINIO_INSTITUCIONAL: string;
+    BOOTSTRAP_ADMIN_EMAIL: string;
 };
 
 const app = new Hono<{ Bindings: Env }>();
@@ -61,7 +63,7 @@ app.route('/api/ponto', rotasPontoJustificativas);
 app.route('/api/avisos', rotasAvisos);
 app.route('/api/dashboard', rotasDashboard);
 app.route('/api/logs', rotasLogs);
-app.route('/api/organizacao', rotasOrganizacao);
+
 app.route('/api/configuracoes', rotasConfiguracoes);
 app.route('/api/relatorios', rotasRelatorios);
 

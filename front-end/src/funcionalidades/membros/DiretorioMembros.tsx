@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Search, Mail, Calendar, Users } from 'lucide-react';
+import { Mail, Calendar, Users } from 'lucide-react';
 import { Link } from 'react-router';
 import { usarMembros } from './usarMembros';
 import { Avatar } from '../../compartilhado/componentes/Avatar';
@@ -7,6 +7,7 @@ import { Carregando } from '../../compartilhado/componentes/Carregando';
 import { EstadoVazio } from '../../compartilhado/componentes/EstadoVazio';
 import { formatarDataHora } from '../../utilitarios/formatadores';
 import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
+import { BarraBusca } from '../../compartilhado/componentes/BarraBusca';
 import type { Membro } from './usarMembros';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -34,7 +35,7 @@ function CardMembro({ membro }: { membro: Membro }) {
         <Link
             to={`/app/membro/${membro.id}`}
             className={`
-                bg-card border border-border rounded-2xl p-6 flex flex-col transition-all shadow-sm
+                bg-card border border-border rounded-2xl p-4 sm:p-6 flex flex-col transition-all shadow-sm
                 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10
                 ${membro.ativo ? '' : 'opacity-60'}
             `}
@@ -118,16 +119,10 @@ export function DiretorioMembros() {
                 icone={Users}
             >
                 <div className="relative w-full sm:w-72">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Search className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                    </div>
-                    <input
-                        type="text"
-                        aria-label="Buscar membro por nome ou e-mail"
-                        className="block w-full pl-9 pr-3 py-2 border border-border rounded-2xl leading-5 bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-all"
+                    <BarraBusca 
+                        valor={busca}
+                        aoMudar={setBusca}
                         placeholder="Buscar por nome ou email..."
-                        value={busca}
-                        onChange={e => setBusca(e.target.value)}
                     />
                 </div>
             </CabecalhoFuncionalidade>

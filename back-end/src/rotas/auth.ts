@@ -76,13 +76,15 @@ rotasAuth.post('/msal', async (c) => {
             }, 500);
         }
 
+        // 5. Verificação de Bootstrap (Regra 13 - Admin via env)
+        const listaBootstrap = (BOOTSTRAP_ADMIN_EMAIL || '').toLowerCase().split(',').map(e => e.trim());
+        const isBootstrapAdmin = listaBootstrap.includes(email);
+
         let isNew = false;
 
         if (!usuario) {
-            const bootstrapEmail = BOOTSTRAP_ADMIN_EMAIL?.toLowerCase();
-
-            if (bootstrapEmail && email === bootstrapEmail) {
-                // Primeiro Admin via bootstrap
+            if (isBootstrapAdmin) {
+                // Novo usuário via bootstrap é ADMIN
                 const novoId = crypto.randomUUID();
                 try {
                     await DB.prepare('INSERT INTO usuarios (id, nome, email, role, ativo, versao_token) VALUES (?, ?, ?, "ADMIN", 1, 1)')
@@ -98,16 +100,29 @@ rotasAuth.post('/msal', async (c) => {
                 // Acesso negado se não estiver pré-cadastrado
                 return c.json({
                     erro: 'Acesso negado: email não autorizado.',
-                    detalhe: `O email ${email} não está na lista de membros e não é o email de bootstrap (${BOOTSTRAP_ADMIN_EMAIL}).`
+                    detalhe: `O email ${email} não está na lista de membros e não consta na lista de bootstrap.`
                 }, 403);
             }
         } else {
-            // Atualiza nome se mudou no Azure
-            try {
-                await DB.prepare('UPDATE usuarios SET nome = ? WHERE id = ?').bind(nome, usuario.id).run();
-                usuario.nome = nome;
-            } catch (e: any) {
-                console.warn('[Auth] Falha ao atualizar nome do usuário (não crítico):', e.message);
+            // Se já existe mas está na lista de bootstrap, garante que seja ADMIN
+            if (isBootstrapAdmin && usuario.role !== 'ADMIN') {
+                try {
+                    await DB.prepare('UPDATE usuarios SET role = "ADMIN", nome = ? WHERE id = ?')
+                        .bind(nome, usuario.id)
+                        .run();
+                    usuario.role = 'ADMIN';
+                    usuario.nome = nome;
+                } catch (e: any) {
+                    console.warn('[Auth] Falha ao elevar cargo para ADMIN via bootstrap:', e.message);
+                }
+            } else {
+                // Atualiza nome se mudou no Azure
+                try {
+                    await DB.prepare('UPDATE usuarios SET nome = ? WHERE id = ?').bind(nome, usuario.id).run();
+                    usuario.nome = nome;
+                } catch (e: any) {
+                    console.warn('[Auth] Falha ao atualizar nome do usuário:', e.message);
+                }
             }
         }
 

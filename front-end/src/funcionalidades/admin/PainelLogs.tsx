@@ -1,4 +1,5 @@
-import { ShieldAlert, Activity, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, FileText, Search, Calendar, X } from 'lucide-react';
+import { ShieldAlert, Activity, FileText, Search, Calendar, X } from 'lucide-react';
+import { Paginacao } from '../../compartilhado/componentes/Paginacao';
 import { formatarDataHora } from '../../utilitarios/formatadores';
 import { usarLogs } from './usarLogs';
 import { Carregando } from '../../compartilhado/componentes/Carregando';
@@ -215,73 +216,16 @@ export function PainelLogs() {
                 </div>
 
                 {/* Paginação Avançada */}
-                <div className="p-4 border-t border-border bg-muted/50 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="flex items-center gap-6">
-                        {/* Selector Itens por Página */}
-                        <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Exibir</span>
-                            <select
-                                value={itensPorPagina}
-                                onChange={e => { setItensPorPagina(Number(e.target.value)); setPagina(1); }}
-                                className="bg-background border border-border rounded-lg px-2 py-1 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/10"
-                            >
-                                <option value={20}>20</option>
-                                <option value={50}>50</option>
-                                <option value={100}>100</option>
-                            </select>
-                        </div>
-                        
-                        <span className="text-xs text-muted-foreground font-medium">
-                            Mostrando <span className="text-foreground font-bold">{logs.length}</span> de <span className="text-foreground font-bold">{totalRegistros}</span> registros
-                        </span>
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                        <button
-                            disabled={pagina === 1 || carregando}
-                            onClick={() => setPagina(1)}
-                            className="w-10 h-9 rounded-lg border border-border text-foreground hover:bg-accent disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center justify-center"
-                            title="Primeira Página"
-                        >
-                            <ChevronsLeft className="w-4 h-4" />
-                        </button>
-
-                        <button
-                            disabled={pagina === 1 || carregando}
-                            onClick={() => setPagina(p => p - 1)}
-                            className="h-9 px-3 rounded-lg border border-border text-foreground hover:bg-accent disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center gap-1.5"
-                        >
-                            <ChevronLeft className="w-4 h-4" />
-                            <span className="text-xs font-bold">Anterior</span>
-                        </button>
-
-                        <div className="flex items-center px-4 bg-background border border-border rounded-lg h-9">
-                            <span className="text-xs font-bold">
-                                <span className="text-primary">{pagina}</span>
-                                <span className="mx-2 text-muted-foreground/40">/</span>
-                                <span className="text-muted-foreground">{totalPaginas}</span>
-                            </span>
-                        </div>
-
-                        <button
-                            disabled={pagina === totalPaginas || carregando}
-                            onClick={() => setPagina(p => p + 1)}
-                            className="h-9 px-3 rounded-lg border border-border text-foreground hover:bg-accent disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center gap-1.5"
-                        >
-                            <span className="text-xs font-bold">Próxima</span>
-                            <ChevronRight className="w-4 h-4" />
-                        </button>
-
-                        <button
-                            disabled={pagina === totalPaginas || carregando}
-                            onClick={() => setPagina(totalPaginas)}
-                            className="w-10 h-9 rounded-lg border border-border text-foreground hover:bg-accent disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center justify-center"
-                            title="Última Página"
-                        >
-                            <ChevronsRight className="w-4 h-4" />
-                        </button>
-                    </div>
-                </div>
+                <Paginacao
+                    paginaAtual={pagina}
+                    totalPaginas={totalPaginas}
+                    totalRegistros={totalRegistros}
+                    itensPorPagina={itensPorPagina}
+                    itensListados={logs.length}
+                    aoMudarPagina={setPagina}
+                    aoMudarItensPorPagina={(num) => { setItensPorPagina(num); setPagina(1); }}
+                    desabilitado={carregando}
+                />
 
             </div>
 

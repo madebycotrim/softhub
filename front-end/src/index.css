@@ -139,21 +139,38 @@
 
 @layer utilities {
   .animate-scan-line {
-    animation: scan-line 2s linear infinite;
+    animation: scan-line 8s linear infinite;
   }
 
-  .animate-infinite-scroll {
-    animation: infinite-scroll 3s linear infinite;
+  .animate-glitch {
+    animation: glitch 1s linear infinite alternate;
+  }
+
+  .cyan-glow {
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.3), inset 0 0 5px rgba(0, 255, 255, 0.2);
+  }
+
+  .emerald-glow {
+    box-shadow: 0 0 15px rgba(0, 255, 159, 0.3), inset 0 0 5px rgba(0, 255, 159, 0.2);
+  }
+
+  .rose-glow {
+    box-shadow: 0 0 15px rgba(255, 0, 85, 0.3), inset 0 0 5px rgba(255, 0, 85, 0.2);
   }
 
   @keyframes scan-line {
-    0% { top: 0; }
-    50% { top: 100%; }
-    100% { top: 0; }
+    0% { transform: translateY(-100%); opacity: 0; }
+    10% { opacity: 0.5; }
+    90% { opacity: 0.5; }
+    100% { transform: translateY(100%); opacity: 0; }
   }
 
-  @keyframes infinite-scroll {
-    from { transform: translateX(-100%); }
-    to { transform: translateX(200%); }
+  @keyframes glitch {
+    0% { transform: translate(0); text-shadow: none; }
+    20% { transform: translate(-2px, 2px); text-shadow: 2px 0 #00fff2, -2px 0 #ff00c1; }
+    40% { transform: translate(-2px, -2px); text-shadow: -2px 0 #00fff2, 2px 0 #ff00c1; }
+    60% { transform: translate(2px, 2px); text-shadow: 2px 0 #00fff2, -2px 0 #ff00c1; }
+    80% { transform: translate(2px, -2px); text-shadow: -2px 0 #00fff2, 2px 0 #ff00c1; }
+    100% { transform: translate(0); text-shadow: none; }
   }
 }

@@ -51,15 +51,14 @@ export function Modal({ aberto, aoFechar, titulo, children, largura = 'md' }: Mo
                 aria-hidden="true"
             />
 
-            {/* Container do Modal: Premium Aesthetics */}
+            {/* Container do Modal: Light Modern Premium */}
             <div
                 className={`
                     relative w-full ${larguras[largura]} pointer-events-auto
-                    bg-card/95 backdrop-blur-xl rounded-[28px] 
-                    shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.05)]
+                    bg-white border border-slate-200 rounded-2xl 
+                    shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)]
                     flex flex-col max-h-[90vh] overflow-hidden transform transition-all
-                    border border-border/50
-                    animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-500 ease-out-expo
+                    animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-400 ease-out
                 `}
                 role="dialog"
                 aria-modal="true"
@@ -69,16 +68,16 @@ export function Modal({ aberto, aoFechar, titulo, children, largura = 'md' }: Mo
                 <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
 
                 {/* Header: Clean & Modern */}
-                <div className="flex items-center justify-between px-8 py-6 shrink-0 border-b border-border/40 relative">
-                    <div className="flex flex-col gap-0.5">
-                        <h2 id="modal-titulo" className="text-lg font-bold text-foreground tracking-tight leading-none uppercase">
+                <div className="flex items-center justify-between px-8 py-6 shrink-0 border-b border-slate-100 relative bg-slate-50/50">
+                    <div className="flex items-center gap-3">
+                        <div className="w-1.5 h-6 bg-blue-600 rounded-full" />
+                        <h2 id="modal-titulo" className="text-lg font-black text-slate-900 tracking-tight leading-none uppercase">
                             {titulo}
                         </h2>
-                        <div className="h-0.5 w-6 bg-primary rounded-full" />
                     </div>
                     <button
                         onClick={aoFechar}
-                        className="p-2 text-muted-foreground/40 hover:text-foreground hover:bg-accent rounded-2xl transition-all duration-300 focus:outline-none group"
+                        className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-2xl transition-all duration-200 focus:outline-none group border border-transparent hover:border-slate-200"
                         aria-label="Fechar modal"
                     >
                         <X className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
@@ -86,7 +85,7 @@ export function Modal({ aberto, aoFechar, titulo, children, largura = 'md' }: Mo
                 </div>
 
                 {/* Conteúdo com scroll refinado */}
-                <div className="flex-1 overflow-y-auto px-8 py-8 scrollbar-thin scrollbar-thumb-border/40 scrollbar-track-transparent">
+                <div className="flex-1 overflow-y-auto px-8 py-8 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
                     {children}
                 </div>
             </div>

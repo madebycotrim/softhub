@@ -45,21 +45,21 @@ export function CabecalhoFuncionalidade({
     const estilo = cores[variante];
 
     return (
-        <div className={`shrink-0 flex items-center justify-between bg-card border ${estilo.border} rounded-2xl p-6 shadow-sm relative overflow-hidden transition-all`}>
-            <div className="relative z-10 flex items-center gap-4">
-                <div className={`p-3 ${estilo.bgIcone} ${estilo.textoIcone} rounded-2xl`}>
+        <div className={`shrink-0 flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:gap-6 bg-card border ${estilo.border} rounded-2xl p-6 shadow-sm relative overflow-hidden transition-all`}>
+            <div className="relative z-10 flex items-center gap-4 w-full lg:w-auto">
+                <div className={`p-3 ${estilo.bgIcone} ${estilo.textoIcone} rounded-2xl shrink-0`}>
                     <Icone className="w-6 h-6" />
                 </div>
-                <div>
-                    <h1 className="text-xl font-bold text-card-foreground tracking-tight">
+                <div className="min-w-0">
+                    <h1 className="text-xl font-bold text-card-foreground tracking-tight truncate">
                         {titulo}
                     </h1>
-                    <p className="text-muted-foreground text-sm mt-1">{subtitulo}</p>
+                    <p className="text-muted-foreground text-sm mt-1 truncate">{subtitulo}</p>
                 </div>
             </div>
 
             {/* Slot para botões ou ações à direita */}
-            {children && <div className="relative z-10">{children}</div>}
+            {children && <div className="relative z-10 w-full lg:w-auto">{children}</div>}
 
             <div className={`absolute top-0 right-0 w-64 h-full bg-gradient-to-l ${estilo.gradiente} to-transparent pointer-events-none`} />
         </div>

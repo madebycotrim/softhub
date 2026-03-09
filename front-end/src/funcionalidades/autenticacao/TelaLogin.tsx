@@ -6,7 +6,6 @@ import { ambiente } from '../../configuracoes/ambiente';
 import { api } from '../../compartilhado/servicos/api';
 import { usarAutenticacaoContexto } from '../../contexto/ContextoAutenticacao';
 import logoUnieuro from '../../assets/logo-unieuro-branca.png';
-import bgCampus from '../../assets/login-bg.png';
 import { loginRequest } from '../../configuracoes/msal';
 import PainelQRCode from './PainelQRCode';
 import { usarDispositivo } from '../../compartilhado/hooks/usarDispositivo';
@@ -108,7 +107,6 @@ export default function TelaLogin() {
                 <div className="lg:w-[42%] bg-[#001a33] p-8 pt-12 pb-14 lg:p-16 flex flex-col justify-between text-white relative overflow-hidden group shrink-0">
                     {/* Imagem do Campus em Background Cinematico */}
                     <div className="absolute inset-0 z-0">
-                        <img src={bgCampus} alt="Campus" className="w-full h-full object-cover scale-105 group-hover:scale-100 transition-transform duration-[10000ms] ease-out opacity-60" />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#001a33] via-[#001a33]/60 to-transparent" />
                         <div className="absolute inset-0 bg-blue-900/10 pointer-events-none" />
                     </div>

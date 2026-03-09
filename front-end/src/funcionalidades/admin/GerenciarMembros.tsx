@@ -1,5 +1,6 @@
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { Search, UserCog, X, Shield, Mail, Trash2, Loader2, UserCheck, UserX, Archive, Users as UsersIcon, ListPlus, CheckSquare, Square, Download, CheckCircle2, AlertCircle, ChevronDown, RotateCcw, Eraser } from 'lucide-react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { UserCog, X, Shield, Mail, Trash2, Loader2, UserCheck, Archive, ListPlus, CheckSquare, Square, Download, AlertCircle, ChevronDown, RotateCcw, Eraser, User, Users as UsersIcon } from 'lucide-react';
+import { Link } from 'react-router';
 import { api } from '../../compartilhado/servicos/api';
 import { usarMembros } from '../membros/usarMembros';
 import type { Membro } from '../membros/usarMembros';
@@ -11,49 +12,12 @@ import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/Cabecal
 import { Modal } from '../../compartilhado/componentes/Modal';
 import { ConfirmacaoExclusao } from '../../compartilhado/componentes/ConfirmacaoExclusao';
 import { ambiente } from '../../configuracoes/ambiente';
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-type ToastTipo = 'sucesso' | 'erro';
-
-interface ToastState {
-    mensagem: string;
-    tipo: ToastTipo;
-    id: number;
-}
-
-
-// ─── Hook: useDebounce ────────────────────────────────────────────────────────
-
-function useDebounce<T>(valor: T, delay = 300): T {
-    const [valorDebounced, setValorDebounced] = useState(valor);
-
-    useEffect(() => {
-        const timer = setTimeout(() => setValorDebounced(valor), delay);
-        return () => clearTimeout(timer);
-    }, [valor, delay]);
-
-    return valorDebounced;
-}
-
-// ─── Hook: useToast ───────────────────────────────────────────────────────────
-
-function useToast() {
-    const [toasts, setToasts] = useState<ToastState[]>([]);
-    const contadorRef = useRef(0);
-
-    const exibir = useCallback((mensagem: string, tipo: ToastTipo = 'sucesso') => {
-        const id = ++contadorRef.current;
-        setToasts(prev => [...prev, { mensagem, tipo, id }]);
-        setTimeout(() => {
-            setToasts(prev => prev.filter(t => t.id !== id));
-        }, 3500);
-    }, []);
-
-    return { toasts, exibir };
-}
-
-// ─── Hook: useGerenciarMembros ────────────────────────────────────────────────
+import { usarConfiguracoes } from './usarConfiguracoes';
+import { usarDebounce } from '../../compartilhado/hooks/usarDebounce';
+import { BarraBusca } from '../../compartilhado/componentes/BarraBusca';
+import { usarToast } from '../../compartilhado/hooks/usarToast';
+import { ToastContainer } from '../../compartilhado/componentes/ToastContainer';
+import { Paginacao } from '../../compartilhado/componentes/Paginacao';
 
 function useGerenciarMembros() {
     const {
@@ -67,9 +31,8 @@ function useGerenciarMembros() {
     } = usarMembros();
 
     const [salvandoIds, setSalvandoIds] = useState<Set<string>>(new Set());
-    const { toasts, exibir: exibirToast } = useToast();
+    const { toasts, exibirToast } = usarToast();
 
-    // Helpers estáveis para evitar recriação a cada render
     const marcarSalvando = useCallback((id: string) => {
         setSalvandoIds(prev => new Set(prev).add(id));
     }, []);
@@ -85,21 +48,15 @@ function useGerenciarMembros() {
     const alterarRole = useCallback(async (membro: Membro, roleNova: string) => {
         if (membro.role === roleNova) return;
 
-        // Optimistic update
         atualizarMembro({ ...membro, role: roleNova });
         marcarSalvando(membro.id);
 
         try {
             await api.patch(`/api/usuarios/${membro.id}/role`, { role: roleNova });
             exibirToast(`Role de ${membro.nome} atualizado com sucesso.`);
-        } catch (e: unknown) {
-            // Reverte em caso de erro
+        } catch (e: any) {
             atualizarMembro(membro);
-            const axiosError = e as { response?: { data?: { erro?: string } } };
-            exibirToast(
-                axiosError.response?.data?.erro ?? 'Erro ao alterar papel do membro.',
-                'erro'
-            );
+            exibirToast(e.response?.data?.erro ?? 'Erro ao alterar papel do membro.', 'erro');
         } finally {
             desmarcarSalvando(membro.id);
         }
@@ -108,21 +65,15 @@ function useGerenciarMembros() {
     const alternarStatus = useCallback(async (membro: Membro) => {
         const novoStatus = !membro.ativo;
 
-        // Optimistic update
         atualizarMembro({ ...membro, ativo: novoStatus });
         marcarSalvando(membro.id);
 
         try {
             await api.patch(`/api/usuarios/${membro.id}/status`, { ativo: novoStatus });
             exibirToast(`${membro.nome} ${novoStatus ? 'ativado' : 'pausado'} com sucesso.`);
-        } catch (e: unknown) {
-            // Reverte em caso de erro
+        } catch (e: any) {
             atualizarMembro(membro);
-            const axiosError = e as { response?: { data?: { erro?: string } } };
-            exibirToast(
-                axiosError.response?.data?.erro ?? 'Erro ao alterar status do membro.',
-                'erro'
-            );
+            exibirToast(e.response?.data?.erro ?? 'Erro ao alterar status do membro.', 'erro');
         } finally {
             desmarcarSalvando(membro.id);
         }
@@ -130,13 +81,11 @@ function useGerenciarMembros() {
 
     const cadastrarMembro = useCallback(async (
         email: string,
-        role: string,
-        equipe_id?: string | null
+        role: string
     ): Promise<{ sucesso: boolean; erro?: string }> => {
         const res = await adicionarMembro({
             email: email.toLowerCase().trim(),
-            role,
-            equipe_id
+            role
         });
         if (res.sucesso) {
             await recarregar();
@@ -164,31 +113,8 @@ function useGerenciarMembros() {
         return res;
     }, [deletarMembro, recarregar, exibirToast, marcarSalvando, desmarcarSalvando]);
 
-    const [equipes, setEquipes] = useState<any[]>([]);
-
-    useEffect(() => {
-        api.get('/api/organizacao/equipes')
-            .then(res => setEquipes(res.data))
-            .catch(() => console.error('Falha ao buscar equipes.'));
-    }, []);
-
-    const alterarEquipe = useCallback(async (membroId: string, equipeId: string | null) => {
-        marcarSalvando(membroId);
-        try {
-            await api.patch(`/api/organizacao/alocacao/${membroId}`, { equipe_id: equipeId });
-            exibirToast('Alocação de grupo atualizada.');
-            recarregar();
-        } catch (e: any) {
-            exibirToast(e.response?.data?.erro ?? 'Erro ao trocar grupo.', 'erro');
-        } finally {
-            desmarcarSalvando(membroId);
-        }
-    }, [recarregar, exibirToast, marcarSalvando, desmarcarSalvando]);
-
-
     return {
         membros,
-        equipes,
         carregando,
         erro,
         recarregar,
@@ -196,7 +122,6 @@ function useGerenciarMembros() {
         toasts,
         alterarRole,
         alternarStatus,
-        alterarEquipe,
         cadastrarMembro,
         removerMembro,
         limpezaDefinitiva: useCallback(async (membroId: string) => {
@@ -251,7 +176,6 @@ function ModalConvitesEmLote({ aberto, aoFechar, aoCadastrar, recarregar }: Moda
             if (!emailMatch) continue;
 
             const email = emailMatch[0].toLowerCase().trim();
-            // O nome será preenchido pelo prefixo do e-mail no backend ou pelo MSAL no login
             await aoCadastrar({ nome: '', email });
             setProgresso(prev => prev ? { ...prev, atual: prev.atual + 1 } : null);
         }
@@ -313,37 +237,7 @@ function ModalConvitesEmLote({ aberto, aoFechar, aoCadastrar, recarregar }: Moda
     );
 }
 
-// ─── Componente: ToastContainer ───────────────────────────────────────────────
 
-function ToastContainer({ toasts }: { toasts: ToastState[] }) {
-    if (toasts.length === 0) return null;
-
-    return (
-        <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none">
-            {toasts.map(toast => (
-                <div
-                    key={toast.id}
-                    role="status"
-                    aria-live="polite"
-                    className={`
-                        flex items-center gap-3 px-4 py-3 rounded-2xl shadow-lg text-sm font-medium
-                        animate-in slide-in-from-bottom-2 fade-in duration-300
-                        ${toast.tipo === 'sucesso'
-                            ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
-                            : 'bg-red-500/10 border border-red-500/20 text-red-400'
-                        }
-                    `}
-                >
-                    {toast.tipo === 'sucesso'
-                        ? <CheckCircle2 className="w-4 h-4 shrink-0" />
-                        : <AlertCircle className="w-4 h-4 shrink-0" />
-                    }
-                    {toast.mensagem}
-                </div>
-            ))}
-        </div>
-    );
-}
 
 // ─── Componente: LinhaMembro ──────────────────────────────────────────────────
 
@@ -353,11 +247,10 @@ interface LinhaMembroProps {
     selecionado: boolean;
     onToggleSelect: (id: string, isShift?: boolean) => void;
     onAlterarRole: (membro: Membro, role: string) => void;
-    onAlterarEquipe: (membroId: string, equipeId: string | null) => void;
-    equipes: any[];
     onAlternarStatus: (membro: Membro) => void;
     onSolicitarExclusao: (membro: Membro) => void;
     onLimpezaDefinitiva: (membro: Membro) => void;
+    rolesDisponiveis: string[];
 }
 
 function LinhaMembro({
@@ -366,11 +259,10 @@ function LinhaMembro({
     selecionado,
     onToggleSelect,
     onAlterarRole,
-    onAlterarEquipe,
-    equipes,
     onAlternarStatus,
     onSolicitarExclusao,
     onLimpezaDefinitiva,
+    rolesDisponiveis,
 }: LinhaMembroProps) {
     const { usuario } = usarAutenticacao();
     const ehOMesmoUsuario = usuario?.id === membro.id;
@@ -378,23 +270,12 @@ function LinhaMembro({
     const podeDesativar = usarPermissaoAcesso('membros:desativar');
 
 
-    // Identifica os dois grupos disponíveis dinamicamente (os dois primeiros encontrados)
-    const idsGrupos = Array.from(new Set(equipes.map(e => e.grupo_id)));
-
-    // Equipe representante de cada grupo (para poder alocar o membro)
-    const equipeA = equipes.find(e => e.grupo_id === idsGrupos[0]);
-    const equipeB = equipes.find(e => e.grupo_id === idsGrupos[1]);
-
-    const isGrupoA = idsGrupos[0] && membro.grupo_id === idsGrupos[0];
-    const isGrupoB = idsGrupos[1] && membro.grupo_id === idsGrupos[1];
-
-
     return (
         <div
             className={`flex flex-col lg:grid lg:grid-cols-12 gap-4 p-4 items-start lg:items-center border-b border-border/50 hover:bg-muted/30 transition-colors ${salvando ? 'opacity-60 pointer-events-none' : ''} ${selecionado ? 'bg-primary/5 ring-1 ring-inset ring-primary/10 lg:ring-0' : ''}`}
             aria-busy={salvando}
         >
-            {/* Seleção e Identificação (Lado a Lado no Mobile) */}
+            {/* Seleção e Identificação */}
             <div className="flex items-center gap-3 w-full lg:col-span-6">
                 <div className="flex shrink-0">
                     <button
@@ -419,57 +300,30 @@ function LinhaMembro({
                     </div>
                 </div>
 
-                {/* Status Mobile (Badge Simplificado) */}
+                {/* Status Mobile */}
                 <div className="lg:hidden shrink-0 ml-auto flex items-center gap-1.5">
                     <div className={`w-1.5 h-1.5 rounded-full ${membro.ativo ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-muted-foreground/20'}`} />
                 </div>
             </div>
 
-            {/* Role / Papel / Grupo */}
-            <div className="grid grid-cols-2 lg:contents gap-4 w-full lg:w-auto">
-                {/* Role / Papel */}
-                <div className="lg:col-span-1">
-                    <label className="lg:hidden text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 mb-1 block">Papel</label>
-                    <div className="relative">
-                        <select
-                            aria-label={`Papel de ${membro.nome}`}
-                            className={`w-full bg-muted/20 border border-border/50 rounded-xl px-2 py-1.5 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none ${!podeAlterarRole ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
-                            value={membro.role}
-                            onChange={e => onAlterarRole(membro, e.target.value)}
-                            disabled={!podeAlterarRole}
-                        >
-                            <option value="MEMBRO">Membro</option>
-                            <option value="SUBLIDER">Sublíder</option>
-                            <option value="LIDER">Líder</option>
-                            <option value="GESTOR">Gestor</option>
-                            <option value="COORDENADOR">Coordenador</option>
-                            <option value="ADMIN">Admin</option>
-                        </select>
-                        <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-40 lg:hidden" />
-                    </div>
-                </div>
-
-                {/* Grupo */}
-                <div className="lg:col-span-1 flex flex-col lg:items-center">
-                    <label className="lg:hidden text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 mb-1 block">Grupo</label>
-                    <div className="flex bg-muted/20 p-0.5 rounded-2xl border border-border/50 w-fit">
-                        <button
-                            onClick={() => onAlterarEquipe(membro.id, isGrupoA ? null : (equipeA?.id || null))}
-                            title={equipeA?.grupo_nome || 'Grupo A'}
-                            disabled={!equipeA}
-                            className={`w-9 lg:w-8 py-1.5 lg:py-1 rounded-xl text-[10px] font-black transition-all ${isGrupoA ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted/50'}`}
-                        >
-                            A
-                        </button>
-                        <button
-                            onClick={() => onAlterarEquipe(membro.id, isGrupoB ? null : (equipeB?.id || null))}
-                            title={equipeB?.grupo_nome || 'Grupo B'}
-                            disabled={!equipeB}
-                            className={`w-9 lg:w-8 py-1.5 lg:py-1 rounded-xl text-[10px] font-black transition-all ${isGrupoB ? 'bg-indigo-500 text-white shadow-sm' : 'text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted/50'}`}
-                        >
-                            B
-                        </button>
-                    </div>
+            {/* Role / Papel */}
+            <div className="lg:col-span-1">
+                <label className="lg:hidden text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 mb-1 block">Papel</label>
+                <div className="relative">
+                    <select
+                        aria-label={`Papel de ${membro.nome}`}
+                        className={`w-full bg-muted/20 border border-border/50 rounded-xl px-2 py-1.5 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none ${!podeAlterarRole ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
+                        value={membro.role}
+                        onChange={e => onAlterarRole(membro, e.target.value)}
+                        disabled={!podeAlterarRole}
+                    >
+                        {rolesDisponiveis.map(role => (
+                            <option key={role} value={role}>
+                                {role === 'ADMIN' ? 'Administrador' : role.charAt(0) + role.slice(1).toLowerCase().replace('_', ' ')}
+                            </option>
+                        ))}
+                    </select>
+                    <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-40 lg:hidden" />
                 </div>
             </div>
 
@@ -484,7 +338,16 @@ function LinhaMembro({
             </div>
 
             {/* Ações */}
-            <div className="flex items-center justify-end gap-2 w-full lg:w-auto lg:col-span-2 pt-3 lg:pt-0 border-t border-border/40 lg:border-0">
+            <div className="flex items-center justify-end gap-2 w-full lg:w-auto lg:col-span-3 pt-3 lg:pt-0 border-t border-border/40 lg:border-0">
+                <Link
+                    to={`/app/membro/${membro.id}`}
+                    title="Ver perfil completo"
+                    className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-3 py-2 lg:p-2 rounded-xl transition-all text-[11px] font-black uppercase tracking-widest text-primary hover:bg-primary/5"
+                >
+                    <User size={16} />
+                    <span className="lg:hidden">Ver Perfil</span>
+                </Link>
+
                 {!ehOMesmoUsuario && podeDesativar && (
                     <>
                         <button
@@ -512,7 +375,7 @@ function LinhaMembro({
                         {!membro.ativo && (
                             <button
                                 onClick={() => onLimpezaDefinitiva(membro)}
-                                title="Limpeza definitiva (sumir do mapa)"
+                                title="Limpeza definitiva"
                                 className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-3 py-2 lg:p-2 rounded-xl text-muted-foreground/40 hover:text-red-500 hover:bg-red-500/5 transition-all text-[11px] font-black uppercase tracking-widest"
                             >
                                 <Eraser size={16} />
@@ -522,7 +385,7 @@ function LinhaMembro({
                     </>
                 )}
                 {ehOMesmoUsuario && (
-                    <span className="text-[10px] text-primary/50 font-black uppercase tracking-widest italic pr-2">Seu Perfil</span>
+                    <span className="hidden lg:block text-[9px] text-primary/50 font-black uppercase tracking-widest italic pr-1 select-none">Você</span>
                 )}
             </div>
         </div>
@@ -536,9 +399,10 @@ interface BulkActionsProps {
     onClear: () => void;
     onBulkUpdate: (tipo: 'arquivar' | 'role', valor?: string) => void;
     onExport: () => void;
+    rolesDisponiveis: string[];
 }
 
-function BulkActions({ selecionados, onClear, onBulkUpdate, onExport }: BulkActionsProps) {
+function BulkActions({ selecionados, onClear, onBulkUpdate, onExport, rolesDisponiveis }: BulkActionsProps) {
     const podeDesativar = usarPermissaoAcesso('membros:desativar');
     const podeAlterarRole = usarPermissaoAcesso('membros:alterar_role');
 
@@ -561,10 +425,10 @@ function BulkActions({ selecionados, onClear, onBulkUpdate, onExport }: BulkActi
                 </button>
             </div>
 
-            <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none no-scrollbar">
+            <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
                 {podeDesativar && (
                     <button
-                        onClick={() => onBulkUpdate('arquivados' as any)}
+                        onClick={() => onBulkUpdate('arquivar')}
                         className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition-all border border-amber-500/20"
                     >
                         <Archive size={14} /> Arquivar
@@ -577,7 +441,7 @@ function BulkActions({ selecionados, onClear, onBulkUpdate, onExport }: BulkActi
                             <Shield size={14} /> Cargo <ChevronDown size={14} />
                         </button>
                         <div className="absolute bottom-full left-0 mb-3 w-44 bg-card border border-border rounded-2xl shadow-2xl overflow-hidden hidden group-hover/bulk-role:block animate-in fade-in slide-in-from-bottom-2 z-[60]">
-                            {['MEMBRO', 'SUBLIDER', 'LIDER', 'GESTOR', 'COORDENADOR', 'ADMIN'].map(role => (
+                            {rolesDisponiveis.map(role => (
                                 <button
                                     key={role}
                                     onClick={() => onBulkUpdate('role', role)}
@@ -606,37 +470,31 @@ function BulkActions({ selecionados, onClear, onBulkUpdate, onExport }: BulkActi
 interface ModalCadastroProps {
     aberto: boolean;
     aoFechar: () => void;
-    aoCadastrar: (email: string, role: string, equipeId: string | null) => Promise<{ sucesso: boolean; erro?: string }>;
-    equipes: any[];
+    aoCadastrar: (email: string, role: string) => Promise<{ sucesso: boolean; erro?: string }>;
+    rolesDisponiveis: string[];
 }
 
-function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, equipes }: ModalCadastroProps) {
-    const [passo, setPasso] = useState(1);
+function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, rolesDisponiveis }: ModalCadastroProps) {
     const [usuarioEmail, setUsuarioEmail] = useState('');
-    const [dominio, setDominio] = useState('@unieuro.com.br');
-    const [role, setRole] = useState('MEMBRO');
-    const [equipeId, setEquipeId] = useState<string | null>(null);
+    const [dominio, setDominio] = useState(`@${ambiente.dominioInstitucional}`);
+    const [role, setRole] = useState(rolesDisponiveis[0] || 'MEMBRO');
     const [salvando, setSalvando] = useState(false);
     const [erro, setErro] = useState<string | null>(null);
 
     useEffect(() => {
         if (aberto) {
-            setPasso(1);
             setUsuarioEmail('');
-            setDominio('@unieuro.com.br');
-            setRole('MEMBRO');
-            setEquipeId(null);
+            setDominio(`@${ambiente.dominioInstitucional}`);
+            setRole(rolesDisponiveis[0] || 'MEMBRO');
             setErro(null);
         }
-    }, [aberto]);
+    }, [aberto, rolesDisponiveis]);
 
-    const handleSubmit = async () => {
-        if (passo === 1) {
-            if (!usuarioEmail.trim()) {
-                setErro('Por favor, informe o e-mail.');
-                return;
-            }
-            setPasso(2);
+    const handleSubmit = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        
+        if (!usuarioEmail.trim()) {
+            setErro('Por favor, informe o e-mail.');
             return;
         }
 
@@ -644,7 +502,7 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, equipes }: ModalCa
         setErro(null);
 
         const emailCompleto = `${usuarioEmail.trim().toLowerCase()}${dominio}`;
-        const res = await aoCadastrar(emailCompleto, role, equipeId);
+        const res = await aoCadastrar(emailCompleto, role);
         setSalvando(false);
 
         if (res.sucesso) {
@@ -655,88 +513,53 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, equipes }: ModalCa
     };
 
     return (
-        <Modal aberto={aberto} aoFechar={aoFechar} titulo={passo === 1 ? "Cadastro - Passo 1: Identificação" : "Cadastro - Passo 2: Alocação"} largura="md">
+        <Modal aberto={aberto} aoFechar={aoFechar} titulo="Cadastrar Novo Membro" largura="md">
             <div className="space-y-5 py-2">
-                {passo === 1 ? (
-                    <>
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-1">E-mail Institucional</label>
-                            <div className="relative group/email">
-                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground transition-colors z-10" />
-                                <div className="flex items-center w-full bg-background border border-border rounded-2xl focus-within:ring-2 focus-within:ring-primary/20 transition-all overflow-hidden">
-                                    <input
-                                        type="text"
-                                        placeholder="ex: nome.sobrenome"
-                                        value={usuarioEmail}
-                                        onChange={e => setUsuarioEmail(e.target.value)}
-                                        onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-                                        className="flex-1 bg-transparent pl-10 pr-2 py-2.5 text-sm focus:outline-none"
-                                    />
-                                    <div className="flex items-center h-full border-l border-border px-3 relative">
-                                        <select
-                                            value={dominio}
-                                            onChange={e => setDominio(e.target.value)}
-                                            className="bg-transparent text-[13px] font-semibold focus:outline-none cursor-pointer appearance-none pr-5"
-                                        >
-                                            <option value={`@${ambiente.dominioInstitucional}`}>@{ambiente.dominioInstitucional}</option>
-                                        </select>
-                                        <ChevronDown size={14} className="absolute right-2.5 pointer-events-none opacity-40" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-1">Nível de Acesso</label>
-                            <div className="relative">
-                                <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <div className="space-y-2">
+                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-1">E-mail Institucional</label>
+                    <div className="relative group/email">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground transition-colors z-10" />
+                        <div className="flex items-center w-full bg-background border border-border rounded-2xl focus-within:ring-2 focus-within:ring-primary/20 transition-all overflow-hidden">
+                            <input
+                                type="text"
+                                placeholder="ex: nome.sobrenome"
+                                value={usuarioEmail}
+                                onChange={e => setUsuarioEmail(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+                                className="flex-1 bg-transparent pl-10 pr-2 py-2.5 text-sm focus:outline-none"
+                            />
+                            <div className="flex items-center h-full border-l border-border px-3 relative">
                                 <select
-                                    value={role}
-                                    onChange={e => setRole(e.target.value)}
-                                    className="w-full bg-background border border-border rounded-2xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer"
+                                    value={dominio}
+                                    onChange={e => setDominio(e.target.value)}
+                                    className="bg-transparent text-[13px] font-semibold focus:outline-none cursor-pointer appearance-none pr-5"
                                 >
-                                    <option value="MEMBRO">Membro (Padrão)</option>
-                                    <option value="SUBLIDER">Sublíder</option>
-                                    <option value="LIDER">Líder</option>
-                                    <option value="GESTOR">Gestor</option>
-                                    <option value="COORDENADOR">Coordenador</option>
-                                    <option value="ADMIN">Administrador Geral</option>
+                                    <option value={`@${ambiente.dominioInstitucional}`}>@{ambiente.dominioInstitucional}</option>
+                                    <option value="@unieuro.edu.br">@unieuro.edu.br</option>
                                 </select>
+                                <ChevronDown size={14} className="absolute right-2.5 pointer-events-none opacity-40" />
                             </div>
                         </div>
-                    </>
-                ) : (
-                    <>
+                    </div>
+                </div>
 
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-1">Alocação de Grupo</label>
-                            <div className="grid grid-cols-2 gap-3">
-                                {Array.from(new Set(equipes.map(e => e.grupo_id))).map((idG, ix) => {
-                                    const ex = equipes.find(eq => eq.grupo_id === idG);
-                                    return ex ? (
-                                        <button
-                                            key={idG}
-                                            type="button"
-                                            onClick={() => setEquipeId(ex.id)}
-                                            className={`p-3 rounded-2xl border text-center transition-all ${equipeId === ex.id ? 'bg-primary/10 border-primary text-primary shadow-sm' : 'border-border text-muted-foreground hover:bg-muted'}`}
-                                        >
-                                            <UsersIcon className="w-5 h-5 mx-auto mb-1 opacity-50" />
-                                            <span className="text-[11px] font-bold uppercase">{ex.grupo_nome || `Grupo ${ix + 1}`}</span>
-                                        </button>
-                                    ) : null;
-                                })}
-                                <button
-                                    type="button"
-                                    onClick={() => setEquipeId(null)}
-                                    className={`p-3 rounded-2xl border text-center transition-all ${equipeId === null ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 shadow-sm' : 'border-border text-muted-foreground hover:bg-muted'}`}
-                                >
-                                    <UserX className="w-5 h-5 mx-auto mb-1 opacity-50" />
-                                    <span className="text-[11px] font-bold uppercase">Sem Grupo</span>
-                                </button>
-                            </div>
-                        </div>
-                    </>
-                )}
+                <div className="space-y-2">
+                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-1">Nível de Acesso</label>
+                    <div className="relative">
+                        <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <select
+                            value={role}
+                            onChange={e => setRole(e.target.value)}
+                            className="w-full bg-background border border-border rounded-2xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer"
+                        >
+                            {rolesDisponiveis.map(roleOption => (
+                                <option key={roleOption} value={roleOption}>
+                                    {roleOption === 'ADMIN' ? 'Administrador Geral' : roleOption.charAt(0) + roleOption.slice(1).toLowerCase().replace('_', ' ')}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
 
                 {erro && (
                     <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-2xl text-xs flex items-center gap-2 animate-in shake duration-300">
@@ -745,17 +568,14 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, equipes }: ModalCa
                 )}
 
                 <div className="flex justify-end gap-3 pt-4">
-                    {passo === 2 && (
-                        <button type="button" onClick={() => setPasso(1)} disabled={salvando} className="px-4 py-2 text-sm font-bold text-muted-foreground hover:text-foreground mr-auto transition-colors">Voltar</button>
-                    )}
                     <button type="button" onClick={aoFechar} className="px-4 py-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-colors">Cancelar</button>
                     <button
                         type="button"
-                        disabled={salvando || (passo === 1 && !usuarioEmail.trim())}
-                        onClick={handleSubmit}
+                        disabled={salvando || !usuarioEmail.trim()}
+                        onClick={() => handleSubmit()}
                         className="bg-primary text-primary-foreground px-6 py-2 rounded-2xl text-sm font-bold hover:bg-primary/90 transition-all shadow-sm disabled:opacity-50 flex items-center gap-2"
                     >
-                        {salvando ? <Loader2 className="w-4 h-4 animate-spin" /> : passo === 1 ? 'Continuar' : 'Finalizar Cadastro'}
+                        {salvando ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Finalizar Cadastro'}
                     </button>
                 </div>
             </div>
@@ -773,7 +593,7 @@ function StatsCards({ membros }: { membros: Membro[] }) {
         const novosEsteMes = membros.filter(m => new Date(m.criado_em) >= inicioMes).length;
         const totalAtivos = membros.filter(m => m.ativo).length;
         const totalLideres = membros.filter(m => ['SUBLIDER', 'LIDER', 'GESTOR', 'COORDENADOR', 'ADMIN'].includes(m.role)).length;
-        const totalVisitantes = membros.filter(m => m.role === 'VISITANTE' || !m.role).length; // Fallback para registros antigos ou sem role
+        const totalVisitantes = membros.filter(m => !m.role || m.role === 'MEMBRO' && !m.nome).length;
 
         return {
             total: membros.length,
@@ -790,7 +610,7 @@ function StatsCards({ membros }: { membros: Membro[] }) {
                 { label: 'Total de Membros', valor: stats.total, icone: UsersIcon, cor: 'text-primary', bg: 'bg-primary/5', detalhe: stats.novos > 0 ? `+${stats.novos} este mês` : null },
                 { label: 'Membros Ativos', valor: stats.ativos, icone: UserCheck, cor: 'text-emerald-500', bg: 'bg-emerald-500/5', detalhe: stats.total > 0 ? `${Math.round((stats.ativos / stats.total) * 100)}%` : null },
                 { label: 'Lideranças', valor: stats.lideres, icone: Shield, cor: 'text-purple-400', bg: 'bg-purple-400/5', detalhe: 'Líderes & Admins' },
-                { label: 'Visitantes', valor: stats.visitantes, icone: Mail, cor: 'text-amber-500', bg: 'bg-amber-500/5', detalhe: 'Aguardando Papel' },
+                { label: 'Novos Acessos', valor: stats.visitantes, icone: Mail, cor: 'text-amber-500', bg: 'bg-amber-500/5', detalhe: 'Pendentes' },
             ].map((card) => (
                 <div key={card.label} className="bg-card border border-border rounded-2xl p-5 flex items-center gap-4 shadow-sm">
                     <div className={`w-10 h-10 rounded-xl ${card.bg} ${card.cor} flex items-center justify-center shrink-0`}>
@@ -820,40 +640,39 @@ export function GerenciarMembros() {
         membros,
         carregando,
         erro,
+        recarregar,
         salvandoIds,
         toasts,
         alterarRole,
         alternarStatus,
-        alterarEquipe,
-        equipes,
         cadastrarMembro,
-        removerMembro,
         limpezaDefinitiva,
-        esvaziarLixeira
     } = useGerenciarMembros();
 
-    const [modalLimpagemAberta, setModalLimpagemAberta] = useState(false);
-    const [membroParaLimpar, setMembroParaLimpar] = useState<Membro | null>(null);
+    const { configuracoes } = usarConfiguracoes();
+    const rolesDisponiveis = useMemo(() => {
+        if (!configuracoes?.permissoes_roles) return ['MEMBRO', 'SUBLIDER', 'LIDER', 'GESTOR', 'COORDENADOR', 'ADMIN'];
+        return Object.keys(configuracoes.permissoes_roles);
+    }, [configuracoes]);
 
     const [busca, setBusca] = useState('');
-    const buscaDebounced = useDebounce(busca, 300);
+    const buscaDebounced = usarDebounce(busca, 300);
     const [abaAtiva, setAbaAtiva] = useState<'ativos' | 'arquivados'>('ativos');
     const [modalAberto, setModalAberto] = useState(false);
     const [modalLoteAberto, setModalLoteAberto] = useState(false);
     const [membroParaExcluir, setMembroParaExcluir] = useState<Membro | null>(null);
+    const [membroParaLimpar, setMembroParaLimpar] = useState<Membro | null>(null);
     const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
     const [ultimoIdSelecionado, setUltimoIdSelecionado] = useState<string | null>(null);
+    const [pagina, setPagina] = useState(1);
+    const [itensPorPagina, setItensPorPagina] = useState(20);
 
     const podeCadastrar = usarPermissaoAcesso('membros:gerenciar');
-    const podeDesativar = usarPermissaoAcesso('membros:desativar');
 
-    const membrosFiltrados = useMemo(() => {
+    const listaFiltrada = useMemo(() => {
         let lista = membros;
-
-        // Filtro por Aba
         lista = lista.filter(m => abaAtiva === 'ativos' ? m.ativo : !m.ativo);
 
-        // Filtro por Busca
         if (buscaDebounced.trim()) {
             const lower = buscaDebounced.toLowerCase();
             lista = lista.filter(m =>
@@ -865,195 +684,136 @@ export function GerenciarMembros() {
         return lista;
     }, [membros, buscaDebounced, abaAtiva]);
 
+    const totalRegistros = listaFiltrada.length;
+    const totalPaginas = Math.ceil(totalRegistros / itensPorPagina) || 1;
+
+    // Garante que não ficamos numa página fantasma ao filtrar
+    if (pagina > totalPaginas && totalPaginas > 0) {
+        setPagina(totalPaginas);
+    }
+
+    const listaPaginada = useMemo(() => {
+        const startIndex = (pagina - 1) * itensPorPagina;
+        return listaFiltrada.slice(startIndex, startIndex + itensPorPagina);
+    }, [listaFiltrada, pagina, itensPorPagina]);
+
     const toggleSelecionado = useCallback((id: string, isShiftPressed?: boolean) => {
         setSelecionados(prev => {
             const next = new Set(prev);
 
             if (isShiftPressed && ultimoIdSelecionado) {
-                const idsFiltrados = membrosFiltrados.map(m => m.id);
-                const idxAtual = idsFiltrados.indexOf(id);
-                const idxUltimo = idsFiltrados.indexOf(ultimoIdSelecionado);
+                const idsVisiveis = listaFiltrada.map(m => m.id);
+                const idxAtual = idsVisiveis.indexOf(id);
+                const idxUltimo = idsVisiveis.indexOf(ultimoIdSelecionado);
 
                 if (idxAtual !== -1 && idxUltimo !== -1) {
                     const [inicio, fim] = [Math.min(idxAtual, idxUltimo), Math.max(idxAtual, idxUltimo)];
-                    const rangeIds = idsFiltrados.slice(inicio, fim + 1);
-
-                    // Se o último estava selecionado, seleciona o range. Se não, deseleciona.
-                    const selecionando = prev.has(ultimoIdSelecionado);
-                    rangeIds.forEach(rangeId => {
-                        if (selecionando) next.add(rangeId);
-                        else next.delete(rangeId);
-                    });
-
-                    setUltimoIdSelecionado(id);
-                    return next;
+                    const idsParaSelecionar = idsVisiveis.slice(inicio, fim + 1);
+                    idsParaSelecionar.forEach(idSel => next.add(idSel));
                 }
+            } else {
+                if (next.has(id)) next.delete(id);
+                else next.add(id);
             }
-
-            if (next.has(id)) next.delete(id);
-            else next.add(id);
 
             setUltimoIdSelecionado(id);
             return next;
         });
-    }, [membrosFiltrados, ultimoIdSelecionado]);
+    }, [listaFiltrada, ultimoIdSelecionado]);
 
-    const onBulkUpdate = async (tipo: 'arquivar' | 'role', valor?: string) => {
-        const ids = Array.from(selecionados);
-        const membrosAlvo = membros.filter(m => ids.includes(m.id));
-
-        for (const membro of membrosAlvo) {
-            if (tipo === 'arquivar') await alternarStatus(membro);
-            else if (tipo === 'role' && valor) await alterarRole(membro, valor);
+    const handleBulkUpdate = async (tipo: 'arquivar' | 'role', valor?: string) => {
+        const idsArray = Array.from(selecionados);
+        try {
+            if (tipo === 'arquivar') {
+                await Promise.all(idsArray.map(id => api.patch(`/api/usuarios/${id}/status`, { ativo: false })));
+            } else if (tipo === 'role' && valor) {
+                await Promise.all(idsArray.map(id => api.patch(`/api/usuarios/${id}/role`, { role: valor })));
+            }
+            await recarregar();
+            setSelecionados(new Set());
+        } catch (e) {
+            console.error('Erro em ação em lote:', e);
         }
-        setSelecionados(new Set());
     };
 
-    const onExportMembers = () => {
-        const ids = Array.from(selecionados);
-        const alvo = membros.filter(m => ids.includes(m.id));
-
-        let csv = 'Nome,Email,Role,Status,Criado Em\n';
-        alvo.forEach(m => {
-            csv += `${m.nome},${m.email},${m.role},${m.ativo ? 'Ativo' : 'Inativo'},${m.criado_em}\n`;
-        });
-
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.setAttribute("download", `membros_selecionados_${new Date().toISOString().split('T')[0]}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
-
-
-    const handleDeletar = async () => {
-        if (!membroParaExcluir) return;
-        const res = await removerMembro(membroParaExcluir);
-        if (res.sucesso) setMembroParaExcluir(null);
-    };
-
-    if (carregando) return <Carregando />;
-    if (erro) return <p className="text-red-400 text-center py-8">{erro}</p>;
+    if (carregando && membros.length === 0) return <Carregando />;
 
     return (
-        <div className="w-full space-y-10 flex flex-col h-full bg-background animate-in fade-in duration-500 pb-10">
+        <div className="space-y-6">
             <CabecalhoFuncionalidade
                 titulo="Gerenciar Membros"
-                subtitulo="Controle de acesso, papéis e ativação de contas."
+                subtitulo="Controle de acesso, papéis e status dos colaboradores."
                 icone={UserCog}
             >
-                <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
-                    <div className="relative w-full sm:w-72">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                        <input
-                            type="text"
-                            aria-label="Buscar membro"
-                            className="block w-full pl-9 pr-3 py-2 border border-border rounded-xl leading-5 bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all text-sm"
-                            placeholder="Buscar membro..."
-                            value={busca}
-                            onChange={e => setBusca(e.target.value)}
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto mt-4 md:mt-0">
+                    {/* Barra de Busca Dinâmica */}
+                    <div className="relative w-full sm:w-64 xl:w-80">
+                        <BarraBusca 
+                            valor={busca}
+                            aoMudar={setBusca}
+                            placeholder="Buscar por nome ou email..."
                         />
                     </div>
 
-                    <button
-                        onClick={() => setAbaAtiva(prev => prev === 'ativos' ? 'arquivados' : 'ativos')}
-                        title={abaAtiva === 'ativos' ? "Ver Arquivados" : "Ver Ativos"}
-                        className={`
-                            p-2 rounded-xl border transition-all duration-300 relative group/archive
-                            ${abaAtiva === 'arquivados'
-                                ? 'bg-amber-500/10 border-amber-500/30 text-amber-500'
-                                : 'bg-background border-border hover:border-primary/30 text-muted-foreground hover:text-primary'
-                            }
-                        `}
-                    >
-                        <Archive size={18} />
-                        {abaAtiva === 'arquivados' && (
-                            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-500 rounded-full border-2 border-background" />
-                        )}
-                    </button>
-
-                    {abaAtiva === 'arquivados' && membrosFiltrados.length > 0 && podeDesativar && (
+                    <div className="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0 flex-wrap justify-end">
+                        {/* Toggle Arquivados */}
                         <button
-                            onClick={() => setModalLimpagemAberta(true)}
-                            className="w-full sm:w-auto bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 px-4 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all border border-amber-500/20"
+                            onClick={() => setAbaAtiva(abaAtiva === 'ativos' ? 'arquivados' : 'ativos')}
+                            className={`shrink-0 p-2.5 rounded-2xl border transition-all flex items-center gap-2 relative ${abaAtiva === 'arquivados' ? 'bg-red-500/10 border-red-500/20 text-red-500 shadow-lg shadow-red-500/10' : 'bg-muted/40 border-border/50 text-muted-foreground hover:border-primary/30 hover:text-primary'}`}
+                            title={abaAtiva === 'ativos' ? "Ver Arquivados" : "Ver Ativos"}
                         >
-                            <Trash2 className="w-4 h-4" /> Esvaziar Lixeira
+                            <Archive size={18} />
+                            {membros.filter(m => !m.ativo).length > 0 && abaAtiva === 'ativos' && (
+                                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-[10px] font-black text-white flex items-center justify-center border-2 border-background animate-in zoom-in duration-300">
+                                    {membros.filter(m => !m.ativo).length}
+                                </span>
+                            )}
                         </button>
-                    )}
 
-                    {podeCadastrar && (
-                        <>
-                            <button
-                                onClick={() => setModalLoteAberto(true)}
-                                className="w-full sm:w-auto bg-accent hover:bg-accent/80 text-accent-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all"
-                            >
-                                <ListPlus className="w-4 h-4" /> Convites em Lote
-                            </button>
-
-
-                            <button
-                                onClick={() => setModalAberto(true)}
-                                className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all"
-                            >
-                                <UserCog className="w-4 h-4" /> Cadastrar Membro
-                            </button>
-                        </>
-                    )}
+                        {podeCadastrar && (
+                            <div className="flex gap-2 shrink-0">
+                                <button
+                                    onClick={() => setModalLoteAberto(true)}
+                                    className="bg-muted/40 hover:bg-muted/60 text-foreground px-4 py-2.5 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all border border-border/50 flex items-center gap-2"
+                                >
+                                    <ListPlus size={18} /> <span className="hidden sm:inline">Lote</span>
+                                </button>
+                                <button
+                                    onClick={() => setModalAberto(true)}
+                                    className="bg-primary text-primary-foreground px-4 sm:px-6 py-2.5 rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                                >
+                                    <UserCog size={18} /> <span className="hidden sm:inline">Novo Membro</span>
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </CabecalhoFuncionalidade>
 
             <StatsCards membros={membros} />
 
+            <div className="bg-card border border-border rounded-3xl overflow-hidden shadow-sm">
 
-            <div className="flex-1 bg-card border border-border rounded-xl flex flex-col shadow-sm overflow-hidden">
-                {/* Cabeçalho da tabela - Oculto no mobile */}
-                <div className="hidden lg:grid grid-cols-12 gap-4 p-4 border-b border-border bg-muted/80 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] items-center">
-                    <div className="col-span-1 flex justify-center">
-                        <button
-                            onClick={() => {
-                                if (selecionados.size === membrosFiltrados.length && membrosFiltrados.length > 0) {
-                                    setSelecionados(new Set());
-                                } else {
-                                    setSelecionados(new Set(membrosFiltrados.map(m => m.id)));
-                                }
-                            }}
-                            className="hover:text-primary transition-colors"
-                        >
-                            {selecionados.size > 0 && selecionados.size === membrosFiltrados.length
-                                ? <CheckSquare size={18} className="text-primary" />
-                                : selecionados.size > 0
-                                    ? <div className="w-[18px] h-[18px] bg-primary rounded flex items-center justify-center text-white shadow-sm"><X size={12} strokeWidth={3} /></div>
-                                    : <Square size={18} />
-                            }
-                        </button>
-                    </div>
-                    <div className="col-span-5 pl-2">Membro</div>
-                    <div className="col-span-1">Papel</div>
-                    <div className="col-span-1 text-center">GRUPO</div>
-                    <div className="col-span-2 text-center">Status</div>
-                    <div className="col-span-2 text-right pr-4 tracking-normal">Ações</div>
-                </div>
 
-                {/* Corpo da tabela */}
-                <div className="flex-1 overflow-y-auto divide-y divide-border">
-                    {membrosFiltrados.length === 0 ? (
-                        <div className="p-12 text-center text-muted-foreground min-h-[300px] flex flex-col items-center justify-center gap-3">
-                            <div className="w-12 h-12 rounded-full bg-muted/30 flex items-center justify-center text-muted-foreground/30">
-                                {abaAtiva === 'ativos' ? <UserCheck size={24} /> : <UserX size={24} />}
+                {/* Tabela de Membros */}
+                <div className="overflow-x-auto min-h-[400px]">
+                    {erro ? (
+                        <div className="flex flex-col items-center justify-center py-20 text-center px-4">
+                            <div className="w-16 h-16 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center mb-4">
+                                <AlertCircle size={32} />
                             </div>
-                            <p className="text-sm font-medium">
-                                {busca.trim()
-                                    ? `Nenhum membro encontrado em "${abaAtiva}" para a busca "${busca}".`
-                                    : abaAtiva === 'ativos' ? 'Nenhum membro ativo no sistema.' : 'Nenhum membro arquivado.'
-                                }
-                            </p>
+                            <h3 className="text-lg font-bold text-foreground">Erro ao carregar dados</h3>
+                            <p className="text-sm text-muted-foreground max-w-xs mt-2">{erro}</p>
+                            <button onClick={() => recarregar()} className="mt-6 px-6 py-2 bg-primary text-primary-foreground rounded-2xl text-sm font-bold">Tentar Novamente</button>
+                        </div>
+                    ) : listaFiltrada.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-24 text-center opacity-40">
+                            <UsersIcon size={48} className="mb-4" />
+                            <p className="text-sm font-bold uppercase tracking-widest">Nenhum membro encontrado</p>
+                            <p className="text-xs mt-1">Tente ajustar sua busca ou filtros.</p>
                         </div>
                     ) : (
-                        membrosFiltrados.map(membro => (
+                        listaPaginada.map(membro => (
                             <LinhaMembro
                                 key={membro.id}
                                 membro={membro}
@@ -1061,51 +821,61 @@ export function GerenciarMembros() {
                                 selecionado={selecionados.has(membro.id)}
                                 onToggleSelect={toggleSelecionado}
                                 onAlterarRole={alterarRole}
-                                onAlterarEquipe={alterarEquipe}
-                                equipes={equipes}
                                 onAlternarStatus={alternarStatus}
                                 onSolicitarExclusao={setMembroParaExcluir}
                                 onLimpezaDefinitiva={setMembroParaLimpar}
+                                rolesDisponiveis={rolesDisponiveis}
                             />
                         ))
                     )}
                 </div>
+
+                <Paginacao
+                    paginaAtual={pagina}
+                    totalPaginas={totalPaginas}
+                    totalRegistros={totalRegistros}
+                    itensPorPagina={itensPorPagina}
+                    itensListados={listaPaginada.length}
+                    aoMudarPagina={setPagina}
+                    aoMudarItensPorPagina={(num) => { setItensPorPagina(num); setPagina(1); }}
+                />
+
             </div>
+
+            <BulkActions
+                selecionados={selecionados}
+                onClear={() => setSelecionados(new Set())}
+                onBulkUpdate={handleBulkUpdate}
+                onExport={() => alert('Exportação em breve')}
+                rolesDisponiveis={rolesDisponiveis}
+            />
 
             <ModalCadastroMembro
                 aberto={modalAberto}
                 aoFechar={() => setModalAberto(false)}
                 aoCadastrar={cadastrarMembro}
-                equipes={equipes}
+                rolesDisponiveis={rolesDisponiveis}
             />
 
             <ModalConvitesEmLote
                 aberto={modalLoteAberto}
                 aoFechar={() => setModalLoteAberto(false)}
-                aoCadastrar={async (dados) => {
-                    const res = await cadastrarMembro(dados.email, 'MEMBRO');
-                    return res;
-                }}
-                recarregar={async () => {
-                    // O cadastrarMembro já recarrega, mas garantimos
-                }}
-            />
-
-            <BulkActions
-                selecionados={selecionados}
-                onClear={() => setSelecionados(new Set())}
-                onBulkUpdate={onBulkUpdate}
-                onExport={onExportMembers}
+                aoCadastrar={async (d) => cadastrarMembro(d.email, 'MEMBRO')}
+                recarregar={recarregar}
             />
 
             <ConfirmacaoExclusao
                 aberto={!!membroParaExcluir}
                 aoFechar={() => setMembroParaExcluir(null)}
-                aoConfirmar={handleDeletar}
-                titulo="Remover acesso do membro?"
-                descricao={`Esta ação desativará o acesso de ${membroParaExcluir?.nome ?? 'membro'} (@${membroParaExcluir?.email}) imediatamente. Os dados de histórico e logs serão preservados no sistema.`}
-                textoBotao="Sim, Remover Acesso"
-                carregando={salvandoIds.has(membroParaExcluir?.id ?? '')}
+                aoConfirmar={async () => {
+                    if (membroParaExcluir) {
+                        await alternarStatus(membroParaExcluir);
+                        setMembroParaExcluir(null);
+                    }
+                }}
+                titulo="Arquivar Membro?"
+                descricao={`O acesso de ${membroParaExcluir?.nome} será temporariamente suspenso.`}
+                textoBotao="Arquivar"
             />
 
             <ConfirmacaoExclusao
@@ -1117,25 +887,12 @@ export function GerenciarMembros() {
                         setMembroParaLimpar(null);
                     }
                 }}
-                titulo="Limpar registro definitivamente?"
-                descricao={`Esta ação removerá ${membroParaLimpar?.nome} totalmente da interface administrativa. O registro permanecerá no banco de dados para auditoria, mas não poderá mais ser visto ou restaurado por aqui.`}
-                textoBotao="Limpar do Mapa"
-                carregando={salvandoIds.has(membroParaLimpar?.id ?? '')}
-            />
-
-            <ConfirmacaoExclusao
-                aberto={modalLimpagemAberta}
-                aoFechar={() => setModalLimpagemAberta(false)}
-                aoConfirmar={async () => {
-                    await esvaziarLixeira();
-                    setModalLimpagemAberta(false);
-                }}
-                titulo="Esvaziar Lixeira?"
-                descricao={`Todos os ${membrosFiltrados.length} membros arquivados sumirão definitivamente desta visualização. Esta ação é voltada para limpeza da interface e NÃO pode ser desfeita.`}
-                textoBotao="Esvaziar Agora"
+                titulo="Remover Definitivamente?"
+                descricao={`Esta ação excluirá todos os dados de ${membroParaLimpar?.nome} permanentemente.`}
+                textoBotao="Remover Agora"
             />
 
             <ToastContainer toasts={toasts} />
-        </div >
+        </div>
     );
 }

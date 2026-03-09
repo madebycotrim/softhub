@@ -16,7 +16,7 @@ import { PaginaDashboard } from '../funcionalidades/dashboard/PaginaDashboard';
 import { PainelLogs } from '../funcionalidades/admin/PainelLogs';
 import { PainelJustificativas } from '../funcionalidades/admin/PainelJustificativas';
 import { GerenciarMembros } from '../funcionalidades/admin/GerenciarMembros';
-import PainelEquipes from '../funcionalidades/admin/PainelEquipes';
+
 import { PaginaConfiguracoes } from '../funcionalidades/admin/PaginaConfiguracoes';
 import PaginaRelatorios from '../funcionalidades/admin/PaginaRelatorios';
 
@@ -61,7 +61,7 @@ export const rotas = createBrowserRouter([
             { path: '/app/logs', element: <RotaProtegida roleMinimo="ADMIN"><LayoutPrincipal><PainelLogs /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/admin/membros', element: <RotaProtegida roleMinimo="ADMIN"><LayoutPrincipal><GerenciarMembros /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/admin/justificativas', element: <RotaProtegida roleMinimo="SUBLIDER"><LayoutPrincipal><PainelJustificativas /></LayoutPrincipal></RotaProtegida> },
-            { path: '/app/admin/organizacao', element: <RotaProtegida roleMinimo="LIDER"><LayoutPrincipal><PainelEquipes /></LayoutPrincipal></RotaProtegida> },
+
             { path: '/app/admin/relatorios', element: <RotaProtegida roleMinimo="SUBLIDER"><LayoutPrincipal><PaginaRelatorios /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/admin/configuracoes', element: <RotaProtegida roleMinimo="ADMIN"><LayoutPrincipal><PaginaConfiguracoes /></LayoutPrincipal></RotaProtegida> },
             { path: '*', element: <div className="p-6 text-destructive text-center text-xl font-bold">404 - Página não encontrada</div> },

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { 
     FileText, 
     Users, 
-    Search, 
     Download, 
     BarChart4, 
     User, 
@@ -12,6 +11,7 @@ import { usarRelatorios } from './usarRelatorios';
 import type { RelatorioFrequenciaMembro } from './usarRelatorios';
 import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
 import { Carregando } from '../../compartilhado/componentes/Carregando';
+import { BarraBusca } from '../../compartilhado/componentes/BarraBusca';
 import { 
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
@@ -199,13 +199,10 @@ export default function PaginaRelatorios() {
                         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                             <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground/60">Análise de Frequência Individual</h3>
                             <div className="relative w-full md:w-80">
-                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
-                                <input 
-                                    type="text" 
+                                <BarraBusca 
+                                    valor={busca}
+                                    aoMudar={setBusca}
                                     placeholder="Buscar membro..."
-                                    value={busca}
-                                    onChange={e => setBusca(e.target.value)}
-                                    className="w-full bg-muted/10 border border-border/20 rounded-2xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-4 focus:ring-primary/5 transition-all"
                                 />
                             </div>
                         </div>

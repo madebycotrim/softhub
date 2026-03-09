@@ -1,8 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { BarraLateral } from './BarraLateral';
 import { Menu, X, QrCode, Sun, Moon } from 'lucide-react';
-import { usarAutenticacao } from '../../funcionalidades/autenticacao/usarAutenticacao';
-import { Avatar } from './Avatar';
 import { usarTema } from '../../contexto/ContextoTema';
 import { Modal } from './Modal';
 import ScannerQR from '../../funcionalidades/autenticacao/ScannerQR';
@@ -18,7 +16,6 @@ interface LayoutPrincipalProps {
 export function LayoutPrincipal({ children }: LayoutPrincipalProps) {
     const [sidebarAberta, setSidebarAberta] = useState(false);
     const [scannerAberto, setScannerAberto] = useState(false);
-    const { usuario } = usarAutenticacao();
     const { tema, setTema } = usarTema();
 
     return (
@@ -70,9 +67,9 @@ export function LayoutPrincipal({ children }: LayoutPrincipalProps) {
                         <Menu size={22} strokeWidth={2.5} />
                     </button>
                     
-                    <div className="flex flex-col items-center leading-none">
-                        <span className="text-[13px] font-black text-foreground uppercase tracking-widest">SoftHub</span>
-                        <span className="text-[9px] text-primary font-black uppercase tracking-[0.2em] mt-0.5 opacity-60">Fábrica</span>
+                    <div className="flex flex-col  leading-none">
+                        <span className="text-[13px] font-black text-foreground uppercase tracking-widest text-center">Fábrica de Software</span>
+                        <span className="text-[9px] text-primary font-black uppercase tracking-[0.2em] mt-0.5 opacity-60">SoftHub</span>
                     </div>
 
                     <div className="flex items-center gap-2 -mr-1">
@@ -89,9 +86,6 @@ export function LayoutPrincipal({ children }: LayoutPrincipalProps) {
                         >
                             {tema === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
                         </button>
-                        <div className="ml-1 border-l border-border pl-3">
-                            <Avatar nome={usuario?.nome || ''} fotoPerfil={usuario?.foto_perfil || null} tamanho="sm" />
-                        </div>
                     </div>
                 </header>
 

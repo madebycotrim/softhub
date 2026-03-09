@@ -31,14 +31,8 @@ rotasUsuarios.get('/', autenticacaoRequerida(), verificarPermissao('membros:visu
     try {
         const query = `
             SELECT
-                u.id, u.nome, u.email, u.role, u.ativo, u.foto_perfil, u.bio, u.funcoes, u.criado_em,
-                u.equipe_id,
-                e.nome  AS equipe_nome,
-                u.grupo_id,
-                g.nome  AS grupo_nome
+                u.id, u.nome, u.email, u.role, u.ativo, u.foto_perfil, u.bio, u.funcoes, u.criado_em
             FROM usuarios u
-            LEFT JOIN equipes e ON u.equipe_id = e.id
-            LEFT JOIN grupos  g ON u.grupo_id  = g.id
             ORDER BY u.nome ASC
         `;
 
@@ -263,10 +257,9 @@ rotasUsuarios.post('/', autenticacaoRequerida(), verificarPermissao('membros:ger
     let email: string;
     let role: string;
     let funcoes: string[] | undefined;
-    let equipe_id: string | null | undefined;
 
     try {
-        ({ email, role, funcoes, equipe_id } = await c.req.json());
+        ({ email, role, funcoes } = await c.req.json());
     } catch {
         return c.json({ erro: 'Corpo da requisição inválido.' }, 400);
     }
@@ -276,6 +269,14 @@ rotasUsuarios.post('/', autenticacaoRequerida(), verificarPermissao('membros:ger
     }
 
     const emailLimpo = email.toLowerCase().trim();
+
+    // Verificação de Bootstrap (Regra 13 - Admin via env)
+    const { BOOTSTRAP_ADMIN_EMAIL } = c.env;
+    const listaBootstrap = (BOOTSTRAP_ADMIN_EMAIL || '').toLowerCase().split(',').map((e: any) => e.trim());
+    const isBootstrapAdmin = listaBootstrap.includes(emailLimpo);
+
+    // Força ADMIN se estiver na lista de bootstrap
+    const roleFinal = isBootstrapAdmin ? 'ADMIN' : role;
 
     // Validação de domínio obrigatória (Regra de Negócio)
     if (!emailLimpo.endsWith('@unieuro.com.br') && !emailLimpo.endsWith('@unieuro.edu.br')) {
@@ -296,9 +297,9 @@ rotasUsuarios.post('/', autenticacaoRequerida(), verificarPermissao('membros:ger
         const nomePadrao = emailLimpo.split('@')[0];
 
         const insertResult = await DB.prepare(
-            'INSERT INTO usuarios (id, nome, email, role, ativo, funcoes, equipe_id) VALUES (?, ?, ?, ?, 1, ?, ?)'
+            'INSERT INTO usuarios (id, nome, email, role, ativo, funcoes) VALUES (?, ?, ?, ?, 1, ?)'
         )
-            .bind(novoId, nomePadrao, emailLimpo, role, JSON.stringify(funcoes || []), equipe_id || null)
+            .bind(novoId, nomePadrao, emailLimpo, roleFinal, JSON.stringify(funcoes || []))
             .run();
 
         console.log('[POST /usuarios] INSERT meta:', JSON.stringify(insertResult.meta));
@@ -324,7 +325,7 @@ rotasUsuarios.post('/', autenticacaoRequerida(), verificarPermissao('membros:ger
                 usuarioRole: usuarioLogado.role,
                 acao: 'MEMBRO_PRE_CADASTRADO',
                 modulo: 'admin',
-                descricao: `Admin pré-cadastrou ${emailLimpo} com a role ${role}`,
+                descricao: `Admin pré-cadastrou ${emailLimpo} com a role ${roleFinal}${isBootstrapAdmin ? ' (Elevado via Bootstrap)' : ''}`,
                 ip: c.req.header('CF-Connecting-IP') ?? '',
                 entidadeTipo: 'usuarios',
                 entidadeId: novoId,
@@ -339,15 +340,11 @@ rotasUsuarios.post('/', autenticacaoRequerida(), verificarPermissao('membros:ger
                 id: novoId,
                 nome: nomePadrao,
                 email: emailLimpo,
-                role,
+                role: roleFinal,
                 ativo: true,
                 foto_perfil: null,
                 bio: null,
                 criado_em: new Date().toISOString(),
-                equipe_id: null,
-                equipe_nome: null,
-                grupo_id: null,
-                grupo_nome: null,
                 funcoes: [],
             },
         }, 201);

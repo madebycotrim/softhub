@@ -12,10 +12,6 @@ export interface Membro {
     foto_perfil: string | null;
     bio: string | null;
     criado_em: string;
-    equipe_id: string | null;
-    equipe_nome: string | null;
-    grupo_id: string | null;
-    grupo_nome: string | null;
     funcoes: string[]; // Lista de funções (ex: Frontend, Backend, UX)
 }
 
@@ -40,10 +36,6 @@ function normalizarMembro(m: unknown): Membro {
         foto_perfil: (raw.foto_perfil as string | null) ?? null,
         bio: (raw.bio as string | null) ?? null,
         criado_em: String(raw.criado_em ?? ''),
-        equipe_id: (raw.equipe_id as string | null) ?? null,
-        equipe_nome: (raw.equipe_nome as string | null) ?? null,
-        grupo_id: (raw.grupo_id as string | null) ?? null,
-        grupo_nome: (raw.grupo_nome as string | null) ?? null,
         funcoes: Array.isArray(raw.funcoes)
             ? raw.funcoes
             : typeof raw.funcoes === 'string'
@@ -125,7 +117,7 @@ export function usarMembros() {
     // ── Adicionar ─────────────────────────────────────────────────────────────
 
     const adicionarMembro = useCallback(async (
-        dados: { email: string; role: string; funcoes?: string[]; equipe_id?: string | null }
+        dados: { email: string; role: string; funcoes?: string[] }
     ): Promise<ResultadoOperacao> => {
         try {
             const res = await api.post('/api/usuarios', dados);

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Search, Filter, X } from 'lucide-react';
+import { Filter, X } from 'lucide-react';
 import type { FiltrosKanban } from './usarKanban';
 import { LABELS_PRIORIDADE, CORES_PRIORIDADE } from '../../utilitarios/constantes';
 import { Emblema } from '../../compartilhado/componentes/Emblema';
+import { BarraBusca } from '../../compartilhado/componentes/BarraBusca';
+import { usarDebounce } from '../../compartilhado/hooks/usarDebounce';
 
 interface PainelFiltrosProps {
     filtros: FiltrosKanban;
@@ -13,14 +15,13 @@ interface PainelFiltrosProps {
 export function PainelFiltrosKanban({ filtros, aoFiltrar }: PainelFiltrosProps) {
     const [buscaText, setBuscaText] = useState(filtros.busca || '');
     const [prioridades, setPrioridades] = useState<string[]>(filtros.prioridades || []);
+    
+    const buscaDebounced = usarDebounce(buscaText, 500);
 
-    // Debounce nativo no React (0.5s)
+    // Efeito para disparar aoFiltrar quando debounce atualiza
     useEffect(() => {
-        const handler = setTimeout(() => {
-            aoFiltrar({ ...filtros, busca: buscaText, prioridades });
-        }, 500);
-        return () => clearTimeout(handler);
-    }, [buscaText]);
+        aoFiltrar({ ...filtros, busca: buscaDebounced, prioridades });
+    }, [buscaDebounced]);
 
     const togglePrioridade = (pri: string) => {
         const novo = prioridades.includes(pri)
@@ -42,13 +43,10 @@ export function PainelFiltrosKanban({ filtros, aoFiltrar }: PainelFiltrosProps) 
         <div className="bg-card/80 backdrop-blur-md border border-border shadow-sm rounded-2xl p-4 mb-4 flex flex-col sm:flex-row gap-4 items-center justify-between transition-colors duration-300">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full flex-1">
                 <div className="relative w-full sm:max-w-md">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <input
-                        type="text"
+                    <BarraBusca 
+                        valor={buscaText}
+                        aoMudar={setBuscaText}
                         placeholder="Buscar por Título ou Descrição..."
-                        value={buscaText}
-                        onChange={e => setBuscaText(e.target.value)}
-                        className="w-full bg-background/50 border border-input rounded-2xl pl-9 pr-4 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
                     />
                 </div>
 

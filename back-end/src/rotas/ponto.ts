@@ -13,7 +13,40 @@ rotasPonto.get('/', autenticacaoRequerida(), verificarPermissao('ponto:visualiza
     const usuario = c.get('usuario') as any;
 
     try {
-        // Busca batidas de hoje
+        const agora = new Date();
+        const horaBrasilia = (agora.getUTCHours() - 3 + 24) % 24;
+        const hojeIso = agora.toISOString().split('T')[0];
+
+        // Busca batida mais recente de hoje
+        const ultimo = await DB.prepare(`
+            SELECT * FROM ponto_registros 
+            WHERE usuario_id = ? AND date(registrado_em) = date('now')
+            ORDER BY registrado_em DESC LIMIT 1
+        `).bind(usuario.id).first() as any;
+
+        // REGRA: Se tiver entrada aberta e passou das 17h, encerra automaticamente
+        if (ultimo?.tipo === 'entrada' && horaBrasilia >= 17) {
+            const dataSaidaAuto = `${hojeIso}T20:00:00Z`; // 17h Brasília = 20h UTC
+            
+            await DB.prepare(`
+                INSERT INTO ponto_registros (id, usuario_id, tipo, registrado_em, ip_origem)
+                VALUES (?, ?, ?, ?, ?)
+            `).bind(crypto.randomUUID(), usuario.id, 'saida', dataSaidaAuto, 'SISTEMA_AUTO').run();
+
+            await registrarLog(DB, {
+                usuarioId: usuario.id,
+                usuarioNome: usuario.nome,
+                usuarioEmail: usuario.email,
+                usuarioRole: usuario.role,
+                acao: 'PONTO_SAIDA_AUTO',
+                modulo: 'ponto',
+                descricao: `Saída automática processada às 17h (usuário esqueceu de bater)`,
+                ip: '127.0.0.1',
+                entidadeTipo: 'ponto_registros'
+            });
+        }
+
+        // Busca batidas de hoje (atualizado)
         const hoje = await DB.prepare(`
             SELECT * FROM ponto_registros 
             WHERE usuario_id = ? AND date(registrado_em) = date('now')
@@ -40,6 +73,14 @@ rotasPonto.get('/', autenticacaoRequerida(), verificarPermissao('ponto:visualiza
 rotasPonto.post('/', autenticacaoRequerida(), verificarPermissao('ponto:registrar'), validarRedeLocal, async (c: Context) => {
     const { DB } = c.env;
     const { tipo } = await c.req.json();
+
+    // Validação de horário: 13:00 às 17:00 (Brasília - UTC-3)
+    const agora = new Date();
+    const horaBrasilia = (agora.getUTCHours() - 3 + 24) % 24;
+
+    if (horaBrasilia < 13 || horaBrasilia >= 17) {
+        return c.json({ erro: 'O sistema de ponto só funciona das 13:00 às 17:00.' }, 403);
+    }
 
     try {
         const usuario = c.get('usuario') as any;
