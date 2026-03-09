@@ -31,7 +31,9 @@ export function usarLogs() {
     const [erro, setErro] = useState<string | null>(null);
 
     const [pagina, setPagina] = useState(1);
+    const [itensPorPagina, setItensPorPagina] = useState(20);
     const [totalPaginas, setTotalPaginas] = useState(1);
+    const [totalRegistros, setTotalRegistros] = useState(0);
 
     const [filtroModulo, setFiltroModulo] = useState('');
     const [filtroAcao, setFiltroAcao] = useState('');
@@ -42,7 +44,7 @@ export function usarLogs() {
     const carregar = async () => {
         try {
             setCarregando(true);
-            const params: any = { pagina };
+            const params: any = { pagina, itensPorPagina };
             if (filtroModulo) params.modulo = filtroModulo;
             if (filtroAcao) params.acao = filtroAcao;
             if (busca) params.busca = busca;
@@ -50,13 +52,14 @@ export function usarLogs() {
             if (dataFim) params.dataFim = dataFim;
 
             const [resLogs, resStats] = await Promise.all([
-                api.get('/api/logs', { params }).catch(() => ({ data: { dados: [], paginacao: { totalPaginas: 1 } } })),
+                api.get('/api/logs', { params }).catch(() => ({ data: { dados: [], paginacao: { totalPaginas: 1, total: 0 } } })),
                 api.get('/api/logs/estatisticas').catch(() => ({ data: { modulos: [] } }))
             ]);
 
             setLogs(resLogs.data.dados || []);
             setStats(resStats.data.modulos || []);
             setTotalPaginas(resLogs.data.paginacao?.totalPaginas || 1);
+            setTotalRegistros(resLogs.data.paginacao?.total || 0);
             setErro(null);
         } catch (e: any) {
             setErro(e.response?.data?.erro || 'Erro ao carregar os logs do sistema.');
@@ -67,7 +70,7 @@ export function usarLogs() {
 
     useEffect(() => {
         carregar();
-    }, [pagina, filtroModulo, filtroAcao, busca, dataInicio, dataFim]);
+    }, [pagina, itensPorPagina, filtroModulo, filtroAcao, busca, dataInicio, dataFim]);
 
     return {
         logs,
@@ -77,7 +80,10 @@ export function usarLogs() {
         recarregar: carregar,
         pagina,
         setPagina,
+        itensPorPagina,
+        setItensPorPagina,
         totalPaginas,
+        totalRegistros,
         filtroModulo,
         setFiltroModulo,
         filtroAcao,

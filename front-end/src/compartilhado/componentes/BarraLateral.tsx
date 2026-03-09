@@ -1,4 +1,4 @@
-import { FolderKanban, Clock, Users, Megaphone, LayoutDashboard, Database, Settings, LogOut, Sun, Moon, QrCode } from 'lucide-react';
+import { FolderKanban, Clock, Users, Megaphone, LayoutDashboard, Database, Settings, LogOut, Sun, Moon, QrCode, LayoutGrid, FileText } from 'lucide-react';
 import { useLocation, Link } from 'react-router';
 import { usarAutenticacao } from '../../funcionalidades/autenticacao/usarAutenticacao';
 import { usarTema } from '../../contexto/ContextoTema';
@@ -40,7 +40,9 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
         {
             label: 'Gestão',
             links: [
-                { label: 'Administração', path: '/app/admin/membros', icon: Settings },
+                { label: 'Membros', path: '/app/admin/membros', icon: Users },
+                { label: 'Estrutura', path: '/app/admin/organizacao', icon: LayoutGrid },
+                { label: 'Relatórios', path: '/app/admin/relatorios', icon: FileText },
                 ...(usuario?.role === 'ADMIN' ? [{ label: 'Configurações', path: '/app/admin/configuracoes', icon: Settings }] : []),
                 { label: 'Painel de Logs', path: '/app/logs', icon: Database },
             ],

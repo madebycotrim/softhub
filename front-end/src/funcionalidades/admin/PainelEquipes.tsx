@@ -2,23 +2,34 @@ import { useState } from 'react';
 import { usarOrganizacao } from './usarOrganizacao';
 import { usarMembros } from '../membros/usarMembros';
 import { Carregando } from '../../compartilhado/componentes/Carregando';
-import { Users, Plus, Trash, FolderTree, X } from 'lucide-react';
+import { 
+    Users, Plus, Trash, X, 
+    ArrowRightLeft, UserPlus, Info,
+    ShieldCheck, Crown, LayoutGrid, Network, 
+    ListTodo
+} from 'lucide-react';
 import { Modal } from '../../compartilhado/componentes/Modal';
 import { ConfirmacaoExclusao } from '../../compartilhado/componentes/ConfirmacaoExclusao';
 import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
 
+
+
 export default function PainelEquipes() {
-    const { grupos, equipes, carregando: carregandoOrg, criarGrupo, criarEquipe, excluirGrupo, excluirEquipe, alocarUsuario } = usarOrganizacao();
+    const { 
+        grupos, equipes, carregando: carregandoOrg, 
+        criarGrupo, criarEquipe, editarEquipe,
+        excluirGrupo, excluirEquipe, alocarUsuario 
+    } = usarOrganizacao();
     const { membros, carregando: carregandoMembros, recarregar: recarregarMembros } = usarMembros();
 
     const [modalGrupo, setModalGrupo] = useState(false);
     const [modalEquipe, setModalEquipe] = useState(false);
-    const [modalAlocacao, setModalAlocacao] = useState<{ aberto: boolean, equipeId: string | null }>({ aberto: false, equipeId: null });
-
+    
+    // Estados para criação
     const [novoGrupo, setNovoGrupo] = useState({ nome: '', descricao: '' });
-    const [novaEquipe, setNovaEquipe] = useState({ nome: '', descricao: '', grupo_id: '' });
+    const [novaEquipe, setNovaEquipe] = useState({ nome: '', descricao: '', lider_id: '', sub_lider_id: '' });
+    
     const [submetendo, setSubmetendo] = useState(false);
-
     const [exclusao, setExclusao] = useState<{ tipo: 'grupo' | 'equipe', id: string, aberto: boolean } | null>(null);
 
     const handleCriarGrupo = async (e: React.FormEvent) => {
@@ -41,7 +52,7 @@ export default function PainelEquipes() {
         try {
             await criarEquipe(novaEquipe);
             setModalEquipe(false);
-            setNovaEquipe({ nome: '', descricao: '', grupo_id: '' });
+            setNovaEquipe({ nome: '', descricao: '', lider_id: '', sub_lider_id: '' });
         } catch (error) {
             alert(error);
         } finally {
@@ -63,236 +74,358 @@ export default function PainelEquipes() {
         }
     };
 
-    const handleAlocar = async (membroId: string) => {
-        try {
-            await alocarUsuario(membroId, modalAlocacao.equipeId);
-            recarregarMembros();
-        } catch (error) {
-            alert(error);
-        }
-    };
-
     if (carregandoOrg || carregandoMembros) return <Carregando />;
 
     return (
-        <div className="w-full space-y-10 pb-20 animate-in fade-in duration-500">
-                <CabecalhoFuncionalidade
-                    titulo="Gestão de Equipes"
-                    subtitulo="Organize os membros em grupos e equipes de trabalho."
-                    icone={Users}
-                    variante="padrao"
-                >
+        <div className="w-full space-y-8 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <CabecalhoFuncionalidade
+                titulo="Estrutura Organizacional"
+                subtitulo="Gestão transversal de equipes e grupos de trabalho."
+                icone={LayoutGrid}
+            >
+                <div className="flex gap-3">
+                    <button
+                        onClick={() => setModalEquipe(true)}
+                        className="flex items-center gap-2 px-5 py-2.5 bg-purple-500 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-purple-500/20 hover:scale-105 active:scale-95 transition-all"
+                    >
+                        <Plus className="w-4 h-4 stroke-[3]" /> Nova Equipe
+                    </button>
                     <button
                         onClick={() => setModalGrupo(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent/80 text-accent-foreground rounded-2xl transition-colors border border-border"
+                        className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
                     >
-                        <Plus className="w-4 h-4" /> Novo Grupo
+                        <Plus className="w-4 h-4 stroke-[3]" /> Novo Grupo
                     </button>
-                </CabecalhoFuncionalidade>
+                </div>
+            </CabecalhoFuncionalidade>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    {/* Árvore de Grupos e Equipes */}
-                    <div className="lg:col-span-4 space-y-4">
-                        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                            <FolderTree className="w-4 h-4" /> Estrutura
-                        </h2>
-
-                        {grupos.length === 0 && (
-                            <div className="p-8 text-center bg-card border border-border/50 rounded-2xl border-dashed">
-                                <p className="text-sm text-muted-foreground italic">Nenhum grupo criado.</p>
-                            </div>
-                        )}
-
-                        {grupos.map(grupo => (
-                            <div key={grupo.id} className="bg-card border border-border/50 rounded-2xl overflow-hidden">
-                                <div className="p-4 bg-muted/50 flex justify-between items-center border-b border-border/50">
-                                    <div>
-                                        <h3 className="font-bold text-foreground">{grupo.nome}</h3>
-                                        {grupo.descricao && <p className="text-xs text-muted-foreground line-clamp-1">{grupo.descricao}</p>}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                {/* ── SEÇÃO 1: EQUIPES LÓGICAS (A Liderança é Única) ── */}
+                <div className="lg:col-span-12 space-y-4">
+                    <div className="flex items-center gap-3 px-2">
+                        <div className="p-2 bg-purple-500/10 rounded-xl text-purple-500">
+                            <ShieldCheck size={18} />
+                        </div>
+                        <h2 className="text-[13px] font-black uppercase tracking-[0.2em] text-foreground/80">Gestão de Equipes (Liderança Unificada)</h2>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                        {equipes.map(equipe => (
+                            <div key={equipe.id} className="bg-card/40 backdrop-blur-md border border-border/40 rounded-[32px] p-6 shadow-sm group hover:shadow-xl hover:border-purple-500/20 transition-all duration-500">
+                                <div className="flex justify-between items-start mb-6">
+                                    <div className="space-y-1">
+                                        <h3 className="text-[16px] font-black uppercase tracking-tight text-foreground">{equipe.nome}</h3>
+                                        <div className="flex items-center gap-2">
+                                            <Users size={12} className="text-muted-foreground/40" />
+                                            <span className="text-[10px] font-black text-muted-foreground/60 uppercase">{membros.filter(m => m.equipe_id === equipe.id).length} Membros</span>
+                                        </div>
                                     </div>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => { setNovaEquipe(prev => ({ ...prev, grupo_id: grupo.id })); setModalEquipe(true); }}
-                                            className="p-1.5 hover:bg-accent/50 text-muted-foreground hover:text-foreground rounded-lg transition-colors"
-                                            title="Adicionar Equipe"
-                                        >
-                                            <Plus className="w-4 h-4" />
-                                        </button>
-                                        <button
-                                            onClick={() => setExclusao({ tipo: 'grupo', id: grupo.id, aberto: true })}
-                                            className="p-1.5 hover:bg-destructive/10 text-muted-foreground hover:text-destructive rounded-lg transition-colors"
-                                        >
-                                            <Trash className="w-4 h-4" />
-                                        </button>
-                                    </div>
+                                    <button 
+                                        onClick={() => setExclusao({ tipo: 'equipe', id: equipe.id, aberto: true })}
+                                        className="p-2 text-muted-foreground/20 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                                    >
+                                        <Trash size={16} />
+                                    </button>
                                 </div>
-                                <div className="p-2 space-y-1">
-                                    {equipes.filter(e => e.grupo_id === grupo.id).map(equipe => (
-                                        <button
-                                            key={equipe.id}
-                                            onClick={() => setModalAlocacao({ aberto: true, equipeId: equipe.id })}
-                                            className={`w-full flex justify-between items-center px-3 py-2 rounded-2xl text-sm transition-colors ${modalAlocacao.equipeId === equipe.id ? 'bg-primary/20 text-primary border border-primary/50' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                                                }`}
-                                        >
-                                            <span>{equipe.nome}</span>
+
+                                <div className="space-y-4">
+                                    {/* Liderança Única da Equipe */}
+                                    <div className="space-y-3">
+                                        <div className="space-y-1.5">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded-lg text-muted-foreground">
-                                                    {membros.filter(m => m.equipe_id === equipe.id).length} membros
-                                                </span>
-                                                <div
-                                                    onClick={(e) => { e.stopPropagation(); setExclusao({ tipo: 'equipe', id: equipe.id, aberto: true }); }}
-                                                    className="p-1 hover:bg-destructive/10 rounded-lg text-muted-foreground hover:text-destructive"
-                                                >
-                                                    <X className="w-3 h-3" />
-                                                </div>
+                                                <Crown size={11} className="text-amber-500" />
+                                                <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 leading-none">Líder da Equipe</label>
                                             </div>
-                                        </button>
-                                    ))}
-                                    {equipes.filter(e => e.grupo_id === grupo.id).length === 0 && (
-                                        <p className="text-[10px] text-muted-foreground text-center py-2">Sem equipes.</p>
-                                    )}
+                                            <select 
+                                                value={equipe.lider_id || 'none'}
+                                                onChange={e => editarEquipe(equipe.id, { 
+                                                    nome: equipe.nome, 
+                                                    lider_id: e.target.value === 'none' ? undefined : e.target.value,
+                                                    sub_lider_id: equipe.sub_lider_id || undefined
+                                                })}
+                                                className="w-full bg-purple-500/5 border border-purple-500/10 rounded-2xl px-4 py-2.5 text-[12px] font-black outline-none text-foreground/80 focus:ring-4 focus:ring-purple-500/5 transition-all transition-all appearance-none"
+                                            >
+                                                <option value="none">Selecione o Líder...</option>
+                                                {membros.map(m => <option key={m.id} value={m.id}>{m.nome}</option>)}
+                                            </select>
+                                        </div>
+
+                                        <div className="space-y-1.5">
+                                            <div className="flex items-center gap-2">
+                                                <ShieldCheck size={11} className="text-blue-500" />
+                                                <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 leading-none">Sub-Líder</label>
+                                            </div>
+                                            <select 
+                                                value={equipe.sub_lider_id || 'none'}
+                                                onChange={e => editarEquipe(equipe.id, { 
+                                                    nome: equipe.nome, 
+                                                    sub_lider_id: e.target.value === 'none' ? undefined : e.target.value,
+                                                    lider_id: equipe.lider_id || undefined
+                                                })}
+                                                className="w-full bg-purple-500/5 border border-purple-500/10 rounded-2xl px-4 py-2.5 text-[12px] font-black outline-none text-foreground/80 focus:ring-4 focus:ring-purple-500/5 transition-all appearance-none"
+                                            >
+                                                <option value="none">Selecione o Sub...</option>
+                                                {membros.map(m => <option key={m.id} value={m.id}>{m.nome}</option>)}
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         ))}
+
+                        {equipes.length === 0 && (
+                            <div className="col-span-full py-12 bg-muted/5 border-2 border-dashed border-border/20 rounded-[40px] flex flex-col items-center justify-center space-y-4">
+                                <ListTodo size={40} className="text-muted-foreground/10" />
+                                <p className="text-[11px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 text-center">Nenhuma Equipe Definida</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <div className="lg:col-span-12 h-px bg-border/20 my-4" />
+
+                {/* ── SEÇÃO 2: OPERAÇÃO / GRUPOS (Turnos de trabalho) ── */}
+                <div className="lg:col-span-12 space-y-6">
+                    <div className="flex items-center justify-between px-2">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-primary/10 rounded-xl text-primary">
+                                <Network size={18} />
+                            </div>
+                            <h2 className="text-[13px] font-black uppercase tracking-[0.2em] text-foreground/80">Grupos de Trabalho (Escalabilidade)</h2>
+                        </div>
+                        <div className="flex items-center gap-4 bg-muted/20 px-4 py-2 rounded-2xl border border-border/20">
+                             <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                                <span className="text-[10px] font-black uppercase text-muted-foreground/60">Operação Ativa</span>
+                             </div>
+                        </div>
                     </div>
 
-                    {/* Lista de Membros para Alocação */}
-                    <div className="lg:col-span-8 space-y-4">
-                        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                            <Users className="w-4 h-4" />
-                            {modalAlocacao.equipeId
-                                ? `Membros da Equipe: ${equipes.find(e => e.id === modalAlocacao.equipeId)?.nome}`
-                                : 'Todos os Membros'}
-                        </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {grupos.map(grupo => (
+                            <div key={grupo.id} className="bg-card/20 backdrop-blur-sm border border-border/20 rounded-[40px] overflow-hidden flex flex-col">
+                                <div className="p-8 pb-6 border-b border-border/10 flex justify-between items-start bg-gradient-to-br from-primary/5 to-transparent">
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-3">
+                                            <h3 className="text-xl font-black uppercase tracking-tight text-foreground">{grupo.nome}</h3>
+                                            <div className="px-2.5 py-1 bg-primary/10 border border-primary/20 rounded-lg text-[9px] font-black text-primary">GRUPO</div>
+                                        </div>
 
-                        <div className="bg-card border border-border/50 rounded-2xl overflow-hidden shadow-sm">
-                            <table className="w-full text-left text-sm">
-                                <thead className="bg-muted/50 text-muted-foreground border-b border-border/50 uppercase text-[10px] font-bold tracking-widest">
-                                    <tr>
-                                        <th className="px-6 py-4">Membro</th>
-                                        <th className="px-6 py-4">Equipe Atual</th>
-                                        <th className="px-6 py-4">Ação</th>
+                                    </div>
+                                    <button
+                                        onClick={() => setExclusao({ tipo: 'grupo', id: grupo.id, aberto: true })}
+                                        className="p-3 text-muted-foreground/20 hover:text-red-500 hover:bg-red-500/10 rounded-2xl transition-all"
+                                    >
+                                        <Trash size={20} />
+                                    </button>
+                                </div>
+
+                                <div className="p-8 flex-1 space-y-6">
+                                    {/* Membros do Grupo Organizados por Equipe */}
+                                    {equipes.map(equipe => {
+                                        const membrosEquipeNoGrupo = membros.filter(m => m.equipe_id === equipe.id && m.grupo_id === grupo.id);
+                                        if (membrosEquipeNoGrupo.length === 0) return null;
+
+                                        return (
+                                            <div key={equipe.id} className="space-y-3">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-primary/40">{equipe.nome}</span>
+                                                    <div className="flex-1 h-px bg-border/10" />
+                                                </div>
+                                                <div className="grid grid-cols-1 gap-2">
+                                                    {membrosEquipeNoGrupo.map(m => (
+                                                        <div key={m.id} className="flex items-center justify-between p-3 bg-muted/5 rounded-[22px] border border-border/10">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-8 h-8 rounded-xl bg-background/80 flex items-center justify-center text-[11px] font-black text-foreground/30 shadow-sm border border-border/10">
+                                                                    {m.nome.charAt(0)}
+                                                                </div>
+                                                                <span className="text-[12px] font-bold text-foreground/80">{m.nome}</span>
+                                                            </div>
+                                                            <button 
+                                                                onClick={() => alocarUsuario(m.id, null, null).then(recarregarMembros)}
+                                                                className="p-1.5 text-muted-foreground/20 hover:text-red-500 transition-colors"
+                                                            >
+                                                                <X size={14} />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+
+                                    {membros.filter(m => m.grupo_id === grupo.id).length === 0 && (
+                                        <div className="py-12 border-2 border-dashed border-border/5 rounded-[32px] flex flex-col items-center justify-center space-y-4 opacity-30">
+                                            <UserPlus size={32} />
+                                            <p className="text-[10px] font-black uppercase tracking-widest">Aguardando Alocação</p>
+                                        </div>
+                                    )}
+
+                                    {/* Membros Sem Equipe no Grupo (Se houver) */}
+                                    {membros.filter(m => m.grupo_id === grupo.id && !m.equipe_id).length > 0 && (
+                                        <div className="pt-4 border-t border-border/5 space-y-3">
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-amber-500/40">Geral (Sem Equipe)</span>
+                                            <div className="flex flex-wrap gap-2">
+                                                {membros.filter(m => m.grupo_id === grupo.id && !m.equipe_id).map(m => (
+                                                    <div key={m.id} className="px-3 py-1.5 bg-amber-500/5 border border-amber-500/10 rounded-full text-[10px] font-bold text-amber-600/60 flex items-center gap-2">
+                                                        {m.nome}
+                                                        <X size={10} className="cursor-pointer" onClick={() => alocarUsuario(m.id, null, null).then(recarregarMembros)} />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* ── SEÇÃO 3: DIRETÓRIO DE ALOCAÇÃO RÁPIDA ── */}
+                <div className="lg:col-span-12">
+                   <section className="bg-card/40 backdrop-blur-md border border-border/40 rounded-[40px] shadow-sm flex flex-col overflow-hidden">
+                        <div className="p-8 border-b border-border/20 flex items-center justify-between bg-muted/5">
+                            <div className="flex items-center gap-5">
+                                <div className="p-4 bg-primary/10 rounded-[22px] text-primary">
+                                    <UserPlus size={24} strokeWidth={2.5} />
+                                </div>
+                                <div className="space-y-1">
+                                    <h2 className="text-[15px] font-black tracking-widest text-foreground uppercase">Diretório de Alocação Estratégica</h2>
+                                    <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest opacity-40">Mova membros entre grupos e equipes em tempo real</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead>
+                                    <tr className="bg-muted/10 border-b border-border/20">
+                                        <th className="px-10 py-5 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">Membro</th>
+                                        <th className="px-10 py-5 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 md:table-cell hidden">Equipe (Função)</th>
+                                        <th className="px-10 py-5 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">Grupo</th>
+                                        <th className="px-10 py-5 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 text-right">Controles</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-border/50">
-                                    {(modalAlocacao.equipeId
-                                        ? membros.filter(m => m.equipe_id === modalAlocacao.equipeId)
-                                        : membros
-                                    ).map(membro => (
-                                        <tr key={membro.id} className="text-foreground hover:bg-accent/30 transition-colors">
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold ring-1 ring-border uppercase text-muted-foreground">
+                                <tbody className="divide-y divide-border/10">
+                                    {membros.map(membro => (
+                                        <tr key={membro.id} className="hover:bg-primary/[0.02] transition-colors group">
+                                            <td className="px-10 py-5">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-[14px] bg-muted/40 border border-border/40 flex items-center justify-center text-[14px] font-black text-foreground/40 group-hover:bg-primary/10 group-hover:text-primary transition-all">
                                                         {membro.nome.charAt(0)}
                                                     </div>
                                                     <div>
-                                                        <p className="font-medium text-foreground">{membro.nome}</p>
-                                                        <p className="text-[10px] text-muted-foreground">{membro.email}</p>
+                                                        <p className="text-[13px] font-bold text-foreground">{membro.nome}</p>
+                                                        <p className="text-[10px] text-muted-foreground font-medium">{membro.email}</p>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-xs">
-                                                {membro.equipe_nome ? (
-                                                    <span className="text-muted-foreground">{membro.grupo_nome} / {membro.equipe_nome}</span>
-                                                ) : (
-                                                    <span className="text-muted-foreground italic">Não alocado</span>
-                                                )}
+                                            <td className="px-10 py-5 md:table-cell hidden">
+                                                <select
+                                                    className="w-full max-w-[180px] bg-purple-500/5 border border-purple-500/10 rounded-[16px] px-4 py-2 text-[11px] font-black outline-none focus:ring-4 focus:ring-purple-500/5 transition-all text-foreground"
+                                                    onChange={async (e) => {
+                                                        await alocarUsuario(membro.id, e.target.value === 'none' ? null : e.target.value, undefined);
+                                                        recarregarMembros();
+                                                    }}
+                                                    value={membro.equipe_id || 'none'}
+                                                >
+                                                    <option value="none">Sem Equipe</option>
+                                                    {equipes.map(e => (
+                                                        <option key={e.id} value={e.id}>{e.nome}</option>
+                                                    ))}
+                                                </select>
                                             </td>
-                                            <td className="px-6 py-4 text-right">
-                                                {modalAlocacao.equipeId ? (
-                                                    <button
-                                                        onClick={() => { handleAlocar(membro.id); }}
-                                                        className="p-2 hover:bg-destructive/10 text-destructive rounded-xl transition-colors"
-                                                        title="Remover da Equipe"
-                                                    >
-                                                        <X className="w-4 h-4" />
-                                                    </button>
-                                                ) : (
-                                                    <div className="flex gap-2 justify-end">
-                                                        <select
-                                                            className="bg-background border border-input rounded-xl px-2 py-1 text-xs focus:ring-1 focus:ring-primary text-foreground"
-                                                            onChange={(e) => {
-                                                                if (e.target.value) {
-                                                                    alocarUsuario(membro.id, e.target.value).then(() => recarregarMembros());
-                                                                }
-                                                            }}
-                                                            value={membro.equipe_id || ''}
-                                                        >
-                                                            <option value="">Trocar Equipe...</option>
-                                                            {equipes.map(e => (
-                                                                <option key={e.id} value={e.id}>{e.nome}</option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-                                                )}
+                                            <td className="px-10 py-5">
+                                                <select
+                                                    className="w-full max-w-[180px] bg-primary/5 border border-primary/10 rounded-[16px] px-4 py-2 text-[11px] font-black outline-none focus:ring-4 focus:ring-primary/5 transition-all text-foreground"
+                                                    onChange={async (e) => {
+                                                        await alocarUsuario(membro.id, undefined, e.target.value === 'none' ? null : e.target.value);
+                                                        recarregarMembros();
+                                                    }}
+                                                    value={membro.grupo_id || 'none'}
+                                                >
+                                                    <option value="none">Disponível</option>
+                                                    {grupos.map(g => (
+                                                        <option key={g.id} value={g.id}>{g.nome}</option>
+                                                    ))}
+                                                </select>
+                                            </td>
+                                            <td className="px-10 py-5 text-right">
+                                                <button 
+                                                    onClick={() => alocarUsuario(membro.id, null, null).then(recarregarMembros)}
+                                                    className="p-3 text-muted-foreground/10 hover:text-red-500 hover:bg-red-500/10 rounded-[18px] transition-all"
+                                                    title="Limpar Alocações"
+                                                >
+                                                    <ArrowRightLeft size={16} />
+                                                </button>
                                             </td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
                         </div>
-                    </div>
+                   </section>
+                </div>
             </div>
 
-            {/* Modais */}
-            <Modal aberto={modalGrupo} aoFechar={() => setModalGrupo(false)} titulo="Criar Novo Grupo">
-                <form onSubmit={handleCriarGrupo} className="space-y-4">
-                    <div>
-                        <label className="block text-xs font-medium text-muted-foreground mb-1">Nome do Grupo</label>
-                        <input
-                            type="text"
-                            required
-                            value={novoGrupo.nome}
-                            onChange={e => setNovoGrupo(prev => ({ ...prev, nome: e.target.value }))}
-                            className="w-full bg-background border border-input rounded-2xl px-4 py-2 text-foreground focus:ring-2 focus:ring-primary outline-none"
-                            placeholder="Ex: Desenvolvimento Web"
-                        />
+            {/* Modais de Fluxo */}
+            <Modal aberto={modalGrupo} aoFechar={() => setModalGrupo(false)} titulo="Configurar Novo Grupo de Trabalho">
+                <form onSubmit={handleCriarGrupo} className="space-y-6 pt-4">
+                    <div className="p-8 bg-primary/5 border border-primary/10 rounded-[32px] space-y-4">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 px-2">Identificação do Grupo</label>
+                            <input
+                                required
+                                value={novoGrupo.nome}
+                                onChange={e => setNovoGrupo(prev => ({ ...prev, nome: e.target.value }))}
+                                className="w-full bg-card border border-border/60 rounded-[22px] px-6 py-4 text-[14px] font-bold outline-none focus:ring-4 focus:ring-primary/5 transition-all"
+                                placeholder="Ex: Grupo Alpha, Grupo Beta..."
+                            />
+                        </div>
+
+
                     </div>
-                    <div>
-                        <label className="block text-xs font-medium text-muted-foreground mb-1">Descrição</label>
-                        <textarea
-                            value={novoGrupo.descricao}
-                            onChange={e => setNovoGrupo(prev => ({ ...prev, descricao: e.target.value }))}
-                            className="w-full bg-background border border-input rounded-2xl px-4 py-2 text-foreground focus:ring-2 focus:ring-primary outline-none h-20"
-                        />
-                    </div>
+
                     <button
                         type="submit"
                         disabled={submetendo}
-                        className="w-full py-2 bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground rounded-2xl font-bold transition-colors"
+                        className="w-full py-5 bg-primary text-primary-foreground rounded-[26px] font-black text-[12px] uppercase tracking-[0.2em] shadow-2xl shadow-primary/20 hover:scale-[1.02] transition-all"
                     >
-                        {submetendo ? 'Criando...' : 'Criar Grupo'}
+                        Ativar Grupo
                     </button>
                 </form>
             </Modal>
 
-            <Modal aberto={modalEquipe} aoFechar={() => setModalEquipe(false)} titulo="Criar Nova Equipe">
-                <form onSubmit={handleCriarEquipe} className="space-y-4">
-                    <div>
-                        <label className="block text-xs font-medium text-muted-foreground mb-1">Nome da Equipe</label>
-                        <input
-                            type="text"
-                            required
-                            value={novaEquipe.nome}
-                            onChange={e => setNovaEquipe(prev => ({ ...prev, nome: e.target.value }))}
-                            className="w-full bg-background border border-input rounded-2xl px-4 py-2 text-foreground focus:ring-2 focus:ring-primary outline-none"
-                            placeholder="Ex: Frontend Core"
-                        />
+            <Modal aberto={modalEquipe} aoFechar={() => setModalEquipe(false)} titulo="Definir Nova Equipe">
+                <form onSubmit={handleCriarEquipe} className="space-y-6 pt-4">
+                    <div className="p-8 bg-purple-500/5 border border-purple-500/10 rounded-[32px] space-y-4">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 px-2">Designação da Equipe</label>
+                            <input
+                                required
+                                value={novaEquipe.nome}
+                                onChange={e => setNovaEquipe(prev => ({ ...prev, nome: e.target.value }))}
+                                className="w-full bg-card border border-border/60 rounded-[22px] px-6 py-4 text-[14px] font-bold outline-none focus:ring-4 focus:ring-purple-500/5 transition-all"
+                                placeholder="Ex: Web Core, Auditoria, Mobile..."
+                            />
+                        </div>
+                        <div className="p-4 bg-muted/20 rounded-2xl flex items-center gap-3">
+                            <Info size={18} className="text-purple-500/40" />
+                            <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest leading-snug">
+                                Lideranças de equipes são transversais e gerenciam membros em todos os grupos.
+                            </p>
+                        </div>
                     </div>
-                    <div>
-                        <label className="block text-xs font-medium text-muted-foreground mb-1">Descrição</label>
-                        <textarea
-                            value={novaEquipe.descricao}
-                            onChange={e => setNovaEquipe(prev => ({ ...prev, descricao: e.target.value }))}
-                            className="w-full bg-background border border-input rounded-2xl px-4 py-2 text-foreground focus:ring-2 focus:ring-primary outline-none h-20"
-                        />
-                    </div>
+
                     <button
                         type="submit"
                         disabled={submetendo}
-                        className="w-full py-2 bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground rounded-2xl font-bold transition-colors"
+                        className="w-full py-5 bg-purple-500 text-white rounded-[26px] font-black text-[12px] uppercase tracking-[0.2em] shadow-2xl shadow-purple-500/20 hover:scale-[1.02] transition-all"
                     >
-                        {submetendo ? 'Criando...' : 'Criar Equipe'}
+                        Criar Equipe
                     </button>
                 </form>
             </Modal>
@@ -302,9 +435,9 @@ export default function PainelEquipes() {
                 aoFechar={() => setExclusao(null)}
                 aoConfirmar={handleExcluir}
                 titulo={`Excluir ${exclusao?.tipo === 'grupo' ? 'Grupo' : 'Equipe'}`}
-                descricao={`Esta ação desativará permanentemente o ${exclusao?.tipo === 'grupo' ? 'grupo e todas as suas equipes' : 'equipe'}. Os membros serão desalocados.`}
+                descricao="Esta ação é permanente e removerá todas as alocações vinculadas a esta entidade."
                 carregando={submetendo}
-                textoBotao="Desativar"
+                textoBotao="Confirmar Exclusão"
             />
         </div>
     );

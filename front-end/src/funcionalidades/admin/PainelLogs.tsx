@@ -1,4 +1,4 @@
-import { ShieldAlert, Activity, ChevronLeft, ChevronRight, FileText, Search, Calendar, X } from 'lucide-react';
+import { ShieldAlert, Activity, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, FileText, Search, Calendar, X } from 'lucide-react';
 import { formatarDataHora } from '../../utilitarios/formatadores';
 import { usarLogs } from './usarLogs';
 import { Carregando } from '../../compartilhado/componentes/Carregando';
@@ -10,7 +10,8 @@ import type { LogSistema } from './usarLogs';
 
 export function PainelLogs() {
     const {
-        logs, carregando, pagina, setPagina, totalPaginas,
+        logs, carregando, pagina, setPagina, totalPaginas, totalRegistros,
+        itensPorPagina, setItensPorPagina,
         filtroModulo, setFiltroModulo, filtroAcao, setFiltroAcao,
         busca, setBusca, dataInicio, setDataInicio, dataFim, setDataFim
     } = usarLogs();
@@ -213,27 +214,71 @@ export function PainelLogs() {
                     )}
                 </div>
 
-                {/* Paginação */}
-                <div className="p-4 border-t border-border bg-muted/80 flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">
-                        Página <span className="font-medium text-foreground">{pagina}</span> de <span className="font-medium text-foreground">{totalPaginas}</span>
-                    </span>
-                    <div className="flex items-center gap-2">
+                {/* Paginação Avançada */}
+                <div className="p-4 border-t border-border bg-muted/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-6">
+                        {/* Selector Itens por Página */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Exibir</span>
+                            <select
+                                value={itensPorPagina}
+                                onChange={e => { setItensPorPagina(Number(e.target.value)); setPagina(1); }}
+                                className="bg-background border border-border rounded-lg px-2 py-1 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/10"
+                            >
+                                <option value={20}>20</option>
+                                <option value={50}>50</option>
+                                <option value={100}>100</option>
+                            </select>
+                        </div>
+                        
+                        <span className="text-xs text-muted-foreground font-medium">
+                            Mostrando <span className="text-foreground font-bold">{logs.length}</span> de <span className="text-foreground font-bold">{totalRegistros}</span> registros
+                        </span>
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                        <button
+                            disabled={pagina === 1 || carregando}
+                            onClick={() => setPagina(1)}
+                            className="w-10 h-9 rounded-lg border border-border text-foreground hover:bg-accent disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center justify-center"
+                            title="Primeira Página"
+                        >
+                            <ChevronsLeft className="w-4 h-4" />
+                        </button>
+
                         <button
                             disabled={pagina === 1 || carregando}
                             onClick={() => setPagina(p => p - 1)}
-                            className="p-2 rounded-xl border border-border text-foreground hover:bg-accent disabled:opacity-50 disabled:pointer-events-none transition-colors"
-                            title="Página Anterior"
+                            className="h-9 px-3 rounded-lg border border-border text-foreground hover:bg-accent disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center gap-1.5"
                         >
                             <ChevronLeft className="w-4 h-4" />
+                            <span className="text-xs font-bold">Anterior</span>
                         </button>
+
+                        <div className="flex items-center px-4 bg-background border border-border rounded-lg h-9">
+                            <span className="text-xs font-bold">
+                                <span className="text-primary">{pagina}</span>
+                                <span className="mx-2 text-muted-foreground/40">/</span>
+                                <span className="text-muted-foreground">{totalPaginas}</span>
+                            </span>
+                        </div>
+
                         <button
                             disabled={pagina === totalPaginas || carregando}
                             onClick={() => setPagina(p => p + 1)}
-                            className="p-2 rounded-xl border border-border text-foreground hover:bg-accent disabled:opacity-50 disabled:pointer-events-none transition-colors"
-                            title="Próxima Página"
+                            className="h-9 px-3 rounded-lg border border-border text-foreground hover:bg-accent disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center gap-1.5"
                         >
+                            <span className="text-xs font-bold">Próxima</span>
                             <ChevronRight className="w-4 h-4" />
+                        </button>
+
+                        <button
+                            disabled={pagina === totalPaginas || carregando}
+                            onClick={() => setPagina(totalPaginas)}
+                            className="w-10 h-9 rounded-lg border border-border text-foreground hover:bg-accent disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center justify-center"
+                            title="Última Página"
+                        >
+                            <ChevronsRight className="w-4 h-4" />
                         </button>
                     </div>
                 </div>

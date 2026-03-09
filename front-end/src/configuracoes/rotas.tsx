@@ -18,6 +18,7 @@ import { PainelJustificativas } from '../funcionalidades/admin/PainelJustificati
 import { GerenciarMembros } from '../funcionalidades/admin/GerenciarMembros';
 import PainelEquipes from '../funcionalidades/admin/PainelEquipes';
 import { PaginaConfiguracoes } from '../funcionalidades/admin/PaginaConfiguracoes';
+import PaginaRelatorios from '../funcionalidades/admin/PaginaRelatorios';
 
 /**
  * Layout raiz — renderizado em TODAS as rotas.
@@ -61,6 +62,7 @@ export const rotas = createBrowserRouter([
             { path: '/app/admin/membros', element: <RotaProtegida roleMinimo="ADMIN"><LayoutPrincipal><GerenciarMembros /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/admin/justificativas', element: <RotaProtegida roleMinimo="LIDER_EQUIPE"><LayoutPrincipal><PainelJustificativas /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/admin/organizacao', element: <RotaProtegida roleMinimo="LIDER_GRUPO"><LayoutPrincipal><PainelEquipes /></LayoutPrincipal></RotaProtegida> },
+            { path: '/app/admin/relatorios', element: <RotaProtegida roleMinimo="LIDER_EQUIPE"><LayoutPrincipal><PaginaRelatorios /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/admin/configuracoes', element: <RotaProtegida roleMinimo="ADMIN"><LayoutPrincipal><PaginaConfiguracoes /></LayoutPrincipal></RotaProtegida> },
             { path: '*', element: <div className="p-6 text-destructive text-center text-xl font-bold">404 - Página não encontrada</div> },
         ],

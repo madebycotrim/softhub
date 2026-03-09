@@ -81,8 +81,9 @@ rotasOrganizacao.patch('/grupos/:id', autenticacaoRequerida(), async (c) => {
             dadosNovos: { nome, descricao }
         });
         return c.json({ sucesso: true });
-    } catch (e) {
-        return c.json({ erro: 'Falha ao editar grupo' }, 500);
+    } catch (e: any) {
+        console.error('[ERRO EDITAR GRUPO]', e);
+        return c.json({ erro: 'Falha ao editar grupo', detalhe: e.message }, 500);
     }
 });
 
@@ -117,11 +118,14 @@ rotasOrganizacao.get('/equipes', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
     try {
         const query = `
-            SELECT e.*, g.nome as grupo_nome 
-            FROM equipes e 
-            JOIN grupos g ON e.grupo_id = g.id 
-            WHERE e.ativo = 1 AND g.ativo = 1
-            ORDER BY g.nome ASC, e.nome ASC
+            SELECT e.*,
+                   u1.nome as lider_nome, 
+                   u2.nome as sub_lider_nome 
+            FROM equipes e
+            LEFT JOIN usuarios u1 ON e.lider_id = u1.id
+            LEFT JOIN usuarios u2 ON e.sub_lider_id = u2.id
+            WHERE e.ativo = 1
+            ORDER BY e.nome ASC
         `;
         const { results } = await DB.prepare(query).all();
         return c.json(results);
@@ -135,23 +139,23 @@ rotasOrganizacao.post('/equipes', autenticacaoRequerida(), async (c) => {
     const usuario = c.get('usuario');
     if (!verificarPermissaoAdminLiderGrupo(usuario.role)) return c.json({ erro: 'Acesso negado' }, 403);
 
-    const { grupo_id, nome, descricao } = await c.req.json();
-    if (!grupo_id || !nome) return c.json({ erro: 'Grupo e Nome são obrigatórios' }, 400);
+    const { nome, descricao, lider_id, sub_lider_id } = await c.req.json();
+    if (!nome) return c.json({ erro: 'Nome é obrigatório' }, 400);
 
     try {
         const id = crypto.randomUUID();
-        await DB.prepare('INSERT INTO equipes (id, grupo_id, nome, descricao) VALUES (?, ?, ?, ?)')
-            .bind(id, grupo_id, nome, descricao || null).run();
+        await DB.prepare('INSERT INTO equipes (id, nome, descricao, lider_id, sub_lider_id) VALUES (?, ?, ?, ?, ?)')
+            .bind(id, nome, descricao || null, lider_id || null, sub_lider_id || null).run();
 
         await registrarLog(DB, {
             usuarioId: usuario.id,
             acao: 'ORG_EQUIPE_CRIADA',
             modulo: 'organizacao',
-            descricao: `Criou a equipe "${nome}"`,
+            descricao: `Criou o squad "${nome}"`,
             ip: c.req.header('CF-Connecting-IP') ?? '',
             entidadeTipo: 'equipes',
             entidadeId: id,
-            dadosNovos: { grupo_id, nome, descricao }
+            dadosNovos: { nome, descricao, lider_id, sub_lider_id }
         });
         return c.json({ sucesso: true, id });
     } catch (e) {
@@ -165,20 +169,20 @@ rotasOrganizacao.patch('/equipes/:id', autenticacaoRequerida(), async (c) => {
     const usuario = c.get('usuario');
     if (!verificarPermissaoAdminLiderGrupo(usuario.role)) return c.json({ erro: 'Acesso negado' }, 403);
 
-    const { nome, descricao, grupo_id } = await c.req.json();
+    const { nome, descricao, lider_id, sub_lider_id } = await c.req.json();
     try {
-        await DB.prepare('UPDATE equipes SET nome = ?, descricao = ?, grupo_id = ? WHERE id = ?')
-            .bind(nome, descricao, grupo_id, id).run();
+        await DB.prepare('UPDATE equipes SET nome = ?, descricao = ?, lider_id = ?, sub_lider_id = ? WHERE id = ?')
+            .bind(nome, descricao, lider_id, sub_lider_id, id).run();
 
         await registrarLog(DB, {
             usuarioId: usuario.id,
             acao: 'ORG_EQUIPE_EDITADA',
             modulo: 'organizacao',
-            descricao: `Editou a equipe "${nome}"`,
+            descricao: `Editou o squad "${nome}"`,
             ip: c.req.header('CF-Connecting-IP') ?? '',
             entidadeTipo: 'equipes',
             entidadeId: id,
-            dadosNovos: { nome, descricao, grupo_id }
+            dadosNovos: { nome, descricao, lider_id, sub_lider_id }
         });
         return c.json({ sucesso: true });
     } catch (e) {
@@ -219,24 +223,23 @@ rotasOrganizacao.patch('/alocacao/:usuarioId', autenticacaoRequerida(), async (c
     const { DB } = c.env;
     const reqUserId = c.req.param('usuarioId');
     const usuario = c.get('usuario');
-    // Apenas ADMIN ou LIDER_GRUPO para mudar alocação
     if (!verificarPermissaoAdminLiderGrupo(usuario.role)) return c.json({ erro: 'Acesso negado' }, 403);
 
-    const { equipe_id } = await c.req.json(); // Se null, é desvinculação
+    const { equipe_id, grupo_id } = await c.req.json();
 
     try {
-        await DB.prepare('UPDATE usuarios SET equipe_id = ? WHERE id = ?')
-            .bind(equipe_id || null, reqUserId).run();
+        await DB.prepare('UPDATE usuarios SET equipe_id = COALESCE(?, equipe_id), grupo_id = COALESCE(?, grupo_id) WHERE id = ?')
+            .bind(equipe_id === 'clear' ? null : (equipe_id || null), grupo_id === 'clear' ? null : (grupo_id || null), reqUserId).run();
 
         await registrarLog(DB, {
             usuarioId: usuario.id,
             acao: 'ORG_USUARIO_ALOCADO',
             modulo: 'organizacao',
-            descricao: `Usuário ${reqUserId} alocado para equipe ${equipe_id || 'Nenhuma'}`,
+            descricao: `Usuário ${reqUserId} alocado: Squad ${equipe_id || 'Mantida'} / Polo ${grupo_id || 'Mantido'}`,
             ip: c.req.header('CF-Connecting-IP') ?? '',
             entidadeTipo: 'usuarios',
             entidadeId: reqUserId,
-            dadosNovos: { equipe_id }
+            dadosNovos: { equipe_id, grupo_id }
         });
         return c.json({ sucesso: true });
     } catch (e) {

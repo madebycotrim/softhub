@@ -136,7 +136,7 @@ export default function ScannerQR({ aoFechar }: ScannerQRProps) {
                     <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center mx-auto text-blue-600 border border-slate-200 relative shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] transition-transform hover:scale-105 duration-500">
                         <Camera size={48} strokeWidth={1.5} />
                         {status === 'pedindo_permissao' && (
-                            <div className="absolute inset-0 border-[3px] border-blue-600 border-t-transparent rounded-2xl animate-spin" />
+                            <div className="absolute -inset-1.5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                         )}
                         {/* Glow effect */}
                         <div className="absolute -inset-4 bg-blue-500/5 rounded-[2.5rem] -z-10 blur-xl" />

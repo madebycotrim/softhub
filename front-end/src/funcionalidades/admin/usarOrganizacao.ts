@@ -14,10 +14,12 @@ export interface Grupo {
 
 export interface Equipe {
     id: string;
-    grupo_id: string;
-    grupo_nome?: string;
     nome: string;
     descricao: string | null;
+    lider_id: string | null;
+    sub_lider_id: string | null;
+    lider_nome?: string;
+    sub_lider_nome?: string;
     ativo: number;
 }
 
@@ -66,12 +68,21 @@ export function usarOrganizacao() {
         }
     };
 
-    const criarEquipe = async (dados: { grupo_id: string, nome: string, descricao?: string }) => {
+    const criarEquipe = async (dados: { nome: string, descricao?: string, lider_id?: string, sub_lider_id?: string }) => {
         try {
             await api.post('/api/organizacao/equipes', dados);
             await carregarDados();
         } catch (e: any) {
             throw new Error(e.response?.data?.erro || 'Falha ao criar equipe');
+        }
+    };
+
+    const editarEquipe = async (id: string, dados: { nome: string, descricao?: string, lider_id?: string, sub_lider_id?: string }) => {
+        try {
+            await api.patch(`/api/organizacao/equipes/${id}`, dados);
+            await carregarDados();
+        } catch (e: any) {
+            throw new Error(e.response?.data?.erro || 'Falha ao editar equipe');
         }
     };
 
@@ -93,9 +104,12 @@ export function usarOrganizacao() {
         }
     };
 
-    const alocarUsuario = async (usuarioId: string, equipeId: string | null) => {
+    const alocarUsuario = async (usuarioId: string, equipeId?: string | null, grupoId?: string | null) => {
         try {
-            await api.patch(`/api/organizacao/alocacao/${usuarioId}`, { equipe_id: equipeId });
+            await api.patch(`/api/organizacao/alocacao/${usuarioId}`, { 
+                equipe_id: equipeId === undefined ? undefined : (equipeId || 'clear'),
+                grupo_id: grupoId === undefined ? undefined : (grupoId || 'clear')
+            });
         } catch (e: any) {
             throw new Error(e.response?.data?.erro || 'Falha ao alocar usuário');
         }
@@ -109,6 +123,7 @@ export function usarOrganizacao() {
         criarGrupo,
         editarGrupo,
         criarEquipe,
+        editarEquipe,
         excluirGrupo,
         excluirEquipe,
         alocarUsuario,

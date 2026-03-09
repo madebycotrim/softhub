@@ -1,0 +1,136 @@
+import { Hono } from 'hono';
+import { Env } from '../index';
+import { autenticacaoRequerida, verificarRole } from '../middleware/auth';
+
+const rotasRelatorios = new Hono<{ Bindings: Env }>();
+
+/**
+ * 📊 RELATÓRIO DE ESTRUTURA ORGANIZACIONAL
+ * Retorna contagem de membros por grupo e equipe, além de lideranças.
+ */
+rotasRelatorios.get('/organizacao', autenticacaoRequerida(), verificarRole(['ADMIN', 'LIDER_GRUPO']), async (c) => {
+    const { DB } = c.env;
+
+    try {
+        // 1. Resumo de Grupos
+        const gruposResumo = await DB.prepare(`
+            SELECT 
+                g.id,
+                g.nome,
+                g.ativo,
+                (SELECT nome FROM usuarios WHERE id = g.lider_id) as lider_nome,
+                (SELECT COUNT(*) FROM equipes WHERE id IN (SELECT id FROM equipes WHERE id IN (SELECT equipe_id FROM usuarios WHERE grupo_id = g.id))) as total_equipes,
+                (SELECT COUNT(*) FROM usuarios WHERE grupo_id = g.id AND ativo = 1) as total_membros
+            FROM grupos g
+            WHERE g.ativo = 1
+        `).all();
+
+        // 2. Resumo de Equipes
+        const equipesResumo = await DB.prepare(`
+            SELECT 
+                e.id,
+                e.nome,
+                e.ativo,
+                (SELECT nome FROM usuarios WHERE id = e.lider_id) as lider_nome,
+                (SELECT g.nome FROM grupos g WHERE g.id IN (SELECT grupo_id FROM usuarios WHERE equipe_id = e.id LIMIT 1)) as grupo_nome,
+                (SELECT COUNT(*) FROM usuarios WHERE equipe_id = e.id AND ativo = 1) as total_membros
+            FROM equipes e
+            WHERE e.ativo = 1
+        `).all();
+
+        return c.json({
+            grupos: gruposResumo.results,
+            equipes: equipesResumo.results
+        });
+    } catch (erro) {
+        console.error('[ERRO DB] GET /relatorios/organizacao', erro);
+        return c.json({ erro: 'Falha ao gerar relatório organizacional' }, 500);
+    }
+});
+
+/**
+ * 📅 RELATÓRIO GERAL DE FREQUÊNCIA
+ * Retorna métricas agregadas de presença e justificativas.
+ */
+rotasRelatorios.get('/frequencia/geral', autenticacaoRequerida(), verificarRole(['ADMIN', 'LIDER_GRUPO']), async (c) => {
+    const { DB } = c.env;
+
+    try {
+        // Presenças diárias nos últimos 30 dias
+        const presencasDiarias = await DB.prepare(`
+            SELECT 
+                date(registrado_em) as data,
+                COUNT(DISTINCT usuario_id) as total_presentes
+            FROM ponto_registros
+            WHERE registrado_em >= date('now', '-30 days')
+            AND tipo = 'ENTRADA'
+            GROUP BY date(registrado_em)
+            ORDER BY data ASC
+        `).all();
+
+        // Status das justificativas (Aprovadas vs Pendentes)
+        const justificativasStatus = await DB.prepare(`
+            SELECT 
+                status,
+                COUNT(*) as total
+            FROM justificativas_ponto
+            WHERE ativo = 1
+            GROUP BY status
+        `).all();
+
+        // Tipos de justificativas mais comuns
+        const justificativasTipos = await DB.prepare(`
+            SELECT 
+                tipo,
+                COUNT(*) as total
+            FROM justificativas_ponto
+            WHERE ativo = 1 AND status = 'aprovada'
+            GROUP BY tipo
+        `).all();
+
+        return c.json({
+            tendencia: presencasDiarias.results,
+            statusJustificativas: justificativasStatus.results,
+            tiposJustificativas: justificativasTipos.results
+        });
+    } catch (erro) {
+        console.error('[ERRO DB] GET /relatorios/frequencia/geral', erro);
+        return c.json({ erro: 'Falha ao gerar relatório de frequência geral' }, 500);
+    }
+});
+
+/**
+ * 👤 RELATÓRIO DE FREQUÊNCIA POR MEMBRO
+ * Retorna o histórico resumido de cada membro.
+ */
+rotasRelatorios.get('/frequencia/membros', autenticacaoRequerida(), verificarRole(['ADMIN', 'LIDER_GRUPO', 'LIDER_EQUIPE']), async (c) => {
+    const { DB } = c.env;
+
+    try {
+        const membrosFrequencia = await DB.prepare(`
+            SELECT 
+                u.id, 
+                u.nome,
+                u.email,
+                e.nome as equipe_nome,
+                g.nome as grupo_nome,
+                (SELECT COUNT(DISTINCT date(registrado_em)) FROM ponto_registros WHERE usuario_id = u.id AND tipo = 'ENTRADA') as dias_presentes,
+                (SELECT COUNT(*) FROM justificativas_ponto WHERE usuario_id = u.id AND status = 'aprovada') as justificativas_aprovadas,
+                (SELECT MAX(registrado_em) FROM ponto_registros WHERE usuario_id = u.id) as ultima_batida
+            FROM usuarios u
+            LEFT JOIN equipes e ON u.equipe_id = e.id
+            LEFT JOIN grupos g ON u.grupo_id = g.id
+            WHERE u.ativo = 1
+            ORDER BY u.nome ASC
+        `).all();
+
+        return c.json({
+            membros: membrosFrequencia.results
+        });
+    } catch (erro) {
+        console.error('[ERRO DB] GET /relatorios/frequencia/membros', erro);
+        return c.json({ erro: 'Falha ao gerar relatório de frequência por membro' }, 500);
+    }
+});
+
+export default rotasRelatorios;

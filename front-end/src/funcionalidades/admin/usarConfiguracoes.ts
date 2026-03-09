@@ -16,11 +16,14 @@ export function usarConfiguracoes() {
         setCarregando(true);
         try {
             const res = await api.get('/api/configuracoes');
-            const dados = res.data.configuracoes;
+            const dados = res.data.configuracoes || {};
 
-            // Normalização: garante que campos de array sempre sejam arrays no front
             if (!Array.isArray(dados.funcoes_tecnicas)) {
                 dados.funcoes_tecnicas = [];
+            }
+
+            if (!dados.permissoes_roles || typeof dados.permissoes_roles !== 'object') {
+                dados.permissoes_roles = {};
             }
 
             setConfiguracoes(dados);

@@ -101,3 +101,19 @@ export function autenticacaoRequerida(roleMinimoRequerido?: string) {
         await next();
     };
 }
+
+/**
+ * Middleware para verificar se o usuário logado possui um dos papéis permitidos.
+ */
+export function verificarRole(rolesPermitidos: string[]) {
+    return async (c: Context<HonoEnv>, next: Next) => {
+        const usuario = c.get('usuario');
+
+        if (!usuario || !rolesPermitidos.includes(usuario.role)) {
+            console.warn(`[AUTH] Acesso negado: Papel ${usuario?.role} não consta em ${rolesPermitidos.join(', ')}`);
+            return c.json({ erro: 'Papel administrativo requerido para esta operação.' }, 403);
+        }
+
+        await next();
+    };
+}

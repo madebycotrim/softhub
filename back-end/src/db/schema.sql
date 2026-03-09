@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
     foto_perfil TEXT,
     bio TEXT,
     funcoes TEXT DEFAULT '[]', -- JSON: ['FRONTEND', 'BACKEND', etc]
-    equipe_id TEXT, -- FK para equipes
+    equipe_id TEXT REFERENCES equipes(id), -- FK para equipes lógicas
+    grupo_id TEXT REFERENCES grupos(id), -- FK para grupos de trabalho / turnos (A/B)
     visivel INTEGER NOT NULL DEFAULT 1,
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
@@ -20,13 +21,15 @@ CREATE TABLE IF NOT EXISTS usuarios (
 CREATE INDEX IF NOT EXISTS idx_usuarios_email ON usuarios(email);
 CREATE INDEX IF NOT EXISTS idx_usuarios_role ON usuarios(role);
 CREATE INDEX IF NOT EXISTS idx_usuarios_ativo ON usuarios(ativo);
+CREATE INDEX IF NOT EXISTS idx_usuarios_equipe ON usuarios(equipe_id);
+CREATE INDEX IF NOT EXISTS idx_usuarios_grupo ON usuarios(grupo_id);
 
 -- 2. Tabela de Estrutura: Grupos
 CREATE TABLE IF NOT EXISTS grupos (
     id TEXT NOT NULL PRIMARY KEY,
     nome TEXT NOT NULL,
     descricao TEXT,
-    lider_id TEXT REFERENCES usuarios(id) ON DELETE SET NULL,
+    lider_id TEXT REFERENCES usuarios(id) ON DELETE SET NULL, -- Líder Administrativo do Grupo
     sub_lider_id TEXT REFERENCES usuarios(id) ON DELETE SET NULL,
     ativo INTEGER NOT NULL DEFAULT 1,
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
@@ -35,14 +38,13 @@ CREATE TABLE IF NOT EXISTS grupos (
 -- 3. Tabela de Estrutura: Equipes
 CREATE TABLE IF NOT EXISTS equipes (
     id TEXT NOT NULL PRIMARY KEY,
-    grupo_id TEXT NOT NULL REFERENCES grupos(id) ON DELETE CASCADE,
     nome TEXT NOT NULL,
     descricao TEXT,
+    lider_id TEXT REFERENCES usuarios(id) ON DELETE SET NULL,
+    sub_lider_id TEXT REFERENCES usuarios(id) ON DELETE SET NULL,
     ativo INTEGER NOT NULL DEFAULT 1,
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
-
-CREATE INDEX IF NOT EXISTS idx_equipes_grupo ON equipes(grupo_id);
 
 -- 4. Tabela Projetos
 CREATE TABLE IF NOT EXISTS projetos (
