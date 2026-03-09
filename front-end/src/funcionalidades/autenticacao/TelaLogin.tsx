@@ -166,8 +166,8 @@ export default function TelaLogin() {
                                 <div className="inline-flex py-1 px-3 bg-red-500/10 text-red-600 text-[10px] font-black uppercase tracking-widest rounded-full leading-none">
                                     Bem-vindo de volta
                                 </div>
-                                <h3 className="text-[28px] lg:text-4xl font-black text-foreground tracking-tight leading-tight">Inicie agora.</h3>
-                                <p className="text-muted-foreground font-bold text-xs lg:text-sm leading-relaxed max-w-[280px] lg:max-w-none mx-auto lg:mx-0 pr-0 lg:pr-8">
+                                <h3 className="text-[28px] lg:text-4xl font-black text-slate-900 tracking-tight leading-tight">Inicie agora.</h3>
+                                <p className="text-slate-600 font-bold text-xs lg:text-sm leading-relaxed max-w-[280px] lg:max-w-none mx-auto lg:mx-0 pr-0 lg:pr-8">
                                     Acesse a plataforma da Fábrica de Software com seu login institucional.
                                 </p>
                             </div>
@@ -197,10 +197,10 @@ export default function TelaLogin() {
                                     </div>
                                 </button>
 
-                                <div className="flex items-center justify-center lg:justify-start gap-1.5 text-muted-foreground text-[11px] lg:text-[11.5px] opacity-60">
+                                <div className="flex items-center justify-center lg:justify-start gap-1.5 text-slate-500 text-[11px] lg:text-[11.5px] font-medium">
                                     <Info size={11} className="shrink-0" />
                                     <span>
-                                        Use seu e-mail <span className="text-foreground/80 font-bold">@{ambiente.dominioInstitucional}</span>
+                                        Use seu e-mail <span className="text-slate-900 font-bold">@{ambiente.dominioInstitucional}</span>
                                     </span>
                                 </div>
 
@@ -233,8 +233,8 @@ export default function TelaLogin() {
                                 <PainelQRCode />
 
                                 <div className="text-center space-y-3 max-w-[280px]">
-                                    <h4 className="text-2xl font-black text-foreground tracking-tight leading-none">Entrar com QR Code</h4>
-                                    <p className="text-[13px] text-muted-foreground font-bold leading-relaxed opacity-60">
+                                    <h4 className="text-2xl font-black text-slate-900 tracking-tight leading-none">Entrar com QR Code</h4>
+                                    <p className="text-[13px] text-slate-600 font-bold leading-relaxed">
                                         Abra o app ou site da plataforma no celular, escaneie o código e faça login em segundos.
                                     </p>
                                 </div>
