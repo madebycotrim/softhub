@@ -57,6 +57,19 @@ rotasAuthQr.get('/qr/verificar/:id', async (c) => {
             return c.json({ status: 'expirado' });
         }
 
+        if (sessao.status === 'identificado' && sessao.usuario_id) {
+            const usuario = await DB.prepare(
+                'SELECT id, nome, email, role, foto_perfil FROM usuarios WHERE id = ?'
+            )
+                .bind(sessao.usuario_id)
+                .first();
+
+            return c.json({
+                status: 'identificado',
+                usuario
+            });
+        }
+
         if (sessao.status === 'autorizado' && sessao.usuario_id) {
             const usuario = await DB.prepare(
                 'SELECT id, nome, email, role, foto_perfil FROM usuarios WHERE id = ?'
@@ -83,10 +96,39 @@ rotasAuthQr.get('/qr/verificar/:id', async (c) => {
     }
 });
 
-// ── QR Code: Autorizar (Chamado pelo Celular) ────────────────────────────────
+// ── QR Code: Identificar (Chamado ao ESCANEAR) ───────────────────────────────
+rotasAuthQr.post('/qr/identificar', autenticacaoRequerida(), async (c) => {
+    const { DB } = c.env;
+    const usuario = c.get('usuario' as any) as any;
+
+    try {
+        const { sessaoId } = await c.req.json();
+        if (!sessaoId) return c.json({ erro: 'ID da sessão ausente.' }, 400);
+
+        const sessao = await DB.prepare('SELECT status FROM sessoes_qr WHERE id = ?')
+            .bind(sessaoId)
+            .first<{ status: string }>();
+
+        if (!sessao) return c.json({ erro: 'Sessão não encontrada.' }, 404);
+        if (sessao.status !== 'pendente') return c.json({ erro: 'Sessão não está mais disponível.' }, 400);
+
+        // Apenas marca como identificado e vincula o usuário para o polling mostrar no desktop
+        await DB.prepare(
+            'UPDATE sessoes_qr SET status = ?, usuario_id = ? WHERE id = ?'
+        )
+            .bind('identificado', usuario.id, sessaoId)
+            .run();
+
+        return c.json({ sucesso: true });
+    } catch (err: any) {
+        return c.json({ erro: 'Erro ao identificar.' }, 500);
+    }
+});
+
+// ── QR Code: Autorizar (Chamado ao CONFIRMAR) ────────────────────────────────
 rotasAuthQr.post('/qr/autorizar', autenticacaoRequerida(), async (c) => {
     const { DB, JWT_SECRET } = c.env;
-    const usuario = c.get('usuario' as any) as any; // Extraído pelo middleware auth
+    const usuario = c.get('usuario' as any) as any;
 
     try {
         const { sessaoId } = await c.req.json();
@@ -97,7 +139,11 @@ rotasAuthQr.post('/qr/autorizar', autenticacaoRequerida(), async (c) => {
             .first<{ status: string; expira_em: string }>();
 
         if (!sessao) return c.json({ erro: 'Sessão não encontrada.' }, 404);
-        if (sessao.status !== 'pendente') return c.json({ erro: 'Sessão não está mais pendente.' }, 400);
+        
+        // Pode autorizar se estiver pendente OU já identificado
+        if (sessao.status !== 'pendente' && sessao.status !== 'identificado') {
+            return c.json({ erro: 'Sessão inválida.' }, 400);
+        }
 
         const agora = new Date().toISOString();
         if (sessao.expira_em < agora) {

@@ -12,8 +12,9 @@ interface ScannerQRProps {
  * Remove qualquer opção de seleção de arquivo para uma experiência nativa.
  */
 export default function ScannerQR({ aoFechar }: ScannerQRProps) {
-    const [status, setStatus] = useState<'ocioso' | 'pedindo_permissao' | 'scaneando' | 'autorizando' | 'sucesso' | 'erro'>('ocioso');
+    const [status, setStatus] = useState<'ocioso' | 'pedindo_permissao' | 'scaneando' | 'confirmacao' | 'autorizando' | 'sucesso' | 'erro'>('ocioso');
     const [erro, setErro] = useState<string | null>(null);
+    const [sessaoIdPendente, setSessaoIdPendente] = useState<string | null>(null);
     const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
 
     // Limpa os recursos ao fechar/desmontar
@@ -85,13 +86,27 @@ export default function ScannerQR({ aoFechar }: ScannerQRProps) {
             await html5QrCodeRef.current.stop();
         }
 
-        autorizarSessao(decodedText);
+        setSessaoIdPendente(decodedText);
+        setStatus('confirmacao');
+
+        // Notifica o backend imediatamente para mostrar o avatar no PC
+        identificarUsuario(decodedText);
     };
 
-    const autorizarSessao = async (sessaoId: string) => {
+    const identificarUsuario = async (sessaoId: string) => {
+        try {
+            await api.post('/api/auth/qr/identificar', { sessaoId });
+        } catch (e) {
+            console.error('[Scanner] Falha ao identificar no desktop:', e);
+        }
+    };
+
+    const autorizarSessao = async () => {
+        if (!sessaoIdPendente) return;
+        
         setStatus('autorizando');
         try {
-            await api.post('/api/auth/qr/autorizar', { sessaoId });
+            await api.post('/api/auth/qr/autorizar', { sessaoId: sessaoIdPendente });
             setStatus('sucesso');
             setTimeout(aoFechar, 2000);
         } catch (e: any) {
@@ -104,7 +119,7 @@ export default function ScannerQR({ aoFechar }: ScannerQRProps) {
         <div className="flex flex-col items-center justify-center space-y-8 pt-4 min-h-[440px]">
             
             {(status === 'ocioso' || status === 'pedindo_permissao') && (
-                <div className="text-center space-y-8 px-6">
+                <div className="text-center space-y-8 px-6 animate-in fade-in duration-500">
                     <div className="w-24 h-24 bg-primary/5 rounded-full flex items-center justify-center mx-auto text-primary relative">
                         <Camera size={48} strokeWidth={1.5} />
                         {status === 'pedindo_permissao' && (
@@ -131,7 +146,7 @@ export default function ScannerQR({ aoFechar }: ScannerQRProps) {
             )}
 
             {status === 'scaneando' && (
-                <div className="w-full flex flex-col items-center space-y-8 px-4">
+                <div className="w-full flex flex-col items-center space-y-8 px-4 animate-in zoom-in-95 duration-500">
                     <div className="text-center space-y-1">
                         <h3 className="text-lg font-black text-slate-900">Escanear</h3>
                         <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest animate-pulse">Buscando QR Code...</p>
@@ -150,6 +165,36 @@ export default function ScannerQR({ aoFechar }: ScannerQRProps) {
                 </div>
             )}
 
+            {status === 'confirmacao' && (
+                <div className="text-center space-y-8 px-6 animate-in slide-in-from-bottom-4 duration-500">
+                    <div className="w-24 h-24 bg-blue-500/10 text-blue-500 rounded-full flex items-center justify-center mx-auto shadow-inner border border-blue-500/20">
+                        <CheckCircle size={48} strokeWidth={1.5} />
+                    </div>
+                    
+                    <div className="space-y-3">
+                        <h3 className="text-2xl font-black text-slate-900 tracking-tight">Confirmar Acesso</h3>
+                        <p className="text-[15px] text-slate-500 font-medium leading-relaxed">
+                            Deseja autorizar o acesso neste computador?
+                        </p>
+                    </div>
+
+                    <div className="flex flex-col gap-4 w-full">
+                        <button
+                            onClick={autorizarSessao}
+                            className="w-full h-14 bg-blue-600 text-white font-bold rounded-2xl shadow-xl shadow-blue-200 active:scale-95 transition-all"
+                        >
+                            Autorizar Agora
+                        </button>
+                        <button 
+                            onClick={() => setStatus('ocioso')}
+                            className="text-xs text-slate-400 font-black uppercase tracking-widest"
+                        >
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {status === 'autorizando' && (
                 <div className="text-center space-y-6">
                     <Loader2 className="w-16 h-16 text-primary animate-spin mx-auto" />
@@ -158,13 +203,13 @@ export default function ScannerQR({ aoFechar }: ScannerQRProps) {
             )}
 
             {status === 'sucesso' && (
-                <div className="text-center space-y-6 px-6">
+                <div className="text-center space-y-6 px-6 animate-in zoom-in duration-500">
                     <div className="w-24 h-24 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mx-auto">
                         <CheckCircle size={56} strokeWidth={1} />
                     </div>
                     <div className="space-y-2">
                         <h3 className="text-2xl font-black text-slate-900 tracking-tight">Login Autorizado!</h3>
-                        <p className="text-sm text-slate-500 font-medium">O computador agora está conectado.</p>
+                        <p className="text-sm text-slate-500 font-medium font-bold">O computador agora está conectado.</p>
                     </div>
                 </div>
             )}
@@ -176,9 +221,12 @@ export default function ScannerQR({ aoFechar }: ScannerQRProps) {
                         <h3 className="text-xl font-black text-slate-900">Erro</h3>
                         <p className="text-sm text-red-600 font-bold">{erro}</p>
                     </div>
-                    <button onClick={pedirPermissao} className="w-full h-14 bg-slate-900 text-white font-bold rounded-2xl flex items-center justify-center gap-2">
-                        <Settings size={20} /> Tentar Novamente
-                    </button>
+                    <div className="flex flex-col gap-4 w-full">
+                        <button onClick={pedirPermissao} className="w-full h-14 bg-slate-900 text-white font-bold rounded-2xl flex items-center justify-center gap-2">
+                            <Settings size={20} /> Tentar Novamente
+                        </button>
+                        <button onClick={aoFechar} className="text-xs text-slate-400 font-black uppercase tracking-widest">Fechar</button>
+                    </div>
                 </div>
             )}
         </div>

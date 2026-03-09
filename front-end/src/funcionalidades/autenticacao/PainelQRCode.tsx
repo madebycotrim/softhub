@@ -11,8 +11,8 @@ import { usarDispositivo } from '../../compartilhado/hooks/usarDispositivo';
  * Monitora o status da sessão via polling.
  */
 export default function PainelQRCode() {
-    const [sessao, setSessao] = useState<{ id: string; expiraEm: string } | null>(null);
-    const [status, setStatus] = useState<'gerando' | 'pendente' | 'autorizado' | 'expirado' | 'erro'>('gerando');
+    const [sessao, setSessao] = useState<{ id: string; expiraEm: string; usuario?: any } | null>(null);
+    const [status, setStatus] = useState<'gerando' | 'pendente' | 'identificado' | 'autorizado' | 'expirado' | 'erro'>('gerando');
     const { entrar } = usarAutenticacaoContexto();
     const navigate = useNavigate();
     const { isMobile } = usarDispositivo();
@@ -46,7 +46,11 @@ export default function PainelQRCode() {
             try {
                 const res = await api.get(`/api/auth/qr/verificar/${sessao.id}`);
 
-                if (res.data.status === 'autorizado') {
+                if (res.data.status === 'identificado') {
+                    setSessao(s => s ? ({ ...s, usuario: res.data.usuario }) : null);
+                    setStatus('identificado');
+                } else if (res.data.status === 'autorizado') {
+                    setSessao(s => s ? ({ ...s, usuario: res.data.usuario }) : null);
                     setStatus('autorizado');
                     clearInterval(polling);
 
@@ -54,7 +58,7 @@ export default function PainelQRCode() {
                     setTimeout(() => {
                         entrar(res.data.usuario, res.data.token);
                         navigate('/app/dashboard', { replace: true });
-                    }, 1500);
+                    }, 2500); // Aumentado para 2.5s para ver o avatar
                 } else if (res.data.status === 'expirado' || res.data.status === 'erro' || res.data.status === 'consumido') {
                     setStatus(res.data.status === 'expirado' ? 'expirado' : 'erro');
                     clearInterval(polling);
@@ -137,15 +141,51 @@ export default function PainelQRCode() {
                         </div>
                     )}
 
-                    {status === 'autorizado' && (
-                        <div className="w-[240px] h-[240px] flex flex-col items-center justify-center bg-card z-10 animate-in zoom-in duration-500">
-                            <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center mb-4 animate-bounce shadow-lg ring-4 ring-card">
-                                <CheckCircle className="w-12 h-12 text-green-500" />
-                            </div>
-                            <span className="text-[12px] font-black text-green-600 uppercase tracking-widest">Autorizado</span>
+                    {(status === 'identificado' || status === 'autorizado') && (
+                        <EstadoAutorizado usuario={sessao?.usuario} status={status} />
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function EstadoAutorizado({ usuario, status }: { usuario: any, status: string }) {
+    const isAutorizado = status === 'autorizado';
+
+    return (
+        <div className="w-[240px] h-auto flex flex-col items-center justify-center animate-in zoom-in duration-500 py-4">
+            <div className="relative mb-4">
+                <div className={`w-24 h-24 rounded-full border-4 ${isAutorizado ? 'border-green-500/20' : 'border-blue-500/20'} p-1 flex items-center justify-center bg-white shadow-xl transition-colors duration-500`}>
+                    {usuario?.foto_perfil ? (
+                        <img 
+                            src={usuario.foto_perfil} 
+                            alt={usuario.nome} 
+                            className="w-full h-full rounded-full object-cover"
+                        />
+                    ) : (
+                        <div className="w-full h-full rounded-full bg-slate-100 flex items-center justify-center text-slate-400 font-black text-2xl uppercase">
+                            {usuario?.nome?.[0]}
                         </div>
                     )}
                 </div>
+                <div className={`absolute -bottom-1 -right-1 w-8 h-8 rounded-full border-4 border-white flex items-center justify-center text-white shadow-lg transition-all duration-500 ${isAutorizado ? 'bg-green-500' : 'bg-blue-500'}`}>
+                    {isAutorizado ? <CheckCircle size={14} strokeWidth={3} /> : <div className="w-2 h-2 bg-white rounded-full animate-pulse" />}
+                </div>
+            </div>
+            <div className="flex flex-col items-center">
+                <span className="text-[15px] font-black text-slate-900 uppercase tracking-tight text-center leading-none">
+                    {usuario?.nome}
+                </span>
+                <span className="text-[11px] text-slate-400 font-bold mt-1 lowercase">
+                    {usuario?.email}
+                </span>
+            </div>
+            <div className="mt-6 flex items-center gap-2">
+                <div className={`h-1.5 w-1.5 rounded-full animate-pulse ${isAutorizado ? 'bg-green-500' : 'bg-blue-500'}`} />
+                <span className={`text-[10px] font-black uppercase tracking-widest ${isAutorizado ? 'text-green-600' : 'text-blue-600'}`}>
+                    {isAutorizado ? 'Acesso Liberado' : 'Aguardando Confirmação'}
+                </span>
             </div>
         </div>
     );
