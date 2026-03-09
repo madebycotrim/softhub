@@ -5,9 +5,9 @@ export interface Grupo {
     id: string;
     nome: string;
     descricao: string | null;
-    lider_id: string | null;
+    equipe_id: string | null;
+    equipe_nome: string | null;
     lider_nome: string | null;
-    sub_lider_id: string | null;
     sub_lider_nome: string | null;
     total_membros: number;
     ativo: number;
@@ -23,6 +23,7 @@ export interface Equipe {
     sub_lider_id: string | null;
     sub_lider_nome: string | null;
     total_membros: number;
+    grupos_nomes: string | null;
     ativo: number;
     criado_em: string;
 }
@@ -70,13 +71,13 @@ export function usarOrganizacao() {
     useEffect(() => { carregar(); }, [carregar]);
 
     /** Cria um novo grupo. */
-    const criarGrupo = async (dados: { nome: string; descricao: string | null; lider_id: string | null; sub_lider_id: string | null }) => {
+    const criarGrupo = async (dados: { nome: string; descricao: string | null; equipe_id: string | null }) => {
         await api.post('/api/organizacao/grupos', dados);
         await carregar();
     };
 
     /** Edita um grupo existente. */
-    const editarGrupo = async (id: string, dados: { nome: string; descricao: string | null; lider_id: string | null; sub_lider_id: string | null }) => {
+    const editarGrupo = async (id: string, dados: { nome: string; descricao: string | null; equipe_id: string | null }) => {
         await api.patch(`/api/organizacao/grupos/${id}`, dados);
         await carregar();
     };

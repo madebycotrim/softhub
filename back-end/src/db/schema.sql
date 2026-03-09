@@ -30,8 +30,7 @@ CREATE TABLE IF NOT EXISTS grupos (
     id TEXT NOT NULL PRIMARY KEY,
     nome TEXT NOT NULL,
     descricao TEXT,
-    lider_id TEXT REFERENCES usuarios(id) ON DELETE SET NULL, -- Líder Administrativo do Grupo
-    sub_lider_id TEXT REFERENCES usuarios(id) ON DELETE SET NULL,
+    equipe_id TEXT REFERENCES equipes(id) ON DELETE CASCADE, -- Vínculo com a equipe pai
     ativo INTEGER NOT NULL DEFAULT 1,
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );

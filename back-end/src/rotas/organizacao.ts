@@ -14,16 +14,18 @@ rotasOrganizacao.get('/grupos', autenticacaoRequerida(), verificarPermissao('org
         const grupos = await DB.prepare(`
             SELECT
                 g.id, g.nome, g.descricao, g.ativo, g.criado_em,
-                g.lider_id, g.sub_lider_id,
+                g.equipe_id,
+                e.nome AS equipe_nome,
                 ul.nome AS lider_nome,
                 us.nome AS sub_lider_nome,
                 COUNT(u.id) AS total_membros
             FROM grupos g
-            LEFT JOIN usuarios ul ON g.lider_id = ul.id
-            LEFT JOIN usuarios us ON g.sub_lider_id = us.id
+            LEFT JOIN equipes e ON g.equipe_id = e.id
+            LEFT JOIN usuarios ul ON e.lider_id = ul.id
+            LEFT JOIN usuarios us ON e.sub_lider_id = us.id
             LEFT JOIN usuarios u ON u.grupo_id = g.id AND u.ativo = 1
             GROUP BY g.id
-            ORDER BY g.nome ASC
+            ORDER BY e.nome ASC, g.nome ASC
         `).all();
 
         return c.json({ grupos: grupos.results ?? [] });
@@ -39,20 +41,21 @@ rotasOrganizacao.post('/grupos', autenticacaoRequerida(), verificarPermissao('or
     const { DB } = c.env;
     const usuarioLogado = c.get('usuario') as any;
 
-    let nome: string, descricao: string | null, lider_id: string | null, sub_lider_id: string | null;
+    let nome: string, descricao: string | null, equipe_id: string | null;
     try {
-        ({ nome, descricao = null, lider_id = null, sub_lider_id = null } = await c.req.json());
+        ({ nome, descricao = null, equipe_id = null } = await c.req.json());
     } catch {
         return c.json({ erro: 'Corpo da requisição inválido.' }, 400);
     }
 
     if (!nome?.trim()) return c.json({ erro: 'O nome do grupo é obrigatório.' }, 400);
+    if (!equipe_id) return c.json({ erro: 'O vínculo com uma equipe é obrigatório.' }, 400);
 
     try {
         const id = crypto.randomUUID();
         await DB.prepare(
-            'INSERT INTO grupos (id, nome, descricao, lider_id, sub_lider_id) VALUES (?, ?, ?, ?, ?)'
-        ).bind(id, nome.trim(), descricao, lider_id, sub_lider_id).run();
+            'INSERT INTO grupos (id, nome, descricao, equipe_id) VALUES (?, ?, ?, ?)'
+        ).bind(id, nome.trim(), descricao, equipe_id).run();
 
         await registrarLog(DB, {
             usuarioId: usuarioLogado.id,
@@ -65,7 +68,7 @@ rotasOrganizacao.post('/grupos', autenticacaoRequerida(), verificarPermissao('or
             ip: c.req.header('CF-Connecting-IP') ?? '',
             entidadeTipo: 'grupos',
             entidadeId: id,
-            dadosNovos: { nome, descricao, lider_id, sub_lider_id },
+            dadosNovos: { nome, descricao, equipe_id },
         });
 
         return c.json({ sucesso: true, id }, 201);
@@ -82,9 +85,9 @@ rotasOrganizacao.patch('/grupos/:id', autenticacaoRequerida(), verificarPermissa
     const usuarioLogado = c.get('usuario') as any;
     const id = c.req.param('id');
 
-    let nome: string, descricao: string | null, lider_id: string | null, sub_lider_id: string | null;
+    let nome: string, descricao: string | null, equipe_id: string | null;
     try {
-        ({ nome, descricao = null, lider_id = null, sub_lider_id = null } = await c.req.json());
+        ({ nome, descricao = null, equipe_id = null } = await c.req.json());
     } catch {
         return c.json({ erro: 'Corpo da requisição inválido.' }, 400);
     }
@@ -93,8 +96,8 @@ rotasOrganizacao.patch('/grupos/:id', autenticacaoRequerida(), verificarPermissa
 
     try {
         await DB.prepare(
-            'UPDATE grupos SET nome = ?, descricao = ?, lider_id = ?, sub_lider_id = ? WHERE id = ?'
-        ).bind(nome.trim(), descricao, lider_id, sub_lider_id, id).run();
+            'UPDATE grupos SET nome = ?, descricao = ?, equipe_id = ? WHERE id = ?'
+        ).bind(nome.trim(), descricao, equipe_id, id).run();
 
         await registrarLog(DB, {
             usuarioId: usuarioLogado.id,
@@ -107,7 +110,7 @@ rotasOrganizacao.patch('/grupos/:id', autenticacaoRequerida(), verificarPermissa
             ip: c.req.header('CF-Connecting-IP') ?? '',
             entidadeTipo: 'grupos',
             entidadeId: id,
-            dadosNovos: { nome, descricao, lider_id, sub_lider_id },
+            dadosNovos: { nome, descricao, equipe_id },
         });
 
         return c.json({ sucesso: true });
@@ -160,7 +163,8 @@ rotasOrganizacao.get('/equipes', autenticacaoRequerida(), verificarPermissao('or
                 e.lider_id, e.sub_lider_id,
                 ul.nome AS lider_nome,
                 us.nome AS sub_lider_nome,
-                COUNT(u.id) AS total_membros
+                COUNT(DISTINCT u.id) AS total_membros,
+                (SELECT GROUP_CONCAT(nome, ', ') FROM grupos WHERE equipe_id = e.id AND ativo = 1) AS grupos_nomes
             FROM equipes e
             LEFT JOIN usuarios ul ON e.lider_id = ul.id
             LEFT JOIN usuarios us ON e.sub_lider_id = us.id
