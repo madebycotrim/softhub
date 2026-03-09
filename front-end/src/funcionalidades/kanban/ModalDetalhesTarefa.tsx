@@ -2,9 +2,8 @@ import { Modal } from '../../compartilhado/componentes/Modal';
 import { Emblema } from '../../compartilhado/componentes/Emblema';
 import { CORES_PRIORIDADE, LABELS_PRIORIDADE } from '../../utilitarios/constantes';
 import type { Tarefa } from './usarKanban';
-import { SecaoComentarios } from './SecaoComentarios';
-import { SecaoHistorico } from './SecaoHistorico';
 import { SecaoChecklist } from './SecaoChecklist';
+import { JornalTarefa } from './JornalTarefa';
 
 interface ModalDetalhesTarefaProps {
     tarefa: Tarefa | null;
@@ -58,11 +57,8 @@ export function ModalDetalhesTarefa({ tarefa, aberto, aoFechar }: ModalDetalhesT
                 {/* WF 31 - Checklist da Tarefa */}
                 <SecaoChecklist tarefaId={tarefa.id} />
 
-                {/* WF 25 - Comentários da Tarefa */}
-                <SecaoComentarios tarefaId={tarefa.id} />
-
-                {/* WF 29 - Histórico da Tarefa */}
-                <SecaoHistorico tarefaId={tarefa.id} />
+                {/* WF 25 & 29 - Jornal da Tarefa (Comentários + Histórico) */}
+                <JornalTarefa tarefaId={tarefa.id} />
             </div>
         </Modal>
     );

@@ -37,7 +37,7 @@ export default function PainelQRCode() {
     }, [isMobile]);
 
     useEffect(() => {
-        if (status !== 'pendente' || !sessao) return;
+        if ((status !== 'pendente' && status !== 'identificado') || !sessao) return;
 
         // Limpa o polling ao mudar de estado ou desmontar
         let polling: any;
@@ -54,11 +54,10 @@ export default function PainelQRCode() {
                     setStatus('autorizado');
                     clearInterval(polling);
 
-                    // Pequeno delay para mostrar o feedback de sucesso antes de navegar
                     setTimeout(() => {
                         entrar(res.data.usuario, res.data.token);
                         navigate('/app/dashboard', { replace: true });
-                    }, 2500); // Aumentado para 2.5s para ver o avatar
+                    }, 300); 
                 } else if (res.data.status === 'expirado' || res.data.status === 'erro' || res.data.status === 'consumido') {
                     setStatus(res.data.status === 'expirado' ? 'expirado' : 'erro');
                     clearInterval(polling);
@@ -70,7 +69,7 @@ export default function PainelQRCode() {
             }
         };
 
-        polling = setInterval(verificarStatus, 5000); // Polling a cada 5 segundos para reduzir ruído
+        polling = setInterval(verificarStatus, 800); // Polling mais rápido (800ms) para resposta instantânea
 
         return () => clearInterval(polling);
     }, [status, sessao, entrar, navigate]);

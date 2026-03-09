@@ -1,7 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
-import { Camera, X, CheckCircle, AlertCircle, Loader2, Settings } from 'lucide-react';
+import { Camera, X, CheckCircle, AlertCircle, Loader2, Settings, Monitor, ArrowRight } from 'lucide-react';
 import { api } from '../../compartilhado/servicos/api';
+import { Avatar } from '../../compartilhado/componentes/Avatar';
+import { usarAutenticacaoContexto } from '../../contexto/ContextoAutenticacao';
+
+import { vibrar, vibrarErro, somSucesso } from '../../utilitarios/haptics';
 
 interface ScannerQRProps {
     aoFechar: () => void;
@@ -12,6 +16,7 @@ interface ScannerQRProps {
  * Remove qualquer opção de seleção de arquivo para uma experiência nativa.
  */
 export default function ScannerQR({ aoFechar }: ScannerQRProps) {
+    const { usuario } = usarAutenticacaoContexto();
     const [status, setStatus] = useState<'ocioso' | 'pedindo_permissao' | 'scaneando' | 'confirmacao' | 'autorizando' | 'sucesso' | 'erro'>('ocioso');
     const [erro, setErro] = useState<string | null>(null);
     const [sessaoIdPendente, setSessaoIdPendente] = useState<string | null>(null);
@@ -42,6 +47,7 @@ export default function ScannerQR({ aoFechar }: ScannerQRProps) {
             console.error('[Scanner] Permissão negada:', err);
             setErro(err.name === 'NotAllowedError' ? 'Câmera bloqueada. Por favor, autorize nas permissões do seu navegador.' : 'Não foi possível detectar uma câmera ativa.');
             setStatus('erro');
+            vibrarErro();
         }
     };
 
@@ -74,12 +80,16 @@ export default function ScannerQR({ aoFechar }: ScannerQRProps) {
                 console.error('[Scanner] Erro ao iniciar:', err);
                 setErro('Falha ao abrir o sensor da câmera.');
                 setStatus('erro');
+                vibrarErro();
             }
         }, 100);
     };
 
     const onScanSuccess = async (decodedText: string) => {
         if (!decodedText || decodedText.length < 30) return;
+
+        // Feedback haptico sutil ao ler
+        vibrar(60);
 
         // Desliga a câmera imediatamente
         if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
@@ -108,22 +118,25 @@ export default function ScannerQR({ aoFechar }: ScannerQRProps) {
         try {
             await api.post('/api/auth/qr/autorizar', { sessaoId: sessaoIdPendente });
             setStatus('sucesso');
+            vibrar(100);
+            somSucesso();
             setTimeout(aoFechar, 2000);
         } catch (e: any) {
             setErro(e.response?.data?.erro || 'Autorização falhou.');
             setStatus('erro');
+            vibrarErro();
         }
     };
 
     return (
-        <div className="flex flex-col items-center justify-center space-y-8 pt-4 min-h-[440px]">
+        <div className="flex flex-col items-center justify-center space-y-8 pt-4 min-h-[500px]">
             
             {(status === 'ocioso' || status === 'pedindo_permissao') && (
                 <div className="text-center space-y-8 px-6 animate-in fade-in duration-500">
-                    <div className="w-24 h-24 bg-primary/5 rounded-full flex items-center justify-center mx-auto text-primary relative">
-                        <Camera size={48} strokeWidth={1.5} />
+                    <div className="w-24 h-24 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto text-slate-900 border border-slate-200 relative shadow-sm">
+                        <Camera size={40} strokeWidth={1.5} />
                         {status === 'pedindo_permissao' && (
-                            <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                            <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-3xl animate-spin" />
                         )}
                     </div>
                     
@@ -137,9 +150,9 @@ export default function ScannerQR({ aoFechar }: ScannerQRProps) {
                     <button
                         onClick={pedirPermissao}
                         disabled={status === 'pedindo_permissao'}
-                        className="w-full h-14 bg-primary text-white font-bold rounded-2xl shadow-xl shadow-primary/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+                        className="w-full h-14 bg-slate-900 text-white font-bold rounded-2xl shadow-xl shadow-slate-200 active:scale-95 transition-all flex items-center justify-center gap-2"
                     >
-                        {status === 'pedindo_permissao' ? <Loader2 className="animate-spin" /> : 'Abrir Câmera'}
+                        {status === 'pedindo_permissao' ? <Loader2 className="animate-spin" /> : 'Começar Leitura'}
                     </button>
                     <button onClick={aoFechar} className="text-xs text-slate-400 font-black uppercase tracking-widest">Agora não</button>
                 </div>
@@ -166,30 +179,46 @@ export default function ScannerQR({ aoFechar }: ScannerQRProps) {
             )}
 
             {status === 'confirmacao' && (
-                <div className="text-center space-y-8 px-6 animate-in slide-in-from-bottom-4 duration-500">
-                    <div className="w-24 h-24 bg-blue-500/10 text-blue-500 rounded-full flex items-center justify-center mx-auto shadow-inner border border-blue-500/20">
-                        <CheckCircle size={48} strokeWidth={1.5} />
+                <div className="text-center space-y-8 px-6 animate-in slide-in-from-bottom-6 duration-500 flex flex-col items-center w-full">
+                    
+                    {/* Visualização de Conexão */}
+                    <div className="flex items-center justify-center gap-6 w-full max-w-xs relative my-6">
+                        <div className="relative group">
+                            <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl animate-pulse group-hover:bg-blue-500/30 transition-all" />
+                            <Avatar nome={usuario?.nome || ''} fotoPerfil={usuario?.foto_perfil || null} tamanho="lg" className="relative z-10 w-16 h-16 ring-4 ring-white shadow-xl" />
+                        </div>
+
+                        <div className="flex-1 h-px bg-gradient-to-r from-blue-200 via-blue-500 to-blue-200 relative overflow-hidden">
+                            <div className="absolute top-1/2 left-0 -translate-y-1/2 animate-infinite-scroll">
+                                <ArrowRight className="w-4 h-4 text-blue-500 opacity-50 ml-10" />
+                            </div>
+                        </div>
+
+                        <div className="w-16 h-16 bg-slate-50 border border-slate-100 rounded-3xl flex items-center justify-center text-slate-900 shadow-xl relative z-10">
+                            <Monitor size={32} strokeWidth={1.5} />
+                        </div>
                     </div>
                     
                     <div className="space-y-3">
-                        <h3 className="text-2xl font-black text-slate-900 tracking-tight">Confirmar Acesso</h3>
-                        <p className="text-[15px] text-slate-500 font-medium leading-relaxed">
-                            Deseja autorizar o acesso neste computador?
-                        </p>
+                        <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-none">Confirmar Acesso?</h3>
+                        <div className="flex flex-col items-center">
+                            <p className="text-[15px] text-slate-500 font-medium">Você está autorizando o acesso para:</p>
+                            <span className="text-[15px] font-black text-blue-600 uppercase mt-1 tracking-tight">{usuario?.nome}</span>
+                        </div>
                     </div>
 
-                    <div className="flex flex-col gap-4 w-full">
+                    <div className="flex flex-col gap-4 w-full pt-4">
                         <button
                             onClick={autorizarSessao}
-                            className="w-full h-14 bg-blue-600 text-white font-bold rounded-2xl shadow-xl shadow-blue-200 active:scale-95 transition-all"
+                            className="w-full h-14 bg-blue-600 text-white font-bold rounded-2xl shadow-xl shadow-blue-100 active:scale-95 transition-all flex items-center justify-center gap-2"
                         >
-                            Autorizar Agora
+                             Liberar Computador
                         </button>
                         <button 
-                            onClick={() => setStatus('ocioso')}
+                            onClick={() => setStatus('scaneando')}
                             className="text-xs text-slate-400 font-black uppercase tracking-widest"
                         >
-                            Cancelar
+                            Refazer Leitura
                         </button>
                     </div>
                 </div>
@@ -198,18 +227,23 @@ export default function ScannerQR({ aoFechar }: ScannerQRProps) {
             {status === 'autorizando' && (
                 <div className="text-center space-y-6">
                     <Loader2 className="w-16 h-16 text-primary animate-spin mx-auto" />
-                    <p className="text-slate-900 font-black text-xl tracking-tight">Validando Acesso...</p>
+                    <p className="text-slate-900 font-black text-xl tracking-tight">Liberando sessões...</p>
                 </div>
             )}
 
             {status === 'sucesso' && (
-                <div className="text-center space-y-6 px-6 animate-in zoom-in duration-500">
-                    <div className="w-24 h-24 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mx-auto">
-                        <CheckCircle size={56} strokeWidth={1} />
+                <div className="text-center space-y-8 px-6 animate-in zoom-in duration-500 flex flex-col items-center">
+                    <div className="relative">
+                        <div className="absolute inset-0 bg-green-500/20 rounded-full blur-2xl animate-pulse" />
+                        <div className="w-24 h-24 bg-green-500 text-white rounded-[2rem] flex items-center justify-center mx-auto shadow-xl relative z-10 ring-8 ring-green-50">
+                            <CheckCircle size={56} strokeWidth={2} />
+                        </div>
                     </div>
                     <div className="space-y-2">
-                        <h3 className="text-2xl font-black text-slate-900 tracking-tight">Login Autorizado!</h3>
-                        <p className="text-sm text-slate-500 font-medium font-bold">O computador agora está conectado.</p>
+                        <h3 className="text-2xl font-black text-slate-900 tracking-tight">Tudo pronto!</h3>
+                        <p className="text-sm text-slate-500 font-bold max-w-[200px] mx-auto leading-relaxed">
+                            O acesso foi liberado. Divirta-se na fábrica!
+                        </p>
                     </div>
                 </div>
             )}

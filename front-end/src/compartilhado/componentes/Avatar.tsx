@@ -4,12 +4,13 @@ interface AvatarProps {
     nome: string;
     fotoPerfil?: string | null;
     tamanho?: 'sm' | 'md' | 'lg';
+    className?: string;
 }
 
 /**
  * Avatar do usuário. Exibe a foto externa ou as iniciais baseadas no nome.
  */
-export function Avatar({ nome, fotoPerfil, tamanho = 'md' }: AvatarProps) {
+export function Avatar({ nome, fotoPerfil, tamanho = 'md', className = '' }: AvatarProps) {
     // Tamanhos mapeados por pixels
     const medidas = {
         sm: 'w-6 h-6 text-xs',
@@ -38,7 +39,7 @@ export function Avatar({ nome, fotoPerfil, tamanho = 'md' }: AvatarProps) {
 
     if (fotoPerfil && fotoPerfil.trim() !== '') {
         return (
-            <div className={`relative rounded-2xl overflow-hidden flex-shrink-0 border border-white/10 ${tamanhoAtual}`}>
+            <div className={`relative rounded-2xl overflow-hidden flex-shrink-0 border border-white/10 ${tamanhoAtual} ${className}`}>
                 <img
                     src={fotoPerfil}
                     alt={`Foto de ${nome}`}
@@ -51,7 +52,7 @@ export function Avatar({ nome, fotoPerfil, tamanho = 'md' }: AvatarProps) {
     // Fallback para Iniciais
     return (
         <div
-            className={`relative rounded-2xl flex items-center justify-center flex-shrink-0 text-white font-medium border border-white/5 ${tamanhoAtual} ${corBg}`}
+            className={`relative rounded-2xl flex items-center justify-center flex-shrink-0 text-white font-medium border border-white/5 ${tamanhoAtual} ${corBg} ${className}`}
             title={nome}
         >
             <span className="opacity-90 leading-none">{getIniciais(nome)}</span>
