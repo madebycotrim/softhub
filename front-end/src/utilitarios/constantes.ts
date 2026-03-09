@@ -1,5 +1,4 @@
 export const COLUNAS_KANBAN = [
-    'backlog',
     'a_fazer',
     'em_andamento',
     'em_revisao',

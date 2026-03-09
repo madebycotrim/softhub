@@ -1,19 +1,20 @@
-import { FolderKanban, Clock, Users, Megaphone, LayoutDashboard, Database, Settings, LogOut, Layers, Sun, Moon } from 'lucide-react';
+import { FolderKanban, Clock, Users, Megaphone, LayoutDashboard, Database, Settings, LogOut, Sun, Moon, QrCode } from 'lucide-react';
 import { useLocation, Link } from 'react-router';
 import { usarAutenticacao } from '../../funcionalidades/autenticacao/usarAutenticacao';
 import { usarTema } from '../../contexto/ContextoTema';
 import { Avatar } from './Avatar';
 import logoUnieuro from '../../assets/logo-unieuro.png';
-import { useState } from 'react';
-import { Modal } from './Modal';
-import ScannerQR from '../../funcionalidades/autenticacao/ScannerQR';
 
-export function BarraLateral() {
+interface BarraLateralProps {
+    aoNavegar?: () => void;
+    aoAbrirScanner?: () => void;
+}
+
+export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
     const location = useLocation();
     const currentPath = location.pathname;
     const { usuario, sair } = usarAutenticacao();
     const { tema, setTema } = usarTema();
-    const [scannerAberto, setScannerAberto] = useState(false);
 
     const grupos = [
         {
@@ -26,7 +27,6 @@ export function BarraLateral() {
             label: 'Projetos',
             links: [
                 { label: 'Kanban', path: '/app/kanban', icon: FolderKanban },
-                { label: 'Backlog & Sprints', path: '/app/backlog', icon: Layers },
             ],
         },
         {
@@ -54,6 +54,7 @@ export function BarraLateral() {
         return (
             <Link
                 to={link.path}
+                onClick={aoNavegar}
                 className={`
                     group relative flex items-center gap-3 px-3 py-2.5 rounded-2xl text-[13.5px] font-medium
                     transition-all duration-200 select-none
@@ -87,7 +88,7 @@ export function BarraLateral() {
     };
 
     return (
-        <aside className="w-64 hidden lg:flex flex-col shrink-0 h-full relative">
+        <aside className="w-full h-full flex flex-col relative overflow-hidden">
 
             {/* Fundo */}
             <div className="absolute inset-0 bg-sidebar" />
@@ -143,13 +144,33 @@ export function BarraLateral() {
 
             {/* ── Footer / Usuário ── */}
             <div className="relative z-10 p-3">
-                {/* Alternar Tema (Sidebar sync) */}
+                {/* Login via QR Code - Apenas Mobile */}
+                <div className="flex items-center justify-between px-2 mb-2 lg:hidden">
+                    <span className="text-[10px] font-black text-sidebar-foreground/20 uppercase tracking-[0.22em]">
+                        Login via QR
+                    </span>
+                    <button
+                        onClick={() => {
+                            aoAbrirScanner?.();
+                            aoNavegar?.();
+                        }}
+                        className="p-1.5 rounded-xl text-sidebar-foreground/30 hover:text-primary hover:bg-primary/10 transition-all duration-300"
+                        title="Conectar via QR Code"
+                    >
+                        <QrCode size={14} />
+                    </button>
+                </div>
+
+                {/* Alternar Tema */}
                 <div className="flex items-center justify-between px-2 mb-3">
                     <span className="text-[10px] font-black text-sidebar-foreground/20 uppercase tracking-[0.22em]">
                         Tema
                     </span>
                     <button
-                        onClick={() => setTema(tema === 'dark' ? 'light' : 'dark')}
+                        onClick={() => {
+                            setTema(tema === 'dark' ? 'light' : 'dark');
+                            aoNavegar?.();
+                        }}
                         className="p-1.5 rounded-xl text-sidebar-foreground/30 hover:text-primary hover:bg-primary/10 transition-all duration-300 group/theme"
                         title={tema === 'dark' ? "Mudar para modo claro" : "Mudar para modo escuro"}
                     >
@@ -187,7 +208,10 @@ export function BarraLateral() {
 
                             {/* Sair */}
                             <button
-                                onClick={sair}
+                                onClick={() => {
+                                    sair();
+                                    aoNavegar?.();
+                                }}
                                 title="Sair"
                                 className="shrink-0 p-1.5 rounded-xl text-sidebar-foreground/20 hover:text-red-400 hover:bg-red-400/10 transition-all duration-200 group/logout"
                             >
@@ -198,16 +222,6 @@ export function BarraLateral() {
                     </>
                 )}
             </div>
-
-            {/* Modal Scanner */}
-            <Modal
-                aberto={scannerAberto}
-                aoFechar={() => setScannerAberto(false)}
-                titulo="Conectar via QR Code"
-                largura="sm"
-            >
-                <ScannerQR aoFechar={() => setScannerAberto(false)} />
-            </Modal>
         </aside>
     );
 }

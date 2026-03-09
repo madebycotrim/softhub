@@ -40,8 +40,8 @@ export function PainelFiltrosKanban({ filtros, aoFiltrar }: PainelFiltrosProps) 
 
     return (
         <div className="bg-card/80 backdrop-blur-md border border-border shadow-sm rounded-2xl p-4 mb-4 flex flex-col sm:flex-row gap-4 items-center justify-between transition-colors duration-300">
-            <div className="flex items-center gap-4 w-full sm:w-auto flex-1">
-                <div className="relative w-full max-w-md">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full flex-1">
+                <div className="relative w-full sm:max-w-md">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <input
                         type="text"
@@ -52,23 +52,26 @@ export function PainelFiltrosKanban({ filtros, aoFiltrar }: PainelFiltrosProps) 
                     />
                 </div>
 
-                <div className="hidden lg:flex items-center gap-2">
-                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mx-2 flex items-center gap-1">
+                <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 opacity-50 px-1">
                         <Filter className="w-3 h-3" />
-                        Prioridade:
+                        Prioridade
                     </span>
-                    {Object.entries(LABELS_PRIORIDADE).map(([key, label]) => {
-                        const ativo = prioridades.includes(key);
-                        return (
-                            <button
-                                key={key}
-                                onClick={() => togglePrioridade(key)}
-                                className={`transition-all rounded-full border border-transparent ${ativo ? 'ring-2 ring-primary/50 scale-105' : 'opacity-60 hover:opacity-100 hover:scale-105'} cursor-pointer`}
-                            >
-                                <Emblema texto={label} variante={CORES_PRIORIDADE[key as keyof typeof CORES_PRIORIDADE]} className="pointer-events-none" />
-                            </button>
-                        );
-                    })}
+                    <div className="flex flex-wrap items-center gap-1.5">
+                        {Object.entries(LABELS_PRIORIDADE).map(([key, label]) => {
+                            const ativo = prioridades.includes(key);
+                            return (
+                                <button
+                                    key={key}
+                                    onClick={() => togglePrioridade(key)}
+                                    className={`transition-all rounded-full border border-transparent ${ativo ? 'ring-2 ring-primary/50' : 'opacity-40 hover:opacity-100'} cursor-pointer`}
+                                    aria-label={`Filtrar por ${label}`}
+                                >
+                                    <Emblema texto={label} variante={CORES_PRIORIDADE[key as keyof typeof CORES_PRIORIDADE]} className="pointer-events-none text-[10px]" />
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
 

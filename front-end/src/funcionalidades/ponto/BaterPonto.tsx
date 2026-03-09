@@ -57,21 +57,23 @@ export function BaterPonto() {
             />
 
             <Tabs defaultValue="registro" className="w-full">
-                <div className="flex items-center justify-between mb-6">
-                    <TabsList className="bg-card border border-border shadow-sm">
-                        <TabsTrigger value="registro" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-8">
+                    <TabsList className="bg-card border border-border shadow-sm p-1 rounded-2xl w-fit">
+                        <TabsTrigger value="registro" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground rounded-xl px-4 py-2 text-xs font-black uppercase tracking-widest">
                             Registro Diário
                         </TabsTrigger>
-                        <TabsTrigger value="justificativas" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+                        <TabsTrigger value="justificativas" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground rounded-xl px-4 py-2 text-xs font-black uppercase tracking-widest">
                             Minhas Justificativas
                         </TabsTrigger>
                     </TabsList>
 
-                    <div className="flex items-center gap-3">
-                        <BotaoExportarPonto />
+                    <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                        <div className="flex-1 sm:flex-none">
+                            <BotaoExportarPonto />
+                        </div>
                         <button
                             onClick={() => setModalJustificativaAberto(true)}
-                            className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/90 border border-border rounded-xl text-sm text-secondary-foreground transition-colors"
+                            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-primary/10 hover:bg-primary/20 border border-primary/20 rounded-2xl text-[11px] font-black uppercase tracking-widest text-primary transition-all active:scale-95"
                         >
                             <Plus className="w-4 h-4" />
                             Nova Justificativa
@@ -162,13 +164,13 @@ export function BaterPonto() {
                             )}
                         </div>
 
-                        {/* Coluna 2: Histórico (Mesclando o componente no mesmo arquivo para brevidade na UI) */}
-                        <div className="lg:col-span-2 bg-card border border-border rounded-2xl flex flex-col h-[340px] overflow-hidden shadow-sm">
-                            <div className="p-4 border-b border-border shrink-0 bg-muted/50">
-                                <h3 className="font-bold text-card-foreground">Histórico Recente</h3>
+                        {/* Coluna 2: Histórico */}
+                        <div className="lg:col-span-2 bg-card border border-border rounded-2xl flex flex-col h-auto lg:h-[343px] overflow-hidden shadow-sm">
+                            <div className="p-4 border-b border-border shrink-0 bg-muted/20">
+                                <h3 className="text-[11px] font-black uppercase tracking-widest text-foreground">Histórico Recente</h3>
                             </div>
 
-                            <div className="flex-1 overflow-y-auto p-2 min-w-0">
+                            <div className="flex-1 overflow-x-auto min-w-0 no-scrollbar">
                                 {historico.length === 0 ? (
                                     <div className="h-full flex flex-col items-center justify-center text-muted-foreground text-sm">
                                         <p>Nenhum registro encontrado no histórico.</p>

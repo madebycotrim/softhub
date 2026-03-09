@@ -68,7 +68,6 @@ export function PainelLogs() {
                                 className="w-full h-10 bg-background border border-border rounded-2xl px-3 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/10 appearance-none cursor-pointer hover:border-primary/40 transition-colors"
                             >
                                 <option value="">Todos Módulos</option>
-                                <option value="backlog">Backlog</option>
                                 <option value="kanban">Kanban</option>
                                 <option value="ponto">Ponto</option>
                                 <option value="autenticacao">Autenticação</option>

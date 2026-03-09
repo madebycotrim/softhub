@@ -1,5 +1,11 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { BarraLateral } from './BarraLateral';
+import { Menu, X, QrCode, Sun, Moon } from 'lucide-react';
+import { usarAutenticacao } from '../../funcionalidades/autenticacao/usarAutenticacao';
+import { Avatar } from './Avatar';
+import { usarTema } from '../../contexto/ContextoTema';
+import { Modal } from './Modal';
+import ScannerQR from '../../funcionalidades/autenticacao/ScannerQR';
 
 interface LayoutPrincipalProps {
     children: ReactNode;
@@ -7,17 +13,102 @@ interface LayoutPrincipalProps {
 
 /**
  * Layout base de todas as páginas internas da aplicação.
- * Toda página interna renderizada pela rota /app usa essa estrutura fixa.
+ * Implementa navegação responsiva: Sidebar fixa no Desktop e Drawer no Mobile.
  */
 export function LayoutPrincipal({ children }: LayoutPrincipalProps) {
+    const [sidebarAberta, setSidebarAberta] = useState(false);
+    const [scannerAberto, setScannerAberto] = useState(false);
+    const { usuario } = usarAutenticacao();
+    const { tema, setTema } = usarTema();
+
     return (
         <div className="flex h-screen bg-background text-foreground overflow-hidden transition-colors duration-300 font-sans">
-            <BarraLateral />
+            
+            {/* Sidebar Desktop */}
+            <div className="hidden lg:flex shrink-0 w-[280px]">
+                <BarraLateral aoAbrirScanner={() => setScannerAberto(true)} />
+            </div>
+
+            {/* Mobile: Overlay & Drawer Sidebar */}
+            {sidebarAberta && (
+                <div 
+                    className="fixed inset-0 z-50 lg:hidden"
+                    onClick={() => setSidebarAberta(false)}
+                >
+                    {/* Backdrop */}
+                    <div className="absolute inset-0 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300" />
+                    
+                    {/* Drawer Content */}
+                    <div 
+                        className="absolute inset-y-0 left-0 w-[280px] bg-sidebar border-r border-sidebar-border shadow-2xl animate-in slide-in-from-left duration-300"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <div className="flex flex-col h-full relative">
+                            {/* Botão fechar móvel */}
+                            <button 
+                                onClick={() => setSidebarAberta(false)}
+                                className="absolute top-4 right-4 z-50 p-2 text-sidebar-foreground/40 hover:text-primary transition-colors bg-sidebar-accent/30 rounded-xl"
+                            >
+                                <X size={20} />
+                            </button>
+                            <BarraLateral 
+                                aoNavegar={() => setSidebarAberta(false)} 
+                                aoAbrirScanner={() => setScannerAberto(true)}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="flex flex-col flex-1 overflow-hidden relative">
-                <main className="flex-1 overflow-y-auto px-6 pb-6 pt-6 relative z-10 transition-all">
+                {/* Mobile Header: Só aparece em telas pequenas */}
+                <header className="lg:hidden h-16 shrink-0 flex items-center justify-between px-4 border-b border-border bg-card/80 backdrop-blur-xl sticky top-0 z-40">
+                    <button 
+                        onClick={() => setSidebarAberta(true)}
+                        className="p-2.5 -ml-1 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-2xl transition-all active:scale-90"
+                    >
+                        <Menu size={22} strokeWidth={2.5} />
+                    </button>
+                    
+                    <div className="flex flex-col items-center leading-none">
+                        <span className="text-[13px] font-black text-foreground uppercase tracking-widest">SoftHub</span>
+                        <span className="text-[9px] text-primary font-black uppercase tracking-[0.2em] mt-0.5 opacity-60">Fábrica</span>
+                    </div>
+
+                    <div className="flex items-center gap-2 -mr-1">
+                        <button
+                            onClick={() => setScannerAberto(true)}
+                            className="p-2 text-muted-foreground hover:text-primary transition-colors bg-sidebar-accent/5 rounded-xl border border-border/40"
+                            title="Conectar via QR Code"
+                        >
+                            <QrCode size={18} />
+                        </button>
+                        <button
+                            onClick={() => setTema(tema === 'dark' ? 'light' : 'dark')}
+                            className="p-2 text-muted-foreground hover:text-primary transition-colors bg-sidebar-accent/5 rounded-xl border border-border/40"
+                        >
+                            {tema === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                        </button>
+                        <div className="ml-1 border-l border-border pl-3">
+                            <Avatar nome={usuario?.nome || ''} fotoPerfil={usuario?.foto_perfil || null} tamanho="sm" />
+                        </div>
+                    </div>
+                </header>
+
+                <main className="flex-1 overflow-y-auto px-4 sm:px-6 pb-20 lg:pb-6 pt-4 lg:pt-6 relative z-10 transition-all overflow-x-hidden">
                     {children}
                 </main>
             </div>
+
+            {/* Modal Scanner QR (Global via Layout) */}
+            <Modal
+                aberto={scannerAberto}
+                aoFechar={() => setScannerAberto(false)}
+                titulo="Conectar via QR Code"
+                largura="sm"
+            >
+                <ScannerQR aoFechar={() => setScannerAberto(false)} />
+            </Modal>
         </div>
     );
 }

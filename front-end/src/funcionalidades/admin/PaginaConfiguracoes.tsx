@@ -53,7 +53,7 @@ export function PaginaConfiguracoes() {
                 id: 'kanban', 
                 titulo: '📦 Kanban & Tarefas', 
                 icone: LayoutGrid, 
-                permissoes: ['criar_tarefa', 'mover_tarefa', 'arquivar_tarefa', 'comentar_tarefa', 'gerenciar_checklist', 'ver_historico_tarefa', 'gerenciar_sprint'] 
+                permissoes: ['criar_tarefa', 'mover_tarefa', 'arquivar_tarefa', 'comentar_tarefa', 'gerenciar_checklist', 'ver_historico_tarefa'] 
             },
             ponto: { 
                 id: 'ponto', 
@@ -316,7 +316,7 @@ export function PaginaConfiguracoes() {
                             </div>
                             <div className="flex flex-col">
                                 <h2 className="text-[11px] font-black uppercase tracking-widest text-foreground">Equipes</h2>
-                                <span className="text-[9px] text-muted-foreground font-medium uppercase tracking-widest opacity-60">Sprints & Squads</span>
+                                <span className="text-[9px] text-muted-foreground font-medium uppercase tracking-widest opacity-60">Squads & Teams</span>
                             </div>
                         </div>
                         <div className="p-5 space-y-4">
@@ -355,7 +355,7 @@ export function PaginaConfiguracoes() {
 
                 {/* Coluna da Direita: Matriz de Permissões */}
                 <div className="lg:col-span-3">
-                    <section className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm flex flex-col h-[calc(100vh-200px)]">
+                    <section className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm flex flex-col h-auto lg:h-[calc(100vh-200px)]">
                         <div className="p-6 border-b border-border flex items-center gap-4 shrink-0">
                             <div className="p-3 bg-purple-500/10 rounded-xl text-purple-500">
                                 <Lock className="w-5 h-5" />
@@ -366,16 +366,16 @@ export function PaginaConfiguracoes() {
                             </div>
                         </div>
 
-                        <div className="flex-1 overflow-auto custom-scrollbar">
-                            <table className="w-full text-left border-collapse">
-                                <thead className="sticky top-0 z-20 bg-card border-b border-border shadow-sm">
-                                    <tr>
-                                        <th className="p-5 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 bg-muted/5 min-w-[240px]">Recurso do Sistema</th>
+                        <div className="flex-1 overflow-auto custom-scrollbar relative">
+                            <table className="w-full text-left border-separate border-spacing-0">
+                                <thead className="sticky top-0 z-40">
+                                    <tr className="bg-card/95 backdrop-blur-md">
+                                        <th className="p-4 px-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 border-b border-border shadow-[0_1px_0_0_rgba(var(--border),0.1)] min-w-[200px]">Módulo / Recurso</th>
                                         {permissoesAgrupadas.roles.map(role => {
                                             const info = formatarRole(role);
                                             return (
-                                                <th key={role} className="p-5 text-center min-w-[100px] border-l border-border/30">
-                                                    <div className="flex flex-col items-center gap-1">
+                                                <th key={role} className="p-4 text-center min-w-[100px] border-b border-border border-l border-border/20 shadow-[0_1px_0_0_rgba(var(--border),0.1)]">
+                                                    <div className="flex flex-col items-center gap-1.5 py-1">
                                                         <info.icone size={14} className={info.cor} />
                                                         <span className="text-[9px] font-black uppercase tracking-tighter text-foreground/70">{info.label}</span>
                                                     </div>
@@ -384,7 +384,7 @@ export function PaginaConfiguracoes() {
                                         })}
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-border/30">
+                                <tbody className="divide-y divide-border/20">
                                     {Object.values(permissoesAgrupadas.groups).map(grupo => (
                                         <Fragment key={grupo.id}>
                                             <tr className="bg-muted/10">

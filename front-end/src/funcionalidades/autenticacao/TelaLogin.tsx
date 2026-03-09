@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useMsal } from '@azure/msal-react';
 import { useSearchParams, useNavigate } from 'react-router';
-import { AlertCircle, Globe, Code, Info } from 'lucide-react';
+import { AlertCircle, Globe, Code, Info, Download } from 'lucide-react';
 import { ambiente } from '../../configuracoes/ambiente';
 import { api } from '../../compartilhado/servicos/api';
 import { usarAutenticacaoContexto } from '../../contexto/ContextoAutenticacao';
@@ -22,6 +22,25 @@ export default function TelaLogin() {
 
     const [carregando, setCarregando] = useState(false);
     const [erroLocal, setErroLocal] = useState<string | null>(null);
+    const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+    useEffect(() => {
+        const handleBeforeInstallPrompt = (e: any) => {
+            e.preventDefault();
+            setDeferredPrompt(e);
+        };
+        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    }, []);
+
+    const handleInstallClick = async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+            setDeferredPrompt(null);
+        }
+    };
 
     const erroRedirect = searchParams.get('erro');
     const mensagemErroRedirect: Record<string, string> = {
@@ -82,41 +101,49 @@ export default function TelaLogin() {
     };
 
     return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4 sm:p-6 lg:p-8 selection:bg-red-500/20 transition-colors duration-500">
-            <div className="w-full max-w-6xl bg-card rounded-2xl shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] overflow-hidden flex flex-col lg:flex-row min-h-[700px] border border-border animate-in fade-in zoom-in-95 duration-700">
+        <div className="min-h-screen bg-[#020617] lg:bg-background flex items-center justify-center p-0 sm:p-6 lg:p-8 selection:bg-red-500/20 transition-colors duration-500">
+            <div className="w-full max-w-7xl bg-card sm:rounded-2xl shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] overflow-hidden flex flex-col lg:flex-row min-h-screen sm:min-h-[750px] border-none sm:border border-border animate-in fade-in zoom-in-95 duration-700">
 
                 {/* Lado Esquerdo Institucional */}
-                <div className="lg:w-[40%] bg-gradient-to-br from-[#003366] via-[#002244] to-[#001a33] p-12 lg:p-16 flex flex-col justify-between text-white relative overflow-hidden group">
-                    <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-white/5 rounded-full blur-[100px] pointer-events-none group-hover:scale-110 transition-transform duration-[3s]" />
-                    <div className="absolute bottom-[-5%] right-[-5%] w-64 h-64 bg-red-600/5 rounded-full blur-[80px] pointer-events-none" />
+                <div className="lg:w-[42%] bg-[#001a33] p-8 pt-12 pb-14 lg:p-16 flex flex-col justify-between text-white relative overflow-hidden group shrink-0">
+                    {/* Imagem do Campus em Background Cinematico */}
+                    <div className="absolute inset-0 z-0">
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#001a33] via-transparent to-transparent opacity-80" />
+                        <div className="absolute inset-0 bg-blue-900/10 pointer-events-none" />
+                    </div>
 
-                    <div className="relative z-10 space-y-12">
+                    <div className="absolute top-[-5%] left-[-10%] w-[500px] h-[500px] bg-red-600/10 rounded-full blur-[120px] pointer-events-none group-hover:opacity-60 transition-opacity duration-1000" />
+                    <div className="absolute bottom-[0%] right-[-5%] w-96 h-96 bg-blue-400/5 rounded-full blur-[100px] pointer-events-none" />
+
+                    <div className="relative z-10 space-y-12 lg:space-y-16">
                         <div className="flex items-center gap-5">
-                            <img src={logoUnieuro} alt="Logo Unieuro" className="w-16 h-16 object-contain" />
-                            <div className="space-y-1">
-                                <h1 className="text-[22px] font-black leading-none tracking-tight">FÁBRICA DE SOFTWARE</h1>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[11px] tracking-[0.2em] text-red-500 font-black uppercase">SoftHub</span>
+                            <div className="p-3 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl group-hover:bg-white/10 transition-colors">
+                                <img src={logoUnieuro} alt="Logo Unieuro" className="w-10 h-10 lg:w-12 lg:h-12 object-contain" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <h1 className="text-xl lg:text-[24px] font-[900] leading-none tracking-tight">FÁBRICA DE SOFTWARE</h1>
+                                <div className="inline-flex items-center px-2 py-0.5 bg-red-600/20 rounded-md border border-red-500/20">
+                                    <span className="text-[10px] lg:text-[11px] tracking-[0.3em] text-red-500 font-black uppercase">SoftHub</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="space-y-8">
-                            <h2 className="text-5xl lg:text-6xl font-black leading-[1.05] tracking-tighter">
+                        <div className="space-y-6 lg:space-y-10">
+                            <h2 className="text-[42px] lg:text-[72px] font-[900] leading-[0.95] lg:leading-[0.9] tracking-tighter mix-blend-difference">
                                 Sua Ideia, <br />
-                                <span className="text-white/40">Nosso Código.</span>
+                                <span className="text-white/30 group-hover:text-white/50 transition-colors duration-1000">Nosso Código.</span>
                             </h2>
-                            <p className="text-white/50 text-base leading-relaxed max-w-sm font-medium">
-                                Transformamos o conhecimento acadêmico em soluções tecnológicas de alto impacto para o mundo real.
+                            <p className="text-white/60 text-sm lg:text-[18px] leading-relaxed max-w-xs lg:max-w-md font-medium">
+                                Transformamos o conhecimento acadêmico em soluções tecnológicas de alto impacto.
                             </p>
                             <div className="flex items-center gap-3">
-                                <div className="h-1 w-16 bg-red-600 rounded-full" />
-                                <div className="h-1 w-4 bg-white/20 rounded-full" />
+                                <div className="h-1.5 w-16 lg:w-24 bg-red-600 rounded-full shadow-[0_0_20px_rgba(220,38,38,0.5)]" />
+                                <div className="h-1.5 w-6 bg-white/20 rounded-full" />
                             </div>
                         </div>
                     </div>
 
-                    <div className="relative z-10 space-y-8">
+                    <div className="mt-8 lg:mt-0 relative z-10 hidden sm:block">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
                                 <div className="p-2 bg-white/5 rounded-xl border border-white/10">
@@ -131,53 +158,69 @@ export default function TelaLogin() {
                     </div>
                 </div>
 
-                {/* Área de Acesso (Login Microsoft + QR Code) */}
-                <div className="flex-1 flex flex-col lg:flex-row items-stretch">
+                {/* Área de Acesso (Login Microsoft + Prompt PWA) */}
+                <div className="flex-1 flex flex-col lg:flex-row items-stretch bg-card -mt-8 lg:mt-0 rounded-t-[32px] lg:rounded-none relative z-20">
 
-                    {/* Lado Esquerdo: Acesso Microsoft */}
-                    <div className="flex-1 p-12 flex flex-col items-center justify-center bg-card dark:bg-card/95">
-                        <div className="space-y-12 w-full max-w-sm">
-                            <div className="space-y-4 text-center">
-                                <div className="inline-flex py-1 px-3 bg-red-500/10 text-red-600 text-[10px] font-black uppercase tracking-widest rounded-full">
+                    {/* Lado Central: Acesso Microsoft */}
+                    <div className="flex-1 p-8 lg:p-12 flex flex-col items-center justify-center">
+                        <div className="space-y-8 lg:space-y-12 w-full max-w-sm">
+                            <div className="space-y-4 text-center lg:text-left">
+                                <div className="inline-flex py-1 px-3 bg-red-500/10 text-red-600 text-[10px] font-black uppercase tracking-widest rounded-full leading-none">
                                     Bem-vindo de volta
                                 </div>
-                                <h3 className="text-4xl font-black text-foreground tracking-tight leading-none">Inicie agora.</h3>
-                                <p className="text-muted-foreground font-bold text-sm leading-relaxed">
-                                    Acesse a plataforma da Fábrica de Software, utilize seu login institucional.
+                                <h3 className="text-[28px] lg:text-4xl font-black text-foreground tracking-tight leading-tight">Inicie agora.</h3>
+                                <p className="text-muted-foreground font-bold text-xs lg:text-sm leading-relaxed max-w-[280px] lg:max-w-none mx-auto lg:mx-0 pr-0 lg:pr-8">
+                                    Acesse a plataforma da Fábrica de Software com seu login institucional.
                                 </p>
                             </div>
 
                             {erro && (
                                 <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-4 text-red-600 text-[11px] font-bold animate-in shake duration-500">
-                                    <AlertCircle size={16} />
+                                    <AlertCircle size={16} className="shrink-0" />
                                     <span>{erro}</span>
                                 </div>
                             )}
 
-                            <div className="space-y-8">
+                            <div className="space-y-6 lg:space-y-8">
                                 <button
                                     onClick={handleLogin}
                                     disabled={carregando || inProgress !== 'none'}
-                                    className="w-full flex items-center justify-center h-[41px] bg-[#2F2F2F] hover:bg-[#3F3F3F] active:bg-[#1F1F1F] transition-colors shadow-lg shadow-black/10 disabled:opacity-50 group px-3"
+                                    className="w-full flex items-center justify-center h-14 bg-[#2F2F2F] hover:bg-[#3F3F3F] active:bg-[#1F1F1F] transition-all shadow-xl shadow-black/10 disabled:opacity-50 group px-4 rounded-2xl active:scale-[0.98]"
                                     style={{ fontFamily: "Segoe UI, Frutiger, Frutiger Linotype, Dejavu Sans, Helvetica Neue, Arial, sans-serif" }}
                                 >
                                     <div className="flex items-center gap-3">
-                                        <svg className="w-[21px] h-[21px]" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <svg className="w-5 h-5 lg:w-[21px] lg:h-[21px]" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <rect x="0" y="0" width="10" height="10" fill="#F25022" />
                                             <rect x="11" y="0" width="10" height="10" fill="#7FBA00" />
                                             <rect x="0" y="11" width="10" height="10" fill="#00A4EF" />
                                             <rect x="11" y="11" width="10" height="10" fill="#FFB900" />
                                         </svg>
-                                        <span className="text-[15px] font-[600] text-white whitespace-nowrap">Entrar com a Microsoft</span>
+                                        <span className="text-[15px] lg:text-[16px] font-semibold text-white whitespace-nowrap">Entrar com a Microsoft</span>
                                     </div>
                                 </button>
 
-                                <div className="flex items-center gap-1.5 text-muted-foreground text-[11.5px] animate-in fade-in slide-in-from-bottom-2 duration-700 delay-500">
+                                <div className="flex items-center justify-center lg:justify-start gap-1.5 text-muted-foreground text-[11px] lg:text-[11.5px] opacity-60">
                                     <Info size={11} className="shrink-0" />
                                     <span>
-                                        Use o e-mail <span className="text-foreground/60">@{ambiente.dominioInstitucional}</span>
+                                        Use seu e-mail <span className="text-foreground/80 font-bold">@{ambiente.dominioInstitucional}</span>
                                     </span>
                                 </div>
+
+                                {isMobile && deferredPrompt && (
+                                    <div className="pt-8 border-t border-border/10">
+                                        <button
+                                            onClick={handleInstallClick}
+                                            className="w-full flex items-center justify-center h-14 bg-accent/5 hover:bg-accent/10 rounded-2xl transition-all active:scale-[0.98] group"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-primary/10 rounded-xl text-primary opacity-60 group-hover:opacity-100 transition-opacity">
+                                                    <Download size={18} />
+                                                </div>
+                                                <span className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground">Instalar Aplicativo</span>
+                                            </div>
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -185,16 +228,18 @@ export default function TelaLogin() {
                     {/* Divisor Vertical Ultra Sutil */}
                     <div className="hidden lg:block w-[1px] bg-border self-stretch my-24 opacity-50" />
 
-                    {/* Lado Direito: QR Code Integrado */}
+                    {/* Lado Direito: Accesso Integrado (QR Code) */}
                     {!isMobile && (
-                        <div className="flex-1 p-12 flex flex-col items-center justify-center bg-accent/5 dark:bg-card/30 animate-in fade-in duration-700">
-                            <PainelQRCode />
+                        <div className="flex-1 flex flex-col items-center justify-center bg-accent/[0.03] dark:bg-card/30 p-12 relative animate-in fade-in duration-1000">
+                            <div className="w-full flex flex-col items-center space-y-12">
+                                <PainelQRCode />
 
-                            <div className="mt-8 text-center space-y-4 px-4 max-w-[340px]">
-                                <h4 className="text-2xl font-black text-foreground tracking-tight leading-none">Entrar com QR Code</h4>
-                                <p className="text-[13px] text-muted-foreground font-bold leading-relaxed text-center opacity-80">
-                                    No celular, acesse o site ou app da <strong className="text-foreground font-black">Fábrica de Software</strong>, escaneie o QR code e faça login em segundos — sem digitar nada.
-                                </p>
+                                <div className="text-center space-y-3 max-w-[280px]">
+                                    <h4 className="text-2xl font-black text-foreground tracking-tight leading-none">Entrar com QR Code</h4>
+                                    <p className="text-[13px] text-muted-foreground font-bold leading-relaxed opacity-60">
+                                        Escaneie com o app e faça login instantaneamente.
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     )}

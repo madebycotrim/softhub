@@ -61,12 +61,11 @@ export function formatarHoras(minutos: number): string {
 export function formatarEventoHistorico(campo: string, anterior: string, novo: string): string {
     const labels: Record<string, Record<string, string>> = {
         status: {
-            backlog: 'Backlog',
             a_fazer: 'A Fazer',
             em_andamento: 'Em Andamento',
             em_revisao: 'Em Revisão',
             testando: 'Testando',
-            concluido: 'Conclído'
+            concluido: 'Concluído'
         },
         prioridade: {
             urgente: 'Urgente',
@@ -81,7 +80,6 @@ export function formatarEventoHistorico(campo: string, anterior: string, novo: s
         prioridade: 'a prioridade',
         titulo: 'o título',
         descricao: 'a descrição',
-        sprint_id: 'a sprint',
         responsavel: 'o responsável'
     };
 

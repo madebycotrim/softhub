@@ -6,7 +6,7 @@ export interface Tarefa {
     id: string;
     titulo: string;
     descricao: string | null;
-    status: 'backlog' | 'a_fazer' | 'em_andamento' | 'em_revisao' | 'concluido' | 'testando';
+    status: 'a_fazer' | 'em_andamento' | 'em_revisao' | 'concluido';
     prioridade: 'urgente' | 'alta' | 'media' | 'baixa';
     pontos: number | null;
     responsaveis: Array<{
@@ -24,9 +24,9 @@ export interface FiltrosKanban {
 }
 
 /**
- * Hook com responsabilidade única de gerenciar as tarefas do Kanban de uma Sprint/Projeto.
+ * Hook com responsabilidade única de gerenciar as tarefas do Kanban de um Projeto.
  */
-export function usarKanban(sprintId?: string, projetoId?: string, filtros?: FiltrosKanban) {
+export function usarKanban(projetoId?: string, filtros?: FiltrosKanban) {
     const [tarefas, setTarefas] = useState<Tarefa[]>([]);
     const [carregando, setCarregando] = useState(true);
     const [erro, setErro] = useState<string | null>(null);
@@ -38,7 +38,7 @@ export function usarKanban(sprintId?: string, projetoId?: string, filtros?: Filt
         let mounted = true;
 
         async function buscar() {
-            if (!sprintId && !projetoId) {
+            if (!projetoId) {
                 setCarregando(false);
                 return;
             }
@@ -47,7 +47,7 @@ export function usarKanban(sprintId?: string, projetoId?: string, filtros?: Filt
                 setCarregando(true);
 
                 // Construindo Query Params via axios params
-                const params: Record<string, any> = { sprintId, projetoId };
+                const params: Record<string, any> = { projetoId };
                 if (filtroBusca) params.busca = filtroBusca;
                 if (filtroPrioridades) params.prioridade = filtroPrioridades;
                 if (filtroResponsavelId) params.responsavelId = filtroResponsavelId;
@@ -70,7 +70,7 @@ export function usarKanban(sprintId?: string, projetoId?: string, filtros?: Filt
         return () => {
             mounted = false;
         };
-    }, [sprintId, projetoId, filtroBusca, filtroPrioridades, filtroResponsavelId]);
+    }, [projetoId, filtroBusca, filtroPrioridades, filtroResponsavelId]);
 
     /**
      * Move uma tarefa localmente (optimistic update) e depois chama a API.

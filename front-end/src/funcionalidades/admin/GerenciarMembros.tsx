@@ -388,99 +388,119 @@ function LinhaMembro({
 
     return (
         <div
-            className={`grid grid-cols-12 gap-4 p-4 items-center border-b border-border/50 hover:bg-muted/30 transition-colors ${salvando ? 'opacity-60 pointer-events-none' : ''} ${selecionado ? 'bg-primary/5' : ''}`}
+            className={`flex flex-col lg:grid lg:grid-cols-12 gap-4 p-4 items-start lg:items-center border-b border-border/50 hover:bg-muted/30 transition-colors ${salvando ? 'opacity-60 pointer-events-none' : ''} ${selecionado ? 'bg-primary/5 ring-1 ring-inset ring-primary/10 lg:ring-0' : ''}`}
             aria-busy={salvando}
         >
-            {/* Seleção */}
-            <div className="col-span-1 flex justify-center">
-                <button
-                    onClick={(e) => !ehOMesmoUsuario && onToggleSelect(membro.id, e.shiftKey)}
-                    className={`transition-colors focus:outline-none ${ehOMesmoUsuario ? 'cursor-not-allowed text-muted-foreground/10' : 'text-muted-foreground/30 hover:text-primary'}`}
-                    disabled={ehOMesmoUsuario}
-                    aria-label={`Selecionar ${membro.nome}`}
-                >
-                    {selecionado ? <CheckSquare size={18} className="text-primary" /> : <Square size={18} />}
-                </button>
-            </div>
+            {/* Seleção e Identificação (Lado a Lado no Mobile) */}
+            <div className="flex items-center gap-3 w-full lg:col-span-6">
+                <div className="flex shrink-0">
+                    <button
+                        onClick={(e) => !ehOMesmoUsuario && onToggleSelect(membro.id, e.shiftKey)}
+                        className={`transition-colors focus:outline-none p-2 -m-2 ${ehOMesmoUsuario ? 'cursor-not-allowed text-muted-foreground/5' : 'text-muted-foreground/30 hover:text-primary'}`}
+                        disabled={ehOMesmoUsuario}
+                        aria-label={`Selecionar ${membro.nome}`}
+                    >
+                        {selecionado ? <CheckSquare size={20} className="text-primary" /> : <Square size={20} />}
+                    </button>
+                </div>
 
-            {/* Membro */}
-            <div className="col-span-5 flex items-center gap-3">
-                <Avatar nome={membro.nome} fotoPerfil={membro.foto_perfil} tamanho="md" />
-                <div className="min-w-0">
-                    <p className="font-semibold text-foreground text-sm leading-tight break-words">
-                        {membro.nome}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground opacity-70 break-all leading-tight mt-0.5">
-                        {membro.email}
-                    </p>
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <Avatar nome={membro.nome} fotoPerfil={membro.foto_perfil} tamanho="md" />
+                    <div className="min-w-0">
+                        <p className="font-bold text-foreground text-sm leading-tight truncate">
+                            {membro.nome}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground opacity-70 truncate leading-tight mt-0.5">
+                            {membro.email}
+                        </p>
+                    </div>
+                </div>
+
+                {/* Status Mobile (Badge Simplificado) */}
+                <div className="lg:hidden shrink-0 ml-auto flex items-center gap-1.5">
+                    <div className={`w-1.5 h-1.5 rounded-full ${membro.ativo ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-muted-foreground/20'}`} />
                 </div>
             </div>
 
-            {/* Role / Papel */}
-            <div className="col-span-1">
-                <select
-                    aria-label={`Papel de ${membro.nome}`}
-                    className="w-full bg-muted/20 border border-border/50 rounded-xl px-2 py-1.5 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer"
-                    value={membro.role}
-                    onChange={e => onAlterarRole(membro, e.target.value)}
-                >
-                    <option value="VISITANTE">Visitante</option>
-                    <option value="MEMBRO">Membro</option>
-                    <option value="LIDER_EQUIPE">Líder Equipe</option>
-                    <option value="LIDER_GRUPO">Líder Grupo</option>
-                    <option value="ADMIN">Admin</option>
-                </select>
-            </div>
+            {/* Role / Papel / Grupo */}
+            <div className="grid grid-cols-2 lg:contents gap-4 w-full lg:w-auto">
+                {/* Role / Papel */}
+                <div className="lg:col-span-1">
+                    <label className="lg:hidden text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 mb-1 block">Papel</label>
+                    <div className="relative">
+                        <select
+                            aria-label={`Papel de ${membro.nome}`}
+                            className="w-full bg-muted/20 border border-border/50 rounded-xl px-2 py-1.5 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer"
+                            value={membro.role}
+                            onChange={e => onAlterarRole(membro, e.target.value)}
+                        >
+                            <option value="VISITANTE">Visitante</option>
+                            <option value="MEMBRO">Membro</option>
+                            <option value="LIDER_EQUIPE">Líder Equipe</option>
+                            <option value="LIDER_GRUPO">Líder Grupo</option>
+                            <option value="ADMIN">Admin</option>
+                        </select>
+                        <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-40 lg:hidden" />
+                    </div>
+                </div>
 
-            {/* Grupo */}
-            <div className="col-span-1 flex justify-center">
-                <div className="flex bg-muted/20 p-0.5 rounded-2xl border border-border/50">
-                    <button
-                        onClick={() => onAlterarEquipe(membro.id, isGrupoA ? null : (equipeA?.id || null))}
-                        title={equipeA?.grupo_nome || 'Grupo A'}
-                        disabled={!equipeA}
-                        className={`w-8 py-1 rounded-xl text-[10px] font-bold transition-all ${isGrupoA ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted/50'}`}
-                    >
-                        A
-                    </button>
-                    <button
-                        onClick={() => onAlterarEquipe(membro.id, isGrupoB ? null : (equipeB?.id || null))}
-                        title={equipeB?.grupo_nome || 'Grupo B'}
-                        disabled={!equipeB}
-                        className={`w-8 py-1 rounded-xl text-[10px] font-bold transition-all ${isGrupoB ? 'bg-indigo-500 text-white shadow-sm' : 'text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted/50'}`}
-                    >
-                        B
-                    </button>
+                {/* Grupo */}
+                <div className="lg:col-span-1 flex flex-col lg:items-center">
+                    <label className="lg:hidden text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 mb-1 block">Grupo</label>
+                    <div className="flex bg-muted/20 p-0.5 rounded-2xl border border-border/50 w-fit">
+                        <button
+                            onClick={() => onAlterarEquipe(membro.id, isGrupoA ? null : (equipeA?.id || null))}
+                            title={equipeA?.grupo_nome || 'Grupo A'}
+                            disabled={!equipeA}
+                            className={`w-9 lg:w-8 py-1.5 lg:py-1 rounded-xl text-[10px] font-black transition-all ${isGrupoA ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted/50'}`}
+                        >
+                            A
+                        </button>
+                        <button
+                            onClick={() => onAlterarEquipe(membro.id, isGrupoB ? null : (equipeB?.id || null))}
+                            title={equipeB?.grupo_nome || 'Grupo B'}
+                            disabled={!equipeB}
+                            className={`w-9 lg:w-8 py-1.5 lg:py-1 rounded-xl text-[10px] font-black transition-all ${isGrupoB ? 'bg-indigo-500 text-white shadow-sm' : 'text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted/50'}`}
+                        >
+                            B
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            {/* Status */}
-            <div className="col-span-2 flex justify-center">
+            {/* Status Desktop */}
+            <div className="hidden lg:flex lg:col-span-2 justify-center">
                 <div className="flex items-center gap-1.5">
-                    <div className={`w-1.5 h-1.5 rounded-full ${membro.ativo ? 'bg-emerald-500' : 'bg-muted-foreground/20'}`} />
-                    <span className={`text-[9px] font-bold uppercase tracking-wider ${membro.ativo ? 'text-emerald-500' : 'text-muted-foreground/40'}`}>
+                    <div className={`w-1.5 h-1.5 rounded-full ${membro.ativo ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-muted-foreground/20'}`} />
+                    <span className={`text-[9px] font-black uppercase tracking-wider ${membro.ativo ? 'text-emerald-500' : 'text-muted-foreground/40'}`}>
                         {membro.ativo ? 'Ativo' : 'Offline'}
                     </span>
                 </div>
             </div>
 
             {/* Ações */}
-            <div className="col-span-2 flex items-center justify-end gap-2">
+            <div className="flex items-center justify-end gap-2 w-full lg:w-auto lg:col-span-2 pt-3 lg:pt-0 border-t border-border/40 lg:border-0">
                 {!ehOMesmoUsuario && (
                     <>
                         <button
                             onClick={membro.ativo ? () => onSolicitarExclusao(membro) : () => onAlternarStatus(membro)}
                             title={membro.ativo ? "Arquivar membro" : "Restaurar membro"}
-                            className={`p-2 rounded-xl transition-all ${membro.ativo
-                                ? 'text-muted-foreground/40 hover:text-red-500 hover:bg-red-500/5'
-                                : 'text-emerald-500/60 hover:text-emerald-500 hover:bg-emerald-500/5'}`}
+                            className={`flex-1 lg:flex-none flex items-center justify-center gap-2 px-3 py-2 lg:p-2 rounded-xl transition-all text-[11px] font-black uppercase tracking-widest ${membro.ativo
+                                ? 'text-muted-foreground/60 hover:text-red-500 hover:bg-red-500/5'
+                                : 'text-emerald-500 hover:bg-emerald-500/5'}`}
                         >
                             {salvando ? (
                                 <Loader2 size={16} className="animate-spin" />
                             ) : membro.ativo ? (
-                                <Trash2 size={16} />
+                                <>
+                                    <Trash2 size={16} />
+                                    <span className="lg:hidden">Arquivar</span>
+                                </>
                             ) : (
-                                <RotateCcw size={16} />
+                                <>
+                                    <RotateCcw size={16} />
+                                    <span className="lg:hidden">Restaurar</span>
+                                </>
                             )}
                         </button>
 
@@ -488,15 +508,16 @@ function LinhaMembro({
                             <button
                                 onClick={() => onLimpezaDefinitiva(membro)}
                                 title="Limpeza definitiva (sumir do mapa)"
-                                className="p-2 rounded-xl text-muted-foreground/30 hover:text-red-500 hover:bg-red-500/5 transition-all"
+                                className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-3 py-2 lg:p-2 rounded-xl text-muted-foreground/40 hover:text-red-500 hover:bg-red-500/5 transition-all text-[11px] font-black uppercase tracking-widest"
                             >
                                 <Eraser size={16} />
+                                <span className="lg:hidden">Excluir</span>
                             </button>
                         )}
                     </>
                 )}
                 {ehOMesmoUsuario && (
-                    <span className="text-[10px] text-muted-foreground/40 font-medium italic pr-2">você</span>
+                    <span className="text-[10px] text-primary/50 font-black uppercase tracking-widest italic pr-2">Seu Perfil</span>
                 )}
             </div>
         </div>
@@ -516,38 +537,40 @@ function BulkActions({ selecionados, onClear, onBulkUpdate, onExport }: BulkActi
     if (selecionados.size === 0) return null;
 
     return (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-card border border-primary/20 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)] rounded-2xl px-6 py-4 flex items-center gap-6 animate-in slide-in-from-bottom-8 duration-500 glassmorphism">
-            <div className="flex items-center gap-3 border-r border-border pr-6">
-                <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">
-                    {selecionados.size}
+        <div className="fixed bottom-20 sm:bottom-6 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-40 bg-card/95 backdrop-blur-xl border border-primary/30 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.5)] rounded-2xl px-4 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row items-center gap-3 sm:gap-6 animate-in slide-in-from-bottom-8 duration-500">
+            <div className="flex items-center justify-between w-full sm:w-auto sm:border-r sm:border-border sm:pr-6">
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-black text-xs shadow-lg shadow-primary/20">
+                        {selecionados.size}
+                    </div>
+                    <span className="text-sm font-black text-foreground uppercase tracking-widest">Selecionados</span>
                 </div>
-                <span className="text-sm font-bold text-foreground">Selecionados</span>
                 <button
                     onClick={onClear}
-                    className="ml-2 text-xs text-muted-foreground hover:text-primary underline transition-colors"
+                    className="ml-4 p-1.5 text-muted-foreground hover:text-primary transition-colors bg-muted/50 rounded-lg lg:bg-transparent"
                 >
-                    Limpar
+                    <X size={16} />
                 </button>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none no-scrollbar">
                 <button
                     onClick={() => onBulkUpdate('arquivados' as any)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-2xl text-xs font-bold bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition-all"
+                    className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition-all border border-amber-500/20"
                 >
-                    <Archive size={14} /> Arquivar / Restaurar
+                    <Archive size={14} /> Arquivar
                 </button>
 
-                <div className="relative group/bulk-role">
-                    <button className="flex items-center gap-2 px-3 py-2 rounded-2xl text-xs font-bold bg-primary/10 text-primary hover:bg-primary/20 transition-all">
-                        <Shield size={14} /> Alterar Cargo <ChevronDown size={14} />
+                <div className="relative group/bulk-role shrink-0">
+                    <button className="flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest bg-primary/10 text-primary hover:bg-primary/20 transition-all border border-primary/20">
+                        <Shield size={14} /> Cargo <ChevronDown size={14} />
                     </button>
-                    <div className="absolute bottom-full left-0 mb-2 w-48 bg-card border border-border rounded-2xl shadow-xl overflow-hidden hidden group-hover/bulk-role:block animate-in fade-in slide-in-from-bottom-2">
+                    <div className="absolute bottom-full left-0 mb-3 w-44 bg-card border border-border rounded-2xl shadow-2xl overflow-hidden hidden group-hover/bulk-role:block animate-in fade-in slide-in-from-bottom-2 z-[60]">
                         {['VISITANTE', 'MEMBRO', 'LIDER_EQUIPE', 'LIDER_GRUPO', 'ADMIN'].map(role => (
                             <button
                                 key={role}
                                 onClick={() => onBulkUpdate('role', role)}
-                                className="w-full text-left px-4 py-2 hover:bg-accent text-xs font-medium transition-colors"
+                                className="w-full text-left px-4 py-3 hover:bg-accent text-[11px] font-black uppercase tracking-widest transition-colors border-b border-border/50 last:border-0"
                             >
                                 {role === 'ADMIN' ? 'Administrador' : role.replace('_', ' ')}
                             </button>
@@ -557,9 +580,9 @@ function BulkActions({ selecionados, onClear, onBulkUpdate, onExport }: BulkActi
 
                 <button
                     onClick={onExport}
-                    className="flex items-center gap-2 px-3 py-2 rounded-2xl text-xs font-bold bg-accent text-accent-foreground hover:opacity-80 transition-all"
+                    className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest bg-muted hover:bg-muted/80 text-foreground transition-all border border-border"
                 >
-                    <Download size={14} /> Exportar CSV
+                    <Download size={14} /> Exportar
                 </button>
             </div>
         </div>
@@ -968,8 +991,8 @@ export function GerenciarMembros() {
 
 
             <div className="flex-1 bg-card border border-border rounded-xl flex flex-col shadow-sm overflow-hidden">
-                {/* Cabeçalho da tabela */}
-                <div className="grid grid-cols-12 gap-4 p-4 border-b border-border bg-muted/80 text-xs font-bold text-muted-foreground uppercase tracking-widest items-center">
+                {/* Cabeçalho da tabela - Oculto no mobile */}
+                <div className="hidden lg:grid grid-cols-12 gap-4 p-4 border-b border-border bg-muted/80 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] items-center">
                     <div className="col-span-1 flex justify-center">
                         <button
                             onClick={() => {
@@ -984,7 +1007,7 @@ export function GerenciarMembros() {
                             {selecionados.size > 0 && selecionados.size === membrosFiltrados.length
                                 ? <CheckSquare size={18} className="text-primary" />
                                 : selecionados.size > 0
-                                    ? <div className="w-[18px] h-[18px] bg-primary rounded flex items-center justify-center text-white"><X size={12} /></div>
+                                    ? <div className="w-[18px] h-[18px] bg-primary rounded flex items-center justify-center text-white shadow-sm"><X size={12} strokeWidth={3} /></div>
                                     : <Square size={18} />
                             }
                         </button>

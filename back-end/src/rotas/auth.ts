@@ -125,7 +125,7 @@ rotasAuth.post('/msal', async (c) => {
                 id: usuario.id,
                 role: usuario.role,
                 email: usuario.email,
-                exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7, // 7 dias
+                exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30, // 30 dias (Estratégia PWA)
             },
             JWT_SECRET
         );

@@ -5,7 +5,7 @@ export interface Notificacao {
     id: string;
     titulo: string;
     mensagem: string;
-    tipo: 'tarefa' | 'ponto' | 'sprint' | 'aviso' | 'sistema';
+    tipo: 'tarefa' | 'ponto' | 'aviso' | 'sistema';
     link?: string;
     lida: boolean;
     criado_em: string;

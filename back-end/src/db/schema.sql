@@ -1,8 +1,8 @@
--- SCHEMA BLINDADO - SoftHub
+-- SCHEMA BLINDADO - SoftHub (Definitivo v1)
 -- Este arquivo é a fonte única de verdade para a estrutura do banco de dados (SQLite/D1).
 -- Segue as Regras Absolutas: IDs UUID, Datas ISO 8601 UTC, Soft Delete em tudo.
 
--- 1. Tabela de Pessoas (Auditores e Donos do Sistema podem ver tudo)
+-- 1. Tabela de Pessoas
 CREATE TABLE IF NOT EXISTS usuarios (
     id TEXT NOT NULL PRIMARY KEY,
     nome TEXT NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     foto_perfil TEXT,
     bio TEXT,
     funcoes TEXT DEFAULT '[]', -- JSON: ['FRONTEND', 'BACKEND', etc]
-    equipe_id TEXT, -- FK definida após a criação de equipes
+    equipe_id TEXT, -- FK para equipes
     visivel INTEGER NOT NULL DEFAULT 1,
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
@@ -21,7 +21,7 @@ CREATE INDEX IF NOT EXISTS idx_usuarios_email ON usuarios(email);
 CREATE INDEX IF NOT EXISTS idx_usuarios_role ON usuarios(role);
 CREATE INDEX IF NOT EXISTS idx_usuarios_ativo ON usuarios(ativo);
 
--- 2. Tabela de Estrutura: Grupos (Divisões de alto nível)
+-- 2. Tabela de Estrutura: Grupos
 CREATE TABLE IF NOT EXISTS grupos (
     id TEXT NOT NULL PRIMARY KEY,
     nome TEXT NOT NULL,
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS grupos (
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 
--- 3. Tabela de Estrutura: Equipes (Sub-divisões funcionais)
+-- 3. Tabela de Estrutura: Equipes
 CREATE TABLE IF NOT EXISTS equipes (
     id TEXT NOT NULL PRIMARY KEY,
     grupo_id TEXT NOT NULL REFERENCES grupos(id) ON DELETE CASCADE,
@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS equipes (
 
 CREATE INDEX IF NOT EXISTS idx_equipes_grupo ON equipes(grupo_id);
 
--- 4. Tabela Projetos (Vinculados a sprints)
+-- 4. Tabela Projetos
 CREATE TABLE IF NOT EXISTS projetos (
     id TEXT NOT NULL PRIMARY KEY,
     nome TEXT NOT NULL,
@@ -54,29 +54,10 @@ CREATE TABLE IF NOT EXISTS projetos (
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 
--- 5. Tabela Sprints (Gestão de tempo)
-CREATE TABLE IF NOT EXISTS sprints (
-    id TEXT NOT NULL PRIMARY KEY,
-    projeto_id TEXT NOT NULL REFERENCES projetos(id) ON DELETE CASCADE,
-    nome TEXT NOT NULL,
-    objetivo TEXT,
-    status TEXT NOT NULL DEFAULT 'planejada', -- planejada, ativa, encerrada
-    data_inicio TEXT,
-    data_fim TEXT,
-    velocity_planejado INTEGER,
-    velocity_realizado INTEGER,
-    ativo INTEGER NOT NULL DEFAULT 1,
-    criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
-);
-
-CREATE INDEX IF NOT EXISTS idx_sprints_projeto ON sprints(projeto_id);
-CREATE INDEX IF NOT EXISTS idx_sprints_status ON sprints(status);
-
--- 6. Tabela Tarefas (Nível atômico de trabalho)
+-- 5. Tabela Tarefas
 CREATE TABLE IF NOT EXISTS tarefas (
     id TEXT NOT NULL PRIMARY KEY,
     projeto_id TEXT NOT NULL REFERENCES projetos(id) ON DELETE CASCADE,
-    sprint_id TEXT REFERENCES sprints(id) ON DELETE SET NULL,
     titulo TEXT NOT NULL,
     descricao TEXT,
     status TEXT NOT NULL DEFAULT 'a_fazer', -- a_fazer, em_andamento, em_revisao, concluido
@@ -88,10 +69,9 @@ CREATE TABLE IF NOT EXISTS tarefas (
 );
 
 CREATE INDEX IF NOT EXISTS idx_tarefas_projeto ON tarefas(projeto_id);
-CREATE INDEX IF NOT EXISTS idx_tarefas_sprint ON tarefas(sprint_id);
 CREATE INDEX IF NOT EXISTS idx_tarefas_status ON tarefas(status);
 
--- 7. Junções e Associações (N:N)
+-- 6. Junções e Associações
 CREATE TABLE IF NOT EXISTS tarefas_responsaveis (
     tarefa_id TEXT NOT NULL REFERENCES tarefas(id) ON DELETE CASCADE,
     usuario_id TEXT NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
@@ -105,7 +85,7 @@ CREATE TABLE IF NOT EXISTS projetos_membros (
     PRIMARY KEY (projeto_id, usuario_id)
 );
 
--- 8. Ponto Eletrônico (Blindagem de IP e Tempo)
+-- 7. Ponto Eletrônico
 CREATE TABLE IF NOT EXISTS ponto_registros (
     id TEXT NOT NULL PRIMARY KEY,
     usuario_id TEXT NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
@@ -133,7 +113,7 @@ CREATE TABLE IF NOT EXISTS justificativas_ponto (
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_justificativa_unica ON justificativas_ponto (usuario_id, data);
 
--- 9. Colaboração: Comentários e Checklists
+-- 8. Colaboração: Comentários e Checklists
 CREATE TABLE IF NOT EXISTS comentarios_tarefa (
     id TEXT NOT NULL PRIMARY KEY,
     tarefa_id TEXT NOT NULL REFERENCES tarefas(id) ON DELETE CASCADE,
@@ -153,7 +133,7 @@ CREATE TABLE IF NOT EXISTS checklist_tarefa (
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 
--- 10. Comunicação e Engajamento
+-- 9. Comunicação e Engajamento
 CREATE TABLE IF NOT EXISTS avisos (
     id TEXT NOT NULL PRIMARY KEY,
     titulo TEXT NOT NULL,
@@ -176,7 +156,7 @@ CREATE TABLE IF NOT EXISTS notificacoes (
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 
--- 11. Governança e Audit (Blindagem Legal)
+-- 10. Governança e Audit
 CREATE TABLE IF NOT EXISTS logs (
     id TEXT NOT NULL PRIMARY KEY,
     usuario_id TEXT REFERENCES usuarios(id) ON DELETE SET NULL,
@@ -204,14 +184,14 @@ CREATE TABLE IF NOT EXISTS tarefa_historico (
     alterado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 
--- 12. Configurações de Negócio Dinâmicas
+-- 11. Configurações de Negócio Dinâmicas
 CREATE TABLE IF NOT EXISTS configuracoes_sistema (
     id TEXT NOT NULL PRIMARY KEY,
     chave TEXT NOT NULL UNIQUE,
     valor TEXT NOT NULL -- Geralmente JSON
 );
 
--- 13. Sessões e QR Logic
+-- 12. Sessões e QR Logic
 CREATE TABLE IF NOT EXISTS sessoes_qr (
     id TEXT NOT NULL PRIMARY KEY,
     status TEXT NOT NULL DEFAULT 'pendente',
@@ -222,15 +202,3 @@ CREATE TABLE IF NOT EXISTS sessoes_qr (
     expira_em TEXT NOT NULL,
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
-
--- 14. Agile Tools: Retrospectivas
-CREATE TABLE IF NOT EXISTS retrospectivas (
-    id TEXT NOT NULL PRIMARY KEY,
-    sprint_id TEXT NOT NULL UNIQUE REFERENCES sprints(id) ON DELETE CASCADE,
-    o_que_foi_bem TEXT,
-    o_que_melhorar TEXT,
-    acoes_proxima_sprint TEXT,
-    atualizado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
-);
-
--- FIM DO SCHEMA BLINDADO

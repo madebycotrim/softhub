@@ -7,10 +7,9 @@ import { criarNotificacoes } from '../servicos/servico-notificacoes';
 
 const rotasTarefas = new Hono<{ Bindings: Env, Variables: { usuario: any } }>();
 
-// Listar Tarefas (Backlog ou Sprint)
+// Listar Tarefas do Projeto
 rotasTarefas.get('/', autenticacaoRequerida(), async (c) => {
     const { DB } = c.env;
-    const sprintId = c.req.query('sprintId');
     const projetoId = c.req.query('projetoId') || 'p1';
 
     // Workflow 26 - Parâmetros de Filtro
@@ -25,13 +24,6 @@ rotasTarefas.get('/', autenticacaoRequerida(), async (c) => {
       WHERE t.projeto_id = ? AND t.ativo = 1
     `;
         const params: any[] = [projetoId];
-
-        if (sprintId === 'null') {
-            query += ` AND t.sprint_id IS NULL`;
-        } else if (sprintId) {
-            query += ` AND t.sprint_id = ?`;
-            params.push(sprintId);
-        }
 
         if (busca) {
             query += ` AND (t.titulo LIKE ? OR t.descricao LIKE ?)`;

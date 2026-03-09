@@ -25,7 +25,6 @@ import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/Cabecal
 
 /** Mapeamento amigável das colunas */
 const LABELS_COLUNAS: Record<ColunaKanban, string> = {
-    backlog: 'Backlog',
     a_fazer: 'A Fazer',
     em_andamento: 'Em Andamento',
     em_revisao: 'Em Revisão',
@@ -69,9 +68,9 @@ function ColunaDropZone({ id, titulo, tarefas, aoApertarTarefa }: { id: ColunaKa
 /**
  * O Quadro Kanban que exibe as colunas com Drag and Drop funcional.
  */
-export function QuadroKanban({ sprintId, projetoId }: { sprintId?: string, projetoId?: string }) {
+export function QuadroKanban({ projetoId = 'p1' }: { projetoId?: string }) {
     const [filtros, setFiltros] = useState<FiltrosKanban>({});
-    const { tarefas, carregando, erro, moverCard } = usarKanban(sprintId, projetoId, filtros);
+    const { tarefas, carregando, erro, moverCard } = usarKanban(projetoId, filtros);
     const [activeTarefa, setActiveTarefa] = useState<Tarefa | null>(null);
     const [tarefaDetalhes, setTarefaDetalhes] = useState<Tarefa | null>(null);
 
@@ -82,7 +81,7 @@ export function QuadroKanban({ sprintId, projetoId }: { sprintId?: string, proje
 
     if (carregando) return <Carregando />;
     if (erro) return <p className="text-destructive text-center py-8">{erro}</p>;
-    if (tarefas.length === 0) return <EstadoVazio titulo="Nenhuma tarefa encontrada." descricao="Crie tarefas ou selecione uma sprint para ver o quadro." />;
+    if (tarefas.length === 0) return <EstadoVazio titulo="Nenhuma tarefa encontrada." descricao="Crie tarefas para começar seu fluxo de trabalho no projeto." />;
 
     const handleDragStart = (event: DragStartEvent) => {
         const { active } = event;

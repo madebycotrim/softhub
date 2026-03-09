@@ -12,7 +12,7 @@ export interface ParamsNotificacao {
     todosOsUsuarios?: boolean; // Para avisos globais
     titulo: string;
     mensagem: string;
-    tipo: 'tarefa' | 'ponto' | 'sprint' | 'aviso' | 'sistema';
+    tipo: 'tarefa' | 'ponto' | 'aviso' | 'sistema';
     link?: string;
 }
 

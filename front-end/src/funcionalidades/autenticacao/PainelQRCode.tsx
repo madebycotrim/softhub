@@ -4,7 +4,6 @@ import { RefreshCw, CheckCircle } from 'lucide-react';
 import { api } from '../../compartilhado/servicos/api';
 import { usarAutenticacaoContexto } from '../../contexto/ContextoAutenticacao';
 import { useNavigate } from 'react-router';
-import logoUnieuroSemTexto from '../../assets/logo-unieuro-sem-texto-branca.png';
 import { usarDispositivo } from '../../compartilhado/hooks/usarDispositivo';
 
 /**
@@ -75,9 +74,13 @@ export default function PainelQRCode() {
     return (
         <div className="flex flex-col items-center text-center animate-in fade-in slide-in-from-bottom-8 duration-1000">
             {/* Label discreta mas legível acima do QR */}
-            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-12">
-                ESCANEIE PARA ENTRAR
-            </span>
+            <div className="flex items-center gap-3 mb-10">
+                <div className="h-[1px] w-8 bg-red-600/20" />
+                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] whitespace-nowrap">
+                    ACESSO INSTANTÂNEO
+                </span>
+                <div className="h-[1px] w-8 bg-red-600/20" />
+            </div>
 
             {/* Container QR - Ultra Minimalist & Large */}
             <div className="relative group mb-4">
@@ -91,24 +94,15 @@ export default function PainelQRCode() {
                     )}
 
                     {status === 'pendente' && sessao?.id && (
-                        <div className="relative animate-in zoom-in duration-500 p-4 bg-white rounded-2xl flex items-center justify-center group/qr shadow-xl ring-1 ring-border">
+                        <div className="relative animate-in zoom-in duration-700 flex items-center justify-center group/qr">
                             <QRCodeSVG
                                 value={sessao.id}
                                 size={240}
                                 level="H"
+                                fgColor="#020617"
+                                marginSize={0}
+                                includeMargin={false}
                             />
-                            {/* Logo Central Customizado - Apenas a imagem flutuante */}
-                            {logoUnieuroSemTexto && (
-                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                    <div className="bg-background p-0.5 shadow-sm flex items-center justify-center">
-                                        <img
-                                            src={logoUnieuroSemTexto}
-                                            alt="Logo Unieuro"
-                                            className="w-11 h-11 object-contain dark:invert"
-                                        />
-                                    </div>
-                                </div>
-                            )}
                         </div>
                     )}
 

@@ -12,7 +12,7 @@ export function CardEstatisticas() {
                     <span className="font-medium bg-emerald-500/20 text-emerald-500 px-2 py-0.5 rounded-full text-xs">45</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-border">
-                    <span className="text-muted-foreground text-sm">Sprints Participadas</span>
+                    <span className="text-muted-foreground text-sm">Projetos Participados</span>
                     <span className="text-foreground font-medium">8</span>
                 </div>
             </div>
