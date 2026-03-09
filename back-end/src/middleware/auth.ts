@@ -24,7 +24,7 @@ type HonoEnv = { Bindings: Env; Variables: { usuario: UsuarioAutenticado } };
  * 7. Busca usuário no banco (garante que role alterado pelo ADMIN vale imediatamente)
  * 8. Expõe { id, role, email, nome } em c.get('usuario') para os handlers
  */
-const HIERARQUIA_ROLES = ['VISITANTE', 'MEMBRO', 'LIDER_EQUIPE', 'LIDER_GRUPO', 'ADMIN'] as const;
+const HIERARQUIA_ROLES = ['MEMBRO', 'SUBLIDER', 'LIDER', 'GESTOR', 'COORDENADOR', 'ADMIN'] as const;
 
 export function autenticacaoRequerida(roleMinimoRequerido?: string) {
     return async (c: Context<HonoEnv>, next: Next) => {
@@ -57,10 +57,11 @@ export function autenticacaoRequerida(roleMinimoRequerido?: string) {
         }
 
         // ── Passo 5: Busca usuário no banco ───────────────────────────────────
-        const usuario = await c.env.DB
+        const resUsuario = await c.env.DB
             .prepare('SELECT id, nome, email, role, ativo, versao_token FROM usuarios WHERE id = ?')
             .bind(payload.id)
-            .first<{ id: string; nome: string; email: string; role: string; ativo: number; versao_token: number }>();
+            .first();
+        const usuario = resUsuario as any;
 
         if (!usuario) {
             return c.json({ erro: 'Usuário não encontrado.' }, 401);
@@ -140,9 +141,10 @@ export function verificarPermissao(permissao: string) {
 
         try {
             // Busca a matriz de permissões
-            const config = await DB.prepare('SELECT valor FROM configuracoes_sistema WHERE chave = ?')
+            const resConfig = await DB.prepare('SELECT valor FROM configuracoes_sistema WHERE chave = ?')
                 .bind('permissoes_roles')
-                .first<{ valor: string }>();
+                .first();
+            const config = resConfig as any;
 
             if (!config) {
                 // Se não houver configuração, por segurança, nega para não-admins

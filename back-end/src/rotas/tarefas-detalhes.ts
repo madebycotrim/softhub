@@ -133,8 +133,11 @@ rotasTarefasDetalhes.delete('/comentarios/:id', autenticacaoRequerida(), verific
         const comentarioRow = resComRow as any;
         if (!comentarioRow) return c.json({ erro: 'Comentário não encontrado' }, 404);
 
-        const ehAdminOuLider = ['ADMIN', 'LIDER_GRUPO', 'LIDER_EQUIPE'].includes(usuario.role);
-        if (comentarioRow.autor_id !== usuario.id && !ehAdminOuLider) {
+        const resPerms = await DB.prepare("SELECT valor FROM configuracoes_sistema WHERE chave = 'permissoes_roles'").first();
+        const permissoesRoles = JSON.parse((resPerms as any)?.valor || '{}');
+        const ehModerador = permissoesRoles[usuario.role]?.['tarefas:checklist'] === true;
+
+        if (comentarioRow.autor_id !== usuario.id && !ehModerador) {
             return c.json({ erro: 'Você não tem permissão para excluir este comentário.' }, 403);
         }
 
@@ -200,10 +203,6 @@ rotasTarefasDetalhes.post('/:id/checklist', autenticacaoRequerida(), verificarPe
     const { texto } = await c.req.json();
     const usuario = c.get('usuario') as any;
 
-    if (!['ADMIN', 'LIDER_GRUPO', 'LIDER_EQUIPE'].includes(usuario.role)) {
-        return c.json({ erro: 'Apenas líderes podem adicionar itens ao checklist.' }, 403);
-    }
-
     if (!texto || !texto.trim()) return c.json({ erro: 'Texto obrigatório' }, 400);
 
     try {
@@ -240,11 +239,6 @@ rotasTarefasDetalhes.patch('/:tarefaId/checklist/:itemId', autenticacaoRequerida
 rotasTarefasDetalhes.delete('/:tarefaId/checklist/:itemId', autenticacaoRequerida(), verificarPermissao('tarefas:checklist'), async (c: Context) => {
     const { DB } = c.env;
     const itemId = c.req.param('itemId');
-    const usuario = c.get('usuario') as any;
-
-    if (!['ADMIN', 'LIDER_GRUPO', 'LIDER_EQUIPE'].includes(usuario.role)) {
-        return c.json({ erro: 'Apenas líderes podem remover itens do checklist.' }, 403);
-    }
 
     try {
         await DB.prepare('DELETE FROM checklist_tarefa WHERE id = ?').bind(itemId).run();

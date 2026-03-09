@@ -81,7 +81,7 @@ rotasTarefas.patch('/:id/mover', autenticacaoRequerida(), verificarPermissao('ta
         }
 
         // Workflow 8 - Mover Card (Verificar permissão)
-        const ehAdminOuLider = ['ADMIN', 'LIDER_GRUPO', 'LIDER_EQUIPE'].includes(usuario.role);
+        const ehAdminOuLider = ['ADMIN', 'COORDENADOR', 'GESTOR', 'LIDER', 'SUBLIDER'].includes(usuario.role);
         let podeMover = ehAdminOuLider;
 
         if (!podeMover) {
@@ -117,7 +117,7 @@ rotasTarefas.patch('/:id/mover', autenticacaoRequerida(), verificarPermissao('ta
             });
 
             if (colunaDestino === 'em_revisao') {
-                const { results: lideres } = await DB.prepare("SELECT id FROM usuarios WHERE role IN ('LIDER_EQUIPE', 'LIDER_GRUPO')").all();
+                const { results: lideres } = await DB.prepare("SELECT id FROM usuarios WHERE role IN ('SUBLIDER', 'LIDER', 'GESTOR', 'COORDENADOR')").all();
                 if (lideres) {
                     for (const row of lideres as any) {
                         await criarNotificacoes(DB, {
@@ -145,7 +145,7 @@ rotasTarefas.post('/:id/responsaveis', autenticacaoRequerida(), verificarPermiss
     const usuario = c.get('usuario') as any;
 
     try {
-        const ehAdminOuLider = ['ADMIN', 'LIDER_GRUPO', 'LIDER_EQUIPE'].includes(usuario.role);
+        const ehAdminOuLider = ['ADMIN', 'COORDENADOR', 'GESTOR', 'LIDER', 'SUBLIDER'].includes(usuario.role);
 
         let podeAtribuir = ehAdminOuLider;
         if (!podeAtribuir) {

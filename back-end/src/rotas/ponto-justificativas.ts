@@ -35,10 +35,18 @@ rotasPontoJustificativas.post('/justificativas', autenticacaoRequerida(), verifi
             VALUES (?, ?, ?, ?, ?)
         `).bind(justId, usuario.id, data, tipo, motivo).run();
 
-        // Notificar Lideres (Pegamos ADMINs e Lideres de Equipe/Grupo)
+        // Notificar quem possui permissão de aprovação (Dinâmico)
+        const resPerms = await DB.prepare("SELECT valor FROM configuracoes_sistema WHERE chave = 'permissoes_roles'").first();
+        const permissoesRoles = JSON.parse((resPerms as any)?.valor || '{}');
+        const rolesComAcesso = Object.keys(permissoesRoles).filter(r => permissoesRoles[r]?.['ponto:aprovar_justificativa'] === true);
+        
+        // ADMIN sempre incluído
+        if (!rolesComAcesso.includes('ADMIN')) rolesComAcesso.push('ADMIN');
+
         const lideresRes = await DB.prepare(`
-            SELECT id FROM usuarios WHERE role IN ('LIDER_EQUIPE', 'LIDER_GRUPO', 'ADMIN') AND ativo = 1
-        `).all();
+            SELECT id FROM usuarios WHERE role IN (${rolesComAcesso.map(() => '?').join(',')}) AND ativo = 1
+        `).bind(...rolesComAcesso).all();
+        
         const resultadosLideres = lideresRes.results as any[];
         
         if (resultadosLideres.length > 0) {
@@ -102,12 +110,6 @@ rotasPontoJustificativas.get('/justificativas', autenticacaoRequerida(), verific
 // 3. Admin listando todas as justificativas pendentes ou filtradas
 rotasPontoJustificativas.get('/admin/justificativas', autenticacaoRequerida(), verificarPermissao('ponto:aprovar_justificativa'), async (c: Context) => {
     const { DB } = c.env;
-    const usuario = c.get('usuario') as any;
-
-    if (usuario.role === 'MEMBRO' || usuario.role === 'VISITANTE') {
-        return c.json({ erro: 'Acesso negado' }, 403);
-    }
-
     const { results } = await DB.prepare(`
         SELECT j.*, u.nome as usuario_nome, u.email as usuario_email, u.foto_perfil as usuario_foto 
         FROM justificativas_ponto j
@@ -124,8 +126,6 @@ rotasPontoJustificativas.patch('/admin/justificativas/:id/aprovar', autenticacao
     const { DB } = c.env;
     const justificativaId = c.req.param('id');
     const usuario = c.get('usuario') as any;
-
-    if (usuario.role === 'MEMBRO' || usuario.role === 'VISITANTE') return c.json({ erro: 'Acesso negado' }, 403);
 
     const resAlvar = await DB.prepare(`SELECT * FROM justificativas_ponto WHERE id = ?`).bind(justificativaId).first();
     const alvar = resAlvar as any;
@@ -170,8 +170,6 @@ rotasPontoJustificativas.patch('/admin/justificativas/:id/rejeitar', autenticaca
     const { motivoRejeicao } = await c.req.json();
     const usuario = c.get('usuario') as any;
 
-    if (usuario.role === 'MEMBRO' || usuario.role === 'VISITANTE') return c.json({ erro: 'Acesso negado' }, 403);
-
     const resAlvar = await DB.prepare(`SELECT * FROM justificativas_ponto WHERE id = ?`).bind(justificativaId).first();
     const alvar = resAlvar as any;
     if (!alvar) return c.json({ erro: 'Justificativa não encontrada.' }, 404);
@@ -212,10 +210,6 @@ rotasPontoJustificativas.patch('/admin/justificativas/:id/rejeitar', autenticaca
 rotasPontoJustificativas.get('/exportar', autenticacaoRequerida(), verificarPermissao('ponto:exportar_csv'), async (c: Context) => {
     const { DB } = c.env;
     const usuario = c.get('usuario') as any;
-
-    if (!['ADMIN', 'LIDER_GRUPO', 'LIDER_EQUIPE'].includes(usuario.role)) {
-        return c.json({ erro: 'Acesso negado. Apenas líderes podem exportar relatórios.' }, 403);
-    }
 
     const { dataInicio, dataFim, usuarioId, equipeId } = c.req.query();
 

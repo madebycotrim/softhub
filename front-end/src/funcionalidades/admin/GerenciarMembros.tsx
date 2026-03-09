@@ -438,10 +438,11 @@ function LinhaMembro({
                             onChange={e => onAlterarRole(membro, e.target.value)}
                             disabled={!podeAlterarRole}
                         >
-                            <option value="VISITANTE">Visitante</option>
                             <option value="MEMBRO">Membro</option>
-                            <option value="LIDER_EQUIPE">Líder Equipe</option>
-                            <option value="LIDER_GRUPO">Líder Grupo</option>
+                            <option value="SUBLIDER">Sublíder</option>
+                            <option value="LIDER">Líder</option>
+                            <option value="GESTOR">Gestor</option>
+                            <option value="COORDENADOR">Coordenador</option>
                             <option value="ADMIN">Admin</option>
                         </select>
                         <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-40 lg:hidden" />
@@ -576,13 +577,13 @@ function BulkActions({ selecionados, onClear, onBulkUpdate, onExport }: BulkActi
                             <Shield size={14} /> Cargo <ChevronDown size={14} />
                         </button>
                         <div className="absolute bottom-full left-0 mb-3 w-44 bg-card border border-border rounded-2xl shadow-2xl overflow-hidden hidden group-hover/bulk-role:block animate-in fade-in slide-in-from-bottom-2 z-[60]">
-                            {['VISITANTE', 'MEMBRO', 'LIDER_EQUIPE', 'LIDER_GRUPO', 'ADMIN'].map(role => (
+                            {['MEMBRO', 'SUBLIDER', 'LIDER', 'GESTOR', 'COORDENADOR', 'ADMIN'].map(role => (
                                 <button
                                     key={role}
                                     onClick={() => onBulkUpdate('role', role)}
                                     className="w-full text-left px-4 py-3 hover:bg-accent text-[11px] font-black uppercase tracking-widest transition-colors border-b border-border/50 last:border-0"
                                 >
-                                    {role === 'ADMIN' ? 'Administrador' : role.replace('_', ' ')}
+                                    {role === 'ADMIN' ? 'Administrador' : role.charAt(0) + role.slice(1).toLowerCase().replace('_', ' ')}
                                 </button>
                             ))}
                         </div>
@@ -696,10 +697,11 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, equipes }: ModalCa
                                     className="w-full bg-background border border-border rounded-2xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer"
                                 >
                                     <option value="MEMBRO">Membro (Padrão)</option>
-                                    <option value="LIDER_EQUIPE">Líder de Equipe</option>
-                                    <option value="LIDER_GRUPO">Líder de Grupo</option>
+                                    <option value="SUBLIDER">Sublíder</option>
+                                    <option value="LIDER">Líder</option>
+                                    <option value="GESTOR">Gestor</option>
+                                    <option value="COORDENADOR">Coordenador</option>
                                     <option value="ADMIN">Administrador Geral</option>
-                                    <option value="VISITANTE">Visitante</option>
                                 </select>
                             </div>
                         </div>
@@ -771,8 +773,8 @@ function StatsCards({ membros }: { membros: Membro[] }) {
 
         const novosEsteMes = membros.filter(m => new Date(m.criado_em) >= inicioMes).length;
         const totalAtivos = membros.filter(m => m.ativo).length;
-        const totalLideres = membros.filter(m => ['LIDER_EQUIPE', 'LIDER_GRUPO', 'ADMIN'].includes(m.role)).length;
-        const totalVisitantes = membros.filter(m => m.role === 'VISITANTE').length;
+        const totalLideres = membros.filter(m => ['SUBLIDER', 'LIDER', 'GESTOR', 'COORDENADOR', 'ADMIN'].includes(m.role)).length;
+        const totalVisitantes = membros.filter(m => m.role === 'VISITANTE' || !m.role).length; // Fallback para registros antigos ou sem role
 
         return {
             total: membros.length,

@@ -17,7 +17,7 @@ import { usarAutenticacaoContexto } from '../../contexto/ContextoAutenticacao';
 import { useState, useEffect } from 'react';
 import { api } from '../servicos/api';
 
-const HIERARQUIA_ROLES = ['VISITANTE', 'MEMBRO', 'LIDER_EQUIPE', 'LIDER_GRUPO', 'ADMIN'] as const;
+const HIERARQUIA_ROLES = ['MEMBRO', 'SUBLIDER', 'LIDER', 'GESTOR', 'COORDENADOR', 'ADMIN'] as const;
 
 export function usarPermissao(roleMinimoRequerido: string | null): boolean {
     const { usuario } = usarAutenticacaoContexto();

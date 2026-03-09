@@ -13,11 +13,13 @@ import type { Membro } from './usarMembros';
 
 function getRoleLabel(role: string) {
     switch (role) {
-        case 'ADMIN': return "Administração";
-        case 'LIDER_GRUPO': return "Liderança de Grupo";
-        case 'LIDER_EQUIPE': return "Liderança de Equipe";
+        case 'ADMIN': return "Administração Geral";
+        case 'COORDENADOR': return "Coordenação";
+        case 'GESTOR': return "Gestão";
+        case 'LIDER': return "Liderança";
+        case 'SUBLIDER': return "Subliderança";
         case 'MEMBRO': return "Membros";
-        default: return "Visitantes";
+        default: return "Colaboradores";
     }
 }
 
@@ -76,7 +78,7 @@ export function DiretorioMembros() {
     const [busca, setBusca] = useState('');
 
     const gruposHierarquia = useMemo(() => {
-        const ordem = ['ADMIN', 'LIDER_GRUPO', 'LIDER_EQUIPE', 'MEMBRO', 'VISITANTE'];
+        const ordem = ['ADMIN', 'COORDENADOR', 'GESTOR', 'LIDER', 'SUBLIDER', 'MEMBRO'];
 
         // 1. Filtrar Ativos e por Busca
         const ativos = membros.filter(m => m.ativo);

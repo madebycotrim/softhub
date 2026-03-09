@@ -31,38 +31,35 @@ rotasUsuarios.get('/', autenticacaoRequerida(), verificarPermissao('membros:visu
     try {
         const query = `
             SELECT
-                u.*,
+                u.id, u.nome, u.email, u.role, u.ativo, u.foto_perfil, u.bio, u.funcoes, u.criado_em,
+                u.equipe_id,
                 e.nome  AS equipe_nome,
-                g.nome  AS grupo_nome,
-                g.id    AS grupo_id
+                u.grupo_id,
+                g.nome  AS grupo_nome
             FROM usuarios u
             LEFT JOIN equipes e ON u.equipe_id = e.id
-            LEFT JOIN grupos  g ON e.grupo_id  = g.id
-            WHERE 1=1 -- visivel = 1 (removido temporariamente)
+            LEFT JOIN grupos  g ON u.grupo_id  = g.id
             ORDER BY u.nome ASC
         `;
 
-        const { results } = await DB.prepare(query).all();
+        const res = await DB.prepare(query).all();
+        const results = res.results as any[];
 
         console.log(`[AUDITORIA] GET /api/usuarios - Membros encontrados: ${results?.length ?? 0}`);
-        if (results) {
-            console.log(`[AUDITORIA] Emails: ${results.map((u: any) => u.email).join(', ')}`);
-        }
-
+        
         return c.json({
-            membros: results ?? [],
+            membros: results || [],
             metadata: {
                 total: results?.length ?? 0,
                 timestamp: new Date().toISOString(),
             },
         });
     } catch (erro: any) {
-        console.error('[ERRO FATAL] GET /api/usuarios:', erro.message, erro.stack);
+        console.error('[ERRO CONSTANTE] GET /api/usuarios:', erro.message);
         return c.json({
-            erro: 'Falha ao buscar membros',
-            mensagem: erro.message,
-            stack: erro.stack,
-            contexto: 'GET /api/usuarios'
+            erro: 'Falha ao buscar membros no banco de dados',
+            detalhe: erro.message,
+            contexto: 'rotas/usuarios.ts'
         }, 500);
     }
 });

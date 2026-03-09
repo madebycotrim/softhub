@@ -2,7 +2,7 @@
 
 -- Usuários
 INSERT INTO usuarios (id, nome, email, role, ativo, foto_perfil, bio) VALUES
-('u1', 'Mateus Oliveira', 'mateus@unieuro.com.br', 'LIDER_EQUIPE', 1, NULL, 'Focado no backend e front.'),
+('u1', 'Mateus Oliveira', 'mateus@unieuro.com.br', 'SUBLIDER', 1, NULL, 'Focado no backend e front.'),
 ('u2', 'Ana Souza', 'ana.souza@unieuro.com.br', 'ADMIN', 1, NULL, 'Professora orientadora.'),
 ('u3', 'Carlos Mendes', 'carlos.m@unieuro.com.br', 'MEMBRO', 1, NULL, NULL);
 
@@ -29,4 +29,4 @@ INSERT INTO avisos (id, titulo, conteudo, prioridade, criado_por) VALUES
 
 -- Logs
 INSERT INTO logs (id, usuario_id, usuario_nome, usuario_email, usuario_role, acao, modulo, descricao) VALUES
-('log1', 'u1', 'Mateus Oliveira', 'mateus@unieuro.com.br', 'LIDER_EQUIPE', 'LOGIN', 'autenticacao', 'Sessão iniciada via MSAL');
+('log1', 'u1', 'Mateus Oliveira', 'mateus@unieuro.com.br', 'SUBLIDER', 'LOGIN', 'autenticacao', 'Sessão iniciada via MSAL');

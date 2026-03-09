@@ -20,8 +20,6 @@ export type Env = {
     JWT_SECRET: string;
     MSAL_TENANT_ID: string;
     MSAL_CLIENT_ID: string;
-    DOMINIO_INSTITUCIONAL: string;
-    BOOTSTRAP_ADMIN_EMAIL?: string;
 };
 
 const app = new Hono<{ Bindings: Env }>();
@@ -69,6 +67,11 @@ app.route('/api/relatorios', rotasRelatorios);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
 
-app.get('/', (c) => c.json({ mensagem: 'API Fábrica de Software Operacional', status: 'OK' }));
+app.get('/', (c) => c.json({
+    status: 'ok',
+    servico: 'Fábrica de Software',
+    versao: '1.0.0',
+    timestamp: new Date().toISOString(),
+}));
 
 export default app;

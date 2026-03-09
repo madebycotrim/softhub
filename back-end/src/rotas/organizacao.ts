@@ -89,7 +89,7 @@ rotasOrganizacao.delete('/grupos/:id', autenticacaoRequerida(), verificarPermiss
 
     try {
         await DB.prepare('UPDATE grupos SET ativo = 0 WHERE id = ?').bind(id).run();
-        await DB.prepare('UPDATE equipes SET ativo = 0 WHERE grupo_id = ?').bind(id).run(); // cascata lógica
+        // Nota: Equipes são transversais e não possuem grupo_id, então não há cascata direta aqui.
 
         await registrarLog(DB, {
             usuarioId: usuario.id,
