@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     equipe_id TEXT REFERENCES equipes(id), -- FK para equipes lógicas
     grupo_id TEXT REFERENCES grupos(id), -- FK para grupos de trabalho / turnos (A/B)
     visivel INTEGER NOT NULL DEFAULT 1,
+    versao_token INTEGER NOT NULL DEFAULT 1,
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 
