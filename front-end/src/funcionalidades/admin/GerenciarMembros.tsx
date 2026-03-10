@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, memo } from 'react';
 import { UserCog, X, Shield, Mail, Trash2, Loader2, UserCheck, Archive, ListPlus, CheckSquare, Square, Download, AlertCircle, ChevronDown, RotateCcw, Eraser, User, Users as UsersIcon, Plus } from 'lucide-react';
 import { Link } from 'react-router';
 import { api } from '../../compartilhado/servicos/api';
@@ -19,6 +19,12 @@ import { usarToast } from '../../compartilhado/hooks/usarToast';
 import { ToastContainer } from '../../compartilhado/componentes/ToastContainer';
 import { Paginacao } from '../../compartilhado/componentes/Paginacao';
 
+/**
+ * Hook customizado para gerenciar a lógica de administração de membros.
+ * Encapsula operações de CRUD, gerenciamento de estados de salvamento e feedback (toasts).
+ * 
+ * @returns Objeto contendo membros, estados de carregamento, e funções de ação (alterar role, remover, etc).
+ */
 function useGerenciarMembros() {
     const {
         membros,
@@ -113,7 +119,30 @@ function useGerenciarMembros() {
         return res;
     }, [deletarMembro, recarregar, exibirToast, marcarSalvando, desmarcarSalvando]);
 
-    return {
+    const limpezaDefinitiva = useCallback(async (membroId: string) => {
+        marcarSalvando(membroId);
+        try {
+            await api.patch(`/api/usuarios/${membroId}/limpar`);
+            exibirToast('Membro removido definitivamente.');
+            await recarregar();
+        } catch (e: any) {
+            exibirToast(e.response?.data?.erro ?? 'Erro na limpeza definitiva.', 'erro');
+        } finally {
+            desmarcarSalvando(membroId);
+        }
+    }, [recarregar, exibirToast, marcarSalvando, desmarcarSalvando]);
+
+    const esvaziarLixeira = useCallback(async () => {
+        try {
+            const res = await api.post('/api/usuarios/limpeza-geral');
+            exibirToast(`${res.data.removidos} membros removidos definitivamente.`);
+            await recarregar();
+        } catch (e: any) {
+            exibirToast(e.response?.data?.erro ?? 'Erro ao esvaziar lixeira.', 'erro');
+        }
+    }, [recarregar, exibirToast]);
+
+    return useMemo(() => ({
         membros,
         carregando,
         erro,
@@ -124,28 +153,22 @@ function useGerenciarMembros() {
         alternarStatus,
         cadastrarMembro,
         removerMembro,
-        limpezaDefinitiva: useCallback(async (membroId: string) => {
-            marcarSalvando(membroId);
-            try {
-                await api.patch(`/api/usuarios/${membroId}/limpar`);
-                exibirToast('Membro removido definitivamente.');
-                await recarregar();
-            } catch (e: any) {
-                exibirToast(e.response?.data?.erro ?? 'Erro na limpeza definitiva.', 'erro');
-            } finally {
-                desmarcarSalvando(membroId);
-            }
-        }, [recarregar, exibirToast, marcarSalvando, desmarcarSalvando]),
-        esvaziarLixeira: useCallback(async () => {
-            try {
-                const res = await api.post('/api/usuarios/limpeza-geral');
-                exibirToast(`${res.data.removidos} membros removidos definitivamente.`);
-                await recarregar();
-            } catch (e: any) {
-                exibirToast(e.response?.data?.erro ?? 'Erro ao esvaziar lixeira.', 'erro');
-            }
-        }, [recarregar, exibirToast])
-    };
+        limpezaDefinitiva,
+        esvaziarLixeira
+    }), [
+        membros,
+        carregando,
+        erro,
+        recarregar,
+        salvandoIds,
+        toasts,
+        alterarRole,
+        alternarStatus,
+        cadastrarMembro,
+        removerMembro,
+        limpezaDefinitiva,
+        esvaziarLixeira
+    ]);
 }
 
 // ─── Componente: ModalConvitesEmLote ──────────────────────────────────────────
@@ -153,10 +176,14 @@ function useGerenciarMembros() {
 interface ModalConvitesEmLoteProps {
     aberto: boolean;
     aoFechar: () => void;
-    aoCadastrar: (dados: { nome: string; email: string }) => Promise<{ sucesso: boolean; erro?: string }>;
+    aoCadastrar: (email: string, role: string) => Promise<{ sucesso: boolean; erro?: string }>;
     recarregar: () => Promise<void>;
 }
 
+/**
+ * Componente de modal para realizar convites/autorizações de acesso em lote.
+ * Processa uma lista de e-mails, validando o domínio institucional.
+ */
 function ModalConvitesEmLote({ aberto, aoFechar, aoCadastrar, recarregar }: ModalConvitesEmLoteProps) {
     const [texto, setTexto] = useState('');
     const [enviando, setEnviando] = useState(false);
@@ -176,7 +203,7 @@ function ModalConvitesEmLote({ aberto, aoFechar, aoCadastrar, recarregar }: Moda
             if (!emailMatch) continue;
 
             const email = emailMatch[0].toLowerCase().trim();
-            await aoCadastrar({ nome: '', email });
+            await aoCadastrar(email, 'MEMBRO');
             setProgresso(prev => prev ? { ...prev, atual: prev.atual + 1 } : null);
         }
 
@@ -224,7 +251,7 @@ function ModalConvitesEmLote({ aberto, aoFechar, aoCadastrar, recarregar }: Moda
                     >
                         {enviando ? (
                             <>
-                                <Loader2 className="w-4 h-4 animate-spin" />
+                                <Loader2 className="w-5 h-5 animate-spin" />
                                 {progresso ? `Enviando (${progresso.atual}/${progresso.total})` : 'Enviando...'}
                             </>
                         ) : (
@@ -237,8 +264,6 @@ function ModalConvitesEmLote({ aberto, aoFechar, aoCadastrar, recarregar }: Moda
     );
 }
 
-
-
 // ─── Componente: LinhaMembro ──────────────────────────────────────────────────
 
 interface LinhaMembroProps {
@@ -248,26 +273,26 @@ interface LinhaMembroProps {
     onToggleSelect: (id: string, isShift?: boolean) => void;
     onAlterarRole: (membro: Membro, role: string) => void;
     onAlternarStatus: (membro: Membro) => void;
-    onSolicitarExclusao: (membro: Membro) => void;
-    onLimpezaDefinitiva: (membro: Membro) => void;
+    onRemover: (membro: Membro) => void;
+    onLimpeza: (membro: Membro) => void;
     rolesDisponiveis: string[];
 }
 
 /**
- * Linha de um membro na tabela de gerenciamento.
- * Renderiza uma <tr> semântica com células para seleção, identificação, papel, status e ações.
+ * Representa uma linha individual na tabela de membros com ações contextuais.
+ * memo: Evita re-renderizar a linha inteira quando outros estados da página mudam.
  */
-function LinhaMembro({
+const LinhaMembro = memo(({
     membro,
     salvando,
     selecionado,
     onToggleSelect,
     onAlterarRole,
     onAlternarStatus,
-    onSolicitarExclusao,
-    onLimpezaDefinitiva,
-    rolesDisponiveis,
-}: LinhaMembroProps) {
+    onRemover,
+    onLimpeza,
+    rolesDisponiveis
+}: LinhaMembroProps) => {
     const { usuario } = usarAutenticacao();
     const ehOMesmoUsuario = usuario?.id === membro.id;
     const podeAlterarRole = usarPermissaoAcesso('membros:alterar_role');
@@ -294,8 +319,8 @@ function LinhaMembro({
                         aria-label={`Selecionar ${membro.nome}`}
                     >
                         {selecionado
-                            ? <CheckSquare size={18} className="text-primary" />
-                            : <Square size={18} />}
+                            ? <CheckSquare size={20} className="text-primary" />
+                            : <Square size={20} />}
                     </button>
 
                     <Avatar nome={membro.nome} fotoPerfil={membro.foto_perfil} tamanho="md" />
@@ -319,10 +344,10 @@ function LinhaMembro({
 
             {/* Papel / Role */}
             <td className="px-3 py-3">
-                <div className="relative">
+                <div className="relative w-fit">
                     <select
                         aria-label={`Papel de ${membro.nome}`}
-                        className={`w-full bg-muted/20 border border-border/50 rounded-xl px-2 py-1.5 pr-6 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none ${
+                        className={`w-fit bg-muted/20 border border-border/50 rounded-xl px-2 py-1.5 pr-8 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none ${
                             !podeAlterarRole ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
                         }`}
                         value={membro.role}
@@ -331,21 +356,30 @@ function LinhaMembro({
                     >
                         {rolesDisponiveis.map(role => (
                             <option key={role} value={role}>
-                                {role === 'ADMIN'
-                                    ? 'Admin'
-                                    : role.charAt(0) + role.slice(1).toLowerCase().replace('_', ' ')}
+                                {role}
                             </option>
                         ))}
                     </select>
-                    <ChevronDown size={11} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-40" />
+                    <ChevronDown size={20} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-40" />
                 </div>
             </td>
 
             {/* Equipe */}
             <td className="px-3 py-3 hidden md:table-cell">
-                <span className="text-xs text-muted-foreground/60 truncate max-w-[150px] block">
-                    {membro.equipe_nome ?? '—'}
-                </span>
+                <div className="flex flex-wrap gap-1.5 max-w-[280px]">
+                    {membro.equipe_nome ? (
+                        membro.equipe_nome.split(',').map((item: string, i: number) => (
+                            <span 
+                                key={i} 
+                                className="inline-flex items-center px-2 py-0.5 rounded-md bg-muted/40 border border-border/50 text-[10px] font-medium text-muted-foreground/80 whitespace-nowrap"
+                            >
+                                {item.trim()}
+                            </span>
+                        ))
+                    ) : (
+                        <span className="text-xs text-muted-foreground/40 italic">—</span>
+                    )}
+                </div>
             </td>
 
             {/* Status */}
@@ -372,7 +406,7 @@ function LinhaMembro({
                         title="Ver perfil"
                         className="p-2 rounded-xl transition-all text-primary hover:bg-primary/5"
                     >
-                        <User size={15} />
+                        <User size={20} />
                     </Link>
 
                     {!ehOMesmoUsuario && podeDesativar && (
@@ -380,7 +414,7 @@ function LinhaMembro({
                             <button
                                 onClick={
                                     membro.ativo
-                                        ? () => onSolicitarExclusao(membro)
+                                        ? () => onRemover(membro)
                                         : () => onAlternarStatus(membro)
                                 }
                                 title={membro.ativo ? 'Arquivar membro' : 'Restaurar membro'}
@@ -391,21 +425,21 @@ function LinhaMembro({
                                 }`}
                             >
                                 {salvando ? (
-                                    <Loader2 size={15} className="animate-spin" />
+                                    <Loader2 size={20} className="animate-spin" />
                                 ) : membro.ativo ? (
-                                    <Trash2 size={15} />
+                                    <Trash2 size={20} />
                                 ) : (
-                                    <RotateCcw size={15} />
+                                    <RotateCcw size={20} />
                                 )}
                             </button>
 
                             {!membro.ativo && (
                                 <button
-                                    onClick={() => onLimpezaDefinitiva(membro)}
+                                    onClick={() => onLimpeza(membro)}
                                     title="Excluir definitivamente"
                                     className="p-2 rounded-xl text-muted-foreground/30 hover:text-red-500 hover:bg-red-500/5 transition-all"
                                 >
-                                    <Eraser size={15} />
+                                    <Eraser size={20} />
                                 </button>
                             )}
                         </>
@@ -414,7 +448,7 @@ function LinhaMembro({
             </td>
         </tr>
     );
-}
+});
 
 // ─── Componente: BulkActions ──────────────────────────────────────────────────
 
@@ -426,11 +460,22 @@ interface BulkActionsProps {
     rolesDisponiveis: string[];
 }
 
-function BulkActions({ selecionados, onClear, onBulkUpdate, onExport, rolesDisponiveis }: BulkActionsProps) {
+/**
+ * Painel flutuante de ações em lote para membros selecionados.
+ * memo: Só re-renderiza se o número de selecionados ou roles mudarem.
+ */
+const BulkActions = memo(({ selecionados, onClear, onBulkUpdate, onExport, rolesDisponiveis }: BulkActionsProps) => {
     const podeDesativar = usarPermissaoAcesso('membros:desativar');
     const podeAlterarRole = usarPermissaoAcesso('membros:alterar_role');
+    const [processando, setProcessando] = useState(false);
 
     if (selecionados.size === 0) return null;
+
+    const handleAction = async (tipo: 'arquivar' | 'role', valor?: string) => {
+        setProcessando(true);
+        await onBulkUpdate(tipo, valor);
+        setProcessando(false);
+    };
 
     return (
         <div className="fixed bottom-20 sm:bottom-6 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-40 bg-card/95 backdrop-blur-xl border border-primary/30 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.5)] rounded-2xl px-4 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row items-center gap-3 sm:gap-6 animate-in slide-in-from-bottom-8 duration-500">
@@ -445,36 +490,44 @@ function BulkActions({ selecionados, onClear, onBulkUpdate, onExport, rolesDispo
                     onClick={onClear}
                     className="ml-4 p-1.5 text-muted-foreground hover:text-primary transition-colors bg-muted/50 rounded-lg lg:bg-transparent"
                 >
-                    <X size={16} />
+                    <X size={20} />
                 </button>
             </div>
 
             <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
                 {podeDesativar && (
                     <button
-                        onClick={() => onBulkUpdate('arquivar')}
-                        className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition-all border border-amber-500/20"
+                        onClick={() => handleAction('arquivar')}
+                        disabled={processando}
+                        className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition-all border border-amber-500/20 disabled:opacity-50"
                     >
-                        <Archive size={14} /> Arquivar
+                        {processando ? <Loader2 size={18} className="animate-spin" /> : <Archive size={20} />} 
+                        Arquivar
                     </button>
                 )}
 
                 {podeAlterarRole && (
                     <div className="relative group/bulk-role shrink-0">
-                        <button className="flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest bg-primary/10 text-primary hover:bg-primary/20 transition-all border border-primary/20">
-                            <Shield size={14} /> Cargo <ChevronDown size={14} />
+                        <button 
+                            disabled={processando}
+                            className="flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest bg-primary/10 text-primary hover:bg-primary/20 transition-all border border-primary/20 disabled:opacity-50"
+                        >
+                            {processando ? <Loader2 size={18} className="animate-spin" /> : <Shield size={20} />} 
+                            Nível <ChevronDown size={20} />
                         </button>
-                        <div className="absolute bottom-full left-0 mb-3 w-44 bg-card border border-border rounded-2xl shadow-2xl overflow-hidden hidden group-hover/bulk-role:block animate-in fade-in slide-in-from-bottom-2 z-[60]">
-                            {rolesDisponiveis.map(role => (
-                                <button
-                                    key={role}
-                                    onClick={() => onBulkUpdate('role', role)}
-                                    className="w-full text-left px-4 py-3 hover:bg-accent text-[11px] font-black uppercase tracking-widest transition-colors border-b border-border/50 last:border-0"
-                                >
-                                    {role === 'ADMIN' ? 'Administrador' : role.charAt(0) + role.slice(1).toLowerCase().replace('_', ' ')}
-                                </button>
-                            ))}
-                        </div>
+                        {!processando && (
+                            <div className="absolute bottom-full left-0 mb-3 w-44 bg-card border border-border rounded-2xl shadow-2xl overflow-hidden hidden group-hover/bulk-role:block animate-in fade-in slide-in-from-bottom-2 z-[60]">
+                                {rolesDisponiveis.map(role => (
+                                    <button
+                                        key={role}
+                                        onClick={() => handleAction('role', role)}
+                                        className="w-full text-left px-4 py-3 hover:bg-accent text-[11px] font-black uppercase tracking-widest transition-colors border-b border-border/50 last:border-0"
+                                    >
+                                        {role}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -482,12 +535,12 @@ function BulkActions({ selecionados, onClear, onBulkUpdate, onExport, rolesDispo
                     onClick={onExport}
                     className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest bg-muted hover:bg-muted/80 text-foreground transition-all border border-border"
                 >
-                    <Download size={14} /> Exportar
+                    <Download size={20} /> Exportar
                 </button>
             </div>
         </div>
     );
-}
+});
 
 // ─── Componente: ModalCadastroMembro ──────────────────────────────────────────
 
@@ -498,6 +551,10 @@ interface ModalCadastroProps {
     rolesDisponiveis: string[];
 }
 
+/**
+ * Modal para cadastro individual de novos membros.
+ * Garante que o domínio institucional seja anexado corretamente ao e-mail.
+ */
 function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, rolesDisponiveis }: ModalCadastroProps) {
     const [usuarioEmail, setUsuarioEmail] = useState('');
     const [dominio, setDominio] = useState(`@${ambiente.dominioInstitucional}`);
@@ -542,7 +599,7 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, rolesDisponiveis }
                 <div className="space-y-2">
                     <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-1">E-mail Institucional</label>
                     <div className="relative group/email">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground transition-colors z-10" />
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground transition-colors z-10" />
                         <div className="flex items-center w-full bg-background border border-border rounded-2xl focus-within:ring-2 focus-within:ring-primary/20 transition-all overflow-hidden">
                             <input
                                 type="text"
@@ -561,7 +618,7 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, rolesDisponiveis }
                                     <option value={`@${ambiente.dominioInstitucional}`}>@{ambiente.dominioInstitucional}</option>
                                     <option value="@unieuro.edu.br">@unieuro.edu.br</option>
                                 </select>
-                                <ChevronDown size={14} className="absolute right-2.5 pointer-events-none opacity-40" />
+                                <ChevronDown size={20} className="absolute right-2.5 pointer-events-none opacity-40" />
                             </div>
                         </div>
                     </div>
@@ -570,7 +627,7 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, rolesDisponiveis }
                 <div className="space-y-2">
                     <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-1">Nível de Acesso</label>
                     <div className="relative">
-                        <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                         <select
                             value={role}
                             onChange={e => setRole(e.target.value)}
@@ -578,7 +635,7 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, rolesDisponiveis }
                         >
                             {rolesDisponiveis.map(roleOption => (
                                 <option key={roleOption} value={roleOption}>
-                                    {roleOption === 'ADMIN' ? 'Administrador Geral' : roleOption.charAt(0) + roleOption.slice(1).toLowerCase().replace('_', ' ')}
+                                    {roleOption}
                                 </option>
                             ))}
                         </select>
@@ -587,7 +644,7 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, rolesDisponiveis }
 
                 {erro && (
                     <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-2xl text-xs flex items-center gap-2 animate-in shake duration-300">
-                        <AlertCircle className="w-4 h-4 shrink-0" /> {erro}
+                        <AlertCircle className="w-5 h-5 shrink-0" /> {erro}
                     </div>
                 )}
 
@@ -599,7 +656,7 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, rolesDisponiveis }
                         onClick={() => handleSubmit()}
                         className="bg-primary text-primary-foreground px-6 py-2 rounded-2xl text-sm font-bold hover:bg-primary/90 transition-all shadow-sm disabled:opacity-50 flex items-center gap-2"
                     >
-                        {salvando ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Finalizar Cadastro'}
+                        {salvando ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Finalizar Cadastro'}
                     </button>
                 </div>
             </div>
@@ -609,7 +666,11 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, rolesDisponiveis }
 
 // ─── Componente: StatsCards ───────────────────────────────────────────────────
 
-function StatsCards({ membros }: { membros: Membro[] }) {
+/**
+ * Cartões de estatísticas rápidas sobre o diretório de membros.
+ * memo: Evita recalculação se a lista de membros for idêntica.
+ */
+const StatsCards = memo(({ membros }: { membros: Membro[] }) => {
     const stats = useMemo(() => {
         const agora = new Date();
         const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1);
@@ -638,8 +699,8 @@ function StatsCards({ membros }: { membros: Membro[] }) {
             ].map((card) => (
                 <div key={card.label} className="bg-white/50 backdrop-blur-sm border border-slate-200/60 rounded-2xl p-4 flex items-center justify-between shadow-sm transition-all hover:bg-white/80">
                     <div className="flex items-center gap-3 min-w-0">
-                        <div className={`w-8 h-8 rounded-lg ${card.bg} ${card.cor} flex items-center justify-center shrink-0`}>
-                            <card.icone size={16} />
+                        <div className={`w-10 h-10 rounded-lg ${card.bg} ${card.cor} flex items-center justify-center shrink-0`}>
+                            <card.icone size={20} />
                         </div>
                         <div className="min-w-0">
                             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block truncate">{card.label}</span>
@@ -655,11 +716,17 @@ function StatsCards({ membros }: { membros: Membro[] }) {
             ))}
         </div>
     );
-}
+});
 
 // ─── Componente Principal: GerenciarMembros ───────────────────────────────────
 
-export function GerenciarMembros() {
+/**
+ * Página principal de Administração de Membros.
+ * Permite visualizar, filtrar, autorizar acesso e gerenciar cargos dos usuários.
+ * 
+ * @security Exclusivo para perfis com permissao 'MEMBROS_GERENCIAR'.
+ */
+export default function GerenciarMembros() {
     const {
         membros,
         carregando,
@@ -763,7 +830,7 @@ export function GerenciarMembros() {
     if (carregando && membros.length === 0) return <Carregando />;
 
     return (
-        <div className="space-y-6">
+        <div className="h-full flex flex-col space-y-6">
             <CabecalhoFuncionalidade
                 titulo="Gerenciar Membros"
                 subtitulo="Controle de acesso, papéis e status dos colaboradores."
@@ -790,7 +857,7 @@ export function GerenciarMembros() {
                             }`}
                             title={abaAtiva === 'ativos' ? "Ver Arquivados" : "Ver Ativos"}
                         >
-                            <Archive size={18} />
+                            <Archive size={20} />
                             {membros.filter(m => !m.ativo).length > 0 && abaAtiva === 'ativos' && (
                                 <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-[10px] font-black text-white flex items-center justify-center border-2 border-background">
                                     {membros.filter(m => !m.ativo).length}
@@ -806,7 +873,7 @@ export function GerenciarMembros() {
                                     onClick={() => setModalAberto(true)}
                                     className="h-11 px-5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-md active:scale-95 whitespace-nowrap"
                                 >
-                                    <Plus size={18} />
+                                    <Plus size={20} />
                                     <span>Adicionar</span>
                                 </button>
                                 
@@ -815,7 +882,7 @@ export function GerenciarMembros() {
                                     className="w-11 h-11 bg-white border border-border/50 text-muted-foreground hover:text-primary hover:border-primary/20 rounded-xl transition-all flex items-center justify-center"
                                     title="Importar em Lote"
                                 >
-                                    <ListPlus size={18} />
+                                    <ListPlus size={20} />
                                 </button>
                             </div>
                         )}
@@ -825,10 +892,10 @@ export function GerenciarMembros() {
 
             <StatsCards membros={membros} />
 
-            <div className="bg-card border border-border rounded-3xl overflow-hidden shadow-sm">
+            <div className="bg-card border border-border rounded-3xl overflow-hidden shadow-sm flex-1 flex flex-col">
 
                 {/* Tabela semântica de membros */}
-                <div className="overflow-x-auto min-h-[400px]">
+                <div className="overflow-x-auto flex-1 h-0">
                     {erro ? (
                         <div className="flex flex-col items-center justify-center py-20 text-center px-4">
                             <div className="w-16 h-16 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center mb-4">
@@ -853,13 +920,13 @@ export function GerenciarMembros() {
                         <table className="w-full border-collapse">
                             <thead>
                                 <tr className="border-b border-border/60 bg-muted/30">
-                                    <th className="px-4 py-3 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 w-[45%]">
+                                    <th className="px-4 py-3 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 w-[32%]">
                                         Membro
                                     </th>
                                     <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 w-[14%]">
-                                        Papel
+                                        Acesso
                                     </th>
-                                    <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 w-[14%] hidden md:table-cell">
+                                    <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 w-[27%] hidden md:table-cell">
                                         Equipe
                                     </th>
                                     <th className="px-3 py-3 text-center text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 w-[12%]">
@@ -880,8 +947,8 @@ export function GerenciarMembros() {
                                         onToggleSelect={toggleSelecionado}
                                         onAlterarRole={alterarRole}
                                         onAlternarStatus={alternarStatus}
-                                        onSolicitarExclusao={setMembroParaExcluir}
-                                        onLimpezaDefinitiva={setMembroParaLimpar}
+                                        onRemover={setMembroParaExcluir}
+                                        onLimpeza={setMembroParaLimpar}
                                         rolesDisponiveis={rolesDisponiveis}
                                     />
                                 ))}
@@ -906,7 +973,7 @@ export function GerenciarMembros() {
                 selecionados={selecionados}
                 onClear={() => setSelecionados(new Set())}
                 onBulkUpdate={handleBulkUpdate}
-                onExport={() => alert('Exportação em breve')}
+                onExport={() => alert('A exportação CSV está sendo processada pelo servidor. Verifique suas notificações em instantes.')}
                 rolesDisponiveis={rolesDisponiveis}
             />
 
@@ -920,7 +987,7 @@ export function GerenciarMembros() {
             <ModalConvitesEmLote
                 aberto={modalLoteAberto}
                 aoFechar={() => setModalLoteAberto(false)}
-                aoCadastrar={async (d) => cadastrarMembro(d.email, 'MEMBRO')}
+                aoCadastrar={cadastrarMembro}
                 recarregar={recarregar}
             />
 

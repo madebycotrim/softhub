@@ -15,7 +15,7 @@ import { MuralAvisos } from '../funcionalidades/avisos/MuralAvisos';
 import { PaginaDashboard } from '../funcionalidades/dashboard/PaginaDashboard';
 import { PainelLogs } from '../funcionalidades/admin/PainelLogs';
 import { PainelJustificativas } from '../funcionalidades/admin/PainelJustificativas';
-import { GerenciarMembros } from '../funcionalidades/admin/GerenciarMembros';
+import GerenciarMembros from '../funcionalidades/admin/GerenciarMembros';
 
 import { PaginaConfiguracoes } from '../funcionalidades/admin/PaginaConfiguracoes';
 import PaginaRelatorios from '../funcionalidades/admin/PaginaRelatorios';

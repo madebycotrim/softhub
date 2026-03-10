@@ -30,11 +30,23 @@ export function Avatar({ nome, fotoPerfil, tamanho = 'md', className = '' }: Ava
         return `${pares[0][0]}${pares[pares.length - 1][0]}`.toUpperCase();
     };
 
-    // Cores dinâmicas para avatares sem foto baseadas no tamanho do nome (ajuda a separar visualmente)
+    // Gera um número (hash) consistente baseado na string do nome
+    const getHash = (str: string) => {
+        let hash = 0;
+        const textoParaHash = str.trim().toUpperCase();
+        for (let i = 0; i < textoParaHash.length; i++) {
+            hash = textoParaHash.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        return Math.abs(hash);
+    };
+
+    // Cores vibrantes para os avatares sem foto
     const coresFallback = [
-        'bg-blue-600', 'bg-emerald-600', 'bg-violet-600', 'bg-rose-600', 'bg-amber-600'
+        'bg-blue-600', 'bg-emerald-600', 'bg-violet-600', 'bg-rose-600', 'bg-amber-600',
+        'bg-indigo-600', 'bg-cyan-600', 'bg-fuchsia-600', 'bg-teal-600'
     ];
-    const corIndex = nome.length % coresFallback.length;
+    
+    const corIndex = getHash(nome) % coresFallback.length;
     const corBg = coresFallback[corIndex];
 
     if (fotoPerfil && fotoPerfil.trim() !== '') {

@@ -13,15 +13,7 @@ import type { Membro } from './usarMembros';
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getRoleLabel(role: string) {
-    switch (role) {
-        case 'ADMIN': return "Administração Geral";
-        case 'COORDENADOR': return "Coordenação";
-        case 'GESTOR': return "Gestão";
-        case 'LIDER': return "Liderança";
-        case 'SUBLIDER': return "Subliderança";
-        case 'MEMBRO': return "Membros";
-        default: return "Colaboradores";
-    }
+    return role.toUpperCase();
 }
 
 function formatarDataEntrada(dataHora: string): string {

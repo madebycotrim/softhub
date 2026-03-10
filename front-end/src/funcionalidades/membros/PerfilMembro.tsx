@@ -153,8 +153,8 @@ export function PerfilMembro({ membroId }: { membroId: string }) {
                             <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
                                 {membro.nome}
                             </h1>
-                            <p className="text-primary font-medium">
-                                {membro.role.replace('_', ' ')}
+                            <p className="text-primary font-bold text-sm tracking-widest uppercase">
+                                {membro.role}
                             </p>
                         </div>
                     </div>
