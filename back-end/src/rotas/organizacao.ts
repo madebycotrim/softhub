@@ -85,19 +85,26 @@ rotasOrganizacao.patch('/grupos/:id', autenticacaoRequerida(), verificarPermissa
     const usuarioLogado = c.get('usuario') as any;
     const id = c.req.param('id');
 
-    let nome: string, descricao: string | null, equipe_id: string | null;
+    let corpo: any;
     try {
-        ({ nome, descricao = null, equipe_id = null } = await c.req.json());
+        corpo = await c.req.json();
     } catch {
         return c.json({ erro: 'Corpo da requisição inválido.' }, 400);
     }
 
-    if (!nome?.trim()) return c.json({ erro: 'O nome do grupo é obrigatório.' }, 400);
-
     try {
+        const atual = await DB.prepare('SELECT nome, descricao, equipe_id FROM grupos WHERE id = ?').bind(id).first() as any;
+        if (!atual) return c.json({ erro: 'Grupo não encontrado.' }, 404);
+
+        const nome = (corpo.nome !== undefined ? corpo.nome : atual.nome)?.trim();
+        const descricao = corpo.descricao !== undefined ? corpo.descricao : atual.descricao;
+        const equipe_id = corpo.equipe_id !== undefined ? corpo.equipe_id : atual.equipe_id;
+
+        if (!nome) return c.json({ erro: 'O nome do grupo é obrigatório.' }, 400);
+
         await DB.prepare(
             'UPDATE grupos SET nome = ?, descricao = ?, equipe_id = ? WHERE id = ?'
-        ).bind(nome.trim(), descricao, equipe_id, id).run();
+        ).bind(nome, descricao, equipe_id, id).run();
 
         await registrarLog(DB, {
             usuarioId: usuarioLogado.id,
@@ -229,19 +236,27 @@ rotasOrganizacao.patch('/equipes/:id', autenticacaoRequerida(), verificarPermiss
     const usuarioLogado = c.get('usuario') as any;
     const id = c.req.param('id');
 
-    let nome: string, descricao: string | null, lider_id: string | null, sub_lider_id: string | null;
+    let corpo: any;
     try {
-        ({ nome, descricao = null, lider_id = null, sub_lider_id = null } = await c.req.json());
+        corpo = await c.req.json();
     } catch {
         return c.json({ erro: 'Corpo da requisição inválido.' }, 400);
     }
 
-    if (!nome?.trim()) return c.json({ erro: 'O nome da equipe é obrigatório.' }, 400);
-
     try {
+        const atual = await DB.prepare('SELECT nome, descricao, lider_id, sub_lider_id FROM equipes WHERE id = ?').bind(id).first() as any;
+        if (!atual) return c.json({ erro: 'Equipe não encontrada.' }, 404);
+
+        const nome = (corpo.nome !== undefined ? corpo.nome : atual.nome)?.trim();
+        const descricao = corpo.descricao !== undefined ? corpo.descricao : atual.descricao;
+        const lider_id = corpo.lider_id !== undefined ? corpo.lider_id : atual.lider_id;
+        const sub_lider_id = corpo.sub_lider_id !== undefined ? corpo.sub_lider_id : atual.sub_lider_id;
+
+        if (!nome) return c.json({ erro: 'O nome da equipe é obrigatório.' }, 400);
+
         await DB.prepare(
             'UPDATE equipes SET nome = ?, descricao = ?, lider_id = ?, sub_lider_id = ? WHERE id = ?'
-        ).bind(nome.trim(), descricao, lider_id, sub_lider_id, id).run();
+        ).bind(nome, descricao, lider_id, sub_lider_id, id).run();
 
         await registrarLog(DB, {
             usuarioId: usuarioLogado.id,

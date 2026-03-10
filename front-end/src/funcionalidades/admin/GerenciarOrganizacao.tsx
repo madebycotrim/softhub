@@ -145,19 +145,27 @@ interface ModalAlocacaoProps {
     equipes: Equipe[];
     membros: MembroSimples[];
     aoAlocar: (membroId: string, equipeId: string | null, grupoId: string | null) => Promise<void>;
+    grupoIdPadrao?: string;
+    equipeIdPadrao?: string;
 }
 
 /**
  * Modal para alocar membros em grupos e equipes.
  * Redesenhado para ser mais intuitivo com seleção lateral.
  */
-function ModalAlocacao({ aberto, aoFechar, grupos, equipes, membros, aoAlocar }: ModalAlocacaoProps) {
+function ModalAlocacao({ aberto, aoFechar, grupos, equipes, membros, aoAlocar, grupoIdPadrao, equipeIdPadrao }: ModalAlocacaoProps) {
     const [membroId, setMembroId] = useState('');
-    const [equipeId, setEquipeId] = useState('');
-    const [grupoId, setGrupoId] = useState('');
     const [salvando, setSalvando] = useState(false);
     const [erro, setErro] = useState<string | null>(null);
     const [busca, setBusca] = useState('');
+
+    useEffect(() => {
+        if (aberto) {
+            setMembroId('');
+            setBusca('');
+            setErro(null);
+        }
+    }, [aberto]);
 
     const membrosFiltrados = useMemo(() => 
         membros.filter(m =>
@@ -171,14 +179,12 @@ function ModalAlocacao({ aberto, aoFechar, grupos, equipes, membros, aoAlocar }:
     [membros, membroId]);
 
     const handleAlocar = async () => {
-        if (!membroId) return;
+        if (!membroId || !grupoIdPadrao || !equipeIdPadrao) return;
         setSalvando(true);
         setErro(null);
         try {
-            await aoAlocar(membroId, equipeId || null, grupoId || null);
+            await aoAlocar(membroId, equipeIdPadrao, grupoIdPadrao);
             setMembroId('');
-            setEquipeId('');
-            setGrupoId('');
             aoFechar();
         } catch {
             setErro('Não foi possível realizar a alocação.');
@@ -187,13 +193,6 @@ function ModalAlocacao({ aberto, aoFechar, grupos, equipes, membros, aoAlocar }:
         }
     };
 
-    // Auto-preencher Equipe ao selecionar um Grupo
-    useEffect(() => {
-        if (grupoId) {
-            const grupo = grupos.find(g => g.id === grupoId);
-            if (grupo?.equipe_id) setEquipeId(grupo.equipe_id);
-        }
-    }, [grupoId, grupos]);
 
     return (
         <Modal aberto={aberto} aoFechar={aoFechar} titulo="Alocar Membro" largura="lg">
@@ -214,7 +213,7 @@ function ModalAlocacao({ aberto, aoFechar, grupos, equipes, membros, aoAlocar }:
                         {membrosFiltrados.map(m => (
                             <button
                                 key={m.id}
-                                onClick={() => { setMembroId(m.id); setEquipeId(m.equipe_id ?? ''); setGrupoId(m.grupo_id ?? ''); }}
+                                onClick={() => setMembroId(m.id)}
                                 className={`w-full flex items-center justify-between p-3 rounded-2xl border transition-all text-left ${membroId === m.id ? 'bg-blue-50 border-blue-200' : 'bg-white border-transparent hover:bg-slate-50'}`}
                             >
                                 <div className="flex items-center gap-3">
@@ -233,40 +232,39 @@ function ModalAlocacao({ aberto, aoFechar, grupos, equipes, membros, aoAlocar }:
                 {/* Linha Vertical (desktop) */}
                 <div className="hidden lg:block w-px bg-slate-100" />
 
-                {/* Lado Direito: Destino */}
                 <div className="flex-1 flex flex-col justify-between">
                     <div className="space-y-6">
-                        <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Destino da Alocação</p>
-                            {!membroId ? (
-                                <p className="text-xs text-slate-400 italic">Selecione um membro à esquerda para definir o comando e turno.</p>
-                            ) : (
-                                <div className="space-y-4">
-                                    <SeletorBuscavel
-                                        label="Grupo (Turno)"
-                                        valor={grupoId}
-                                        aoAlterar={setGrupoId}
-                                        opcoes={grupos.filter(g => g.ativo).map(g => ({ id: g.id, nome: `${g.nome} (${g.equipe_nome})` }))}
-                                        placeholderVazio="Sem turno definido"
-                                        icone={LayoutGrid}
-                                    />
-                                    <SeletorBuscavel
-                                        label="Equipe (Comando)"
-                                        valor={equipeId}
-                                        aoAlterar={setEquipeId}
-                                        opcoes={equipes.filter(e => e.ativo)}
-                                        placeholderVazio="Sem comando superior"
-                                        icone={Users}
-                                    />
+                        <div className="p-5 bg-blue-50/50 border border-blue-100 rounded-3xl">
+                            <div className="flex items-center gap-4 mb-5">
+                                <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-blue-600 border border-blue-50">
+                                    <Users size={22} />
                                 </div>
-                            )}
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none mb-1.5">Equipe (Comando)</p>
+                                    <p className="text-base font-bold text-slate-900 tracking-tight">
+                                        {equipes.find(e => e.id === equipeIdPadrao)?.nome || 'Comando não encontrado'}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-indigo-500 border border-indigo-50">
+                                    <LayoutGrid size={22} />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none mb-1.5">Grupo (Turno)</p>
+                                    <p className="text-base font-bold text-slate-900 tracking-tight">
+                                        {grupos.find(g => g.id === grupoIdPadrao)?.nome || 'Turno não encontrado'}
+                                    </p>
+                                </div>
+                            </div>
                         </div>
 
                         {membroSelecionado && (
-                            <div className="p-4 border border-blue-100 bg-blue-50/30 rounded-2xl">
-                                <p className="text-[9px] font-black uppercase tracking-widest text-blue-500 mb-1 leading-none">Status Atual</p>
+                            <div className="p-4 border border-slate-100 bg-slate-50/30 rounded-2xl">
+                                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1.5 leading-none">Status do Membro Selecionado</p>
                                 <p className="text-xs text-slate-600">
-                                    Membro pertence a <span className="font-bold text-slate-900">{equipes.find(e => e.id === membroSelecionado.equipe_id)?.nome || 'nenhum comando'}</span>.
+                                    Atualmente vinculado à equipe <span className="font-extrabold text-slate-900">{equipes.find(e => e.id === membroSelecionado.equipe_id)?.nome || 'nenhum comando'}</span>.
                                 </p>
                             </div>
                         )}
@@ -428,7 +426,7 @@ function DetalheEquipe({
     aoAdicionarGrupo: () => void,
     aoEditarGrupo: (g: Grupo) => void,
     aoExcluirGrupo: (g: Grupo) => void,
-    aoAlocar: () => void,
+    aoAlocar: (gId: string, eId: string) => void,
     aoRemoverMembro: (mId: string) => void,
     aoSelecionarLider: (tipo: 'lider' | 'sub_lider') => void
 }) {
@@ -555,7 +553,7 @@ function DetalheEquipe({
                                 <div className="flex-1 flex flex-col min-h-0">
                                     <div className="flex items-center justify-between mb-3">
                                         <h6 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400/60">Integrantes ({membros.filter(m => m.grupo_id === g.id).length})</h6>
-                                        <button onClick={aoAlocar} className="w-8 h-8 rounded-2xl bg-white border border-slate-100 text-slate-400 flex items-center justify-center hover:bg-slate-50 hover:text-blue-600 transition-all shadow-sm">
+                                        <button onClick={() => aoAlocar(g.id, equipe.id)} className="w-8 h-8 rounded-2xl bg-white border border-slate-100 text-slate-400 flex items-center justify-center hover:bg-slate-50 hover:text-blue-600 transition-all shadow-sm">
                                             <Plus size={16} />
                                         </button>
                                     </div>
@@ -593,7 +591,7 @@ export function GerenciarOrganizacao() {
     const [idEquipeAtiva, setIdEquipeAtiva] = useState<string | null>(null);
     const [modalOrg, setModalOrg] = useState<{ aberto: boolean; tipo: 'equipe' | 'grupo'; dados?: any } | null>(null);
     const [confirmacaoExclusao, setConfirmacaoExclusao] = useState<{ id: string; nome: string; tipo: 'equipe' | 'grupo' } | null>(null);
-    const [modalAlocacao, setModalAlocacao] = useState(false);
+    const [modalAlocacao, setModalAlocacao] = useState<{ grupoId: string; equipeId: string } | null>(null);
     const [modalLider, setModalLider] = useState<{ aberto: boolean; tipo: 'lider' | 'sub_lider' } | null>(null);
     const [desativando, setDesativando] = useState(false);
 
@@ -728,7 +726,7 @@ export function GerenciarOrganizacao() {
                             aoAdicionarGrupo={() => setModalOrg({ aberto: true, tipo: 'grupo', dados: { equipe_id: idEquipeAtiva } })}
                             aoEditarGrupo={(g) => setModalOrg({ aberto: true, tipo: 'grupo', dados: g })}
                             aoExcluirGrupo={(g) => setConfirmacaoExclusao({ id: g.id, nome: g.nome, tipo: 'grupo' })}
-                            aoAlocar={() => setModalAlocacao(true)}
+                            aoAlocar={(gId, eId) => setModalAlocacao({ grupoId: gId, equipeId: eId })}
                             aoRemoverMembro={(mId) => alocarMembro(mId, equipeAtiva.id, null)}
                             aoSelecionarLider={(tipo) => setModalLider({ aberto: true, tipo })}
                         />
@@ -753,7 +751,6 @@ export function GerenciarOrganizacao() {
                         titulo={modalOrg.tipo === 'equipe' ? 'Equipe' : 'Grupo'}
                         tipo={modalOrg.tipo}
                         inicial={modalOrg.dados}
-                        membros={membros.map(m => ({ id: m.id, nome: m.nome }))}
                         equipes={equipes.map(e => ({ id: e.id, nome: e.nome }))}
                         aoSalvar={handleSalvarOrg}
                         aoFechar={() => setModalOrg(null)}
@@ -771,12 +768,14 @@ export function GerenciarOrganizacao() {
             />
 
             <ModalAlocacao
-                aberto={modalAlocacao}
-                aoFechar={() => setModalAlocacao(false)}
+                aberto={!!modalAlocacao}
+                aoFechar={() => setModalAlocacao(null)}
                 grupos={grupos}
                 equipes={equipesAtivas}
                 membros={membros.map(m => ({ ...m, role: '', foto_perfil: (m as any).foto_perfil ?? null, equipe_id: (m as any).equipe_id ?? null, grupo_id: (m as any).grupo_id ?? null }))}
                 aoAlocar={alocarMembro}
+                grupoIdPadrao={modalAlocacao?.grupoId}
+                equipeIdPadrao={modalAlocacao?.equipeId}
             />
 
             <ModalSelecaoLider
@@ -797,13 +796,12 @@ interface FormGrupoEquipeProps {
     titulo: string;
     tipo: 'equipe' | 'grupo';
     inicial?: any;
-    membros: { id: string; nome: string }[];
     equipes?: { id: string; nome: string }[];
     aoSalvar: (dados: any) => Promise<void>;
     aoFechar: () => void;
 }
 
-function FormGrupoEquipe({ titulo, tipo, inicial, membros, equipes, aoSalvar, aoFechar }: FormGrupoEquipeProps) {
+function FormGrupoEquipe({ titulo, tipo, inicial, equipes, aoSalvar, aoFechar }: FormGrupoEquipeProps) {
     const [salvando, setSalvando] = useState(false);
     const [nome, setNome] = useState(inicial?.nome || '');
     const [equipeId, setEquipeId] = useState(inicial?.equipe_id || '');
