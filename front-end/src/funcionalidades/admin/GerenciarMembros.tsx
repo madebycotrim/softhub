@@ -301,10 +301,10 @@ function LinhaMembro({
                     <Avatar nome={membro.nome} fotoPerfil={membro.foto_perfil} tamanho="md" />
 
                     <div className="min-w-0">
-                        <p className="font-bold text-foreground text-sm leading-tight truncate max-w-[180px]">
+                        <p className="font-bold text-foreground text-sm leading-tight">
                             {membro.nome || <span className="italic text-muted-foreground/50 font-normal">Sem nome</span>}
                         </p>
-                        <p className="text-[11px] text-muted-foreground/60 truncate leading-tight mt-0.5 max-w-[180px]">
+                        <p className="text-[11px] text-muted-foreground/60 leading-tight mt-0.5">
                             {membro.email}
                         </p>
                     </div>
@@ -631,26 +631,26 @@ function StatsCards({ membros }: { membros: Membro[] }) {
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {[
-                { label: 'Total de Membros', valor: stats.total, icone: UsersIcon, cor: 'text-primary', bg: 'bg-primary/5', detalhe: stats.novos > 0 ? `+${stats.novos} este mês` : null },
-                { label: 'Membros Ativos', valor: stats.ativos, icone: UserCheck, cor: 'text-emerald-500', bg: 'bg-emerald-500/5', detalhe: stats.total > 0 ? `${Math.round((stats.ativos / stats.total) * 100)}%` : null },
-                { label: 'Lideranças', valor: stats.lideres, icone: Shield, cor: 'text-purple-400', bg: 'bg-purple-400/5', detalhe: 'Líderes & Admins' },
-                { label: 'Novos Acessos', valor: stats.visitantes, icone: Mail, cor: 'text-amber-500', bg: 'bg-amber-500/5', detalhe: 'Pendentes' },
+                { label: 'Total', valor: stats.total, icone: UsersIcon, cor: 'text-slate-600', bg: 'bg-slate-100', detalhe: stats.novos > 0 ? `+${stats.novos}` : null },
+                { label: 'Ativos', valor: stats.ativos, icone: UserCheck, cor: 'text-emerald-600', bg: 'bg-emerald-50', detalhe: stats.total > 0 ? `${Math.round((stats.ativos / stats.total) * 100)}%` : null },
+                { label: 'Lideranças', valor: stats.lideres, icone: Shield, cor: 'text-indigo-600', bg: 'bg-indigo-50', detalhe: null },
+                { label: 'Pendentes', valor: stats.visitantes, icone: Mail, cor: 'text-amber-600', bg: 'bg-amber-50', detalhe: null },
             ].map((card) => (
-                <div key={card.label} className="bg-card border border-border rounded-2xl p-5 flex items-center gap-4 shadow-sm">
-                    <div className={`w-10 h-10 rounded-xl ${card.bg} ${card.cor} flex items-center justify-center shrink-0`}>
-                        <card.icone size={20} />
-                    </div>
-                    <div className="min-w-0">
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">{card.label}</span>
-                        <div className="flex items-center gap-2">
-                            <span className="text-xl font-bold text-foreground">{card.valor}</span>
-                            {card.detalhe && (
-                                <span className="text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                                    {card.detalhe}
-                                </span>
-                            )}
+                <div key={card.label} className="bg-white/50 backdrop-blur-sm border border-slate-200/60 rounded-2xl p-4 flex items-center justify-between shadow-sm transition-all hover:bg-white/80">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className={`w-8 h-8 rounded-lg ${card.bg} ${card.cor} flex items-center justify-center shrink-0`}>
+                            <card.icone size={16} />
+                        </div>
+                        <div className="min-w-0">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block truncate">{card.label}</span>
+                            <span className="text-lg font-bold text-slate-900 leading-tight">{card.valor}</span>
                         </div>
                     </div>
+                    {card.detalhe && (
+                        <span className="text-[9px] font-black text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-md self-end mb-0.5">
+                            {card.detalhe}
+                        </span>
+                    )}
                 </div>
             ))}
         </div>
@@ -804,7 +804,7 @@ export function GerenciarMembros() {
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => setModalAberto(true)}
-                                    className="h-11 px-5 bg-slate-900 hover:bg-black text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-lg active:scale-95 whitespace-nowrap"
+                                    className="h-11 px-5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-md active:scale-95 whitespace-nowrap"
                                 >
                                     <Plus size={18} />
                                     <span>Adicionar</span>
