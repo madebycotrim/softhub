@@ -120,9 +120,6 @@ export function usarEquipes() {
             if (equipe_id && grupo_id) {
                 // Adiciona se não existir
                 if (!novosGrupos.includes(grupo_id)) novosGrupos.push(grupo_id);
-            } else if (equipe_id && !grupo_id) {
-                // Se removeu grupo, nesse novo modelo (melhor) removemos de todos os grupos daquela equipe
-                // Mas para simplicidade agora, vamos apenas esperar o refresh do background carregar(true)
             }
             
             return { 
@@ -142,6 +139,16 @@ export function usarEquipes() {
         }
     };
 
+    const moverMembro = async (membroId: string, equipe_id: string, grupo_id: string, origem_grupo_id: string) => {
+        try {
+            await api.patch(`/api/equipes/membros/${membroId}/mover`, { equipe_id, grupo_id, origem_grupo_id });
+            await carregar(true);
+        } catch (e) {
+            console.error('Erro ao mover membro:', e);
+            carregar();
+        }
+    };
+
     return {
         grupos,
         equipes,
@@ -156,5 +163,6 @@ export function usarEquipes() {
         editarEquipe,
         desativarEquipe,
         alocarMembro,
+        moverMembro,
     };
 }

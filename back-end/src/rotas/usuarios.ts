@@ -2,6 +2,7 @@ import { Hono, Context } from 'hono';
 import { Env } from '../index';
 import { autenticacaoRequerida, verificarPermissao } from '../middleware/auth';
 import { registrarLog } from '../servicos/servico-logs';
+import { criarNotificacoes } from '../servicos/servico-notificacoes';
 
 const rotasUsuarios = new Hono<{ Bindings: Env; Variables: { usuario: any } }>();
 
@@ -32,8 +33,10 @@ rotasUsuarios.get('/', autenticacaoRequerida(), verificarPermissao('membros:visu
         const query = `
             SELECT
                 u.id, u.nome, u.email, u.role, u.ativo, u.foto_perfil, u.bio, u.funcoes, u.criado_em,
-                (SELECT GROUP_CONCAT(grupo_id) FROM usuarios_organizacao WHERE usuario_id = u.id) as grupos_ids
+                (SELECT GROUP_CONCAT(grupo_id) FROM usuarios_organizacao WHERE usuario_id = u.id) as grupos_ids,
+                (SELECT GROUP_CONCAT(e.nome) FROM usuarios_organizacao uo JOIN equipes e ON e.id = uo.equipe_id WHERE uo.usuario_id = u.id) as equipe_nome
             FROM usuarios u
+            WHERE u.visivel = 1
             ORDER BY u.nome ASC
         `;
 
@@ -122,6 +125,14 @@ rotasUsuarios.patch('/:id/role', autenticacaoRequerida(), verificarPermissao('me
     try {
         await DB.prepare('UPDATE usuarios SET role = ? WHERE id = ?').bind(role, id).run();
 
+        await criarNotificacoes(DB, {
+            usuarioId: id,
+            tipo: 'sistema',
+            titulo: 'Cargo Atualizado',
+            mensagem: `Seu cargo foi atualizado para ${role} pela administração.`,
+            link: '/app/membros'
+        });
+
         await registrarLog(DB, {
             usuarioId: usuarioLogado.id,
             usuarioNome: usuarioLogado.nome,
@@ -166,6 +177,16 @@ rotasUsuarios.patch('/:id/status', autenticacaoRequerida(), verificarPermissao('
 
     try {
         await DB.prepare('UPDATE usuarios SET ativo = ? WHERE id = ?').bind(ativo ? 1 : 0, id).run();
+
+        if (ativo) {
+            await criarNotificacoes(DB, {
+                usuarioId: id,
+                tipo: 'sistema',
+                titulo: 'Conta Ativada',
+                mensagem: 'Sua conta foi ativada. Você já pode acessar todas as funcionalidades permitidas.',
+                link: '/app/dashboard'
+            });
+        }
 
         await registrarLog(DB, {
             usuarioId: usuarioLogado.id,

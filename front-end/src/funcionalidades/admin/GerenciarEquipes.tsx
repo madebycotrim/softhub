@@ -1,6 +1,6 @@
 import { useState, useRef, useLayoutEffect, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { LayoutGrid, Users, Plus, Pencil, Trash2, UserCheck, Search, ChevronDown, Check } from 'lucide-react';
+import { LayoutGrid, Users, Plus, Pencil, Trash2, UserCheck, Search, ChevronDown, Check, ArrowRightLeft } from 'lucide-react';
 import { usarEquipes, type Grupo, type Equipe } from './usarEquipes';
 
 type MembroSimples = {
@@ -154,15 +154,15 @@ interface ModalAlocacaoProps {
  * Modal para alocar membros em grupos e equipes.
  * Redesenhado para ser mais intuitivo com seleção lateral.
  */
-function ModalAlocacao({ aberto, aoFechar, grupos, equipes, membros, aoAlocar, grupoIdPadrao, equipeIdPadrao }: ModalAlocacaoProps) {
-    const [membroId, setMembroId] = useState('');
+function ModalAlocacao({ aberto, aoFechar, grupos, membros, aoAlocar, grupoIdPadrao, equipeIdPadrao }: ModalAlocacaoProps) {
+    const [selecionados, setSelecionados] = useState<string[]>([]);
     const [salvando, setSalvando] = useState(false);
     const [erro, setErro] = useState<string | null>(null);
     const [busca, setBusca] = useState('');
 
     useEffect(() => {
         if (aberto) {
-            setMembroId('');
+            setSelecionados([]);
             setBusca('');
             setErro(null);
         }
@@ -175,124 +175,219 @@ function ModalAlocacao({ aberto, aoFechar, grupos, equipes, membros, aoAlocar, g
         ),
     [membros, busca]);
 
-    const membroSelecionado = useMemo(() => 
-        membros.find(m => m.id === membroId),
-    [membros, membroId]);
+    const toggleSelecionado = (id: string) => {
+        setSelecionados(prev => 
+            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        );
+    };
+
+    const handleSelecionarTudo = () => {
+        const disponiveis = membrosFiltrados.filter(m => !(m.grupos_ids?.split(',') || []).includes(grupoIdPadrao || ''));
+        if (selecionados.length === disponiveis.length) {
+            setSelecionados([]);
+        } else {
+            setSelecionados(disponiveis.map(m => m.id));
+        }
+    };
 
     const handleAlocar = async () => {
-        if (!membroId || !grupoIdPadrao || !equipeIdPadrao) return;
+        if (selecionados.length === 0 || !grupoIdPadrao || !equipeIdPadrao) return;
         setSalvando(true);
         setErro(null);
         try {
-            await aoAlocar(membroId, equipeIdPadrao, grupoIdPadrao);
-            setMembroId('');
+            await Promise.all(selecionados.map(id => aoAlocar(id, equipeIdPadrao, grupoIdPadrao)));
+            setSelecionados([]);
             aoFechar();
         } catch {
-            setErro('Não foi possível realizar a alocação.');
+            setErro('Não foi possível realizar a alocação de alguns membros.');
         } finally {
             setSalvando(false);
         }
     };
 
-
+    const grupoNome = useMemo(() => grupos.find(g => g.id === grupoIdPadrao)?.nome, [grupos, grupoIdPadrao]);
+    
     return (
-        <Modal aberto={aberto} aoFechar={aoFechar} titulo="Alocar Membro" largura="lg">
-            <div className="flex flex-col lg:flex-row gap-8 min-h-[400px]">
-                {/* Lado Esquerdo: Seleção do Membro */}
-                <div className="flex-1 flex flex-col gap-4">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                        <input
-                            placeholder="Buscar por nome ou e-mail..."
-                            value={busca}
-                            onChange={e => setBusca(e.target.value)}
-                            className="w-full h-11 bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-4 text-sm focus:ring-2 focus:ring-blue-100 outline-none transition-all"
-                        />
-                    </div>
-
-                    <div className="flex-1 max-h-[450px] overflow-y-auto space-y-1 pr-2 custom-scrollbar">
-                        {membrosFiltrados.map(m => (
-                            <button
-                                key={m.id}
-                                onClick={() => setMembroId(m.id)}
-                                className={`w-full flex items-center justify-between p-3 rounded-2xl border transition-all text-left ${membroId === m.id ? 'bg-blue-50 border-blue-200' : 'bg-white border-transparent hover:bg-slate-50'}`}
-                            >
-                                <div className="flex items-center gap-3">
-                                    <Avatar nome={m.nome} fotoPerfil={null} tamanho="sm" />
-                                    <div>
-                                        <p className="text-sm font-bold text-slate-900">{m.nome}</p>
-                                        <p className="text-[10px] text-slate-400 font-medium">{m.email}</p>
-                                    </div>
-                                </div>
-                                {membroId === m.id && <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center"><UserCheck className="text-white w-3 h-3" /></div>}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Linha Vertical (desktop) */}
-                <div className="hidden lg:block w-px bg-slate-100" />
-
-                <div className="flex-1 flex flex-col justify-between">
-                    <div className="space-y-6">
-                        <div className="p-5 bg-blue-50/50 border border-blue-100 rounded-2xl">
-                            <div className="flex items-center gap-4 mb-5">
-                                <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-blue-600 border border-blue-50">
-                                    <Users size={22} />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none mb-1.5">Equipe (Comando)</p>
-                                    <p className="text-base font-bold text-slate-900 tracking-tight">
-                                        {equipes.find(e => e.id === equipeIdPadrao)?.nome || 'Equipe não encontrada'}
-                                    </p>
-                                </div>
-                            </div>
-                            
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-indigo-500 border border-indigo-50">
-                                    <LayoutGrid size={22} />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none mb-1.5">Grupo</p>
-                                    <p className="text-base font-bold text-slate-900 tracking-tight">
-                                        {grupos.find(g => g.id === grupoIdPadrao)?.nome || 'Grupo não encontrado'}
-                                    </p>
-                                </div>
-                            </div>
+        <Modal 
+            aberto={aberto} 
+            aoFechar={aoFechar} 
+            titulo={grupoNome ? `Vincular ao ${grupoNome}` : "Alocar Membro"} 
+            largura="md"
+        >
+            <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-2">
+                        <div className="relative group/search">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within/search:text-blue-500 transition-colors" size={16} />
+                            <input
+                                autoFocus
+                                placeholder="Buscar por nome ou e-mail..."
+                                value={busca}
+                                onChange={e => setBusca(e.target.value)}
+                                className="w-full h-12 bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 text-sm focus:ring-4 focus:ring-blue-50 focus:border-blue-200 focus:bg-white outline-none transition-all"
+                            />
                         </div>
+                        <div className="flex items-center justify-between px-1">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                {selecionados.length} selecionados
+                            </p>
+                            <button 
+                                onClick={handleSelecionarTudo}
+                                className="text-[10px] font-black text-blue-600 hover:text-blue-700 uppercase tracking-widest"
+                            >
+                                {selecionados.length > 0 ? 'Limpar Seleção' : 'Selecionar Tudo'}
+                            </button>
+                        </div>
+                    </div>
 
-                        {membroSelecionado && (
-                            <div className="p-4 border border-slate-100 bg-slate-50/30 rounded-2xl">
-                                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1.5 leading-none">Status do Membro Selecionado</p>
-                                <p className="text-xs text-slate-600">
-                                    Atualmente vinculado à equipe <span className="font-extrabold text-slate-900">{equipes.find(e => e.id === membroSelecionado.equipe_id)?.nome || 'nenhuma equipe'}</span>.
-                                </p>
+                    <div className="max-h-[380px] overflow-y-auto space-y-1.5 pr-2 custom-scrollbar">
+                        {membrosFiltrados.map(m => {
+                            const jaVinculado = (m.grupos_ids?.split(',') || []).includes(grupoIdPadrao || '');
+                            const selecionado = selecionados.includes(m.id);
+                            
+                            return (
+                                <button
+                                    key={m.id}
+                                    onClick={() => !jaVinculado && toggleSelecionado(m.id)}
+                                    disabled={jaVinculado}
+                                    className={`w-full flex items-center justify-between p-3.5 rounded-2xl border transition-all text-left group
+                                        ${selecionado ? 'bg-blue-50 border-blue-200 ring-1 ring-blue-100' : 'bg-white border-slate-100 hover:border-slate-300 hover:shadow-sm'}
+                                        ${jaVinculado ? 'opacity-50 grayscale cursor-not-allowed bg-slate-50' : ''}
+                                    `}
+                                >
+                                    <div className="flex items-center gap-4 min-w-0">
+                                        <Avatar nome={m.nome} fotoPerfil={m.foto_perfil} tamanho="md" className={selecionado ? 'ring-2 ring-blue-200' : ''} />
+                                        <div className="min-w-0">
+                                            <p className={`text-sm font-bold truncate transition-colors ${selecionado ? 'text-blue-900' : 'text-slate-900'}`}>{m.nome}</p>
+                                            <p className="text-[11px] text-slate-400 font-medium truncate">{m.email}</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="shrink-0 pl-2">
+                                        {jaVinculado ? (
+                                            <div className="bg-slate-200 text-slate-500 text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg">Vinculado</div>
+                                        ) : (
+                                            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all
+                                                ${selecionado ? 'bg-blue-600 border-blue-600' : 'bg-transparent border-slate-200 group-hover:border-blue-300'}
+                                            `}>
+                                                <div className={`w-2 h-2 rounded-full bg-white transition-all ${selecionado ? 'scale-100' : 'scale-0'}`} />
+                                            </div>
+                                        )}
+                                    </div>
+                                </button>
+                            );
+                        })}
+
+                        {membrosFiltrados.length === 0 && (
+                            <div className="flex flex-col items-center justify-center py-20 text-center opacity-40">
+                                <Search size={32} className="mb-4 text-slate-300" />
+                                <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Nenhum membro encontrado</p>
                             </div>
                         )}
                     </div>
+                </div>
 
-                    <div className="pt-6 space-y-4">
-                        {erro && <p className="text-destructive text-xs font-bold bg-destructive/5 p-3 rounded-2xl border border-destructive/10">{erro}</p>}
+                <div className="pt-4 space-y-4 border-t border-slate-100">
+                    {erro && <p className="text-destructive text-[11px] font-bold bg-destructive/5 p-3.5 rounded-2xl border border-destructive/10 animate-shake">{erro}</p>}
 
-                        <div className="flex items-center gap-3">
-                            <button type="button" onClick={aoFechar} className="flex-1 h-12 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors">
-                                Cancelar
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleAlocar}
-                                disabled={salvando || !membroId}
-                                className="flex-[2] h-12 bg-blue-600 text-white rounded-2xl text-sm font-bold shadow-lg hover:bg-blue-700 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
-                            >
-                                {salvando ? <Carregando /> : (
-                                    <>
-                                        <UserCheck size={18} />
-                                        Confirmar Destino
-                                    </>
-                                )}
-                            </button>
-                        </div>
+                    <div className="flex items-center gap-3">
+                        <button 
+                            type="button" 
+                            onClick={aoFechar} 
+                            className="h-12 px-6 text-xs font-black text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-all"
+                        >
+                            CANCELAR
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleAlocar}
+                            disabled={salvando || selecionados.length === 0}
+                            className="flex-1 h-12 bg-blue-600 text-white rounded-xl text-xs font-black shadow-[0_8px_20px_-6px_rgba(37,99,235,0.4)] hover:shadow-[0_12px_25px_-4px_rgba(37,99,235,0.5)] hover:bg-blue-700 hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-30 disabled:translate-y-0 disabled:shadow-none flex items-center justify-center gap-2 group px-4"
+                        >
+                            {salvando ? <Carregando /> : (
+                                <>
+                                    <span>VINCULAR {selecionados.length > 1 ? `${selecionados.length} MEMBROS` : 'MEMBRO'}</span>
+                                    <UserCheck size={18} className="group-hover:rotate-12 transition-transform" />
+                                </>
+                            )}
+                        </button>
                     </div>
+                </div>
+            </div>
+        </Modal>
+    );
+}
+
+// ─── Modal de Movimentação de Membros ─────────────────────────────────────────
+
+interface ModalMovimentacaoProps {
+    aberto: boolean;
+    aoFechar: () => void;
+    membro: MembroSimples | null;
+    grupos: Grupo[];
+    equipeId: string;
+    aoMover: (membroId: string, equipeId: string, grupoDestinoId: string) => Promise<void>;
+}
+
+function ModalMovimentacao({ aberto, aoFechar, membro, grupos, equipeId, aoMover }: ModalMovimentacaoProps) {
+    const [grupoDestinoId, setGrupoDestinoId] = useState('');
+    const [salvando, setSalvando] = useState(false);
+
+    useEffect(() => {
+        if (aberto) {
+            setGrupoDestinoId('');
+        }
+    }, [aberto]);
+
+    const handleMover = async () => {
+        if (!membro || !grupoDestinoId) return;
+        setSalvando(true);
+        try {
+            await aoMover(membro.id, equipeId, grupoDestinoId);
+            aoFechar();
+        } finally {
+            setSalvando(false);
+        }
+    };
+
+    return (
+        <Modal aberto={aberto} aoFechar={aoFechar} titulo="Mover para outro Grupo" largura="sm">
+            <div className="space-y-6">
+                <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <Avatar nome={membro?.nome || ''} fotoPerfil={membro?.foto_perfil || null} tamanho="md" />
+                    <div>
+                        <p className="text-sm font-bold text-slate-900">{membro?.nome}</p>
+                        <p className="text-[11px] text-slate-400 font-medium">{membro?.email}</p>
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    <SeletorBuscavel
+                        label="Grupo de Destino"
+                        valor={grupoDestinoId}
+                        aoAlterar={setGrupoDestinoId}
+                        opcoes={grupos.map(g => ({ id: g.id, nome: g.nome }))}
+                        placeholderVazio="Selecione o grupo..."
+                        icone={LayoutGrid}
+                    />
+                </div>
+
+                <div className="flex gap-3 pt-4 border-t border-slate-100">
+                    <button type="button" onClick={aoFechar} className="flex-1 h-12 text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors">
+                        Cancelar
+                    </button>
+                    <button
+                        onClick={handleMover}
+                        disabled={salvando || !grupoDestinoId}
+                        className="flex-[2] h-12 bg-blue-600 text-white rounded-2xl text-sm font-bold shadow-md hover:bg-blue-700 transition-all disabled:opacity-30 flex items-center justify-center gap-2 uppercase tracking-widest"
+                    >
+                        {salvando ? <Carregando /> : (
+                            <>
+                                <span>Mover Agora</span>
+                                <ArrowRightLeft size={16} />
+                            </>
+                        )}
+                    </button>
                 </div>
             </div>
         </Modal>
@@ -341,53 +436,58 @@ function ModalSelecaoLider({
     };
 
     return (
-        <Modal aberto={aberto} aoFechar={aoFechar} titulo={titulo}>
-            <div className="space-y-4">
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+        <Modal aberto={aberto} aoFechar={aoFechar} titulo={titulo} largura="auto">
+            <div className="space-y-6">
+                <div className="relative group/search">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within/search:text-blue-500 transition-colors" size={16} />
                     <input
-                        placeholder="Buscar membro..."
+                        autoFocus
+                        placeholder="Pesquisar por nome ou e-mail..."
                         value={busca}
                         onChange={e => setBusca(e.target.value)}
-                        className="w-full h-11 bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-blue-100 transition-all"
+                        className="w-full h-12 bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 text-sm focus:ring-4 focus:ring-blue-50 focus:border-blue-200 focus:bg-white outline-none transition-all"
                     />
                 </div>
 
-                <div className="max-h-[400px] overflow-y-auto space-y-1 pr-2 custom-scrollbar">
+                <div className="max-h-[400px] overflow-y-auto space-y-1.5 pr-2 custom-scrollbar">
                     {filtrados.map(m => {
                         const ehOutro = outroId === m.id;
                         const bloqueado = ehOutro && tipo === 'sub_lider';
+                        const selecionado = valorAtual === m.id;
                         
                         return (
                             <button
                                 key={m.id}
                                 onClick={() => !bloqueado && handleSelecionar(m.id)}
                                 disabled={salvando || bloqueado}
-                                className={`w-full flex items-center justify-between p-3 rounded-2xl border transition-all text-left group 
-                                    ${valorAtual === m.id ? 'bg-blue-50 border-blue-200' : 'bg-white border-transparent hover:bg-slate-50'}
-                                    ${bloqueado ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
+                                className={`w-full flex items-center justify-between p-3.5 rounded-2xl border transition-all text-left group 
+                                    ${selecionado ? 'bg-blue-50 border-blue-200 ring-1 ring-blue-100' : 'bg-white border-slate-100 hover:border-slate-300 hover:shadow-sm'}
+                                    ${bloqueado ? 'opacity-50 cursor-not-allowed grayscale bg-slate-50' : ''}`}
                             >
-                                <div className="flex items-center gap-3">
-                                    <Avatar nome={m.nome} fotoPerfil={m.foto_perfil} tamanho="sm" />
+                                <div className="flex items-center gap-4">
+                                    <Avatar nome={m.nome} fotoPerfil={m.foto_perfil} tamanho="md" className={selecionado ? 'ring-2 ring-blue-200' : ''} />
                                     <div>
-                                        <p className="text-sm font-bold text-slate-900">{m.nome}</p>
-                                        <p className="text-[10px] text-slate-400 font-medium">{m.email}</p>
+                                        <p className={`text-sm font-bold transition-colors ${selecionado ? 'text-blue-900' : 'text-slate-900'}`}>{m.nome}</p>
+                                        <p className="text-[11px] text-slate-400 font-medium">{m.email}</p>
                                         {ehOutro && (
-                                            <p className="text-[9px] font-bold text-blue-500 uppercase tracking-tight mt-0.5">
+                                            <p className="text-[9px] font-black text-blue-500 uppercase tracking-widest mt-1">
                                                 {tipo === 'lider' ? 'Atualmente Sub-líder' : 'Líder (Indisponível)'}
                                             </p>
                                         )}
                                     </div>
                                 </div>
-                                <div className={`${valorAtual === m.id ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100 transition-all`}>
-                                    <UserCheck size={16} className={valorAtual === m.id ? 'text-blue-600' : 'text-blue-400'} />
+                                <div className={`shrink-0 transition-all ${selecionado ? 'scale-110 opacity-100' : 'opacity-0 group-hover:opacity-40 scale-75'}`}>
+                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${selecionado ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-600'}`}>
+                                        <UserCheck size={14} />
+                                    </div>
                                 </div>
                             </button>
                         );
                     })}
                     {filtrados.length === 0 && (
-                        <div className="py-10 text-center text-slate-300 font-medium uppercase text-[10px] tracking-widest">
-                            Nenhum membro encontrado
+                        <div className="flex flex-col items-center justify-center py-20 text-center opacity-40">
+                            <Search size={32} className="mb-4 text-slate-300" />
+                            <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Nenhum membro encontrado</p>
                         </div>
                     )}
                 </div>
@@ -399,7 +499,7 @@ function ModalSelecaoLider({
 
 // ─── Componente: CardMembroFino ──────────────────────────────────────────────
 
-function CardMembroFino({ membro, aoRemover }: { membro: MembroSimples, aoRemover: () => void }) {
+function CardMembroFino({ membro, aoRemover, aoMover }: { membro: MembroSimples, aoRemover: () => void, aoMover: () => void }) {
     return (
         <div className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-2xl hover:border-slate-300 transition-all group">
             <div className="flex items-center gap-3">
@@ -409,13 +509,22 @@ function CardMembroFino({ membro, aoRemover }: { membro: MembroSimples, aoRemove
                     <p className="text-[9px] text-slate-400 font-medium truncate max-w-[120px]">{membro.email}</p>
                 </div>
             </div>
-            <button
-                onClick={aoRemover}
-                className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-300 hover:text-red-500 transition-all"
-                title="Remover deste grupo"
-            >
-                <Plus size={14} className="rotate-45" />
-            </button>
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                <button
+                    onClick={aoMover}
+                    className="p-1.5 text-slate-300 hover:text-blue-500 transition-all"
+                    title="Mover para outro grupo"
+                >
+                    <ArrowRightLeft size={14} />
+                </button>
+                <button
+                    onClick={aoRemover}
+                    className="p-1.5 text-slate-300 hover:text-red-500 transition-all"
+                    title="Remover deste grupo"
+                >
+                    <Plus size={14} className="rotate-45" />
+                </button>
+            </div>
         </div>
     );
 }
@@ -431,6 +540,7 @@ function DetalheEquipe({
     aoExcluirGrupo,
     aoAlocar,
     aoRemoverMembro,
+    aoMoverMembro,
     aoSelecionarLider,
     aoSalvarNomeGrupo,
     aoSalvarNomeEquipe
@@ -443,6 +553,7 @@ function DetalheEquipe({
     aoExcluirGrupo: (g: Grupo) => void,
     aoAlocar: (gId: string, eId: string) => void,
     aoRemoverMembro: (mId: string) => void,
+    aoMoverMembro: (mId: string, gOrigemId: string) => void,
     aoSelecionarLider: (tipo: 'lider' | 'sub_lider') => void,
     aoSalvarNomeGrupo: (id: string, nome: string) => Promise<void>,
     aoSalvarNomeEquipe: (id: string, nome: string) => Promise<void>
@@ -674,10 +785,15 @@ function DetalheEquipe({
                                                 </div>
                                                 <div className="flex-1 overflow-y-auto min-h-0 space-y-2.5 pr-2 custom-scrollbar">
                                                     {membrosDoGrupo.map(membro => (
-                                                        <CardMembroFino key={membro.id} membro={membro} aoRemover={() => aoRemoverMembro(membro.id)} />
+                                                        <CardMembroFino 
+                                                            key={membro.id} 
+                                                            membro={membro} 
+                                                            aoRemover={() => aoRemoverMembro(membro.id)} 
+                                                            aoMover={() => aoMoverMembro(membro.id, g.id)}
+                                                        />
                                                     ))}
                                                     {membrosDoGrupo.length === 0 && (
-                                                        <div className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-slate-200/40 rounded-2xl bg-white/50 my-2">
+                                                        <div className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200/40 rounded-2xl bg-white/50 my-2 py-8">
                                                             <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Vazio</p>
                                                         </div>
                                                     )}
@@ -703,13 +819,14 @@ export function GerenciarEquipes() {
         grupos, equipes, membros, carregando, erro,
         criarGrupo, editarGrupo, desativarGrupo,
         criarEquipe, editarEquipe, desativarEquipe,
-        alocarMembro
+        alocarMembro, moverMembro
     } = usarEquipes();
 
     const [idEquipeAtiva, setIdEquipeAtiva] = useState<string | null>(null);
     const [modalOrg, setModalOrg] = useState<{ aberto: boolean; tipo: 'equipe' | 'grupo'; dados?: any } | null>(null);
     const [confirmacaoExclusao, setConfirmacaoExclusao] = useState<{ id: string; nome: string; tipo: 'equipe' | 'grupo' } | null>(null);
     const [modalAlocacao, setModalAlocacao] = useState<{ grupoId: string; equipeId: string } | null>(null);
+    const [modalMover, setModalMover] = useState<{ membroId: string; grupoOrigemId: string; equipeId: string } | null>(null);
     const [modalLider, setModalLider] = useState<{ aberto: boolean; tipo: 'lider' | 'sub_lider' } | null>(null);
     const [desativando, setDesativando] = useState(false);
 
@@ -867,6 +984,7 @@ export function GerenciarEquipes() {
                             aoExcluirGrupo={(g) => setConfirmacaoExclusao({ id: g.id, nome: g.nome, tipo: 'grupo' })}
                             aoAlocar={(gId, eId) => setModalAlocacao({ grupoId: gId, equipeId: eId })}
                             aoRemoverMembro={(mId) => alocarMembro(mId, equipeAtiva.id, null)}
+                            aoMoverMembro={(mId, gId) => setModalMover({ membroId: mId, grupoOrigemId: gId, equipeId: equipeAtiva.id })}
                             aoSelecionarLider={(tipo) => setModalLider({ aberto: true, tipo })}
                             aoSalvarNomeGrupo={async (id, nome) => { await editarGrupo(id, { nome }); }}
                             aoSalvarNomeEquipe={async (id, nome) => { await editarEquipe(id, { nome }); }}
@@ -888,7 +1006,7 @@ export function GerenciarEquipes() {
                 <Modal
                     aberto={modalOrg.aberto}
                     aoFechar={() => setModalOrg(null)}
-                    titulo={`Novo(a) ${modalOrg.tipo === 'equipe' ? 'Equipe' : 'Grupo'}`}
+                    titulo={modalOrg.tipo === 'grupo' && equipeAtiva ? `Novo Grupo em ${equipeAtiva.nome}` : `Nova Equipe`}
                 >
                     <FormGrupoEquipe
                         titulo={modalOrg.tipo === 'equipe' ? 'Equipe' : 'Grupo'}
@@ -919,6 +1037,20 @@ export function GerenciarEquipes() {
                 aoAlocar={alocarMembro}
                 grupoIdPadrao={modalAlocacao?.grupoId}
                 equipeIdPadrao={modalAlocacao?.equipeId}
+            />
+
+            <ModalMovimentacao
+                aberto={!!modalMover}
+                aoFechar={() => setModalMover(null)}
+                membro={membros.find(m => m.id === modalMover?.membroId) || null}
+                grupos={grupos.filter(g => g.equipe_id === modalMover?.equipeId && g.id !== modalMover?.grupoOrigemId && g.ativo)}
+                aoMover={async (mId: string, eId: string, gDestId: string) => {
+                    if (modalMover) {
+                        await moverMembro(mId, eId, gDestId, modalMover.grupoOrigemId);
+                        setModalMover(null);
+                    }
+                }}
+                equipeId={modalMover?.equipeId || ''}
             />
 
             <ModalSelecaoLider
@@ -973,12 +1105,12 @@ function FormGrupoEquipe({ titulo, tipo, equipes, equipeAtivaId, aoSalvar, aoFec
                         required
                         value={nome}
                         onChange={e => setNome(e.target.value)}
-                        placeholder={tipo === 'equipe' ? `Ex: Equipe ${titulo}` : `Ex: Grupo ${titulo}`}
+                        placeholder={tipo === 'equipe' ? "Ex: Desenvolvimento, Comercial..." : "Ex: Squad Alpha, Operações..."}
                         className="w-full h-12 bg-slate-50 border border-slate-200 rounded-2xl px-4 text-sm focus:ring-2 focus:ring-blue-100 outline-none transition-all"
                     />
                 </div>
 
-                {tipo === 'grupo' && equipes && (
+                {tipo === 'grupo' && equipes && !equipeAtivaId && (
                     <SeletorBuscavel
                         label="Equipe (Comando Superior)"
                         valor={equipeId}

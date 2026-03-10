@@ -13,6 +13,8 @@ export interface Membro {
     bio: string | null;
     criado_em: string;
     funcoes: string[]; // Lista de funções (ex: Frontend, Backend, UX)
+    grupos_ids?: string | null;
+    equipe_nome?: string | null;
 }
 
 export interface ResultadoOperacao {
@@ -41,6 +43,8 @@ function normalizarMembro(m: unknown): Membro {
             : typeof raw.funcoes === 'string'
                 ? JSON.parse(raw.funcoes || '[]')
                 : [],
+        grupos_ids: (raw.grupos_ids as string | null) ?? null,
+        equipe_nome: (raw.equipe_nome as string | null) ?? null,
     };
 }
 

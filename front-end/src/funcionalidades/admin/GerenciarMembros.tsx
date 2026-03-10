@@ -342,9 +342,9 @@ function LinhaMembro({
             </td>
 
             {/* Equipe */}
-            <td className="px-3 py-3 hidden xl:table-cell">
-                <span className="text-xs text-muted-foreground/60 truncate max-w-[120px] block">
-                    {(membro as any).equipe_nome ?? '—'}
+            <td className="px-3 py-3 hidden md:table-cell">
+                <span className="text-xs text-muted-foreground/60 truncate max-w-[150px] block">
+                    {membro.equipe_nome ?? '—'}
                 </span>
             </td>
 
@@ -859,7 +859,7 @@ export function GerenciarMembros() {
                                     <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 w-[14%]">
                                         Papel
                                     </th>
-                                    <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 w-[14%] hidden xl:table-cell">
+                                    <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 w-[14%] hidden md:table-cell">
                                         Equipe
                                     </th>
                                     <th className="px-3 py-3 text-center text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 w-[12%]">

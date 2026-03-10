@@ -2,6 +2,7 @@ import { Hono, Context } from 'hono';
 import { Env } from '../index';
 import { autenticacaoRequerida, verificarPermissao } from '../middleware/auth';
 import { registrarLog } from '../servicos/servico-logs';
+import { criarNotificacoes } from '../servicos/servico-notificacoes';
 
 const rotasEquipes = new Hono<{ Bindings: Env; Variables: { usuario: any } }>();
 
@@ -260,6 +261,26 @@ rotasEquipes.patch('/equipes/:id', autenticacaoRequerida(), verificarPermissao('
             'UPDATE equipes SET nome = ?, descricao = ?, lider_id = ?, sub_lider_id = ? WHERE id = ?'
         ).bind(nome, descricao, lider_id, sub_lider_id, id).run();
 
+        // Notificar novos líderes se mudaram
+        if (lider_id && lider_id !== atual.lider_id) {
+            await criarNotificacoes(DB, {
+                usuarioId: lider_id,
+                tipo: 'sistema',
+                titulo: 'Nova Liderança',
+                mensagem: `Você foi designado como Líder da equipe "${nome}".`,
+                link: '/app/admin/equipes'
+            });
+        }
+        if (sub_lider_id && sub_lider_id !== atual.sub_lider_id) {
+            await criarNotificacoes(DB, {
+                usuarioId: sub_lider_id,
+                tipo: 'sistema',
+                titulo: 'Nova Liderança',
+                mensagem: `Você foi designado como Sublíder da equipe "${nome}".`,
+                link: '/app/admin/equipes'
+            });
+        }
+
         await registrarLog(DB, {
             usuarioId: usuarioLogado.id,
             usuarioNome: usuarioLogado.nome,
@@ -312,9 +333,6 @@ rotasEquipes.delete('/equipes/:id', autenticacaoRequerida(), verificarPermissao(
 });
 
 // ─── PATCH /membros/:id/alocar — Alocar membro em grupo+equipe ───────────────
-// Regra: membro pertence a apenas UMA equipe por vez.
-// Ao trocar, atualiza usuarios.equipe_id E usuarios.grupo_id.
-
 rotasEquipes.patch('/membros/:id/alocar', autenticacaoRequerida(), verificarPermissao('equipes:editar_equipe'), async (c: Context) => {
     const { DB } = c.env;
     const usuarioLogado = c.get('usuario') as any;
@@ -328,22 +346,36 @@ rotasEquipes.patch('/membros/:id/alocar', autenticacaoRequerida(), verificarPerm
     }
 
     try {
-        // Regra para multi-equipes: se equipe_id e grupo_id forem nulos, removemos o vínculo de todos os grupos da equipe
-        // Se ambos forem fornecidos, criamos ou atualizamos o vínculo específico.
-        // Como o frontend envia equipe_id e grupo_id como par, vamos lidar com a criação/emoção
-        
+        let acao = 'MEMBRO_ALOCADO';
+        let desc = '';
+
         if (equipe_id && grupo_id) {
-            // Adiciona ou garante vínculo (Upsert manual no SQLite)
             await DB.prepare(`
                 INSERT INTO usuarios_organizacao (id, usuario_id, equipe_id, grupo_id)
                 VALUES (?, ?, ?, ?)
                 ON CONFLICT(usuario_id, equipe_id, grupo_id) DO NOTHING
             `).bind(crypto.randomUUID(), membroId, equipe_id, grupo_id).run();
+
+            const info = await DB.prepare('SELECT e.nome as e_nome, g.nome as g_nome FROM equipes e, grupos g WHERE e.id = ? AND g.id = ?')
+                .bind(equipe_id, grupo_id).first() as any;
+            
+            desc = `Membro alocado → ${info?.e_nome ?? equipe_id} / ${info?.g_nome ?? grupo_id}`;
+
+            await criarNotificacoes(DB, {
+                usuarioId: membroId,
+                tipo: 'sistema',
+                titulo: 'Nova alocação',
+                mensagem: `Você foi alocado à equipe ${info?.e_nome ?? 'da organização'} no grupo ${info?.g_nome ?? ''}.`,
+                link: '/app/membros'
+            });
+
         } else if (equipe_id && !grupo_id) {
-            // Se enviar apenas equipe_id sem grupo, removemos o membro de TODOS os grupos dessa equipe
+            acao = 'MEMBRO_REMOVIDO_EQUIPE';
             await DB.prepare('DELETE FROM usuarios_organizacao WHERE usuario_id = ? AND equipe_id = ?')
                 .bind(membroId, equipe_id)
                 .run();
+            
+            desc = `Membro removido da equipe ${equipe_id}`;
         }
 
         await registrarLog(DB, {
@@ -351,9 +383,9 @@ rotasEquipes.patch('/membros/:id/alocar', autenticacaoRequerida(), verificarPerm
             usuarioNome: usuarioLogado.nome,
             usuarioEmail: usuarioLogado.email,
             usuarioRole: usuarioLogado.role,
-            acao: 'MEMBRO_ALOCADO',
+            acao,
             modulo: 'equipes',
-            descricao: `Membro ${membroId} alocado → equipe: ${equipe_id ?? 'nenhuma'} / grupo: ${grupo_id ?? 'nenhum'}`,
+            descricao: desc || `Alteração organizacional para ${membroId}`,
             ip: c.req.header('CF-Connecting-IP') ?? '',
             entidadeTipo: 'usuarios',
             entidadeId: membroId,
@@ -364,6 +396,67 @@ rotasEquipes.patch('/membros/:id/alocar', autenticacaoRequerida(), verificarPerm
     } catch (erro: any) {
         console.error('[ERRO] PATCH /api/equipes/membros/:id/alocar', erro);
         return c.json({ erro: 'Falha ao alocar membro.' }, 500);
+    }
+});
+
+// ─── PATCH /membros/:id/mover — Mover membro entre grupos ─────────────────────
+rotasEquipes.patch('/membros/:id/mover', autenticacaoRequerida(), verificarPermissao('equipes:editar_equipe'), async (c: Context) => {
+    const { DB } = c.env;
+    const usuarioLogado = c.get('usuario') as any;
+    const membroId = c.req.param('id');
+
+    let equipe_id: string, grupo_id: string, origem_grupo_id: string;
+    try {
+        ({ equipe_id, grupo_id, origem_grupo_id } = await c.req.json());
+    } catch {
+        return c.json({ erro: 'Corpo da requisição inválido.' }, 400);
+    }
+
+    if (!equipe_id || !grupo_id || !origem_grupo_id) {
+        return c.json({ erro: 'IDs de equipe, grupo destino e grupo origem são obrigatórios.' }, 400);
+    }
+
+    try {
+        // 1. Remove o vínculo antigo
+        await DB.prepare('DELETE FROM usuarios_organizacao WHERE usuario_id = ? AND equipe_id = ? AND grupo_id = ?')
+            .bind(membroId, equipe_id, origem_grupo_id)
+            .run();
+
+        // 2. Adiciona o novo (ou garante)
+        await DB.prepare(`
+            INSERT INTO usuarios_organizacao (id, usuario_id, equipe_id, grupo_id)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(usuario_id, equipe_id, grupo_id) DO NOTHING
+        `).bind(crypto.randomUUID(), membroId, equipe_id, grupo_id).run();
+
+        // 3. Notifica
+        const info = await DB.prepare('SELECT nome FROM grupos WHERE id = ?').bind(grupo_id).first() as any;
+        await criarNotificacoes(DB, {
+            usuarioId: membroId,
+            tipo: 'sistema',
+            titulo: 'Mudança de grupo',
+            mensagem: `Sua alocação foi alterada para o grupo ${info?.nome ?? 'selecionado'}.`,
+            link: '/app/membros'
+        });
+
+        await registrarLog(DB, {
+            usuarioId: usuarioLogado.id,
+            usuarioNome: usuarioLogado.nome,
+            usuarioEmail: usuarioLogado.email,
+            usuarioRole: usuarioLogado.role,
+            acao: 'MEMBRO_MOVIMENTADO',
+            modulo: 'equipes',
+            descricao: `Membro ${membroId} movido do grupo ${origem_grupo_id} para ${grupo_id}`,
+            ip: c.req.header('CF-Connecting-IP') ?? '',
+            entidadeTipo: 'usuarios',
+            entidadeId: membroId,
+            dadosNovos: { equipe_id, grupo_id, origem_grupo_id },
+        });
+
+        return c.json({ sucesso: true });
+    } catch (erro: any) {
+        console.error('[ERRO] PATCH /api/equipes/membros/:id/mover', erro);
+        return c.json({ erro: 'Falha ao mover membro.' }, 500);
     }
 });
 

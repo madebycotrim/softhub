@@ -6,6 +6,7 @@ import { D1Database } from '@cloudflare/workers-types';
  */
 export interface ParamsNotificacao {
     usuarioId?: string;
+    usuariosIds?: string[]; // Para múltiplos destinatários específicos
     equipeId?: string;
     grupoId?: string;
     todosDoProjetoId?: string;
@@ -21,6 +22,10 @@ export async function criarNotificacoes(db: any, params: ParamsNotificacao): Pro
 
     if (params.usuarioId) {
         idsToNotify.add(params.usuarioId);
+    }
+
+    if (params.usuariosIds && Array.from(params.usuariosIds).length > 0) {
+        params.usuariosIds.forEach(id => idsToNotify.add(id));
     }
 
     if (params.todosOsUsuarios) {

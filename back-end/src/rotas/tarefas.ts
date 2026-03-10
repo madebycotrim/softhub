@@ -117,17 +117,28 @@ rotasTarefas.patch('/:id/mover', autenticacaoRequerida(), verificarPermissao('ta
             });
 
             if (colunaDestino === 'em_revisao') {
-                const { results: lideres } = await DB.prepare("SELECT id FROM usuarios WHERE role IN ('SUBLIDER', 'LIDER', 'GESTOR', 'COORDENADOR')").all();
-                if (lideres) {
-                    for (const row of lideres as any) {
-                        await criarNotificacoes(DB, {
-                            usuarioId: row.id,
-                            tipo: 'tarefa',
-                            titulo: 'Tarefa precisa de revisão',
-                            mensagem: `A tarefa "${tarefa.titulo}" foi movida para Em Revisão por ${usuario.nome}.`,
-                            link: `/app/kanban?tarefa=${id}`
-                        });
-                    }
+                const { results: lideres } = await DB.prepare("SELECT id FROM usuarios WHERE role IN ('SUBLIDER', 'LIDER', 'GESTOR', 'COORDENADOR') AND ativo = 1").all();
+                if (lideres && lideres.length > 0) {
+                    await criarNotificacoes(DB, {
+                        usuariosIds: lideres.map((l: any) => l.id),
+                        tipo: 'tarefa',
+                        titulo: 'Tarefa precisa de revisão',
+                        mensagem: `A tarefa "${tarefa.titulo}" foi movida para Em Revisão por ${usuario.nome}.`,
+                        link: `/app/kanban?tarefa=${id}`
+                    });
+                }
+            }
+
+            if (colunaDestino === 'concluida') {
+                const { results: lideres } = await DB.prepare("SELECT id FROM usuarios WHERE role IN ('LIDER', 'GESTOR', 'COORDENADOR', 'ADMIN') AND ativo = 1").all();
+                if (lideres && lideres.length > 0) {
+                    await criarNotificacoes(DB, {
+                        usuariosIds: lideres.map((l: any) => l.id),
+                        tipo: 'tarefa',
+                        titulo: 'Tarefa Concluída',
+                        mensagem: `A tarefa "${tarefa.titulo}" foi finalizada por ${usuario.nome}.`,
+                        link: `/app/kanban?tarefa=${id}`
+                    });
                 }
             }
         } return c.json({ sucesso: true });

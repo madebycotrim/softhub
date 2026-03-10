@@ -50,15 +50,13 @@ rotasPontoJustificativas.post('/justificativas', autenticacaoRequerida(), verifi
         const resultadosLideres = lideresRes.results as any[];
         
         if (resultadosLideres.length > 0) {
-            for (const l of resultadosLideres) {
-                await criarNotificacoes(DB, {
-                    usuarioId: l.id,
-                    tipo: 'sistema',
-                    titulo: 'Nova justificativa de ponto',
-                    mensagem: `${usuario.nome} enviou uma justificativa para ${data}.`,
-                    link: '/app/admin/justificativas'
-                });
-            }
+            await criarNotificacoes(DB, {
+                usuariosIds: resultadosLideres.map((l: any) => l.id),
+                tipo: 'sistema',
+                titulo: 'Nova justificativa de ponto',
+                mensagem: `${usuario.nome} enviou uma justificativa para ${data}.`,
+                link: '/app/admin/justificativas'
+            });
         }
 
         await registrarLog(DB, {

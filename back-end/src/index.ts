@@ -14,6 +14,7 @@ import rotasAuthQr from './rotas/auth-qr';
 import rotasConfiguracoes from './rotas/configuracoes';
 import rotasRelatorios from './rotas/relatorios';
 import rotasEquipes from './rotas/equipes';
+import rotasNotificacoes from './rotas/notificacoes';
 import { lidarExcecao } from './middleware/erros';
 
 export type Env = {
@@ -68,6 +69,7 @@ app.route('/api/logs', rotasLogs);
 app.route('/api/configuracoes', rotasConfiguracoes);
 app.route('/api/relatorios', rotasRelatorios);
 app.route('/api/equipes', rotasEquipes);
+app.route('/api/notificacoes', rotasNotificacoes);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
 

@@ -1,10 +1,15 @@
-import { FolderKanban, Clock, Users, Megaphone, LayoutDashboard, Database, Settings, LogOut, Sun, Moon, QrCode, FileText, ClipboardCheck, LayoutGrid } from 'lucide-react';
+import { FolderKanban, Clock, Users, Megaphone, LayoutDashboard, Database, Settings, LogOut, Sun, Moon, QrCode, FileText, ClipboardCheck, LayoutGrid, Bell, Trash2, CheckCircle2 } from 'lucide-react';
 import { useLocation, Link } from 'react-router';
 import { usarAutenticacao } from '../../funcionalidades/autenticacao/usarAutenticacao';
 import { usarTema } from '../../contexto/ContextoTema';
 import { usarPermissaoAcesso } from '../hooks/usarPermissao';
 import { Avatar } from './Avatar';
+import { Modal } from './Modal';
+import { usarNotificacoes } from '../hooks/usarNotificacoes';
+import { formatarTempoAtras } from '../../utilitarios/formatadores';
 import logoUnieuro from '../../assets/logo-unieuro.png';
+import { Emblema } from './Emblema';
+import { useState } from 'react';
 
 interface BarraLateralProps {
     aoNavegar?: () => void;
@@ -16,6 +21,10 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
     const currentPath = location.pathname;
     const { usuario, sair } = usarAutenticacao();
     const { tema, setTema } = usarTema();
+    const { notificacoes, marcarComoLida, limparTodas } = usarNotificacoes();
+    const [modalNotificacoes, setModalNotificacoes] = useState(false);
+
+    const totalNaoLidas = notificacoes.length;
 
     // Permissões de Visualização
     const podeVerDashboard = usarPermissaoAcesso('dashboard:visualizar');
@@ -185,6 +194,25 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
                     </button>
                 </div>
 
+                {/* Notificações */}
+                <div className="flex items-center justify-between px-2 mb-2">
+                    <span className="text-[10px] font-black text-sidebar-foreground/20 uppercase tracking-[0.22em]">
+                        Notificações
+                    </span>
+                    <button
+                        onClick={() => setModalNotificacoes(true)}
+                        className="relative p-1.5 rounded-xl text-sidebar-foreground/30 hover:text-primary hover:bg-primary/10 transition-all duration-300 group/notif"
+                        title="Ver notificações"
+                    >
+                        <Bell size={14} className={totalNaoLidas > 0 ? "animate-pulse text-primary" : ""} />
+                        {totalNaoLidas > 0 && (
+                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-[9px] font-black text-white rounded-full flex items-center justify-center ring-2 ring-sidebar shadow-lg shadow-primary/20">
+                                {totalNaoLidas > 9 ? '9+' : totalNaoLidas}
+                            </span>
+                        )}
+                    </button>
+                </div>
+
                 {/* Alternar Tema */}
                 <div className="flex items-center justify-between px-2 mb-3">
                     <span className="text-[10px] font-black text-sidebar-foreground/20 uppercase tracking-[0.22em]">
@@ -246,6 +274,82 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
                     </>
                 )}
             </div>
+
+            {/* Modal de Notificações */}
+            <Modal
+                aberto={modalNotificacoes}
+                aoFechar={() => setModalNotificacoes(false)}
+                titulo="Central de Notificações"
+                largura="md"
+            >
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between px-1">
+                        <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest">
+                            {totalNaoLidas} Pendentes
+                        </p>
+                        {totalNaoLidas > 0 && (
+                            <button 
+                                onClick={limparTodas}
+                                className="flex items-center gap-1.5 text-[10px] font-bold text-primary hover:text-primary/80 transition-colors uppercase tracking-widest"
+                            >
+                                <Trash2 size={12} />
+                                Limpar Tudo
+                            </button>
+                        )}
+                    </div>
+
+                    <div className="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar space-y-2">
+                        {notificacoes.map((n) => (
+                            <div 
+                                key={n.id} 
+                                className="group relative bg-card border border-border/50 p-4 rounded-2xl hover:border-primary/30 transition-all hover:shadow-sm"
+                            >
+                                <div className="flex items-start justify-between gap-4">
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <Emblema 
+                                                texto={n.tipo} 
+                                                variante={n.tipo === 'ponto' ? 'amarelo' : n.tipo === 'tarefa' ? 'azul' : 'roxo'} 
+                                            />
+                                            <span className="text-[10px] text-muted-foreground/40 font-medium">
+                                                {formatarTempoAtras(n.criado_em)}
+                                            </span>
+                                        </div>
+                                        <h4 className="text-[13px] font-bold text-foreground leading-tight mb-1">{n.titulo}</h4>
+                                        <p className="text-[12px] text-muted-foreground/70 leading-relaxed">{n.mensagem}</p>
+                                    </div>
+                                    <button 
+                                        onClick={() => marcarComoLida(n.id)}
+                                        className="shrink-0 p-1.5 rounded-xl text-muted-foreground/20 hover:text-primary hover:bg-primary/5 transition-all opacity-0 group-hover:opacity-100"
+                                        title="Marcar como lida"
+                                    >
+                                        <CheckCircle2 size={16} />
+                                    </button>
+                                </div>
+                                {n.link_acao && (
+                                    <Link 
+                                        to={n.link_acao} 
+                                        onClick={() => { marcarComoLida(n.id); setModalNotificacoes(false); }}
+                                        className="inline-flex mt-3 text-[10px] font-black text-primary uppercase tracking-[0.1em] hover:underline"
+                                    >
+                                        Ver detalhes →
+                                    </Link>
+                                )}
+                            </div>
+                        ))}
+
+                        {totalNaoLidas === 0 && (
+                            <div className="flex flex-col items-center justify-center py-16 text-center opacity-40">
+                                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                                    <Bell size={24} className="text-muted-foreground/30" />
+                                </div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/40">Tudo limpo por aqui</p>
+                                <p className="text-[11px] text-muted-foreground/30 mt-1 italic">Você não tem notificações pendentes.</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </Modal>
         </aside>
     );
 }

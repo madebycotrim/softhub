@@ -8,7 +8,7 @@ interface ModalProps {
     aoFechar: () => void;
     titulo: string;
     children: ReactNode;
-    largura?: 'sm' | 'md' | 'lg' | 'xl';
+    largura?: 'sm' | 'md' | 'lg' | 'xl' | 'auto';
 }
 
 /**
@@ -21,15 +21,21 @@ export function Modal({ aberto, aoFechar, titulo, children, largura = 'md' }: Mo
     useEffect(() => {
         setMontado(true);
 
-        // Travar rolagem do body quando aberto
         if (aberto) {
+            // Prevenir o layout shift salvando a largura da scrollbar
+            const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
             document.body.style.overflow = 'hidden';
+            if (scrollbarWidth > 0) {
+                document.body.style.paddingRight = `${scrollbarWidth}px`;
+            }
         } else {
-            document.body.style.overflow = 'unset';
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
         }
 
         return () => {
-            document.body.style.overflow = 'unset';
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
         };
     }, [aberto]);
 
@@ -39,7 +45,8 @@ export function Modal({ aberto, aoFechar, titulo, children, largura = 'md' }: Mo
         sm: 'max-w-md',
         md: 'max-w-lg',
         lg: 'max-w-2xl',
-        xl: 'max-w-4xl'
+        xl: 'max-w-4xl',
+        auto: 'w-auto max-w-[95vw]'
     };
 
     const modalElement = (
@@ -54,7 +61,7 @@ export function Modal({ aberto, aoFechar, titulo, children, largura = 'md' }: Mo
             {/* Container do Modal: Light Modern Premium */}
             <div
                 className={`
-                    relative w-full ${larguras[largura]} pointer-events-auto
+                    relative ${largura === 'auto' ? 'w-auto' : 'w-full ' + larguras[largura]} pointer-events-auto
                     bg-white border border-slate-200 rounded-2xl 
                     shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)]
                     flex flex-col max-h-[90vh] overflow-hidden transform transition-all
@@ -68,24 +75,24 @@ export function Modal({ aberto, aoFechar, titulo, children, largura = 'md' }: Mo
                 <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
 
                 {/* Header: Clean & Modern */}
-                <div className="flex items-center justify-between px-8 py-6 shrink-0 border-b border-slate-100 relative bg-slate-50/50">
+                <div className="flex items-center justify-between px-8 py-5 shrink-0 border-b border-slate-100 relative bg-gradient-to-b from-slate-50/80 to-white">
                     <div className="flex items-center gap-3">
-                        <div className="w-1.5 h-6 bg-blue-600 rounded-full" />
-                        <h2 id="modal-titulo" className="text-lg font-black text-slate-900 tracking-tight leading-none uppercase">
+                        <div className="w-1.5 h-6 bg-blue-600 rounded-full shadow-[0_0_10px_rgba(37,99,235,0.4)]" />
+                        <h2 id="modal-titulo" className="text-[13px] font-black text-slate-900 tracking-[0.15em] leading-none uppercase">
                             {titulo}
                         </h2>
                     </div>
                     <button
                         onClick={aoFechar}
-                        className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-2xl transition-all duration-200 focus:outline-none group border border-transparent hover:border-slate-200"
+                        className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all duration-300 focus:outline-none group border border-transparent hover:border-slate-200"
                         aria-label="Fechar modal"
                     >
-                        <X className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
+                        <X className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
                     </button>
                 </div>
 
                 {/* Conteúdo com scroll refinado */}
-                <div className="flex-1 overflow-y-auto px-8 py-8 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+                <div className="flex-1 overflow-y-auto overflow-x-hidden px-8 py-6 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
                     {children}
                 </div>
             </div>

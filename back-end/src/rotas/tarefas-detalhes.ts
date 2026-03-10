@@ -55,9 +55,9 @@ rotasTarefasDetalhes.post('/:id/comentarios', autenticacaoRequerida(), verificar
 
         usuariosParaNotificar.delete(usuario.id); // O autor não é notificado da sua própria ação
 
-        for (const uid of usuariosParaNotificar) {
+        if (usuariosParaNotificar.size > 0) {
             await criarNotificacoes(DB, {
-                usuarioId: uid,
+                usuariosIds: Array.from(usuariosParaNotificar),
                 tipo: 'tarefa',
                 titulo: 'Novo comentário',
                 mensagem: `${usuario.nome} comentou na tarefa "${tarefaData.titulo}".`,
