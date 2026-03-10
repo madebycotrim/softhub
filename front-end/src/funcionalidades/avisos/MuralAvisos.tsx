@@ -40,7 +40,7 @@ export function MuralAvisos() {
                 {podeCriar && (
                     <button
                         onClick={() => setModalAberto(true)}
-                        className="h-11 px-5 rounded-xl bg-slate-900 text-white font-bold text-xs shadow-lg hover:bg-black transition-all flex items-center gap-2 active:scale-95"
+                        className="h-11 px-5 rounded-2xl bg-slate-900 text-white font-bold text-xs shadow-lg hover:bg-black transition-all flex items-center gap-2 active:scale-95"
                     >
                         <Plus size={18} />
                         <span>Criar Aviso</span>
@@ -101,7 +101,7 @@ export function MuralAvisos() {
                                     </div>
 
                                     {podeDeletar && (
-                                        <button className="p-2 sm:mt-auto text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full transition-colors opacity-0 group-hover:opacity-100">
+                                        <button className="p-2 sm:mt-auto text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-2xl transition-colors opacity-0 group-hover:opacity-100">
                                             <Trash2 className="w-4 h-4" />
                                         </button>
                                     )}

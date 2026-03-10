@@ -7,7 +7,8 @@ import {
     UserCircle, MessageSquare,
     Settings2, Info, Trash2,
     FolderKanban, Clock, LayoutDashboard,
-    LayoutGrid, FileText, Database, Globe
+    LayoutGrid, FileText, Database, Globe,
+    Pencil, Check, X
 } from 'lucide-react';
 import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
 
@@ -97,7 +98,8 @@ const PERMISSOES_SISTEMA = [
         label: 'Painel de Logs',
         icone: Database,
         permissoes: [
-            { chave: 'logs:visualizar', label: 'Visualizar' },
+            { chave: 'logs:visualizar', label: 'Ver histórico de auditoria global (Todos os usuários)' },
+            { chave: 'logs:visualizar_proprios', label: 'Ver apenas meu próprio histórico de atividades' },
         ],
     },
     {
@@ -119,13 +121,18 @@ const CARGOS_FIXOS = ['ADMIN', 'TODOS'];
  * Gestão de cargos e matriz de permissões completa com todas as funções reais do sistema.
  */
 export function PaginaConfiguracoes() {
-    const { configuracoes, carregando, erro, atualizarConfiguracao } = usarConfiguracoes();
+    const { configuracoes, carregando, erro, atualizarConfiguracao, renomearCargo } = usarConfiguracoes();
 
     const podeEditar = usarPermissaoAcesso('configuracoes:editar');
 
     const [buscaPermissao, setBuscaPermissao] = useState('');
     const [novoCargo, setNovoCargo] = useState('');
     const [salvando, setSalvando] = useState<string | null>(null);
+
+    // Estados para edição inline de cargo
+    const [editandoRole, setEditandoRole] = useState<string | null>(null);
+    const [nomeRoleTemp, setNomeRoleTemp] = useState('');
+    const [salvandoRole, setSalvandoRole] = useState(false);
 
     /** Lista de roles/cargos — ADMIN e TODOS sempre presentes */
     const roles = useMemo(() => {
@@ -163,6 +170,21 @@ export function PaginaConfiguracoes() {
         } finally {
             setSalvando(null);
         }
+    };
+
+    /** Renomeia um cargo na matriz e nos usuários */
+    const handleRenomearRoleAction = async (antigo: string) => {
+        const novo = nomeRoleTemp.toUpperCase().trim();
+        if (!novo || novo === antigo || salvandoRole) {
+            setEditandoRole(null);
+            return;
+        }
+        setSalvandoRole(true);
+        const res = await renomearCargo(antigo, novo);
+        if (res.sucesso) {
+            setEditandoRole(null);
+        }
+        setSalvandoRole(false);
     };
 
     /** Adiciona um novo cargo com permissões básicas */
@@ -203,14 +225,14 @@ export function PaginaConfiguracoes() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 {/* Coluna Lateral: Gestão de Cargos */}
                 <div className="lg:col-span-3 space-y-6">
-                    <div className="bg-white/70 backdrop-blur-xl border border-slate-200/60 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all space-y-6">
+                    <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-6">
                         <div className="flex items-center gap-3 px-1">
-                            <div className="p-2.5 bg-indigo-500/10 rounded-xl text-indigo-600 shadow-sm">
+                            <div className="p-2.5 bg-primary/5 rounded-2xl text-primary">
                                 <ShieldCheck size={18} />
                             </div>
                             <div className="flex flex-col">
-                                <h3 className="text-xs font-black uppercase tracking-[0.1em] text-slate-800">Cargos</h3>
-                                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.05em] leading-tight">Configurar Hierarquia</span>
+                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-foreground">Cargos</h3>
+                                <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.05em] leading-tight">Configurar Hierarquia</span>
                             </div>
                         </div>
 
@@ -222,11 +244,11 @@ export function PaginaConfiguracoes() {
                                     value={novoCargo}
                                     onChange={e => setNovoCargo(e.target.value)}
                                     placeholder="EX: LIDER_TECH"
-                                    className="flex-1 min-w-0 bg-slate-50/50 border border-slate-100 rounded-2xl px-4 py-3 text-[12px] font-bold outline-none focus:bg-white focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/5 transition-all uppercase placeholder:text-slate-300"
+                                    className="flex-1 min-w-0 bg-muted/40 border border-border/50 rounded-2xl px-4 py-3 text-[12px] font-bold outline-none focus:bg-background focus:border-primary/30 focus:ring-4 focus:ring-primary/5 transition-all uppercase placeholder:text-muted-foreground/30"
                                 />
                                 <button
                                     type="submit"
-                                    className="p-3 bg-indigo-500 text-white rounded-2xl shadow-lg shadow-indigo-500/30 active:scale-95 transition-all hover:bg-indigo-600 shrink-0"
+                                    className="p-3 bg-primary text-primary-foreground rounded-2xl shadow-lg shadow-primary/20 active:scale-95 transition-all hover:bg-primary/90 shrink-0"
                                 >
                                     <Plus size={18} strokeWidth={3} />
                                 </button>
@@ -237,36 +259,81 @@ export function PaginaConfiguracoes() {
                         <div className="space-y-4 pt-2">
                             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400/60 px-2 block">Cargos</label>
                             <div className="space-y-2 max-h-[440px] overflow-y-auto pr-1 custom-scrollbar">
-                                {roles.filter(r => r !== 'TODOS').map(role => (
+                                {roles.filter(r => r !== 'TODOS' && r !== 'ADMIN').map(role => (
                                     <div
                                         key={role}
                                         className={`group relative flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 ${
                                             role === 'ADMIN' 
-                                            ? 'bg-amber-50/50 border-amber-200/50 hover:bg-amber-100/50' 
-                                            : 'bg-white border-slate-100 hover:border-slate-200 hover:shadow-sm'
+                                            ? 'bg-amber-500/[0.03] border-amber-200/50 hover:bg-amber-500/[0.06]' 
+                                            : 'bg-background border-border/50 hover:border-border hover:shadow-sm'
                                         }`}
                                     >
                                         <div className="flex items-center gap-3.5">
-                                            <div className={`p-2 rounded-xl flex items-center justify-center transition-colors ${
-                                                role === 'ADMIN' ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20'
-                                                : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200 group-hover:text-slate-600'
+                                            <div className={`p-2 rounded-2xl flex items-center justify-center transition-colors ${
+                                                role === 'ADMIN' ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/10'
+                                                : 'bg-muted text-muted-foreground group-hover:bg-accent group-hover:text-foreground'
                                             }`}>
                                                 {role === 'ADMIN' ? <Crown size={14} />
                                                 : <UserCircle size={14} />}
                                             </div>
-                                            <div className="flex flex-col">
-                                                <span className={`text-[12px] font-black tracking-widest uppercase ${
-                                                    role === 'ADMIN' ? 'text-amber-700'
-                                                    : 'text-slate-700'
-                                                }`}>
-                                                    {role}
-                                                </span>
+                                            <div className="flex flex-col flex-1 min-w-0">
+                                                {editandoRole === role ? (
+                                                    <div className="flex items-center gap-1.5 w-full">
+                                                        <input
+                                                            autoFocus
+                                                            value={nomeRoleTemp}
+                                                            onChange={e => setNomeRoleTemp(e.target.value)}
+                                                            onKeyDown={e => {
+                                                                if (e.key === 'Enter') handleRenomearRoleAction(role);
+                                                                if (e.key === 'Escape') setEditandoRole(null);
+                                                            }}
+                                                            disabled={salvandoRole}
+                                                            className="flex-1 min-w-0 bg-transparent border-b border-primary/40 outline-none text-[12px] font-black tracking-widest uppercase text-foreground py-0.5"
+                                                        />
+                                                        <div className="flex items-center">
+                                                            <button 
+                                                                onClick={() => handleRenomearRoleAction(role)}
+                                                                disabled={salvandoRole}
+                                                                className="p-1 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all disabled:opacity-30"
+                                                            >
+                                                                {salvandoRole ? <div className="w-3 h-3 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" /> : <Check size={14} strokeWidth={3} />}
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => setEditandoRole(null)}
+                                                                disabled={salvandoRole}
+                                                                className="p-1 text-rose-500 hover:bg-rose-50 rounded-lg transition-all disabled:opacity-30"
+                                                            >
+                                                                <X size={14} strokeWidth={3} />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center gap-2 group/title w-full">
+                                                        <span className={`text-[12px] font-black tracking-widest uppercase truncate ${
+                                                            role === 'ADMIN' ? 'text-amber-600'
+                                                            : 'text-foreground'
+                                                        }`}>
+                                                            {role}
+                                                        </span>
+                                                        {podeEditar && !CARGOS_FIXOS.includes(role) && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    setEditandoRole(role);
+                                                                    setNomeRoleTemp(role);
+                                                                }}
+                                                                className="opacity-0 group-hover/title:opacity-100 p-1 text-muted-foreground/40 hover:text-primary transition-all"
+                                                            >
+                                                                <Pencil size={12} />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
-                                        {!CARGOS_FIXOS.includes(role) && podeEditar && (
+                                        {!CARGOS_FIXOS.includes(role) && podeEditar && editandoRole !== role && (
                                             <button
                                                 onClick={() => handleRemoverCargo(role)}
-                                                className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50/50 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                                                className="p-2 text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 rounded-2xl transition-all opacity-0 group-hover:opacity-100"
                                                 title="Remover cargo"
                                             >
                                                 <Trash2 size={14} />
@@ -278,19 +345,19 @@ export function PaginaConfiguracoes() {
                         </div>
                     </div>
 
-                    <div className="p-6 bg-blue-50/50 backdrop-blur-sm rounded-2xl border border-blue-100/50 space-y-4 relative overflow-hidden group">
-                        <div className="absolute -right-6 -bottom-6 text-blue-100/30 group-hover:rotate-12 transition-transform duration-700">
+                    <div className="p-6 bg-primary/5 rounded-2xl border border-primary/10 space-y-4 relative overflow-hidden group">
+                        <div className="absolute -right-6 -bottom-6 text-primary/10 group-hover:rotate-12 transition-transform duration-700">
                             <Info size={80} />
                         </div>
                         <div className="relative z-10">
-                            <div className="flex items-center gap-2 text-blue-600 mb-2.5">
-                                <div className="p-1.5 bg-blue-100 rounded-lg">
+                            <div className="flex items-center gap-2 text-primary mb-2.5">
+                                <div className="p-1.5 bg-primary/10 rounded-2xl">
                                     <Info size={14} />
                                 </div>
                                 <span className="text-[10px] font-black uppercase tracking-widest">Dica Admin</span>
                             </div>
-                            <p className="text-[10px] text-blue-700/70 font-bold leading-relaxed">
-                                Ative uma permissão na coluna <span className="text-emerald-600 font-black">TODOS</span> para concedê-la a qualquer membro, independente do cargo. <br /><br />
+                            <p className="text-[10px] text-muted-foreground font-bold leading-relaxed">
+                                Ative uma permissão na coluna <span className="text-emerald-500 font-black">TODOS</span> para concedê-la a qualquer membro, independente do cargo. <br /><br />
                                 Alterações afetam todos em tempo real.
                             </p>
                         </div>
@@ -299,22 +366,22 @@ export function PaginaConfiguracoes() {
 
                 {/* Coluna Principal: Matriz de Permissões Completa */}
                 <div className="lg:col-span-9 space-y-6 overflow-hidden">
-                    <section className="bg-white/80 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-sm flex flex-col overflow-hidden transition-all hover:bg-white">
-                        <div className="px-6 py-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-gradient-to-r from-slate-50/50 to-white/50">
+                    <section className="bg-card border border-border rounded-2xl shadow-sm flex flex-col overflow-hidden transition-all">
+                        <div className="px-6 py-6 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-muted/20">
                             <div className="flex items-center gap-4">
-                                <div className="p-3.5 bg-blue-600 text-white rounded-2xl shadow-lg shadow-blue-500/20">
+                                <div className="p-3.5 bg-primary text-primary-foreground rounded-2xl shadow-lg shadow-primary/10">
                                     <Lock size={20} />
                                 </div>
                                 <div className="space-y-0.5">
-                                    <h2 className="text-base font-black uppercase tracking-tight text-slate-900 leading-none">Matriz de Controle de Acesso</h2>
-                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                                    <h2 className="text-base font-black uppercase tracking-tight text-foreground leading-none">Matriz de Controle de Acesso</h2>
+                                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
                                         {PERMISSOES_SISTEMA.reduce((acc, m) => acc + m.permissoes.length, 0)} permissões em {PERMISSOES_SISTEMA.length} módulos
                                     </p>
                                 </div>
                             </div>
 
                             <div className="relative group/search max-w-xs w-full">
-                                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within/search:text-blue-500 transition-colors">
+                                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within/search:text-primary transition-colors">
                                     <Plus className="rotate-45" size={14} strokeWidth={3} />
                                 </div>
                                 <input 
@@ -322,7 +389,7 @@ export function PaginaConfiguracoes() {
                                     placeholder="Pesquisar permissões..."
                                     value={buscaPermissao}
                                     onChange={(e) => setBuscaPermissao(e.target.value)}
-                                    className="w-full h-10 bg-slate-100/50 border border-transparent rounded-xl pl-10 pr-4 text-[11px] font-bold outline-none focus:bg-white focus:border-blue-400 transition-all placeholder:text-slate-400"
+                                    className="w-full h-10 bg-muted/40 border border-transparent rounded-2xl pl-10 pr-4 text-[11px] font-bold outline-none focus:bg-background focus:border-primary/20 transition-all placeholder:text-muted-foreground/30"
                                 />
                             </div>
                         </div>

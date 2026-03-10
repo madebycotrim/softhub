@@ -1,4 +1,4 @@
-import { ShieldAlert, Activity, FileText, Search, Calendar, X } from 'lucide-react';
+import { ShieldAlert, Activity, FileText, Search, Calendar, X, User } from 'lucide-react';
 import { Paginacao } from '../../compartilhado/componentes/Paginacao';
 import { formatarDataHora } from '../../utilitarios/formatadores';
 import { usarLogs } from './usarLogs';
@@ -7,6 +7,7 @@ import { Emblema } from '../../compartilhado/componentes/Emblema';
 import { useState } from 'react';
 import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
 import { Modal } from '../../compartilhado/componentes/Modal';
+import { usarPermissaoAcesso } from '../../compartilhado/hooks/usarPermissao';
 import type { LogSistema } from './usarLogs';
 
 /** Painel de auditoria com tabela semântica padronizada. */
@@ -15,10 +16,12 @@ export function PainelLogs() {
         logs, carregando, pagina, setPagina, totalPaginas, totalRegistros,
         itensPorPagina, setItensPorPagina,
         filtroModulo, setFiltroModulo, filtroAcao, setFiltroAcao,
-        busca, setBusca, dataInicio, setDataInicio, dataFim, setDataFim
+        busca, setBusca, dataInicio, setDataInicio, dataFim, setDataFim,
+        filtroMeusLogs, setFiltroMeusLogs
     } = usarLogs();
 
     const [modalInspecao, setModalInspecao] = useState<LogSistema | null>(null);
+    const podeVerTudo = usarPermissaoAcesso('logs:visualizar');
 
     const getVarianteAcao = (acao: string) => {
         if (acao.includes('DELETAR') || acao.includes('REMOVER')) return 'vermelho';
@@ -32,10 +35,10 @@ export function PainelLogs() {
     return (
         <div className="space-y-10 flex flex-col h-full bg-background animate-in fade-in duration-500 pb-10">
             <CabecalhoFuncionalidade
-                titulo="Logs de Auditoria"
-                subtitulo="Registros imutáveis de ações do sistema."
+                titulo={podeVerTudo ? (filtroMeusLogs ? "Meus Logs de Auditoria" : "Logs de Auditoria") : "Meus Logs"}
+                subtitulo={podeVerTudo ? "Registros imutáveis de ações do sistema." : "Registro do seu histórico de ações no sistema."}
                 icone={ShieldAlert}
-                variante="perigo"
+                variante={podeVerTudo ? "perigo" : "padrao"}
             />
 
             {/* Barra de Filtros */}
@@ -56,6 +59,23 @@ export function PainelLogs() {
                     </div>
 
                     <div className="flex flex-wrap lg:flex-nowrap items-end gap-3 w-full xl:w-auto">
+                        {podeVerTudo && (
+                            <div className="min-w-[140px] flex-1 lg:flex-none">
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1 mb-1 block">Abrangência</label>
+                                <button
+                                    onClick={() => { setFiltroMeusLogs(!filtroMeusLogs); setPagina(1); }}
+                                    className={`w-full h-10 flex items-center justify-center gap-2 border rounded-2xl text-xs font-bold transition-all ${
+                                        filtroMeusLogs 
+                                        ? 'bg-primary/10 border-primary text-primary shadow-sm' 
+                                        : 'bg-background border-border text-muted-foreground hover:border-primary/40'
+                                    }`}
+                                >
+                                    {filtroMeusLogs ? <User className="w-4 h-4" /> : <ShieldAlert className="w-4 h-4 opacity-40" />}
+                                    {filtroMeusLogs ? "Meus Logs" : "Todos logs"}
+                                </button>
+                            </div>
+                        )}
+
                         <div className="min-w-[140px] flex-1 lg:flex-none">
                             <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1 mb-1 block">Módulo</label>
                             <select
@@ -119,7 +139,7 @@ export function PainelLogs() {
                             </div>
                         </div>
 
-                        {(busca || filtroModulo || filtroAcao || dataInicio || dataFim) && (
+                        {(busca || filtroModulo || filtroAcao || dataInicio || dataFim || filtroMeusLogs) && (
                             <button
                                 onClick={() => {
                                     setBusca('');
@@ -127,6 +147,7 @@ export function PainelLogs() {
                                     setFiltroAcao('');
                                     setDataInicio('');
                                     setDataFim('');
+                                    setFiltroMeusLogs(false);
                                     setPagina(1);
                                 }}
                                 className="h-10 px-3 flex items-center justify-center text-primary hover:bg-primary/5 rounded-2xl transition-all border border-transparent hover:border-primary/20"

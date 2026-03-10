@@ -40,6 +40,7 @@ export function usarLogs() {
     const [busca, setBusca] = useState('');
     const [dataInicio, setDataInicio] = useState('');
     const [dataFim, setDataFim] = useState('');
+    const [filtroMeusLogs, setFiltroMeusLogs] = useState(false);
 
     const carregar = async () => {
         try {
@@ -50,6 +51,7 @@ export function usarLogs() {
             if (busca) params.busca = busca;
             if (dataInicio) params.dataInicio = dataInicio;
             if (dataFim) params.dataFim = dataFim;
+            if (filtroMeusLogs) params.meus = true;
 
             const [resLogs, resStats] = await Promise.all([
                 api.get('/api/logs', { params }).catch(() => ({ data: { dados: [], paginacao: { totalPaginas: 1, total: 0 } } })),
@@ -70,7 +72,7 @@ export function usarLogs() {
 
     useEffect(() => {
         carregar();
-    }, [pagina, itensPorPagina, filtroModulo, filtroAcao, busca, dataInicio, dataFim]);
+    }, [pagina, itensPorPagina, filtroModulo, filtroAcao, busca, dataInicio, dataFim, filtroMeusLogs]);
 
     return {
         logs,
@@ -93,6 +95,8 @@ export function usarLogs() {
         dataInicio,
         setDataInicio,
         dataFim,
-        setDataFim
+        setDataFim,
+        filtroMeusLogs,
+        setFiltroMeusLogs
     };
 }

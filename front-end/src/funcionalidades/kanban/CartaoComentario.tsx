@@ -71,7 +71,7 @@ export function CartaoComentario({ comentario, usuarioLogadoId, ehLider, aoExclu
                     {(podeEditar || podeExcluir) && !editando && (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <button className="p-1 rounded text-muted-foreground hover:bg-accent hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">
+                                <button className="p-1 rounded-2xl text-muted-foreground hover:bg-accent hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">
                                     <MoreHorizontal className="w-4 h-4" />
                                 </button>
                             </DropdownMenuTrigger>
@@ -97,12 +97,12 @@ export function CartaoComentario({ comentario, usuarioLogadoId, ehLider, aoExclu
                             autoFocus
                             value={novoConteudo}
                             onChange={(e) => setNovoConteudo(e.target.value)}
-                            className="w-full bg-background border border-input rounded-xl p-3 text-sm text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary min-h-[80px]"
+                            className="w-full bg-background border border-input rounded-2xl p-3 text-sm text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary min-h-[80px]"
                         />
                         <div className="flex items-center gap-2 justify-end">
                             <button
                                 onClick={() => { setEditando(false); setNovoConteudo(comentario.conteudo); }}
-                                className="text-xs font-medium px-3 py-1.5 rounded-md hover:bg-accent text-muted-foreground transition-colors"
+                                className="text-xs font-medium px-3 py-1.5 rounded-2xl hover:bg-accent text-muted-foreground transition-colors"
                                 disabled={salvando}
                             >
                                 Cancelar
@@ -110,14 +110,14 @@ export function CartaoComentario({ comentario, usuarioLogadoId, ehLider, aoExclu
                             <button
                                 onClick={handleSalvarEdicao}
                                 disabled={salvando || !novoConteudo.trim()}
-                                className="text-xs font-medium px-3 py-1.5 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground transition-colors disabled:opacity-50"
+                                className="text-xs font-medium px-3 py-1.5 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground transition-colors disabled:opacity-50"
                             >
                                 {salvando ? 'Salvando...' : 'Atualizar'}
                             </button>
                         </div>
                     </div>
                 ) : (
-                    <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap bg-muted/50 p-3 rounded-xl border border-border inline-block w-full">
+                    <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap bg-muted/50 p-3 rounded-2xl border border-border inline-block w-full">
                         {comentario.conteudo}
                     </div>
                 )}

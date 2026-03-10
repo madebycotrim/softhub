@@ -39,7 +39,7 @@ export function Paginacao({
                         value={itensPorPagina}
                         onChange={e => aoMudarItensPorPagina(Number(e.target.value))}
                         disabled={desabilitado}
-                        className="bg-background border border-border rounded-lg px-2 py-1 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/10 appearance-none cursor-pointer disabled:opacity-50"
+                        className="bg-background border border-border rounded-2xl px-2 py-1 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/10 appearance-none cursor-pointer disabled:opacity-50"
                     >
                         {opcoesItensPorPagina.map(num => (
                             <option key={num} value={num}>{num}</option>
@@ -57,7 +57,7 @@ export function Paginacao({
                 <button
                     disabled={paginaAtual === 1 || desabilitado}
                     onClick={() => aoMudarPagina(1)}
-                    className="w-10 h-9 rounded-lg border border-border text-foreground hover:bg-accent disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center justify-center"
+                    className="w-10 h-9 rounded-2xl border border-border text-foreground hover:bg-accent disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center justify-center"
                     title="Primeira Página"
                 >
                     <ChevronsLeft className="w-5 h-5" />
@@ -66,13 +66,13 @@ export function Paginacao({
                 <button
                     disabled={paginaAtual === 1 || desabilitado}
                     onClick={() => aoMudarPagina(paginaAtual - 1)}
-                    className="h-9 px-3 rounded-lg border border-border text-foreground hover:bg-accent disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center gap-1.5"
+                    className="h-9 px-3 rounded-2xl border border-border text-foreground hover:bg-accent disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center gap-1.5"
                 >
                     <ChevronLeft className="w-5 h-5" />
                     <span className="text-xs font-bold hidden sm:inline">Anterior</span>
                 </button>
 
-                <div className="flex items-center px-3 sm:px-4 bg-background border border-border rounded-lg h-9">
+                <div className="flex items-center px-3 sm:px-4 bg-background border border-border rounded-2xl h-9">
                     <span className="text-xs font-bold whitespace-nowrap">
                         <span className="text-primary">{paginaAtual}</span>
                         <span className="mx-1 sm:mx-2 text-muted-foreground/40">/</span>
@@ -83,7 +83,7 @@ export function Paginacao({
                 <button
                     disabled={paginaAtual === totalPaginas || desabilitado}
                     onClick={() => aoMudarPagina(paginaAtual + 1)}
-                    className="h-9 px-3 rounded-lg border border-border text-foreground hover:bg-accent disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center gap-1.5"
+                    className="h-9 px-3 rounded-2xl border border-border text-foreground hover:bg-accent disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center gap-1.5"
                 >
                     <span className="text-xs font-bold hidden sm:inline">Próxima</span>
                     <ChevronRight className="w-5 h-5" />
@@ -92,7 +92,7 @@ export function Paginacao({
                 <button
                     disabled={paginaAtual === totalPaginas || desabilitado}
                     onClick={() => aoMudarPagina(totalPaginas)}
-                    className="w-10 h-9 rounded-lg border border-border text-foreground hover:bg-accent disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center justify-center"
+                    className="w-10 h-9 rounded-2xl border border-border text-foreground hover:bg-accent disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center justify-center"
                     title="Última Página"
                 >
                     <ChevronsRight className="w-5 h-5" />

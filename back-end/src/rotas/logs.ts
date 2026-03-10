@@ -3,10 +3,10 @@ import { Env } from '../index';
 import { autenticacaoRequerida, verificarPermissao } from '../middleware/auth';
 const rotasLogs = new Hono<{ Bindings: Env, Variables: { usuario: any } }>();
 
-// Listar logs paginados (Somente ADMIN, validação feita ou a ser feita no middleware, mock básico aqui)
-rotasLogs.get('/', autenticacaoRequerida(), verificarPermissao('logs:visualizar'), async (c: Context) => {
+// Listar logs paginados
+rotasLogs.get('/', autenticacaoRequerida(), async (c: Context) => {
     const { DB } = c.env;
-    const usuario = c.get('usuario') as any;
+    const usuarioLogado = c.get('usuario') as any;
 
     const pagina = Number(c.req.query('pagina') ?? 1);
     const itensPorPagina = Math.min(Number(c.req.query('itensPorPagina') ?? 20), 100);
@@ -17,9 +17,48 @@ rotasLogs.get('/', autenticacaoRequerida(), verificarPermissao('logs:visualizar'
     const busca = c.req.query('busca');
     const dataInicio = c.req.query('dataInicio');
     const dataFim = c.req.query('dataFim');
+    const apenasMeus = c.req.query('meus') === 'true';
+
+    // ── Validação de Permissão Manual ─────────────────────────────────────────
+    let temPermissaoGeral = usuarioLogado.role === 'ADMIN';
+    let temPermissaoProprios = usuarioLogado.role === 'ADMIN';
+    
+    if (!temPermissaoGeral) {
+        try {
+            const resConfig = await DB.prepare('SELECT valor FROM configuracoes_sistema WHERE chave = ?')
+                .bind('permissoes_roles')
+                .first();
+            if (resConfig) {
+                const permissoesRoles = JSON.parse((resConfig as any).valor);
+                const role = usuarioLogado.role;
+                
+                const univGeral = permissoesRoles['TODOS']?.['logs:visualizar'] === true;
+                const roleGeral = permissoesRoles[role]?.['logs:visualizar'] === true;
+                temPermissaoGeral = univGeral || roleGeral;
+
+                const univProprio = permissoesRoles['TODOS']?.['logs:visualizar_proprios'] === true;
+                const roleProprio = permissoesRoles[role]?.['logs:visualizar_proprios'] === true;
+                temPermissaoProprios = univProprio || roleProprio;
+            }
+        } catch (e) {
+            console.error('[LOGS] Erro ao validar permissão:', e);
+        }
+    }
+
+    // Se não tem permissão geral E não tem permissão de ver os próprios -> Bloqueia
+    if (!temPermissaoGeral && !temPermissaoProprios) {
+        return c.json({ erro: 'Você não tem permissão para visualizar logs.' }, 403);
+    }
 
     let whereClause = 'WHERE 1=1';
     const bParams: any[] = [];
+
+    // Se NÃO tem permissão geral OU se pediu explicitamente apenas os seus
+    // (Lembrando que se chegou aqui e não tem geral, ele OBRIGATORIAMENTE tem a de próprios)
+    if (!temPermissaoGeral || apenasMeus) {
+        whereClause += ' AND usuario_id = ?';
+        bParams.push(usuarioLogado.id);
+    }
 
     if (filtroModulo) {
         whereClause += ' AND modulo = ?';
@@ -80,8 +119,7 @@ rotasLogs.get('/', autenticacaoRequerida(), verificarPermissao('logs:visualizar'
 
 rotasLogs.get('/estatisticas', autenticacaoRequerida(), verificarPermissao('logs:visualizar'), async (c: Context) => {
     const { DB } = c.env;
-    const usuario = c.get('usuario') as any;
-
+    
     try {
         const resModulos = await DB.prepare(`
             SELECT modulo, COUNT(*) as quantidade 

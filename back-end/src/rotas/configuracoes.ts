@@ -104,4 +104,71 @@ rotasConfiguracoes.patch('/:chave', autenticacaoRequerida(), verificarPermissao(
     }
 });
 
+// ─── PATCH /roles/:antigo/renomear — Renomear cargo e atualizar usuários ────────
+rotasConfiguracoes.patch('/roles/:antigo/renomear', autenticacaoRequerida(), verificarPermissao('configuracoes:editar'), async (c: Context) => {
+    const { DB } = c.env;
+    const { antigo } = c.req.param();
+    const { novo } = await c.req.json();
+
+    if (!novo || !novo.trim()) {
+        return c.json({ erro: 'Novo nome do cargo é obrigatório.' }, 400);
+    }
+
+    const novoFormatado = novo.toUpperCase().trim();
+    if (antigo === novoFormatado) return c.json({ sucesso: true });
+
+    // Bloqueia renomear cargos protegidos
+    if (['ADMIN', 'TODOS'].includes(antigo)) {
+        return c.json({ erro: 'Cargos do sistema não podem ser renomeados.' }, 403);
+    }
+
+    try {
+        // 1. Busca a matriz de permissões
+        const resConfig = await DB.prepare('SELECT valor FROM configuracoes_sistema WHERE chave = ?')
+            .bind('permissoes_roles')
+            .first();
+        const config = resConfig as any;
+
+        if (!config) {
+            return c.json({ erro: 'Matriz de permissões não encontrada.' }, 404);
+        }
+
+        const permissoesRoles = JSON.parse(config.valor);
+
+        if (!permissoesRoles[antigo]) {
+            return c.json({ erro: 'Cargo original não encontrado na matriz.' }, 404);
+        }
+
+        if (permissoesRoles[novoFormatado]) {
+            return c.json({ erro: 'Já existe um cargo com este nome.' }, 409);
+        }
+
+        // 2. Transfere permissões e deleta antiga
+        permissoesRoles[novoFormatado] = permissoesRoles[antigo];
+        delete permissoesRoles[antigo];
+
+        // 3. Execução em Batch para atomicidade (Atualizar Config + Atualizar Usuários)
+        await DB.batch([
+            DB.prepare('UPDATE configuracoes_sistema SET valor = ? WHERE chave = ?')
+                .bind(JSON.stringify(permissoesRoles), 'permissoes_roles'),
+            DB.prepare('UPDATE usuarios SET role = ? WHERE role = ?')
+                .bind(novoFormatado, antigo)
+        ]);
+
+        const usuario = c.get('usuario');
+        await registrarLog(DB, {
+            usuarioId: usuario.id,
+            acao: 'CARGO_RENOMEADO',
+            modulo: 'ADMIN',
+            descricao: `Cargo "${antigo}" renomeado para "${novoFormatado}".`,
+            ip: c.req.header('CF-Connecting-IP') ?? ''
+        });
+
+        return c.json({ sucesso: true });
+    } catch (e: any) {
+        console.error('[CONFIGS] Erro ao renomear cargo:', e);
+        return c.json({ erro: 'Falha ao renomear cargo.', detalhe: e.message }, 500);
+    }
+});
+
 export default rotasConfiguracoes;

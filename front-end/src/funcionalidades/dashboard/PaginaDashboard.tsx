@@ -44,7 +44,7 @@ export function PaginaDashboard() {
                                         <div className="flex justify-between items-start gap-4">
                                             <div>
                                                 <div className="flex items-center gap-2 mb-2">
-                                                    <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${aviso.prioridade === 'urgente' ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary'}`}>
+                                                    <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-2xl ${aviso.prioridade === 'urgente' ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary'}`}>
                                                         {aviso.prioridade}
                                                     </span>
                                                     <span className="text-[10px] text-muted-foreground font-mono">{formatarDataHora(aviso.criado_em)}</span>
@@ -91,7 +91,7 @@ export function PaginaDashboard() {
                     <section className="bg-sidebar border border-sidebar-border/10 rounded-2xl overflow-hidden shadow-xl">
                         <div className="p-5 border-b border-sidebar-border/10 bg-sidebar-accent/5 flex items-center justify-between">
                             <h2 className="text-xs font-black uppercase tracking-[0.2em]">Minhas Tarefas</h2>
-                            <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">{minhasTarefas.length}</span>
+                            <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-2xl font-bold">{minhasTarefas.length}</span>
                         </div>
                         <div className="p-2 space-y-1">
                             {minhasTarefas.slice(0, 6).map(tarefa => (

@@ -59,7 +59,7 @@ export const rotas = createBrowserRouter([
             { path: '/app/membros', element: <RotaProtegida><LayoutPrincipal><DiretorioMembros /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/membro/:id', element: <RotaProtegida><LayoutPrincipal><PerfilDinamico /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/avisos', element: <RotaProtegida><LayoutPrincipal><MuralAvisos /></LayoutPrincipal></RotaProtegida> },
-            { path: '/app/admin/logs', element: <RotaProtegida roleMinimo="ADMIN"><LayoutPrincipal><PainelLogs /></LayoutPrincipal></RotaProtegida> },
+            { path: '/app/admin/logs', element: <RotaProtegida><LayoutPrincipal><PainelLogs /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/admin/membros', element: <RotaProtegida roleMinimo="ADMIN"><LayoutPrincipal><GerenciarMembros /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/admin/justificativas', element: <RotaProtegida roleMinimo="SUBLIDER"><LayoutPrincipal><PainelJustificativas /></LayoutPrincipal></RotaProtegida> },
 

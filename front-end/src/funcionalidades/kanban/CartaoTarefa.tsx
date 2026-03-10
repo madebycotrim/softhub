@@ -41,10 +41,10 @@ export function CartaoTarefa({ tarefa, aoClicar }: CartaoTarefaProps) {
             {...listeners}
             {...attributes}
             className={`
-        bg-card p-3 rounded-2xl border flex flex-col gap-3 shadow-sm select-none transition-all duration-200
-        ${podeMover ? 'cursor-grab active:cursor-grabbing hover:border-primary/50 hover:shadow-md' : 'cursor-default opacity-80'}
-        ${isDragging ? 'opacity-50 ring-2 ring-primary z-50 scale-105' : ''}
-        ${isUrgente ? 'border-destructive/30 bg-destructive/5' : 'border-border'}
+        bg-card p-3 rounded-2xl border flex flex-col gap-3 select-none transition-all duration-200
+        ${podeMover ? 'cursor-grab active:cursor-grabbing hover:border-border' : 'cursor-default opacity-80'}
+        ${isDragging ? 'opacity-50 ring-1 ring-primary z-50' : ''}
+        ${isUrgente ? 'border-destructive/20 bg-destructive/5' : 'border-border/50'}
       `}
             onClick={() => aoClicar?.(tarefa)}
         >
@@ -62,14 +62,14 @@ export function CartaoTarefa({ tarefa, aoClicar }: CartaoTarefaProps) {
             <div className="flex items-center justify-between mt-1 text-muted-foreground">
                 <div className="flex items-center gap-3 text-xs">
                     {tarefa.pontos !== null && (
-                        <span className="flex items-center justify-center w-5 h-5 bg-primary/20 rounded-full font-medium text-primary shadow-sm border border-primary/20">
+                        <span className="flex items-center justify-center w-5 h-5 bg-primary/10 rounded-full font-medium text-primary border border-primary/20">
                             {tarefa.pontos}
                         </span>
                     )}
 
                     {/* WF 31 - Indicador de Checklist */}
                     {totalItens > 0 && (
-                        <div className={`flex items-center gap-1.5 px-1.5 py-0.5 rounded border ${totalConcluidos === totalItens ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-muted text-muted-foreground border-border'}`}>
+                        <div className={`flex items-center gap-1.5 px-1.5 py-0.5 rounded-2xl border ${totalConcluidos === totalItens ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-muted text-muted-foreground border-border'}`}>
                             <CheckCircle2 className="w-3.5 h-3.5" />
                             <span className="font-mono">{totalConcluidos}/{totalItens}</span>
                         </div>
@@ -78,7 +78,7 @@ export function CartaoTarefa({ tarefa, aoClicar }: CartaoTarefaProps) {
 
                 <div className="flex gap-2">
                     {tarefa.responsaveis.map((resp) => (
-                        <div key={resp.id} className="flex flex-col items-center bg-secondary rounded p-1 border border-border">
+                        <div key={resp.id} className="flex flex-col items-center bg-muted/40 rounded-2xl p-1 border border-border/10">
                             <Avatar
                                 nome={resp.nome}
                                 fotoPerfil={resp.foto}

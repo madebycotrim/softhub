@@ -37,14 +37,14 @@ export function LayoutPrincipal({ children }: LayoutPrincipalProps) {
                     
                     {/* Drawer Content */}
                     <div 
-                        className="absolute inset-y-0 left-0 w-[280px] bg-sidebar border-r border-sidebar-border shadow-xl animate-in slide-in-from-left duration-300"
+                        className="absolute inset-y-0 left-0 w-[280px] bg-sidebar border-r border-sidebar-border animate-in slide-in-from-left duration-300"
                         onClick={e => e.stopPropagation()}
                     >
                         <div className="flex flex-col h-full relative">
                             {/* Botão fechar móvel */}
                             <button 
                                 onClick={() => setSidebarAberta(false)}
-                                className="absolute top-4 right-4 z-50 p-2 text-sidebar-foreground/40 hover:text-primary transition-colors bg-sidebar-accent/30 rounded-xl"
+                                className="absolute top-4 right-4 z-50 p-2 text-sidebar-foreground/40 hover:text-primary transition-colors bg-sidebar-accent/30 rounded-2xl"
                             >
                                 <X size={20} />
                             </button>
@@ -75,14 +75,14 @@ export function LayoutPrincipal({ children }: LayoutPrincipalProps) {
                     <div className="flex items-center gap-2 -mr-1">
                         <button
                             onClick={() => setScannerAberto(true)}
-                            className="p-2 text-muted-foreground hover:text-primary transition-colors bg-sidebar-accent/5 rounded-xl border border-border/40"
+                            className="p-2 text-muted-foreground hover:text-primary transition-colors bg-sidebar-accent/5 rounded-2xl border border-border/40"
                             title="Conectar via QR Code"
                         >
                             <QrCode size={18} />
                         </button>
                         <button
                             onClick={() => setTema(tema === 'dark' ? 'light' : 'dark')}
-                            className="p-2 text-muted-foreground hover:text-primary transition-colors bg-sidebar-accent/5 rounded-xl border border-border/40"
+                            className="p-2 text-muted-foreground hover:text-primary transition-colors bg-sidebar-accent/5 rounded-2xl border border-border/40"
                         >
                             {tema === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
                         </button>

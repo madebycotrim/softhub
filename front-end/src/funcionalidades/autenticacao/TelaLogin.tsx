@@ -103,16 +103,13 @@ export default function TelaLogin() {
         <div className="light min-h-screen bg-slate-50 flex items-center justify-center p-0 sm:p-6 lg:p-8 selection:bg-red-500/20 transition-colors duration-500">
             <div className="w-full max-w-7xl bg-white sm:rounded-2xl shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] overflow-hidden flex flex-col lg:flex-row min-h-screen sm:min-h-[750px] border-none sm:border border-border animate-in fade-in zoom-in-95 duration-700">
 
-                {/* Lado Esquerdo Institucional */}
-                <div className="lg:w-[42%] bg-[#001a33] p-8 pt-12 pb-14 lg:p-16 flex flex-col justify-between text-white relative overflow-hidden group shrink-0">
-                    {/* Imagem do Campus em Background Cinematico */}
-                    <div className="absolute inset-0 z-0">
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#001a33] via-[#001a33]/60 to-transparent" />
-                        <div className="absolute inset-0 bg-blue-900/10 pointer-events-none" />
-                    </div>
+                    {/* Lado Esquerdo Institucional */}
+                    <div className="lg:w-[42%] bg-[#001a33] p-8 pt-12 pb-14 lg:p-16 flex flex-col justify-between text-white relative overflow-hidden group shrink-0">
+                        {/* Background Sólido para Minimalismo */}
+                        <div className="absolute inset-0 z-0 bg-[#001a33]" />
 
-                    <div className="absolute top-[-5%] left-[-10%] w-[500px] h-[500px] bg-red-600/10 rounded-full blur-[120px] pointer-events-none group-hover:opacity-60 transition-opacity duration-1000" />
-                    <div className="absolute bottom-[0%] right-[-5%] w-96 h-96 bg-blue-400/5 rounded-full blur-[100px] pointer-events-none" />
+
+
 
                     <div className="relative z-10 space-y-12 lg:space-y-16">
                         <div className="flex items-center gap-5">
@@ -134,7 +131,7 @@ export default function TelaLogin() {
                                 Transformamos o conhecimento acadêmico em soluções tecnológicas de alto impacto.
                             </p>
                             <div className="flex items-center gap-3">
-                                <div className="h-1.5 w-16 lg:w-24 bg-red-600 rounded-full shadow-[0_0_20px_rgba(220,38,38,0.5)]" />
+                                <div className="h-1.5 w-16 lg:w-24 bg-red-600 rounded-full" />
                                 <div className="h-1.5 w-6 bg-white/20 rounded-full" />
                             </div>
                         </div>
@@ -162,7 +159,7 @@ export default function TelaLogin() {
                     <div className="flex-1 p-8 lg:p-12 flex flex-col items-center justify-center">
                         <div className="space-y-8 lg:space-y-12 w-full max-w-sm">
                             <div className="space-y-4 text-center lg:text-left">
-                                <div className="inline-flex py-1 px-3 bg-red-500/10 text-red-600 text-[10px] font-black uppercase tracking-widest rounded-full leading-none">
+                                <div className="inline-flex py-1 px-3 bg-red-500/5 text-red-600 text-[10px] font-black uppercase tracking-widest rounded-full leading-none border border-red-500/10">
                                     Bem-vindo de volta
                                 </div>
                                 <h3 className="text-[28px] lg:text-4xl font-black text-slate-900 tracking-tight leading-tight">Inicie agora.</h3>
@@ -182,7 +179,7 @@ export default function TelaLogin() {
                                 <button
                                     onClick={handleLogin}
                                     disabled={carregando || inProgress !== 'none'}
-                                    className="w-full flex items-center h-[41px] bg-[#2F2F2F] hover:bg-[#3F3F3F] active:bg-[#1F1F1F] transition-all disabled:opacity-50 group rounded-none active:scale-[0.98] px-[12px] gap-[12px] border border-transparent"
+                                    className="w-full flex items-center h-[41px] bg-[#2F2F2F] hover:bg-[#3F3F3F] active:bg-[#1F1F1F] transition-all disabled:opacity-50 group rounded-2xl active:scale-[0.98] px-[12px] gap-[12px] border border-transparent shadow-sm"
                                     style={{ 
                                         fontFamily: "'Segoe UI', 'Segoe UI Web (West European)', 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif" 
                                     }}
@@ -227,9 +224,9 @@ export default function TelaLogin() {
                     {/* Divisor Vertical Ultra Sutil */}
                     <div className="hidden lg:block w-[1px] bg-border self-stretch my-24 opacity-50" />
 
-                    {/* Lado Direito: Accesso Integrado (QR Code) */}
-                    {!isMobile && (
-                        <div className="flex-1 flex flex-col items-center justify-center bg-accent/[0.03] dark:bg-card/30 p-12 relative animate-in fade-in duration-1000">
+                     {/* Lado Direito: Accesso Integrado (QR Code) */}
+                     {!isMobile && (
+                         <div className="flex-1 flex flex-col items-center justify-center bg-transparent p-12 relative animate-in fade-in duration-1000">
                             <div className="w-full flex flex-col items-center space-y-12">
                                 <PainelQRCode />
 

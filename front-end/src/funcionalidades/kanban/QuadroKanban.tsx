@@ -44,12 +44,12 @@ function ColunaDropZone({ id, titulo, tarefas, aoApertarTarefa }: { id: ColunaKa
     });
 
     return (
-        <div className="flex flex-col flex-1 min-w-[300px] max-w-[350px] bg-card/80 backdrop-blur-md rounded-2xl border border-border shadow-sm overflow-hidden h-full">
+        <div className="flex flex-col flex-1 min-w-[300px] max-w-[350px] bg-card/60 rounded-2xl border border-border/60 shadow-none overflow-hidden h-full">
             <div className="p-4 border-b border-border bg-card/50 flex items-center justify-between shrink-0">
                 <h3 className="font-semibold text-card-foreground">
                     {titulo}
                 </h3>
-                <span className="px-2 py-0.5 rounded-full bg-secondary text-xs font-medium text-secondary-foreground border border-border">
+                <span className="px-2 py-0.5 rounded-2xl bg-secondary text-xs font-medium text-secondary-foreground border border-border">
                     {tarefas.length}
                 </span>
             </div>

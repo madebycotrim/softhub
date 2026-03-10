@@ -27,8 +27,8 @@ function CardMembro({ membro }: { membro: Membro }) {
         <Link
             to={`/app/membro/${membro.id}`}
             className={`
-                bg-card border border-border rounded-2xl p-4 sm:p-6 flex flex-col transition-all shadow-sm
-                hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10
+                bg-card border border-border rounded-2xl p-4 sm:p-6 flex flex-col transition-all
+                hover:border-primary/30
                 ${membro.ativo ? '' : 'opacity-60'}
             `}
         >
@@ -132,7 +132,7 @@ export function DiretorioMembros() {
                                 <h3 className="text-sm font-black text-muted-foreground uppercase tracking-[0.2em] whitespace-nowrap">
                                     {grupo.titulo}
                                 </h3>
-                                <div className="h-px w-full bg-gradient-to-r from-border/60 to-transparent" />
+                                <div className="h-px w-full bg-border/40" />
                                 <span className="bg-muted px-2 py-0.5 rounded-md text-[10px] font-bold text-muted-foreground">
                                     {grupo.membros.length}
                                 </span>

@@ -107,8 +107,8 @@ export function BaterPonto() {
                             onClick={() => setAbaAtiva(abaAtiva === 'registro' ? 'justificativas' : 'registro')}
                             className={`flex items-center gap-2 h-11 px-4 rounded-xl border transition-all font-bold text-xs ${
                                 abaAtiva === 'justificativas' 
-                                ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/20' 
-                                : 'bg-white border-slate-200 text-slate-500 hover:border-blue-200 hover:text-blue-600'
+                                ? 'bg-primary border-primary text-primary-foreground' 
+                                : 'bg-background border-border text-muted-foreground hover:border-primary/20 hover:text-primary'
                             }`}
                         >
                             <History className="w-4 h-4" />
@@ -121,7 +121,7 @@ export function BaterPonto() {
                             {podeJustificar && (
                                 <button 
                                     onClick={() => setModalJustificativaAberto(true)}
-                                    className="h-11 px-5 bg-slate-900 hover:bg-black text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-lg shadow-slate-200 active:scale-95"
+                                    className="h-11 px-5 bg-foreground text-background rounded-2xl text-xs font-bold flex items-center gap-2 transition-all active:scale-95"
                                 >
                                     <Plus className="w-4 h-4" />
                                     <span>Justificar</span>
@@ -135,16 +135,14 @@ export function BaterPonto() {
                 <div className="grid grid-cols-2 md:grid-cols-4 md:auto-rows-fr gap-3 sm:gap-4">
                     
                     {/* TILE 1: AÇÃO PRINCIPAL (2x2) — Mais Compacto */}
-                    <div className="col-span-2 md:col-span-2 md:row-span-2 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col items-center justify-center text-center relative overflow-hidden group transition-all hover:shadow-md hover:-translate-y-0.5">
-                        {/* Decoração de fundo suave */}
-                        <div className="absolute -top-16 -right-16 w-48 h-48 bg-blue-50/50 rounded-full blur-[60px] group-hover:bg-blue-100/50 transition-colors duration-700" />
-                        <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-emerald-50/30 rounded-full blur-[60px]" />
+                    <div className="col-span-2 md:col-span-2 md:row-span-2 bg-card border border-border/60 rounded-2xl p-6 flex flex-col items-center justify-center text-center relative overflow-hidden group transition-all">
+
                         
                         <div className="relative z-10 space-y-4 sm:space-y-6 w-full">
                             <div className="space-y-2">
-                                <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full border border-blue-100/50 mb-2">
-                                    <div className="w-1 h-1 bg-blue-600 rounded-full animate-pulse" />
-                                    <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">Horário de Brasília</span>
+                                <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/5 rounded-full border border-primary/10 mb-2">
+                                    <div className="w-1 h-1 bg-primary rounded-full" />
+                                    <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-primary">Horário de Brasília</span>
                                 </div>
                                 <h2 className="text-5xl sm:text-6xl font-black tracking-tighter text-slate-900 tabular-nums flex items-baseline justify-center">
                                     {agoraRelogio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
@@ -158,10 +156,10 @@ export function BaterPonto() {
                                 <button
                                     onClick={handleBaterPonto}
                                     disabled={carregando || salvando || foraDaRede || foraDoHorario || !podeRegistrar}
-                                    className={`w-full max-w-sm py-4 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 disabled:opacity-30 disabled:grayscale-0 disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none disabled:border border-slate-200 ${
+                                    className={`w-full max-w-sm py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-30 disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none border border-border/50 ${
                                         proximoTipo === 'entrada' 
-                                        ? 'bg-slate-900 text-white shadow-slate-200 hover:bg-black' 
-                                        : 'bg-rose-600 text-white shadow-rose-200 hover:bg-rose-700'
+                                        ? 'bg-foreground text-background hover:opacity-90' 
+                                        : 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
                                     }`}
                                 >
                                     {salvando ? <Carregando /> : `EFETUAR REGISTRO: ${proximoTipo}`}
@@ -169,7 +167,7 @@ export function BaterPonto() {
                             </div>
 
                             {foraDoHorario && (
-                                <div className="flex items-center justify-center gap-2 text-rose-500 bg-rose-50 py-2.5 px-6 rounded-2xl w-fit mx-auto border border-rose-100 animate-pulse">
+                                <div className="flex items-center justify-center gap-2 text-destructive bg-destructive/5 py-2.5 px-6 rounded-2xl w-fit mx-auto border border-destructive/10">
                                     <AlertTriangle className="w-4 h-4" />
                                     <span className="text-[10px] font-black uppercase tracking-widest">Acesso Bloqueado • Fora do Expediente</span>
                                 </div>
@@ -178,12 +176,12 @@ export function BaterPonto() {
                     </div>
 
                     {/* TILE 2: STATUS — Ultra Compacto no Mobile */}
-                    <div className="col-span-1 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col justify-start sm:justify-between gap-4 sm:gap-0 group hover:border-blue-400 transition-all hover:shadow-md sm:min-h-[160px]">
+                    <div className="col-span-1 bg-card border border-border/60 rounded-2xl p-4 flex flex-col justify-start sm:justify-between gap-4 sm:gap-0 group hover:border-primary/40 transition-all sm:min-h-[160px]">
                         <div className="flex items-start justify-between">
-                            <div className="p-3 bg-slate-50/80 text-slate-400 rounded-xl border border-slate-100 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                            <div className="p-3 bg-muted/40 text-muted-foreground rounded-2xl border border-border/50 group-hover:bg-primary/5 group-hover:text-primary transition-colors">
                                 <LayoutDashboard className="w-5 h-5" />
                             </div>
-                            <div className={`w-2 h-2 rounded-full mt-1 ${ultimoRegistro?.tipo === 'entrada' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-200'}`} />
+                            <div className={`w-2 h-2 rounded-full mt-1 ${ultimoRegistro?.tipo === 'entrada' ? 'bg-emerald-500' : 'bg-muted'}`} />
                         </div>
                         <div className="space-y-1">
                             <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Status</p>
@@ -194,9 +192,9 @@ export function BaterPonto() {
                     </div>
 
                     {/* TILE 3: JORNADA — Ultra Compacto no Mobile */}
-                    <div className="col-span-1 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col justify-start sm:justify-between gap-4 sm:gap-0 group hover:border-amber-400 transition-all hover:shadow-md sm:min-h-[160px]">
+                    <div className="col-span-1 bg-card border border-border/60 rounded-2xl p-4 flex flex-col justify-start sm:justify-between gap-4 sm:gap-0 group hover:border-amber-400/40 transition-all sm:min-h-[160px]">
                         <div className="flex items-start justify-between">
-                            <div className="p-3 bg-amber-50/50 text-amber-600 rounded-xl border border-amber-100">
+                            <div className="p-3 bg-amber-500/5 text-amber-600 rounded-2xl border border-amber-500/10">
                                 <ScrollText className="w-5 h-5" />
                             </div>
                         </div>
@@ -209,7 +207,7 @@ export function BaterPonto() {
                     </div>
 
                     {/* TILE 4: HISTÓRICO RECENTE (2x2) — Mais Compacto */}
-                    <div className="col-span-2 md:col-span-2 md:row-span-2 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col h-[380px] md:h-auto">
+                    <div className="col-span-2 md:col-span-2 md:row-span-2 bg-card border border-border/60 rounded-2xl p-6 flex flex-col h-[380px] md:h-auto">
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
                             <div className="space-y-0.5">
                                 <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Linha do Tempo</h3>
@@ -226,10 +224,10 @@ export function BaterPonto() {
                                 </div>
                                 <button 
                                     onClick={() => setAbaAtiva(abaAtiva === 'registro' ? 'justificativas' : 'registro')}
-                                    className={`p-2.5 rounded-xl transition-all active:scale-95 border ${
+                                    className={`p-2.5 rounded-2xl transition-all active:scale-95 border ${
                                         abaAtiva === 'justificativas' 
-                                        ? 'bg-blue-600 border-blue-600 text-white shadow-xl shadow-blue-200' 
-                                        : 'bg-slate-50 border-slate-100 text-slate-400 hover:bg-slate-100'
+                                        ? 'bg-primary border-primary text-primary-foreground' 
+                                        : 'bg-muted/40 border-border/50 text-muted-foreground hover:bg-muted'
                                     }`}
                                 >
                                     <ScrollText className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -251,7 +249,7 @@ export function BaterPonto() {
                                     </div>
                                 ) : (
                                     historico.filter(r => r.tipo.toLowerCase().includes(busca.toLowerCase()) || formatarDataHora(r.registrado_em).includes(busca)).slice(0, 5).map((reg) => (
-                                        <div key={reg.id} className="flex items-center justify-between p-4 sm:p-5 bg-slate-50/50 border border-slate-100 rounded-2xl group hover:bg-white hover:border-blue-100 hover:shadow-md transition-all">
+                                        <div key={reg.id} className="flex items-center justify-between p-4 sm:p-5 bg-muted/10 border border-hidden rounded-2xl group hover:bg-card hover:border-border/50 transition-all">
                                             <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                                                 <div className={`p-2 sm:p-3 rounded-2xl shrink-0 ${reg.tipo === 'entrada' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
                                                     <Fingerprint className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -261,8 +259,8 @@ export function BaterPonto() {
                                                     <p className="text-sm sm:text-base font-black text-slate-800 truncate">{formatarDataHora(reg.registrado_em).split(' às ')[1]}</p>
                                                 </div>
                                             </div>
-                                            <div className="hidden xs:block px-2 sm:px-3 py-1 sm:py-1.5 bg-white border border-slate-100 rounded-lg shadow-sm shrink-0 ml-2">
-                                                <span className="text-[8px] sm:text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Rede</span>
+                                            <div className="hidden xs:block px-2 sm:px-3 py-1 sm:py-1.5 bg-background border border-border/50 rounded-2xl shrink-0 ml-2">
+                                                <span className="text-[8px] sm:text-[9px] font-black text-muted-foreground/30 uppercase tracking-widest leading-none">Rede</span>
                                             </div>
                                         </div>
                                     ))

@@ -45,6 +45,16 @@ export function usarConfiguracoes() {
         }
     };
 
+    const renomearCargo = async (antigo: string, novo: string) => {
+        try {
+            await api.patch(`/api/configuracoes/roles/${antigo}/renomear`, { novo });
+            await buscarConfiguracoes();
+            return { sucesso: true };
+        } catch (e: any) {
+            return { sucesso: false, erro: e.response?.data?.erro || 'Erro ao renomear cargo' };
+        }
+    };
+
     useEffect(() => {
         buscarConfiguracoes();
     }, [buscarConfiguracoes]);
@@ -54,6 +64,7 @@ export function usarConfiguracoes() {
         carregando,
         erro,
         recarregar: buscarConfiguracoes,
-        atualizarConfiguracao
+        atualizarConfiguracao,
+        renomearCargo
     };
 }

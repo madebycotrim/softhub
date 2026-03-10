@@ -125,7 +125,7 @@ export function PerfilMembro({ membroId }: { membroId: string }) {
                     {ehODono && (
                         <button
                             aria-label="Alterar capa do perfil"
-                            className="absolute top-4 right-4 p-2 bg-background/50 hover:bg-background/80 rounded-full text-foreground backdrop-blur-sm transition-colors"
+                            className="absolute top-4 right-4 p-2 bg-background/50 hover:bg-background/80 rounded-2xl text-foreground backdrop-blur-sm transition-colors"
                         >
                             <Camera className="w-5 h-5" />
                         </button>
@@ -142,7 +142,7 @@ export function PerfilMembro({ membroId }: { membroId: string }) {
                                 <button
                                     onClick={() => setEditando(true)}
                                     aria-label="Alterar foto de perfil"
-                                    className="absolute bottom-2 right-0 p-1.5 bg-primary hover:bg-primary/90 rounded-full text-primary-foreground transition-colors border-2 border-background"
+                                    className="absolute bottom-2 right-0 p-1.5 bg-primary hover:bg-primary/90 rounded-2xl text-primary-foreground transition-colors border-2 border-background"
                                 >
                                     <Camera className="w-4 h-4" />
                                 </button>
@@ -183,7 +183,7 @@ export function PerfilMembro({ membroId }: { membroId: string }) {
                     {ehODono && contaAtiva && (
                         <div className="pt-8 border-t border-border">
                             <div className="flex items-center gap-3 mb-4">
-                                <div className="p-2 bg-primary/20 rounded-lg">
+                                <div className="p-2 bg-primary/20 rounded-2xl">
                                     <KeyRound className="w-5 h-5 text-primary" />
                                 </div>
                                 <h2 className="text-lg font-bold text-card-foreground">

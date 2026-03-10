@@ -753,8 +753,10 @@ export default function GerenciarMembros() {
 
     const { configuracoes } = usarConfiguracoes();
     const rolesDisponiveis = useMemo(() => {
-        if (!configuracoes?.permissoes_roles) return ['MEMBRO', 'SUBLIDER', 'LIDER', 'GESTOR', 'COORDENADOR', 'ADMIN'];
-        return Object.keys(configuracoes.permissoes_roles);
+        const baseRoles = configuracoes?.permissoes_roles 
+            ? Object.keys(configuracoes.permissoes_roles) 
+            : ['MEMBRO', 'SUBLIDER', 'LIDER', 'GESTOR', 'COORDENADOR', 'ADMIN'];
+        return baseRoles.filter(role => role !== 'ADMIN');
     }, [configuracoes]);
 
     const [busca, setBusca] = useState('');

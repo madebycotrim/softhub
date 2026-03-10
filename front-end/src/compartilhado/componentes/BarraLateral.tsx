@@ -37,6 +37,7 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
 
     const podeVerRelatorios = usarPermissaoAcesso('relatorios:visualizar');
     const podeVerLogs = usarPermissaoAcesso('logs:visualizar');
+    const podeVerMeusLogs = usarPermissaoAcesso('logs:visualizar_proprios');
     const podeVerEquipes = usarPermissaoAcesso('equipes:visualizar');
     const podeVerConfiguracoes = usarPermissaoAcesso('configuracoes:visualizar');
 
@@ -69,7 +70,7 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
                 { label: 'Equipes', path: '/app/admin/equipes', icon: LayoutGrid, visivel: podeVerEquipes },
                 { label: 'Relatórios', path: '/app/admin/relatorios', icon: FileText, visivel: podeVerRelatorios },
                 { label: 'Configurações', path: '/app/admin/configuracoes', icon: Settings, visivel: podeVerConfiguracoes },
-                { label: 'Painel de Logs', path: '/app/admin/logs', icon: Database, visivel: podeVerLogs },
+                { label: podeVerLogs ? 'Painel de Logs' : 'Meus Logs', path: '/app/admin/logs', icon: Database, visivel: podeVerLogs || podeVerMeusLogs },
             ],
         },
     ];
@@ -81,9 +82,9 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
             links: g.links.filter(l => l.visivel)
         }))
         .filter(g => {
-            // Regra especial: O grupo 'Gestão' só aparece se o usuário for ADMIN ou tiver 'configuracoes:visualizar'
+            // Regra especial: O grupo 'Gestão' aparece se houver links visíveis ou for ADMIN
             if (g.label === 'Gestão') {
-                return (usuario?.role === 'ADMIN') || podeVerConfiguracoes;
+                return (usuario?.role === 'ADMIN') || g.links.length > 0;
             }
             return g.links.length > 0;
         });
@@ -109,7 +110,7 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
                     <span className="absolute inset-0 rounded-2xl bg-primary/[0.12] border border-primary/20" />
                 )}
                 {ativo && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full shadow-[0_0_10px_rgba(59,130,246,0.7)]" />
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full" />
                 )}
                 <Icon
                     size={17}
@@ -133,8 +134,7 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
 
             {/* Fundo */}
             <div className="absolute inset-0 bg-sidebar" />
-            <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-sidebar-border to-transparent" />
-            <div className="absolute top-0 inset-x-0 h-48 bg-gradient-to-b from-sidebar-primary/[0.03] to-transparent pointer-events-none" />
+            <div className="absolute right-0 inset-y-0 w-px bg-sidebar-border/30" />
 
             {/* ── Logo ── */}
             <div className="h-16 flex items-center px-4 shrink-0 relative z-10">
@@ -195,7 +195,7 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
                             aoAbrirScanner?.();
                             aoNavegar?.();
                         }}
-                        className="p-1.5 rounded-xl text-sidebar-foreground/30 hover:text-primary hover:bg-primary/10 transition-all duration-300"
+                        className="p-1.5 rounded-2xl text-sidebar-foreground/30 hover:text-primary hover:bg-primary/10 transition-all duration-300"
                         title="Conectar via QR Code"
                     >
                         <QrCode size={14} />
@@ -209,7 +209,7 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
                     </span>
                     <button
                         onClick={() => setModalNotificacoes(true)}
-                        className="relative p-1.5 rounded-xl text-sidebar-foreground/30 hover:text-primary hover:bg-primary/10 transition-all duration-300 group/notif"
+                        className="relative p-1.5 rounded-2xl text-sidebar-foreground/30 hover:text-primary hover:bg-primary/10 transition-all duration-300 group/notif"
                         title="Ver notificações"
                     >
                         <Bell size={14} className={totalNaoLidas > 0 ? "animate-pulse text-primary" : ""} />
@@ -231,7 +231,7 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
                             setTema(tema === 'dark' ? 'light' : 'dark');
                             aoNavegar?.();
                         }}
-                        className="p-1.5 rounded-xl text-sidebar-foreground/30 hover:text-primary hover:bg-primary/10 transition-all duration-300 group/theme"
+                        className="p-1.5 rounded-2xl text-sidebar-foreground/30 hover:text-primary hover:bg-primary/10 transition-all duration-300 group/theme"
                         title={tema === 'dark' ? "Mudar para modo claro" : "Mudar para modo escuro"}
                     >
                         {tema === 'dark' ? (
@@ -253,7 +253,7 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
                             {/* Avatar */}
                             <div className="relative shrink-0 group">
                                 <Avatar nome={usuario.nome} fotoPerfil={usuario.foto_perfil || null} tamanho="md" />
-                                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-sidebar shadow-[0_0_6px_rgba(34,197,94,0.6)]" />
+                                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-sidebar" />
                             </div>
 
                             {/* Texto */}
@@ -273,7 +273,7 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
                                     aoNavegar?.();
                                 }}
                                 title="Sair"
-                                className="shrink-0 p-1.5 rounded-xl text-sidebar-foreground/20 hover:text-red-400 hover:bg-red-400/10 transition-all duration-200 group/logout"
+                                className="shrink-0 p-1.5 rounded-2xl text-sidebar-foreground/20 hover:text-red-400 hover:bg-red-400/10 transition-all duration-200 group/logout"
                             >
                                 <LogOut size={14} className="transition-transform duration-200 group-hover/logout:translate-x-0.5" />
                             </button>
@@ -328,7 +328,7 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
                                     </div>
                                     <button 
                                         onClick={() => marcarComoLida(n.id)}
-                                        className="shrink-0 p-1.5 rounded-xl text-muted-foreground/20 hover:text-primary hover:bg-primary/5 transition-all opacity-0 group-hover:opacity-100"
+                                        className="shrink-0 p-1.5 rounded-2xl text-muted-foreground/20 hover:text-primary hover:bg-primary/5 transition-all opacity-0 group-hover:opacity-100"
                                         title="Marcar como lida"
                                     >
                                         <CheckCircle2 size={16} />

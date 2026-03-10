@@ -61,7 +61,6 @@ export function CabecalhoFuncionalidade({
             {/* Slot para botões ou ações à direita */}
             {children && <div className="relative z-10 w-full lg:w-auto">{children}</div>}
 
-            <div className={`absolute top-0 right-0 w-64 h-full bg-gradient-to-l ${estilo.gradiente} to-transparent pointer-events-none`} />
         </div>
     );
 }
