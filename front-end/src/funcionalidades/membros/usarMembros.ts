@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { api } from '../../compartilhado/servicos/api';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -77,119 +77,96 @@ export function usarMembros() {
     const [carregando, setCarregando] = useState(true);
     const [erro, setErro] = useState<string | null>(null);
 
-    // Ref para cancelar requests em andamento ao desmontar
-    const abortControllerRef = useRef<AbortController | null>(null);
-
-    // ── Carregar ──────────────────────────────────────────────────────────────
-
-    const carregar = useCallback(async () => {
-        // Cancela request anterior se ainda estiver em andamento
-        abortControllerRef.current?.abort();
-        const controller = new AbortController();
-        abortControllerRef.current = controller;
-
-        setCarregando(true);
-        setErro(null);
+    /** 
+     * Carrega a lista completa de membros ativos.
+     * @param silencioso Se true, não altera o estado de carregando/erro inicial.
+     */
+    const carregar = useCallback(async (silencioso = false) => {
+        if (!silencioso) {
+            setCarregando(true);
+            setErro(null);
+        }
 
         try {
-            const res = await api.get('/api/usuarios', {
-                signal: controller.signal,
-            });
-
+            const res = await api.get('/api/usuarios');
             const lista = extrairLista(res.data).map(normalizarMembro);
             setMembros(lista);
-        } catch (e: unknown) {
-            // Ignora erro de cancelamento (componente desmontado)
-            if (
-                e instanceof Error &&
-                (e.name === 'CanceledError' || e.name === 'AbortError')
-            ) return;
-
-            const axiosError = e as { response?: { data?: { erro?: string } } };
-            setErro(
-                axiosError.response?.data?.erro ??
-                'Não foi possível carregar o diretório de membros.'
-            );
-        } finally {
-            // Só atualiza o estado se este controller ainda for o ativo
-            if (abortControllerRef.current === controller) {
-                setCarregando(false);
+            setErro(null);
+        } catch (e: any) {
+            console.error('[usarMembros] Erro ao carregar diretório:', e);
+            if (!silencioso) {
+                setErro(e.response?.data?.erro || 'Não foi possível carregar o diretório de membros.');
             }
+        } finally {
+            if (!silencioso) setCarregando(false);
         }
     }, []);
 
-    // ── Adicionar ─────────────────────────────────────────────────────────────
+    useEffect(() => {
+        carregar();
+    }, [carregar]);
 
+    /** 
+     * Adiciona um novo membro ao sistema.
+     * @param dados E-mail, cargo e funções opcionais.
+     */
     const adicionarMembro = useCallback(async (
         dados: { email: string; role: string; funcoes?: string[] }
     ): Promise<ResultadoOperacao> => {
+        setErro(null);
         try {
             const res = await api.post('/api/usuarios', dados);
-
-            // Suporta resposta com `{ usuario }` ou o objeto diretamente
             const payload = res.data?.usuario ?? res.data;
             const novoMembro = payload?.id ? normalizarMembro(payload) : null;
 
             if (novoMembro) {
                 setMembros(prev => [...prev, novoMembro]);
             } else {
-                // Fallback: refetch completo se a API não devolveu o objeto criado
-                await carregar();
+                await carregar(true);
             }
 
             return { sucesso: true };
-        } catch (e: unknown) {
-            const axiosError = e as { response?: { data?: { erro?: string } } };
-            return {
-                sucesso: false,
-                erro: axiosError.response?.data?.erro ?? 'Erro ao cadastrar membro.',
-            };
+        } catch (e: any) {
+            const msg = e.response?.data?.erro || 'Erro ao cadastrar membro.';
+            setErro(msg);
+            return { sucesso: false, erro: msg };
         }
     }, [carregar]);
 
-    // ── Deletar (Soft Delete) ─────────────────────────────────────────────────
-
+    /** 
+     * Desativa um membro (soft delete) com rollback otimista.
+     * @param id UUID do membro.
+     */
     const deletarMembro = useCallback(async (id: string): Promise<ResultadoOperacao> => {
+        const backupMembros = [...membros];
+        setErro(null);
+
+        // 1. Optimistic Update
+        setMembros(prev => prev.filter(m => m.id !== id));
+
         try {
             await api.patch(`/api/usuarios/${id}/status`, { ativo: false });
-            setMembros(prev => prev.filter(m => m.id !== id));
+            await carregar(true); // Confirma estado real
             return { sucesso: true };
-        } catch (e: unknown) {
-            const axiosError = e as { response?: { data?: { erro?: string } } };
-            return {
-                sucesso: false,
-                erro: axiosError.response?.data?.erro ?? 'Erro ao remover membro.',
-            };
+        } catch (e: any) {
+            // 2. Rollback
+            console.error('[usarMembros] Erro ao remover membro, revertendo:', e);
+            setMembros(backupMembros);
+            const msg = e.response?.data?.erro || 'Erro ao remover membro.';
+            setErro(msg);
+            return { sucesso: false, erro: msg };
         }
-    }, []);
-
-    // ── Atualizar localmente (Optimistic Update) ──────────────────────────────
+    }, [membros, carregar]);
 
     /**
      * Atualiza um membro no estado local sem fazer request à API.
-     * Use para optimistic updates: aplique antes do request e reverta em caso de erro.
-     *
-     * @example
-     * atualizarMembro({ ...membro, role: 'ADMIN' }); // aplica
-     * try { await api.patch(...) } catch { atualizarMembro(membro); } // reverte
+     * Use para optimistic updates externos.
      */
     const atualizarMembro = useCallback((membroAtualizado: Membro) => {
         setMembros(prev =>
             prev.map(m => m.id === membroAtualizado.id ? membroAtualizado : m)
         );
     }, []);
-
-    // ── Efeitos ───────────────────────────────────────────────────────────────
-
-    useEffect(() => {
-        carregar();
-
-        return () => {
-            abortControllerRef.current?.abort();
-        };
-    }, [carregar]);
-
-    // ── Retorno ───────────────────────────────────────────────────────────────
 
     return {
         membros,

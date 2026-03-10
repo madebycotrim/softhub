@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { usarChecklist } from './usarChecklist';
 import { usarPermissaoAcesso } from '../../compartilhado/hooks/usarPermissao';
-import { Plus, Trash2, CheckSquare, Square, Loader2 } from 'lucide-react';
+import { Plus, Trash2, CheckSquare, Square } from 'lucide-react';
+import { Carregando } from '../../compartilhado/componentes/Carregando';
 
 interface SecaoChecklistProps {
     tarefaId: string;
@@ -85,9 +86,9 @@ export function SecaoChecklist({ tarefaId }: SecaoChecklistProps) {
                     <button
                         type="submit"
                         disabled={!novoTexto.trim() || enviando}
-                        className="absolute right-2 top-1.5 p-1 text-primary hover:text-primary/80 disabled:opacity-0 transition-all"
+                        className="absolute right-2 top-1.5 p-1 text-primary hover:text-primary/80 disabled:opacity-0 transition-all font-sans"
                     >
-                        {enviando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                        {enviando ? <Carregando /> : <Plus className="w-4 h-4" />}
                     </button>
                 </form>
             )}

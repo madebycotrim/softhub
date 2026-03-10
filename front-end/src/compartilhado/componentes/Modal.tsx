@@ -92,7 +92,7 @@ export function Modal({ aberto, aoFechar, titulo, children, largura = 'md' }: Mo
                 </div>
 
                 {/* Conteúdo com scroll refinado */}
-                <div className="flex-1 overflow-y-auto overflow-x-hidden px-8 py-6 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+                <div className="flex-1 overflow-y-auto overflow-x-hidden px-8 py-6 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent flex flex-col">
                     {children}
                 </div>
             </div>

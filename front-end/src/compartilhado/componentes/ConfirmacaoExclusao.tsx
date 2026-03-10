@@ -44,28 +44,25 @@ export function ConfirmacaoExclusao({
                 </div>
             )}
 
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-100/50 mt-6">
                 <button
                     type="button"
                     onClick={aoFechar}
                     disabled={carregando}
-                    className="flex-1 px-6 py-4 bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-2xl text-xs font-black uppercase tracking-widest transition-all"
+                    className="w-full sm:flex-1 h-12 bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
                 >
-                    Cancelar
+                    CANCELAR
                 </button>
                 <button
                     type="button"
                     onClick={aoConfirmar}
                     disabled={carregando}
-                    className="flex-[2] px-6 py-4 bg-rose-600 text-white hover:bg-black rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-rose-100 disabled:opacity-50 active:scale-95 flex items-center justify-center gap-2"
+                    className="w-full sm:flex-[2] h-12 bg-rose-600 text-white hover:bg-black rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-rose-100 disabled:opacity-50 active:scale-95 flex items-center justify-center gap-2"
                 >
                     {carregando ? (
-                        <>
-                            <Carregando tamanho="sm" className="mr-2 border-white" />
-                            Processando...
-                        </>
+                        <Carregando />
                     ) : (
-                        textoBotao
+                        textoBotao.toUpperCase()
                     )}
                 </button>
             </div>

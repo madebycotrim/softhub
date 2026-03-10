@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Modal } from '../../compartilhado/componentes/Modal';
 import { Fingerprint, Calendar, Info, AlertCircle } from 'lucide-react';
+import { Carregando } from '../../compartilhado/componentes/Carregando';
 
 const esquemaJustificativa = z.object({
     data: z.string().min(1, 'A data é obrigatória.'),
@@ -94,20 +95,20 @@ export function FormularioJustificativa({ aberto, aoFechar, aoSalvar }: Formular
                     </div>
                 </div>
 
-                <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
+                <div className="flex flex-col-reverse sm:flex-row gap-3 pt-6 mt-auto border-t border-slate-100">
                     <button
                         type="button"
                         onClick={() => aoFechar(false)}
-                        className="flex-1 px-6 py-4 bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-2xl text-xs font-black uppercase tracking-widest transition-all"
+                        className="w-full sm:flex-1 h-12 bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
                     >
-                        Cancelar
+                        CANCELAR
                     </button>
                     <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="flex-[2] px-6 py-4 bg-blue-600 text-white hover:bg-black rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-blue-100 disabled:opacity-50 disabled:grayscale active:scale-95 flex items-center justify-center gap-2"
+                        className="w-full sm:flex-[2] h-12 bg-blue-600 text-white hover:bg-black rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-blue-100 disabled:opacity-50 disabled:grayscale active:scale-95 flex items-center justify-center gap-2"
                     >
-                        {isSubmitting ? 'Enviando...' : (
+                        {isSubmitting ? <Carregando /> : (
                             <>
                                 <Fingerprint className="w-4 h-4" />
                                 Enviar Justificativa

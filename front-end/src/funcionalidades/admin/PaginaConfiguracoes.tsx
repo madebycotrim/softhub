@@ -123,6 +123,7 @@ export function PaginaConfiguracoes() {
 
     const podeEditar = usarPermissaoAcesso('configuracoes:editar');
 
+    const [buscaPermissao, setBuscaPermissao] = useState('');
     const [novoCargo, setNovoCargo] = useState('');
     const [salvando, setSalvando] = useState<string | null>(null);
 
@@ -134,6 +135,18 @@ export function PaginaConfiguracoes() {
 
     /** Roles exibidos na matriz (ADMIN oculto — acesso total por padrão) */
     const rolesMatriz = useMemo(() => roles.filter(r => r !== 'ADMIN'), [roles]);
+
+    /** Filtra a matriz de permissões */
+    const permissoesFiltradas = useMemo(() => {
+        if (!buscaPermissao) return PERMISSOES_SISTEMA;
+        return PERMISSOES_SISTEMA.map(modulo => ({
+            ...modulo,
+            permissoes: modulo.permissoes.filter(p => 
+                p.label.toLowerCase().includes(buscaPermissao.toLowerCase()) ||
+                modulo.label.toLowerCase().includes(buscaPermissao.toLowerCase())
+            )
+        })).filter(modulo => modulo.permissoes.length > 0);
+    }, [buscaPermissao]);
 
     if (carregando) return <Carregando />;
     if (erro) return <div className="p-10 text-center text-red-500 font-bold uppercase tracking-widest">{erro}</div>;
@@ -180,7 +193,7 @@ export function PaginaConfiguracoes() {
     };
 
     return (
-        <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-10">
             <CabecalhoFuncionalidade
                 titulo="Configurações"
                 subtitulo="Governança, Permissões e Hierarquia do SoftHub"
@@ -190,57 +203,61 @@ export function PaginaConfiguracoes() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 {/* Coluna Lateral: Gestão de Cargos */}
                 <div className="lg:col-span-3 space-y-6">
-                    <div className="bg-card/40 backdrop-blur-md border border-border/40 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all space-y-5">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2.5 bg-indigo-500/10 rounded-xl text-indigo-500">
-                                <ShieldCheck size={20} />
+                    <div className="bg-white/70 backdrop-blur-xl border border-slate-200/60 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all space-y-6">
+                        <div className="flex items-center gap-3 px-1">
+                            <div className="p-2.5 bg-indigo-500/10 rounded-xl text-indigo-600 shadow-sm">
+                                <ShieldCheck size={18} />
                             </div>
                             <div className="flex flex-col">
-                                <h3 className="text-[13px] font-black uppercase tracking-wider text-foreground">Cargos</h3>
-                                <span className="text-[9px] text-muted-foreground/50 font-black uppercase tracking-[0.1em]">Configurar Hierarquia</span>
+                                <h3 className="text-xs font-black uppercase tracking-[0.1em] text-slate-800">Cargos</h3>
+                                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.05em] leading-tight">Configurar Hierarquia</span>
                             </div>
                         </div>
 
                         {/* Formulário para adicionar cargo — apenas para quem pode editar */}
                         {podeEditar && (
-                            <form onSubmit={handleAddCargo} className="flex gap-2">
+                            <form onSubmit={handleAddCargo} className="flex gap-2 relative group">
                                 <input
                                     required
                                     value={novoCargo}
                                     onChange={e => setNovoCargo(e.target.value)}
                                     placeholder="EX: LIDER_TECH"
-                                    className="flex-1 min-w-0 bg-muted/20 border border-border/40 rounded-xl px-3 py-2.5 text-[11px] font-bold outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all uppercase placeholder:text-muted-foreground/30"
+                                    className="flex-1 min-w-0 bg-slate-50/50 border border-slate-100 rounded-2xl px-4 py-3 text-[12px] font-bold outline-none focus:bg-white focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/5 transition-all uppercase placeholder:text-slate-300"
                                 />
                                 <button
                                     type="submit"
-                                    className="p-2.5 bg-indigo-500 text-white rounded-xl shadow-lg shadow-indigo-500/20 active:scale-95 transition-all hover:bg-indigo-600 shrink-0"
+                                    className="p-3 bg-indigo-500 text-white rounded-2xl shadow-lg shadow-indigo-500/30 active:scale-95 transition-all hover:bg-indigo-600 shrink-0"
                                 >
-                                    <Plus size={16} strokeWidth={3} />
+                                    <Plus size={18} strokeWidth={3} />
                                 </button>
                             </form>
                         )}
 
                         {/* Lista de cargos existentes */}
-                        <div className="space-y-1.5 pt-2">
-                            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/30 px-1">Cargos</label>
-                            <div className="space-y-1 max-h-[400px] overflow-y-auto pr-1">
+                        <div className="space-y-4 pt-2">
+                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400/60 px-2 block">Cargos</label>
+                            <div className="space-y-2 max-h-[440px] overflow-y-auto pr-1 custom-scrollbar">
                                 {roles.filter(r => r !== 'TODOS').map(role => (
                                     <div
                                         key={role}
-                                        className="flex items-center justify-between p-3 rounded-xl border border-border/30 hover:bg-muted/10 transition-colors group"
+                                        className={`group relative flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 ${
+                                            role === 'ADMIN' 
+                                            ? 'bg-amber-50/50 border-amber-200/50 hover:bg-amber-100/50' 
+                                            : 'bg-white border-slate-100 hover:border-slate-200 hover:shadow-sm'
+                                        }`}
                                     >
-                                        <div className="flex items-center gap-2.5">
-                                            <div className={`w-6 h-6 rounded-md flex items-center justify-center ${
-                                                role === 'ADMIN' ? 'bg-amber-500/10 text-amber-600'
-                                                : 'bg-muted text-muted-foreground/60'
+                                        <div className="flex items-center gap-3.5">
+                                            <div className={`p-2 rounded-xl flex items-center justify-center transition-colors ${
+                                                role === 'ADMIN' ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20'
+                                                : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200 group-hover:text-slate-600'
                                             }`}>
-                                                {role === 'ADMIN' ? <Crown size={12} />
-                                                : <ShieldCheck size={12} />}
+                                                {role === 'ADMIN' ? <Crown size={14} />
+                                                : <UserCircle size={14} />}
                                             </div>
                                             <div className="flex flex-col">
-                                                <span className={`text-[12px] font-medium tracking-tight ${
-                                                    role === 'ADMIN' ? 'text-amber-600'
-                                                    : 'text-foreground/80'
+                                                <span className={`text-[12px] font-black tracking-widest uppercase ${
+                                                    role === 'ADMIN' ? 'text-amber-700'
+                                                    : 'text-slate-700'
                                                 }`}>
                                                     {role}
                                                 </span>
@@ -249,9 +266,10 @@ export function PaginaConfiguracoes() {
                                         {!CARGOS_FIXOS.includes(role) && podeEditar && (
                                             <button
                                                 onClick={() => handleRemoverCargo(role)}
-                                                className="p-1.5 text-muted-foreground/20 hover:text-red-500 hover:bg-red-500/5 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                                                className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50/50 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                                                title="Remover cargo"
                                             >
-                                                <Trash2 size={13} />
+                                                <Trash2 size={14} />
                                             </button>
                                         )}
                                     </div>
@@ -260,51 +278,71 @@ export function PaginaConfiguracoes() {
                         </div>
                     </div>
 
-                    <div className="p-6 bg-primary/5 rounded-2xl border border-primary/10 space-y-3">
-                        <div className="flex items-center gap-2 text-primary">
-                            <Info size={14} />
-                            <span className="text-[10px] font-black uppercase tracking-widest">Dica Admin</span>
+                    <div className="p-6 bg-blue-50/50 backdrop-blur-sm rounded-2xl border border-blue-100/50 space-y-4 relative overflow-hidden group">
+                        <div className="absolute -right-6 -bottom-6 text-blue-100/30 group-hover:rotate-12 transition-transform duration-700">
+                            <Info size={80} />
                         </div>
-                        <p className="text-[10px] text-muted-foreground font-medium leading-relaxed">
-                            Ative uma permissão na coluna <span className="text-emerald-600 font-bold">TODOS</span> para concedê-la a qualquer membro, independente do cargo.
-                            Alterações afetam todos em tempo real.
-                        </p>
+                        <div className="relative z-10">
+                            <div className="flex items-center gap-2 text-blue-600 mb-2.5">
+                                <div className="p-1.5 bg-blue-100 rounded-lg">
+                                    <Info size={14} />
+                                </div>
+                                <span className="text-[10px] font-black uppercase tracking-widest">Dica Admin</span>
+                            </div>
+                            <p className="text-[10px] text-blue-700/70 font-bold leading-relaxed">
+                                Ative uma permissão na coluna <span className="text-emerald-600 font-black">TODOS</span> para concedê-la a qualquer membro, independente do cargo. <br /><br />
+                                Alterações afetam todos em tempo real.
+                            </p>
+                        </div>
                     </div>
                 </div>
 
                 {/* Coluna Principal: Matriz de Permissões Completa */}
-                <div className="lg:col-span-9 space-y-6">
-                    <section className="bg-card/40 backdrop-blur-md border border-border/40 rounded-2xl shadow-sm flex flex-col overflow-hidden">
-                        <div className="p-8 border-b border-border/20 flex items-center justify-between bg-muted/5">
+                <div className="lg:col-span-9 space-y-6 overflow-hidden">
+                    <section className="bg-white/80 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-sm flex flex-col overflow-hidden transition-all hover:bg-white">
+                        <div className="px-6 py-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-gradient-to-r from-slate-50/50 to-white/50">
                             <div className="flex items-center gap-4">
-                                <div className="p-3 bg-primary/10 rounded-2xl text-primary">
+                                <div className="p-3.5 bg-blue-600 text-white rounded-2xl shadow-lg shadow-blue-500/20">
                                     <Lock size={20} />
                                 </div>
-                                <div>
-                                    <h2 className="text-[14px] font-black uppercase tracking-widest text-foreground">Matriz de Controle de Acesso</h2>
-                                    <p className="text-[10px] text-muted-foreground/40 font-medium mt-1">
+                                <div className="space-y-0.5">
+                                    <h2 className="text-base font-black uppercase tracking-tight text-slate-900 leading-none">Matriz de Controle de Acesso</h2>
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
                                         {PERMISSOES_SISTEMA.reduce((acc, m) => acc + m.permissoes.length, 0)} permissões em {PERMISSOES_SISTEMA.length} módulos
                                     </p>
                                 </div>
                             </div>
+
+                            <div className="relative group/search max-w-xs w-full">
+                                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within/search:text-blue-500 transition-colors">
+                                    <Plus className="rotate-45" size={14} strokeWidth={3} />
+                                </div>
+                                <input 
+                                    type="text" 
+                                    placeholder="Pesquisar permissões..."
+                                    value={buscaPermissao}
+                                    onChange={(e) => setBuscaPermissao(e.target.value)}
+                                    className="w-full h-10 bg-slate-100/50 border border-transparent rounded-xl pl-10 pr-4 text-[11px] font-bold outline-none focus:bg-white focus:border-blue-400 transition-all placeholder:text-slate-400"
+                                />
+                            </div>
                         </div>
 
-                        <div className="overflow-x-auto">
+                        <div className="overflow-x-auto custom-scrollbar">
                             <table className="w-full border-collapse">
                                 <thead>
-                                    <tr className="border-b border-border/60 bg-muted/30">
-                                        <th className="sticky left-0 bg-muted/30 backdrop-blur-sm z-20 px-8 py-3 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 min-w-[250px]">
+                                    <tr className="border-b border-slate-100 bg-slate-50/50">
+                                        <th className="sticky left-0 bg-slate-50/90 backdrop-blur-xl z-20 px-6 py-4 text-left text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 min-w-[260px] border-r border-slate-100/50">
                                             Funcionalidade
                                         </th>
                                         {rolesMatriz.map(role => (
-                                            <th key={role} className={`px-4 py-3 text-center text-[9px] font-black uppercase tracking-widest min-w-[90px] ${
+                                            <th key={role} className={`px-4 py-4 text-center text-[10px] font-black uppercase tracking-[0.1em] min-w-[100px] border-l border-slate-100/50 ${
                                                 role === 'TODOS'
-                                                    ? 'text-emerald-600 bg-emerald-500/5'
-                                                    : 'text-muted-foreground/50'
+                                                    ? 'text-emerald-600 bg-emerald-500/[0.04]'
+                                                    : 'text-slate-400'
                                             }`}>
                                                 {role === 'TODOS' ? (
-                                                    <span className="flex flex-col items-center gap-0.5">
-                                                        <Globe size={11} className="text-emerald-500" />
+                                                    <span className="flex flex-col items-center gap-1.5 px-2">
+                                                        <Globe size={14} className="text-emerald-500" />
                                                         {role}
                                                     </span>
                                                 ) : role}
@@ -313,19 +351,21 @@ export function PaginaConfiguracoes() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {PERMISSOES_SISTEMA.map((grupo) => {
+                                    {permissoesFiltradas.map((grupo) => {
                                         const IconeModulo = grupo.icone;
                                         return (
                                             <React.Fragment key={grupo.modulo}>
                                                 {/* Separador de módulo */}
-                                                <tr className="bg-muted/10">
+                                                <tr className="bg-slate-50/20">
                                                     <td
                                                         colSpan={1 + rolesMatriz.length}
-                                                        className="px-8 py-2.5 border-y border-border/20"
+                                                        className="px-6 py-3 border-y border-slate-100"
                                                     >
-                                                        <div className="flex items-center gap-2.5">
-                                                            <IconeModulo size={13} className="text-muted-foreground/50" />
-                                                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="p-1 px-2.5 bg-white border border-slate-100 rounded-lg shadow-sm">
+                                                                <IconeModulo size={12} className="text-blue-500" />
+                                                            </div>
+                                                            <span className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500">
                                                                 {grupo.label}
                                                             </span>
                                                         </div>
@@ -334,22 +374,22 @@ export function PaginaConfiguracoes() {
 
                                                 {/* Linhas de permissão */}
                                                 {grupo.permissoes.map((perm) => (
-                                                    <tr key={`${grupo.modulo}-${perm.chave}`} className="border-b border-border/40 hover:bg-muted/20 transition-colors group">
-                                                        <td className="sticky left-0 bg-card/95 backdrop-blur-md z-10 px-8 py-3">
-                                                            <div className="flex items-center gap-3 pl-4">
-                                                                <div className="w-1.5 h-1.5 rounded-full bg-border/60 group-hover:bg-primary/40 transition-colors" />
-                                                                <span className="text-xs font-medium text-foreground/50 group-hover:text-foreground/80 transition-colors">{perm.label}</span>
+                                                    <tr key={`${grupo.modulo}-${perm.chave}`} className="group transition-all hover:bg-slate-50/50">
+                                                        <td className="sticky left-0 bg-white/95 backdrop-blur-md z-10 px-6 py-4 border-b border-slate-100/60 border-r border-slate-100/20 shadow-[8px_0_15px_-5px_rgba(0,0,0,0.01)] transition-colors group-hover:bg-slate-50/40">
+                                                            <div className="flex items-center gap-4 pl-4 group-hover:translate-x-1 transition-transform duration-300">
+                                                                <div className="w-1.5 h-1.5 rounded-full bg-slate-200 group-hover:bg-blue-500 group-hover:scale-125 transition-all" />
+                                                                <span className="text-xs font-bold text-slate-400 group-hover:text-slate-900 transition-colors tracking-tight">{perm.label}</span>
                                                             </div>
                                                         </td>
                                                         {rolesMatriz.map(role => {
                                                             const ativa = configuracoes?.permissoes_roles[role]?.[perm.chave] ?? false;
-                                                            const universal = configuracoes?.permissoes_roles['TODOS']?.[perm.chave] ?? false;
+                                                            const universal = (configuracoes?.permissoes_roles['TODOS'] as any)?.[perm.chave] ?? false;
                                                             const salvandoEste = salvando === `permissoes_roles.${role}.${perm.chave}`;
                                                             // Se TODOS tem a permissão, demais cargos ficam com check automático (bloqueado)
                                                             const forcadoPorTodos = role !== 'TODOS' && universal;
 
                                                             return (
-                                                                <td key={`${role}-${perm.chave}`} className={`px-4 py-3 text-center ${role === 'TODOS' ? 'bg-emerald-500/[0.03]' : ''}`}>
+                                                                <td key={`${role}-${perm.chave}`} className={`px-4 py-4 text-center border-b border-slate-100/60 border-l border-slate-100/20 ${role === 'TODOS' ? 'bg-emerald-500/[0.01]' : ''}`}>
                                                                     <div className="flex justify-center items-center">
                                                                         <button
                                                                             disabled={salvandoEste || !podeEditar || forcadoPorTodos}
@@ -359,21 +399,21 @@ export function PaginaConfiguracoes() {
                                                                                 : !podeEditar ? 'Sem permissão para editar'
                                                                                 : undefined
                                                                             }
-                                                                            className={`w-5 h-5 rounded flex items-center justify-center transition-all ${
+                                                                            className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-300 ${
                                                                                 forcadoPorTodos
-                                                                                    ? 'bg-emerald-500/20 text-emerald-600 cursor-not-allowed border border-emerald-500/30'
-                                                                                    : podeEditar ? 'cursor-pointer active:scale-95' : 'cursor-not-allowed opacity-60'
+                                                                                    ? 'bg-emerald-500/10 text-emerald-600 cursor-not-allowed border border-emerald-500/20 shadow-sm'
+                                                                                    : podeEditar ? 'cursor-pointer active:scale-90 hover:scale-105 shadow-sm' : 'cursor-not-allowed opacity-20 grayscale'
                                                                             } ${
                                                                                 !forcadoPorTodos && ativa
                                                                                     ? role === 'TODOS'
-                                                                                        ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-500/30'
-                                                                                        : 'bg-primary text-white shadow-sm'
+                                                                                        ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/40'
+                                                                                        : 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
                                                                                     : !forcadoPorTodos
-                                                                                        ? 'bg-muted/30 border border-border/60 text-transparent hover:border-primary/60'
+                                                                                        ? 'bg-slate-50/50 border border-slate-100 text-transparent hover:border-blue-300 hover:bg-white'
                                                                                         : ''
-                                                                            } ${salvandoEste ? 'animate-pulse' : ''}`}
+                                                                            } ${salvandoEste ? 'animate-pulse scale-90' : ''}`}
                                                                         >
-                                                                            {(ativa || forcadoPorTodos) && <ShieldCheck size={9} strokeWidth={3} />}
+                                                                            {(ativa || forcadoPorTodos) && <ShieldCheck size={14} strokeWidth={3} />}
                                                                         </button>
                                                                     </div>
                                                                 </td>
@@ -384,6 +424,17 @@ export function PaginaConfiguracoes() {
                                             </React.Fragment>
                                         );
                                     })}
+
+                                    {permissoesFiltradas.length === 0 && (
+                                        <tr>
+                                            <td colSpan={1 + rolesMatriz.length} className="px-10 py-20 text-center">
+                                                <div className="flex flex-col items-center gap-4 text-slate-300">
+                                                    <Lock size={40} className="opacity-20" />
+                                                    <p className="text-[11px] font-black uppercase tracking-widest">Nenhuma permissão encontrada para "{buscaPermissao}"</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
                                 </tbody>
                             </table>
                         </div>

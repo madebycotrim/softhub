@@ -84,17 +84,17 @@ export function BotaoExportarPonto() {
                         </div>
                     </div>
 
-                    <div className="pt-4 flex justify-end gap-3">
+                    <div className="pt-6 mt-auto border-t border-border flex flex-col sm:flex-row justify-end gap-3">
                         <button
                             onClick={() => setAberto(false)}
-                            className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                            className="w-full sm:w-auto h-12 px-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground hover:bg-muted transition-all rounded-2xl"
                         >
                             Cancelar
                         </button>
                         <button
                             onClick={aoConfirmarExportacao}
                             disabled={carregando}
-                            className="flex items-center gap-2 px-6 py-2 bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-primary-foreground text-sm font-bold rounded-lg transition-colors shadow-sm"
+                            className="w-full sm:w-auto flex items-center justify-center gap-2 h-12 px-8 bg-primary hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-primary-foreground text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-lg shadow-primary/20"
                         >
                             {carregando ? (
                                 <>

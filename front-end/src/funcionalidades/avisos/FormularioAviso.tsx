@@ -104,19 +104,19 @@ export function FormularioAviso({ aoSalvar }: FormularioAvisoProps) {
                 </div>
             </div>
 
-            <div className="pt-4 border-t border-border flex justify-end gap-3 mt-4">
+            <div className="pt-6 mt-auto border-t border-border flex flex-col sm:flex-row justify-end gap-3">
                 <button
                     type="button"
                     onClick={aoSalvar}
                     disabled={isSubmitting}
-                    className="px-4 py-2 rounded-2xl text-sm font-medium border border-border text-muted-foreground hover:bg-accent transition-colors disabled:opacity-50"
+                    className="w-full sm:w-auto h-12 px-6 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-border text-muted-foreground hover:bg-accent transition-colors disabled:opacity-50"
                 >
                     Cancelar
                 </button>
                 <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="px-5 py-2 rounded-2xl text-sm font-medium bg-primary hover:bg-primary/90 text-primary-foreground transition-all transform active:scale-95 disabled:opacity-70 disabled:pointer-events-none flex items-center justify-center gap-2 shadow-lg shadow-primary/20 min-w-32"
+                    className="w-full sm:w-auto h-12 px-8 rounded-2xl text-[10px] font-black uppercase tracking-widest bg-primary hover:bg-primary/90 text-primary-foreground transition-all transform active:scale-95 disabled:opacity-70 disabled:pointer-events-none flex items-center justify-center gap-2 shadow-lg shadow-primary/20 min-w-32"
                 >
                     {isSubmitting ? (
                         <>

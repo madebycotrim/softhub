@@ -37,7 +37,7 @@ export function LayoutPrincipal({ children }: LayoutPrincipalProps) {
                     
                     {/* Drawer Content */}
                     <div 
-                        className="absolute inset-y-0 left-0 w-[280px] bg-sidebar border-r border-sidebar-border shadow-2xl animate-in slide-in-from-left duration-300"
+                        className="absolute inset-y-0 left-0 w-[280px] bg-sidebar border-r border-sidebar-border shadow-xl animate-in slide-in-from-left duration-300"
                         onClick={e => e.stopPropagation()}
                     >
                         <div className="flex flex-col h-full relative">

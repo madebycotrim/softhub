@@ -247,23 +247,23 @@ function ModalConvitesEmLote({ aberto, aoFechar, aoCadastrar, recarregar }: Moda
                     />
                 </div>
 
-                <div className="flex justify-end gap-3 pt-2">
+                <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 mt-6 border-t border-border/50">
                     <button
                         type="button"
                         onClick={aoFechar}
-                        className="px-4 py-2 rounded-2xl text-sm font-bold text-muted-foreground hover:bg-muted transition-all"
+                        className="w-full sm:w-auto h-11 px-6 rounded-2xl text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:bg-muted transition-all"
                     >
-                        Cancelar
+                        CANCELAR
                     </button>
                     <button
                         type="submit"
                         disabled={enviando || !texto.trim()}
-                        className="bg-primary text-primary-foreground px-6 py-2 rounded-2xl text-sm font-bold shadow-lg shadow-primary/20 hover:opacity-90 transition-all flex items-center gap-2 disabled:opacity-50"
+                        className="w-full sm:w-auto h-11 bg-primary text-primary-foreground px-8 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                         {enviando ? (
                             <>
-                                <Loader2 className="w-5 h-5 animate-spin" />
-                                {progresso ? `Enviando (${progresso.atual}/${progresso.total})` : 'Enviando...'}
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                {progresso ? `${progresso.atual}/${progresso.total}` : 'Enviando...'}
                             </>
                         ) : (
                             <>Enviar Convites</>
@@ -398,13 +398,13 @@ const LinhaMembro = memo(({
                 <div className="flex items-center justify-center gap-1.5">
                     <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                         membro.ativo
-                            ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
+                            ? 'bg-emerald-500'
                             : 'bg-muted-foreground/20'
                     }`} />
                     <span className={`text-[9px] font-black uppercase tracking-wider hidden sm:block ${
                         membro.ativo ? 'text-emerald-500' : 'text-muted-foreground/40'
                     }`}>
-                        {membro.ativo ? 'Ativo' : 'Inativo'}
+                        {membro.ativo ? 'ATIVO' : 'INATIVO'}
                     </span>
                 </div>
             </td>
@@ -436,7 +436,7 @@ const LinhaMembro = memo(({
                                 }`}
                             >
                                 {salvando ? (
-                                    <Loader2 size={20} className="animate-spin" />
+                                    <Carregando />
                                 ) : membro.ativo ? (
                                     <Trash2 size={20} />
                                 ) : (
@@ -489,10 +489,10 @@ const BulkActions = memo(({ selecionados, onClear, onBulkUpdate, onExport, roles
     };
 
     return (
-        <div className="fixed bottom-20 sm:bottom-6 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-40 bg-card/95 backdrop-blur-xl border border-primary/30 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.5)] rounded-2xl px-4 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row items-center gap-3 sm:gap-6 animate-in slide-in-from-bottom-8 duration-500">
+        <div className="fixed bottom-20 sm:bottom-6 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-40 bg-card/95 backdrop-blur-xl border border-primary/20 shadow-xl rounded-2xl px-4 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row items-center gap-3 sm:gap-6 animate-in slide-in-from-bottom-8 duration-500">
             <div className="flex items-center justify-between w-full sm:w-auto sm:border-r sm:border-border sm:pr-6">
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-black text-xs shadow-lg shadow-primary/20">
+                    <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-black text-xs shadow shadow-primary/20">
                         {selecionados.size}
                     </div>
                     <span className="text-sm font-black text-foreground uppercase tracking-widest">Selecionados</span>
@@ -659,15 +659,15 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, rolesDisponiveis }
                     </div>
                 )}
 
-                <div className="flex justify-end gap-3 pt-4">
-                    <button type="button" onClick={aoFechar} className="px-4 py-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-colors">Cancelar</button>
+                <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 mt-6 border-t border-border/50">
+                    <button type="button" onClick={aoFechar} className="w-full sm:w-auto h-11 px-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground hover:bg-muted rounded-2xl transition-all">CANCELAR</button>
                     <button
                         type="button"
                         disabled={salvando || !usuarioEmail.trim()}
                         onClick={() => handleSubmit()}
-                        className="bg-primary text-primary-foreground px-6 py-2 rounded-2xl text-sm font-bold hover:bg-primary/90 transition-all shadow-sm disabled:opacity-50 flex items-center gap-2"
+                        className="w-full sm:w-auto h-11 bg-primary text-primary-foreground px-8 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-primary/90 transition-all shadow-sm disabled:opacity-50 flex items-center justify-center gap-2"
                     >
-                        {salvando ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Finalizar Cadastro'}
+                        {salvando ? <Carregando /> : 'Finalizar Cadastro'}
                     </button>
                 </div>
             </div>

@@ -90,7 +90,7 @@ function SeletorBuscavel({
                             left: coords.left,
                             width: coords.width,
                         }}
-                        className="bg-card border border-border rounded-2xl shadow-2xl z-[110] p-2 space-y-2 animate-in fade-in zoom-in-95 duration-200"
+                        className="bg-card border border-border rounded-2xl shadow-lg z-[110] p-2 space-y-2 animate-in fade-in zoom-in-95 duration-200"
                     >
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/40" size={12} />
@@ -215,6 +215,11 @@ function ModalAlocacao({ aberto, aoFechar, grupos, membros, aoAlocar, grupoIdPad
             largura="md"
         >
             <div className="flex flex-col gap-6">
+                {erro && (
+                    <div className="p-3 bg-rose-50 border border-rose-100 rounded-2xl text-[11px] font-bold text-rose-600 uppercase tracking-widest animate-in fade-in slide-in-from-top-2 duration-300">
+                        {erro}
+                    </div>
+                )}
                 <div className="flex flex-col gap-4">
                     <div className="flex flex-col gap-2">
                         <div className="relative group/search">
@@ -287,31 +292,27 @@ function ModalAlocacao({ aberto, aoFechar, grupos, membros, aoAlocar, grupoIdPad
                     </div>
                 </div>
 
-                <div className="pt-4 space-y-4 border-t border-slate-100">
-                    {erro && <p className="text-destructive text-[11px] font-bold bg-destructive/5 p-3.5 rounded-2xl border border-destructive/10 animate-shake">{erro}</p>}
-
-                    <div className="flex items-center gap-3">
-                        <button 
-                            type="button" 
-                            onClick={aoFechar} 
-                            className="h-12 px-6 text-xs font-black text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-all"
-                        >
-                            CANCELAR
-                        </button>
-                        <button
-                            type="button"
-                            onClick={handleAlocar}
-                            disabled={salvando || selecionados.length === 0}
-                            className="flex-1 h-12 bg-blue-600 text-white rounded-xl text-xs font-black shadow-[0_8px_20px_-6px_rgba(37,99,235,0.4)] hover:shadow-[0_12px_25px_-4px_rgba(37,99,235,0.5)] hover:bg-blue-700 hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-30 disabled:translate-y-0 disabled:shadow-none flex items-center justify-center gap-2 group px-4"
-                        >
-                            {salvando ? <Carregando /> : (
-                                <>
-                                    <span>VINCULAR {selecionados.length > 1 ? `${selecionados.length} MEMBROS` : 'MEMBRO'}</span>
-                                    <UserCheck size={18} className="group-hover:rotate-12 transition-transform" />
-                                </>
-                            )}
-                        </button>
-                    </div>
+                <div className="pt-6 mt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center gap-3">
+                    <button 
+                        type="button" 
+                        onClick={aoFechar} 
+                        className="w-full sm:w-auto px-6 h-12 text-[10px] font-black text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-all uppercase tracking-widest"
+                    >
+                        CANCELAR
+                    </button>
+                    <button
+                        type="button"
+                        onClick={handleAlocar}
+                        disabled={salvando || selecionados.length === 0}
+                        className="w-full sm:flex-1 h-12 bg-blue-600 text-white rounded-xl text-[10px] font-black shadow-sm hover:bg-blue-700 hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-30 disabled:translate-y-0 disabled:shadow-none flex items-center justify-center gap-2 group px-4 uppercase tracking-widest"
+                    >
+                        {salvando ? <Carregando /> : (
+                            <>
+                                <span>VINCULAR {selecionados.length > 1 ? `${selecionados.length} MEMBROS` : 'MEMBRO'}</span>
+                                <UserCheck size={18} className="group-hover:rotate-12 transition-transform" />
+                            </>
+                        )}
+                    </button>
                 </div>
             </div>
         </Modal>
@@ -372,14 +373,14 @@ function ModalMovimentacao({ aberto, aoFechar, membro, grupos, equipeId, aoMover
                     />
                 </div>
 
-                <div className="flex gap-3 pt-4 border-t border-slate-100">
-                    <button type="button" onClick={aoFechar} className="flex-1 h-12 text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors">
-                        Cancelar
+                <div className="flex flex-col sm:flex-row gap-3 pt-6 mt-6 border-t border-slate-100">
+                    <button type="button" onClick={aoFechar} className="w-full sm:flex-1 h-12 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-2xl transition-all">
+                        CANCELAR
                     </button>
                     <button
                         onClick={handleMover}
                         disabled={salvando || !grupoDestinoId}
-                        className="flex-[2] h-12 bg-blue-600 text-white rounded-2xl text-sm font-bold shadow-md hover:bg-blue-700 transition-all disabled:opacity-30 flex items-center justify-center gap-2 uppercase tracking-widest"
+                        className="w-full sm:flex-[2] h-12 bg-blue-600 text-white rounded-2xl text-[10px] font-black shadow-md hover:bg-blue-700 transition-all disabled:opacity-30 flex items-center justify-center gap-2 uppercase tracking-widest"
                     >
                         {salvando ? <Carregando /> : (
                             <>
@@ -584,6 +585,8 @@ function DetalheEquipe({
         try {
             await aoSalvarNomeEquipe(equipe.id, nomeTemp);
             setEditandoEquipe(false);
+        } catch {
+            setNomeTemp(equipe.nome);
         } finally {
             setSalvandoInline(false);
         }
@@ -593,7 +596,7 @@ function DetalheEquipe({
     const subLider = useMemo(() => membros.find(m => m.id === equipe.sub_lider_id), [membros, equipe.sub_lider_id]);
 
     return (
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm flex flex-col h-full overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col h-full overflow-hidden">
             <div className="shrink-0">
                 {/* Header da Equipe */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
@@ -616,8 +619,13 @@ function DetalheEquipe({
                                     className="bg-transparent border-b-2 border-slate-900 outline-none text-2xl font-bold text-slate-900 p-0 tracking-tight"
                                 />
                                 <div className="flex items-center gap-1">
-                                    <button onClick={handleSalvarEquipeInline} className="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all" title="Salvar">
-                                        <Check size={16} strokeWidth={2.5} />
+                                    <button 
+                                        onClick={handleSalvarEquipeInline} 
+                                        disabled={salvandoInline}
+                                        className="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all disabled:opacity-30" 
+                                        title="Salvar"
+                                    >
+                                        {salvandoInline ? <Carregando /> : <Check size={16} strokeWidth={2.5} />}
                                     </button>
                                 </div>
                             </div>
@@ -648,13 +656,13 @@ function DetalheEquipe({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
                 <div 
                     onClick={() => aoSelecionarLider('lider')}
-                    className={`flex items-center gap-5 p-6 rounded-2xl border transition-all cursor-pointer group/lead ${equipe.lider_id ? 'bg-slate-50/50 border-slate-100 shadow-sm hover:border-blue-200' : 'bg-white border-dashed border-slate-200 hover:bg-slate-50'}`}
+                    className={`flex items-center gap-5 p-5 rounded-2xl border transition-all cursor-pointer group/lead ${equipe.lider_id ? 'bg-slate-50/50 border-slate-100 shadow-sm hover:border-blue-200' : 'bg-white border-dashed border-slate-200 hover:bg-slate-50'}`}
                 >
                     <Avatar 
                         nome={equipe.lider_nome || '?'} 
                         fotoPerfil={lider?.foto_perfil} 
                         tamanho="md" 
-                        className={!equipe.lider_id ? 'bg-slate-100 !text-slate-400' : 'ring-4 ring-white shadow-sm'}
+                        className={!equipe.lider_id ? 'bg-slate-100 !text-slate-400' : 'ring-2 ring-white shadow-sm'}
                     />
                     <div>
                         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-1.5 leading-none">Líder</p>
@@ -666,13 +674,13 @@ function DetalheEquipe({
 
                 <div 
                     onClick={() => aoSelecionarLider('sub_lider')}
-                    className={`flex items-center gap-5 p-6 rounded-2xl border transition-all cursor-pointer group/lead ${equipe.sub_lider_id ? 'bg-slate-50/50 border-slate-100 shadow-sm hover:border-blue-200' : 'bg-white border-dashed border-slate-200 hover:bg-slate-50'}`}
+                    className={`flex items-center gap-5 p-5 rounded-2xl border transition-all cursor-pointer group/lead ${equipe.sub_lider_id ? 'bg-slate-50/50 border-slate-100 shadow-sm hover:border-blue-200' : 'bg-white border-dashed border-slate-200 hover:bg-slate-50'}`}
                 >
                     <Avatar 
                         nome={equipe.sub_lider_nome || '?'} 
                         fotoPerfil={subLider?.foto_perfil} 
                         tamanho="md" 
-                        className={!equipe.sub_lider_id ? 'bg-slate-100 !text-slate-400' : 'ring-4 ring-white shadow-sm'}
+                        className={!equipe.sub_lider_id ? 'bg-slate-100 !text-slate-400' : 'ring-2 ring-white shadow-sm'}
                     />
                     <div>
                         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-1.5 leading-none">Sub-Líder</p>
@@ -711,7 +719,7 @@ function DetalheEquipe({
                         const inicial = devePularPrimeira ? partes[1].charAt(0).toUpperCase() : partes[0].charAt(0).toUpperCase();
 
                         return (
-                            <div key={g.id} className="bg-slate-50/50 border border-slate-200 rounded-2xl p-6 flex flex-col h-full min-h-[400px] shadow-sm hover:shadow-md transition-all overflow-hidden">
+                            <div key={g.id} className="bg-slate-50/50 border border-slate-200 rounded-2xl p-5 flex flex-col h-full min-h-[400px] shadow-sm hover:shadow-md transition-all overflow-hidden">
                                 <div className="flex items-center justify-between mb-5">
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 rounded-2xl bg-white shadow-sm border border-slate-100 text-slate-400 flex items-center justify-center font-bold text-lg">
@@ -749,11 +757,22 @@ function DetalheEquipe({
                                     </div>
                                     <div className="flex items-center gap-1">
                                         {editandoId === g.id ? (
-                                            <button onClick={() => handleSalvarInline(g.id)} className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-xl transition-all" title="Confirmar">
-                                                <Check size={18} strokeWidth={2.5} />
+                                            <button 
+                                                onClick={() => handleSalvarInline(g.id)} 
+                                                disabled={salvandoInline}
+                                                className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-xl transition-all disabled:opacity-30" 
+                                                title="Confirmar"
+                                            >
+                                                {salvandoInline ? <Carregando /> : <Check size={18} strokeWidth={2.5} />}
                                             </button>
                                         ) : (
-                                            <button onClick={() => aoExcluirGrupo(g)} className="p-2 text-slate-300 hover:text-red-500 transition-colors"><Trash2 size={18} /></button>
+                                            <button 
+                                                onClick={() => aoExcluirGrupo(g)} 
+                                                disabled={salvandoInline}
+                                                className="p-2 text-slate-300 hover:text-red-500 transition-colors disabled:opacity-30"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
                                         )}
                                     </div>
                                 </div>
@@ -814,6 +833,7 @@ export function GerenciarEquipes() {
     } = usarEquipes();
 
     const [idEquipeAtiva, setIdEquipeAtiva] = useState<string | null>(null);
+    const [buscaEquipe, setBuscaEquipe] = useState('');
     const [modalOrg, setModalOrg] = useState<{ aberto: boolean; tipo: 'equipe' | 'grupo'; dados?: any } | null>(null);
     const [confirmacaoExclusao, setConfirmacaoExclusao] = useState<{ id: string; nome: string; tipo: 'equipe' | 'grupo' } | null>(null);
     const [modalAlocacao, setModalAlocacao] = useState<{ grupoId: string; equipeId: string } | null>(null);
@@ -821,25 +841,24 @@ export function GerenciarEquipes() {
     const [modalLider, setModalLider] = useState<{ aberto: boolean; tipo: 'lider' | 'sub_lider' } | null>(null);
     const [desativando, setDesativando] = useState(false);
 
-    // Selecionar primeira equipe por padrão
-    useEffect(() => {
-        if (!idEquipeAtiva && equipes.length > 0) {
-            setIdEquipeAtiva(equipes[0].id);
-        }
-    }, [equipes, idEquipeAtiva]);
+    const equipesAtivas = useMemo(() => 
+        equipes.filter(e => e.ativo),
+    [equipes]);
+
+    const equipesFiltradas = useMemo(() => 
+        equipesAtivas.filter(e => 
+            e.nome.toLowerCase().includes(buscaEquipe.toLowerCase())
+        ),
+    [equipesAtivas, buscaEquipe]);
 
     // Otimização: Memoização de dados derivados
     const equipeAtiva = useMemo(() => 
-        equipes.find(e => e.id === idEquipeAtiva),
-    [equipes, idEquipeAtiva]);
+        equipesAtivas.find(e => e.id === idEquipeAtiva),
+    [equipesAtivas, idEquipeAtiva]);
 
     const gruposDaEquipe = useMemo(() => 
         grupos.filter(g => g.equipe_id === idEquipeAtiva && g.ativo),
     [grupos, idEquipeAtiva]);
-
-    const equipesAtivas = useMemo(() => 
-        equipes.filter(e => e.ativo),
-    [equipes]);
 
     const handleSalvarOrg = useCallback(async (dados: any) => {
         if (!modalOrg) return;
@@ -866,6 +885,10 @@ export function GerenciarEquipes() {
                 await desativarGrupo(confirmacaoExclusao.id);
             } else {
                 await desativarEquipe(confirmacaoExclusao.id);
+                // Se era a equipe ativa, limpa para forçar re-seleção ou tela vazia
+                if (idEquipeAtiva === confirmacaoExclusao.id) {
+                    setIdEquipeAtiva(null);
+                }
             }
         } catch (error) {
             console.error("Erro ao desativar:", error);
@@ -873,7 +896,7 @@ export function GerenciarEquipes() {
             setDesativando(false);
             setConfirmacaoExclusao(null);
         }
-    }, [confirmacaoExclusao, desativarGrupo, desativarEquipe]);
+    }, [confirmacaoExclusao, desativarGrupo, desativarEquipe, idEquipeAtiva]);
 
     const handleDefinirLider = useCallback(async (membroId: string) => {
         if (!modalLider || !idEquipeAtiva || !equipeAtiva) return;
@@ -910,8 +933,8 @@ export function GerenciarEquipes() {
         }
     }, [modalLider, idEquipeAtiva, equipeAtiva, editarEquipe]);
 
-    if (carregando && equipes.length === 0) return <div className="h-screen flex items-center justify-center"><Carregando /></div>;
-    if (erro && equipes.length === 0) return <div className="p-20 text-center text-red-500 font-bold">{erro}</div>;
+    if (carregando && equipesAtivas.length === 0) return <div className="h-screen flex items-center justify-center"><Carregando /></div>;
+    if (erro && equipesAtivas.length === 0) return <div className="p-20 text-center text-red-500 font-bold">{erro}</div>;
 
     return (
         <div className="h-[calc(100vh-80px)] lg:h-[calc(100vh-48px)] flex flex-col overflow-hidden px-0">
@@ -934,12 +957,22 @@ export function GerenciarEquipes() {
                 {/* Sidebar: Lista de Equipes */}
                 <aside className="w-72 hidden lg:flex flex-col shrink-0">
                     <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm overflow-hidden flex flex-col flex-1">
-                        <div className="flex items-center justify-between mb-4 px-1">
-                            <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400">EQUIPES ({equipes.length})</h3>
+                        <div className="flex items-center justify-between mb-3 px-1">
+                            <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400">EQUIPES ({equipesFiltradas.length})</h3>
+                        </div>
+
+                        <div className="relative mb-4 group/search">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within/search:text-blue-500 transition-colors" size={14} />
+                            <input 
+                                placeholder="Buscar equipe..."
+                                value={buscaEquipe}
+                                onChange={e => setBuscaEquipe(e.target.value)}
+                                className="w-full h-9 bg-slate-50 border border-slate-100 rounded-xl pl-9 pr-3 text-[11px] font-medium outline-none focus:bg-white focus:border-blue-200 focus:ring-4 focus:ring-blue-50/50 transition-all"
+                            />
                         </div>
 
                         <div className="flex-1 overflow-y-auto space-y-1.5 pr-2 custom-scrollbar">
-                            {equipesAtivas.map((e: Equipe) => (
+                            {equipesFiltradas.map((e: Equipe) => (
                                 <div key={e.id} className="relative group/card">
                                     <button
                                         onClick={() => setIdEquipeAtiva(e.id)}
@@ -964,7 +997,7 @@ export function GerenciarEquipes() {
                                     </button>
                                 </div>
                             ))}
-                            {equipes.length === 0 && (
+                            {equipesAtivas.length === 0 && (
                                 <div className="py-20 text-center border-2 border-dashed border-slate-100 rounded-2xl">
                                     <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Nenhuma equipe</p>
                                 </div>
@@ -984,19 +1017,26 @@ export function GerenciarEquipes() {
                             aoAdicionarGrupo={() => setModalOrg({ aberto: true, tipo: 'grupo', dados: { equipe_id: idEquipeAtiva } })}
                             aoExcluirGrupo={(g) => setConfirmacaoExclusao({ id: g.id, nome: g.nome, tipo: 'grupo' })}
                             aoAlocar={(gId, eId) => setModalAlocacao({ grupoId: gId, equipeId: eId })}
-                            aoRemoverMembro={(mId) => alocarMembro(mId, equipeAtiva.id, null)}
-                            aoMoverMembro={(mId, gId) => setModalMover({ membroId: mId, grupoOrigemId: gId, equipeId: equipeAtiva.id })}
+                            aoRemoverMembro={(mId) => alocarMembro(mId, null, null)}
+                            aoMoverMembro={(mId, gOrigemId) => setModalMover({ membroId: mId, grupoOrigemId: gOrigemId, equipeId: idEquipeAtiva! })}
                             aoSelecionarLider={(tipo) => setModalLider({ aberto: true, tipo })}
-                            aoSalvarNomeGrupo={async (id, nome) => { await editarGrupo(id, { nome }); }}
-                            aoSalvarNomeEquipe={async (id, nome) => { await editarEquipe(id, { nome }); }}
+                            aoSalvarNomeGrupo={(id, nome) => editarGrupo(id, { nome })}
+                            aoSalvarNomeEquipe={(id, nome) => editarEquipe(id, { nome })}
                         />
                     ) : (
-                        <div className="h-full flex flex-col items-center justify-center bg-white border border-slate-200 border-dashed rounded-2xl p-20 text-center">
-                            <div className="w-24 h-24 rounded-2xl bg-slate-50 text-slate-200 flex items-center justify-center mb-6 border border-slate-100">
-                                <Users size={40} />
+                        <div className="flex-1 flex flex-col items-center justify-center bg-white border border-slate-200 rounded-3xl p-12 text-center shadow-sm">
+                            <div className="w-20 h-20 rounded-3xl bg-blue-50 text-blue-500 flex items-center justify-center mb-6 animate-pulse">
+                                <LayoutGrid size={40} />
                             </div>
                             <h3 className="text-xl font-bold text-slate-900 mb-2">Selecione uma Equipe</h3>
-                            <p className="text-slate-400 font-medium max-w-xs mx-auto">Navegue pelas equipes na barra lateral para gerenciar grupos e lideranças.</p>
+                            <p className="text-sm text-slate-500 max-w-xs mx-auto leading-relaxed">
+                                Escolha uma equipe na barra lateral para gerenciar seus grupos, líderes e membros alocados.
+                            </p>
+                            <div className="mt-8 flex items-center gap-2 text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">
+                                <div className="w-12 h-px bg-slate-100" />
+                                <span>Aguardando seleção</span>
+                                <div className="w-12 h-px bg-slate-100" />
+                            </div>
                         </div>
                     )}
                 </main>
@@ -1013,7 +1053,7 @@ export function GerenciarEquipes() {
                         titulo={modalOrg.tipo === 'equipe' ? 'Equipe' : 'Grupo'}
                         tipo={modalOrg.tipo}
                         equipeAtivaId={modalOrg.dados?.equipe_id}
-                        equipes={equipes.map(e => ({ id: e.id, nome: e.nome }))}
+                        equipes={equipesAtivas.map(e => ({ id: e.id, nome: e.nome }))}
                         aoSalvar={handleSalvarOrg}
                         aoFechar={() => setModalOrg(null)}
                     />
@@ -1124,14 +1164,14 @@ function FormGrupoEquipe({ titulo, tipo, equipes, equipeAtivaId, aoSalvar, aoFec
 
             </div>
 
-            <div className="flex gap-3 pt-4">
-                <button type="button" onClick={aoFechar} className="flex-1 h-12 text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors">
+            <div className="flex flex-col sm:flex-row gap-3 pt-6 mt-6 border-t border-slate-100">
+                <button type="button" onClick={aoFechar} className="w-full sm:flex-1 h-12 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-2xl transition-all">
                     Cancelar
                 </button>
                 <button
                     type="submit"
                     disabled={salvando || !nome.trim()}
-                    className="flex-[2] h-12 bg-blue-600 text-white rounded-2xl text-sm font-bold shadow-md hover:bg-blue-700 transition-all disabled:opacity-30 flex items-center justify-center uppercase tracking-widest"
+                    className="w-full sm:flex-[2] h-12 bg-blue-600 text-white rounded-2xl text-[10px] font-black shadow-md hover:bg-blue-700 transition-all disabled:opacity-30 flex items-center justify-center uppercase tracking-widest"
                 >
                     {salvando ? <Carregando /> : `Criar ${titulo}`}
                 </button>

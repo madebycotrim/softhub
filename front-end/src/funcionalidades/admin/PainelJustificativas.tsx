@@ -214,11 +214,11 @@ export function PainelJustificativas() {
                         value={motivoRejeicao}
                         onChange={(e) => setMotivoRejeicao(e.target.value)}
                     />
-                    <div className="flex justify-end gap-3 pt-2">
+                    <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 mt-auto border-t border-border/50">
                         <button
                             type="button"
                             onClick={() => { setJustificativaSelecionada(null); setMotivoRejeicao(''); }}
-                            className="px-4 py-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-colors"
+                            className="w-full sm:w-auto h-11 px-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground hover:bg-muted rounded-2xl transition-all"
                         >
                             Cancelar
                         </button>
@@ -226,7 +226,7 @@ export function PainelJustificativas() {
                             type="button"
                             onClick={handleRejeitar}
                             disabled={!!processandoAcao || !motivoRejeicao.trim()}
-                            className="bg-destructive text-destructive-foreground px-6 py-2 rounded-2xl text-sm font-bold hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2"
+                            className="w-full sm:w-auto h-11 bg-rose-600 text-white px-8 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-lg shadow-rose-100 disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                             {processandoAcao ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmar Reprovação'}
                         </button>

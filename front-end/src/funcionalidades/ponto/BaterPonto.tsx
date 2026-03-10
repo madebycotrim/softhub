@@ -10,6 +10,7 @@ import { usarPermissaoAcesso } from '../../compartilhado/hooks/usarPermissao';
 import { useEffect as useReactEffect } from 'react';
 import { BarraBusca } from '../../compartilhado/componentes/BarraBusca';
 import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
+import { Carregando } from '../../compartilhado/componentes/Carregando';
 
 /**
  * Interface de registro e visualização diária do ponto.
@@ -134,10 +135,10 @@ export function BaterPonto() {
                 <div className="grid grid-cols-2 md:grid-cols-4 md:auto-rows-fr gap-3 sm:gap-4">
                     
                     {/* TILE 1: AÇÃO PRINCIPAL (2x2) — Mais Compacto */}
-                    <div className="col-span-2 md:col-span-2 md:row-span-2 bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm flex flex-col items-center justify-center text-center relative overflow-hidden group transition-all hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1">
+                    <div className="col-span-2 md:col-span-2 md:row-span-2 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col items-center justify-center text-center relative overflow-hidden group transition-all hover:shadow-md hover:-translate-y-0.5">
                         {/* Decoração de fundo suave */}
-                        <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-50/50 rounded-full blur-[80px] group-hover:bg-blue-100/50 transition-colors duration-700" />
-                        <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-emerald-50/30 rounded-full blur-[80px]" />
+                        <div className="absolute -top-16 -right-16 w-48 h-48 bg-blue-50/50 rounded-full blur-[60px] group-hover:bg-blue-100/50 transition-colors duration-700" />
+                        <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-emerald-50/30 rounded-full blur-[60px]" />
                         
                         <div className="relative z-10 space-y-4 sm:space-y-6 w-full">
                             <div className="space-y-2">
@@ -145,9 +146,9 @@ export function BaterPonto() {
                                     <div className="w-1 h-1 bg-blue-600 rounded-full animate-pulse" />
                                     <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">Horário de Brasília</span>
                                 </div>
-                                <h2 className="text-6xl sm:text-7xl md:text-8xl font-black tracking-tighter text-slate-900 tabular-nums flex items-baseline justify-center">
+                                <h2 className="text-5xl sm:text-6xl font-black tracking-tighter text-slate-900 tabular-nums flex items-baseline justify-center">
                                     {agoraRelogio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                                    <span className="text-2xl sm:text-3xl text-slate-300 font-medium ml-2 select-none">
+                                    <span className="text-xl sm:text-2xl text-slate-300 font-medium ml-1.5 select-none">
                                         {agoraRelogio.toLocaleTimeString('pt-BR', { second: '2-digit' })}
                                     </span>
                                 </h2>
@@ -157,13 +158,13 @@ export function BaterPonto() {
                                 <button
                                     onClick={handleBaterPonto}
                                     disabled={carregando || salvando || foraDaRede || foraDoHorario || !podeRegistrar}
-                                    className={`w-full max-w-sm py-5 rounded-2xl text-xs font-black uppercase tracking-[0.2em] transition-all shadow-2xl active:scale-95 disabled:opacity-30 disabled:grayscale-0 disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none disabled:border border-slate-200 ${
+                                    className={`w-full max-w-sm py-4 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 disabled:opacity-30 disabled:grayscale-0 disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none disabled:border border-slate-200 ${
                                         proximoTipo === 'entrada' 
-                                        ? 'bg-slate-900 text-white shadow-slate-200 hover:bg-black hover:shadow-slate-300' 
-                                        : 'bg-rose-600 text-white shadow-rose-200 hover:bg-rose-700 hover:shadow-rose-300'
+                                        ? 'bg-slate-900 text-white shadow-slate-200 hover:bg-black' 
+                                        : 'bg-rose-600 text-white shadow-rose-200 hover:bg-rose-700'
                                     }`}
                                 >
-                                    {salvando ? 'Processando...' : `EFETUAR REGISTRO: ${proximoTipo}`}
+                                    {salvando ? <Carregando /> : `EFETUAR REGISTRO: ${proximoTipo}`}
                                 </button>
                             </div>
 
@@ -177,42 +178,42 @@ export function BaterPonto() {
                     </div>
 
                     {/* TILE 2: STATUS — Ultra Compacto no Mobile */}
-                    <div className="col-span-1 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col justify-start sm:justify-between gap-4 sm:gap-0 group hover:border-blue-400 transition-all hover:shadow-xl hover:shadow-blue-500/5 sm:min-h-[160px]">
+                    <div className="col-span-1 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col justify-start sm:justify-between gap-4 sm:gap-0 group hover:border-blue-400 transition-all hover:shadow-md sm:min-h-[160px]">
                         <div className="flex items-start justify-between">
                             <div className="p-3 bg-slate-50/80 text-slate-400 rounded-xl border border-slate-100 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
                                 <LayoutDashboard className="w-5 h-5" />
                             </div>
-                            <div className={`w-2 h-2 rounded-full mt-1 ${ultimoRegistro?.tipo === 'entrada' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] animate-pulse' : 'bg-slate-200'}`} />
+                            <div className={`w-2 h-2 rounded-full mt-1 ${ultimoRegistro?.tipo === 'entrada' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-200'}`} />
                         </div>
                         <div className="space-y-1">
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">Status</p>
-                            <p className="text-2xl font-black text-slate-900 leading-tight">
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Status</p>
+                            <p className="text-xl font-black text-slate-900 leading-tight">
                                 {ultimoRegistro?.tipo === 'entrada' ? 'Ocupado' : 'Livre'}
                             </p>
                         </div>
                     </div>
 
                     {/* TILE 3: JORNADA — Ultra Compacto no Mobile */}
-                    <div className="col-span-1 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col justify-start sm:justify-between gap-4 sm:gap-0 group hover:border-amber-400 transition-all hover:shadow-xl hover:shadow-amber-500/5 sm:min-h-[160px]">
+                    <div className="col-span-1 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col justify-start sm:justify-between gap-4 sm:gap-0 group hover:border-amber-400 transition-all hover:shadow-md sm:min-h-[160px]">
                         <div className="flex items-start justify-between">
                             <div className="p-3 bg-amber-50/50 text-amber-600 rounded-xl border border-amber-100">
                                 <ScrollText className="w-5 h-5" />
                             </div>
                         </div>
                         <div className="space-y-1">
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">Jornada</p>
-                            <p className="text-2xl font-black text-slate-900 leading-tight tabular-nums">
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Jornada</p>
+                            <p className="text-xl font-black text-slate-900 leading-tight tabular-nums">
                                 {cronometroJornada?.texto || '00:00:00'}
                             </p>
                         </div>
                     </div>
 
                     {/* TILE 4: HISTÓRICO RECENTE (2x2) — Mais Compacto */}
-                    <div className="col-span-2 md:col-span-2 md:row-span-2 bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm flex flex-col h-[380px] md:h-auto">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 gap-4">
-                            <div className="space-y-1">
-                                <h3 className="text-[9px] sm:text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Linha do Tempo</h3>
-                                <p className="text-base sm:text-lg font-black text-slate-900 truncate">Atividade Diária</p>
+                    <div className="col-span-2 md:col-span-2 md:row-span-2 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col h-[380px] md:h-auto">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+                            <div className="space-y-0.5">
+                                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Linha do Tempo</h3>
+                                <p className="text-base font-black text-slate-900 truncate">Atividade Diária</p>
                             </div>
                             
                             <div className="flex items-center gap-2 w-full sm:w-auto">
