@@ -37,6 +37,26 @@ rotasConfiguracoes.get('/', autenticacaoRequerida(), verificarPermissao('configu
     }
 });
 
+// ─── GET /permissoes — Endpoint acessível para TODOS autenticados (UX) ─────────
+rotasConfiguracoes.get('/publico/permissoes', autenticacaoRequerida(), async (c: Context) => {
+    const { DB } = c.env;
+
+    try {
+        const res = await DB.prepare('SELECT valor FROM configuracoes_sistema WHERE chave = ?')
+            .bind('permissoes_roles')
+            .first();
+        const config = res as any;
+
+        if (!config) {
+            return c.json({ permissoes_roles: {} });
+        }
+
+        return c.json({ permissoes_roles: JSON.parse(config.valor) });
+    } catch (e: any) {
+        return c.json({ erro: 'Falha ao buscar matriz de permissões', detalhe: e.message }, 500);
+    }
+});
+
 // ─── PATCH /:chave — Atualizar uma configuração ────────────────────────────────
 
 rotasConfiguracoes.patch('/:chave', autenticacaoRequerida(), verificarPermissao('configuracoes:editar'), async (c: Context) => {

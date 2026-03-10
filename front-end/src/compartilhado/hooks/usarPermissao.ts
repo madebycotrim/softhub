@@ -48,7 +48,7 @@ interface PermissoesAPI {
 
 /** Cache global síncrono para as configurações, evitando re-renders desnecessários */
 let configuracoesCache: PermissoesAPI | null = null;
-let buscandoConfiguracoes = false;
+let fetchPromise: Promise<PermissoesAPI> | null = null;
 let ultimaBusca = 0;
 
 /**
@@ -57,59 +57,72 @@ let ultimaBusca = 0;
  */
 export function usarPermissaoAcesso(chavePermissao: string): boolean {
     const { usuario } = usarAutenticacaoContexto();
-    const [permissoesAtivas, setPermissoesAtivas] = useState<boolean>(true); // Optimistic true
+    const role = usuario?.role || 'MEMBRO';
+    
+    // Estado pessimista: inicia oculto (exceto para ADMIN)
+    const [permissoesAtivas, setPermissoesAtivas] = useState<boolean>(() => {
+        if (usuario?.role === 'ADMIN') return true;
+        
+        // Se já tiver cache, usa imediatamente para evitar flicker
+        if (configuracoesCache) {
+            const universal = configuracoesCache.permissoes_roles?.['TODOS']?.[chavePermissao] === true;
+            return universal || (configuracoesCache.permissoes_roles?.[role]?.[chavePermissao] === true);
+        }
+        return false;
+    });
 
     useEffect(() => {
-        // Se ADMIN, sempre tem acesso (bypass)
-        if (usuario?.role === 'ADMIN') {
-            setPermissoesAtivas(true);
-            return;
-        }
+        if (usuario?.role === 'ADMIN') return;
 
-        const role = usuario?.role || 'MEMBRO';
+        const atualizarEstado = () => {
+            if (configuracoesCache) {
+                const universal = configuracoesCache.permissoes_roles?.['TODOS']?.[chavePermissao] === true;
+                const temRole = configuracoesCache.permissoes_roles?.[role]?.[chavePermissao] === true;
+                setPermissoesAtivas(universal || temRole);
+            }
+        };
 
         const carregar = async () => {
             const agora = Date.now();
             
-            // Cache válido por 1 minuto para evitar spam na API (60000ms)
+            // 1. Cache válido (1 min)
             if (configuracoesCache && (agora - ultimaBusca < 60000)) {
-                const universal = configuracoesCache.permissoes_roles?.['TODOS']?.[chavePermissao] ?? false;
-                setPermissoesAtivas(universal || (configuracoesCache.permissoes_roles?.[role]?.[chavePermissao] ?? false));
+                atualizarEstado();
                 return;
             }
 
-            if (buscandoConfiguracoes) return;
+            // 2. Já existe uma busca em andamento? Espera ela.
+            if (fetchPromise) {
+                await fetchPromise;
+                atualizarEstado();
+                return;
+            }
 
+            // 3. Inicia a busca (Singleton Promise)
             try {
-                buscandoConfiguracoes = true;
-                const res = await api.get('/api/configuracoes');
+                fetchPromise = api.get('/api/configuracoes/publico/permissoes').then(res => res.data);
+                const data = await fetchPromise;
                 
-                // Tratar a chave do sistema
-                const configRecord = res.data.find((c: any) => c.chave === 'sistema');
-                if (configRecord) {
-                    configuracoesCache = configRecord.valor;
-                    ultimaBusca = agora;
-
-                    // Cargo universal: se TODOS tem a permissão, qualquer role tem
-                    const universal = configuracoesCache?.permissoes_roles?.['TODOS']?.[chavePermissao] ?? false;
-                    if (universal) {
-                        setPermissoesAtivas(true);
-                    } else {
-                        setPermissoesAtivas(configuracoesCache?.permissoes_roles?.[role]?.[chavePermissao] ?? false);
-                    }
-                }
+                configuracoesCache = data;
+                ultimaBusca = Date.now();
+                
+                // Notifica outros hooks que o cache chegou
+                window.dispatchEvent(new CustomEvent('permissoes_carregadas'));
+                atualizarEstado();
             } catch (e) {
-                console.warn('[usarPermissaoAcesso] Falha ao buscar permissões:', e);
+                console.warn('[usarPermissaoAcesso] Erro:', e);
+                setPermissoesAtivas(false);
             } finally {
-                buscandoConfiguracoes = false;
+                fetchPromise = null;
             }
         };
 
         carregar();
-    }, [usuario, chavePermissao]);
 
-    // Fast-path para admins
-    if (usuario?.role === 'ADMIN') return true;
-    
-    return permissoesAtivas;
+        // Escuta atualizações do cache (para quando outro hook terminar a busca)
+        window.addEventListener('permissoes_carregadas', atualizarEstado);
+        return () => window.removeEventListener('permissoes_carregadas', atualizarEstado);
+    }, [usuario, role, chavePermissao]);
+
+    return usuario?.role === 'ADMIN' ? true : permissoesAtivas;
 }

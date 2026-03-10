@@ -75,10 +75,18 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
     ];
 
     // Filtra apenas grupos que possuem pelo menos um link visível
-    const grupos = gruposBrutos.map(g => ({
-        ...g,
-        links: g.links.filter(l => l.visivel)
-    })).filter(g => g.links.length > 0);
+    const grupos = gruposBrutos
+        .map(g => ({
+            ...g,
+            links: g.links.filter(l => l.visivel)
+        }))
+        .filter(g => {
+            // Regra especial: O grupo 'Gestão' só aparece se o usuário for ADMIN ou tiver 'configuracoes:visualizar'
+            if (g.label === 'Gestão') {
+                return (usuario?.role === 'ADMIN') || podeVerConfiguracoes;
+            }
+            return g.links.length > 0;
+        });
 
     const NavLink = ({ link }: { link: { label: string; path: string; icon: any } }) => {
         const ativo = currentPath.startsWith(link.path);
