@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Filter, X } from 'lucide-react';
 import type { FiltrosKanban } from './usarKanban';
-import { LABELS_PRIORIDADE, CORES_PRIORIDADE } from '../../utilitarios/constantes';
-import { Emblema } from '../../compartilhado/componentes/Emblema';
-import { BarraBusca } from '../../compartilhado/componentes/BarraBusca';
+import { LABELS_PRIORIDADE } from '../../utilitarios/constantes';
 import { usarDebounce } from '../../compartilhado/hooks/usarDebounce';
 
 interface PainelFiltrosProps {
@@ -40,47 +38,42 @@ export function PainelFiltrosKanban({ filtros, aoFiltrar }: PainelFiltrosProps) 
     const temFiltroSimples = buscaText.length > 0 || prioridades.length > 0 || filtros.responsavelId;
 
     return (
-        <div className="bg-card/80 backdrop-blur-md border border-border shadow-sm rounded-2xl p-4 mb-4 flex flex-col sm:flex-row gap-4 items-center justify-between transition-colors duration-300">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full flex-1">
-                <div className="relative w-full sm:max-w-md">
-                    <BarraBusca 
-                        valor={buscaText}
-                        aoMudar={setBuscaText}
-                        placeholder="Buscar por Título ou Descrição..."
-                    />
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 opacity-50 px-1">
+        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between px-2 mb-2 transition-all duration-300">
+            <div className="flex items-center gap-4">
+                <div className="flex items-center gap-1.5 p-1 bg-card border border-border rounded-xl shadow-sm">
+                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 opacity-50 px-3">
                         <Filter className="w-3 h-3" />
                         Prioridade
                     </span>
-                    <div className="flex flex-wrap items-center gap-1.5">
+                    <div className="flex items-center gap-1 pr-1">
                         {Object.entries(LABELS_PRIORIDADE).map(([key, label]) => {
                             const ativo = prioridades.includes(key);
                             return (
                                 <button
                                     key={key}
                                     onClick={() => togglePrioridade(key)}
-                                    className={`transition-all rounded-full border border-transparent ${ativo ? 'ring-2 ring-primary/50' : 'opacity-40 hover:opacity-100'} cursor-pointer`}
-                                    aria-label={`Filtrar por ${label}`}
+                                    className={`transition-all px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-tight ${
+                                        ativo 
+                                        ? 'bg-primary text-primary-foreground shadow-sm' 
+                                        : 'text-muted-foreground hover:bg-accent hover:text-foreground opacity-60'
+                                    }`}
                                 >
-                                    <Emblema texto={label} variante={CORES_PRIORIDADE[key as keyof typeof CORES_PRIORIDADE]} className="pointer-events-none text-[10px]" />
+                                    {label}
                                 </button>
                             );
                         })}
                     </div>
                 </div>
-            </div>
 
-            {temFiltroSimples && (
-                <button
-                    onClick={limparFiltros}
-                    className="shrink-0 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-lg hover:bg-accent transition-colors"
-                >
-                    <X className="w-3 h-3" /> Limpar Filtros
-                </button>
-            )}
+                {temFiltroSimples && (
+                    <button
+                        onClick={limparFiltros}
+                        className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-destructive transition-colors px-2"
+                    >
+                        <X className="w-3 h-3" /> Limpar
+                    </button>
+                )}
+            </div>
         </div>
     );
 }

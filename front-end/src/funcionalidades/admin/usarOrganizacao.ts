@@ -33,6 +33,7 @@ export interface MembroSimples {
     nome: string;
     email: string;
     role: string;
+    foto_perfil: string | null;
     equipe_id: string | null;
     grupo_id: string | null;
 }
@@ -48,10 +49,13 @@ export function usarOrganizacao() {
     const [carregando, setCarregando] = useState(true);
     const [erro, setErro] = useState<string | null>(null);
 
-    /** Carrega grupos, equipes e membros em paralelo. */
-    const carregar = useCallback(async () => {
-        setCarregando(true);
-        setErro(null);
+    /** Carrega grupos, equipes e membros. */
+    const carregar = useCallback(async (silencioso = false) => {
+        if (!silencioso) {
+            setCarregando(true);
+            setErro(null);
+        }
+        
         try {
             const [resGrupos, resEquipes, resMembros] = await Promise.all([
                 api.get('/api/organizacao/grupos'),
@@ -62,54 +66,55 @@ export function usarOrganizacao() {
             setEquipes(resEquipes.data.equipes ?? []);
             setMembros(resMembros.data.membros ?? []);
         } catch (e: any) {
-            setErro('Não foi possível carregar os dados de organização.');
+            if (!silencioso) setErro('Não foi possível carregar os dados de organização.');
         } finally {
-            setCarregando(false);
+            if (!silencioso) setCarregando(false);
         }
     }, []);
 
     useEffect(() => { carregar(); }, [carregar]);
 
-    /** Cria um novo grupo. */
+    /** Ações com Revalidação Silenciosa - Melhora percepção de velocidade */
     const criarGrupo = async (dados: { nome: string; descricao: string | null; equipe_id: string | null }) => {
         await api.post('/api/organizacao/grupos', dados);
-        await carregar();
+        carregar(true); // Atualiza em background
     };
 
-    /** Edita um grupo existente. */
-    const editarGrupo = async (id: string, dados: { nome: string; descricao: string | null; equipe_id: string | null }) => {
+    const editarGrupo = async (id: string, dados: Partial<{ nome: string; descricao: string | null; equipe_id: string | null }>) => {
+        // Update local state immediately for perceived speed
+        setGrupos(prev => prev.map(g => g.id === id ? { ...g, ...dados } : g));
         await api.patch(`/api/organizacao/grupos/${id}`, dados);
-        await carregar();
+        carregar(true);
     };
 
-    /** Desativa um grupo (soft delete). */
     const desativarGrupo = async (id: string) => {
+        setGrupos(prev => prev.filter(g => g.id !== id));
         await api.delete(`/api/organizacao/grupos/${id}`);
-        await carregar();
+        carregar(true);
     };
 
-    /** Cria uma nova equipe. */
     const criarEquipe = async (dados: { nome: string; descricao: string | null; lider_id: string | null; sub_lider_id: string | null }) => {
         await api.post('/api/organizacao/equipes', dados);
-        await carregar();
+        carregar(true);
     };
 
-    /** Edita uma equipe existente. */
-    const editarEquipe = async (id: string, dados: { nome: string; descricao: string | null; lider_id: string | null; sub_lider_id: string | null }) => {
+    const editarEquipe = async (id: string, dados: Partial<{ nome: string; descricao: string | null; lider_id: string | null; sub_lider_id: string | null }>) => {
+        setEquipes(prev => prev.map(e => e.id === id ? { ...e, ...dados } : e));
         await api.patch(`/api/organizacao/equipes/${id}`, dados);
-        await carregar();
+        carregar(true);
     };
 
-    /** Desativa uma equipe (soft delete). */
     const desativarEquipe = async (id: string) => {
+        setEquipes(prev => prev.filter(e => e.id !== id));
         await api.delete(`/api/organizacao/equipes/${id}`);
-        await carregar();
+        carregar(true);
     };
 
-    /** Aloca um membro em grupo + equipe. Desvincula se null. */
     const alocarMembro = async (membroId: string, equipe_id: string | null, grupo_id: string | null) => {
+        // Optimistic local update
+        setMembros(prev => prev.map(m => m.id === membroId ? { ...m, equipe_id, grupo_id } : m));
         await api.patch(`/api/organizacao/membros/${membroId}/alocar`, { equipe_id, grupo_id });
-        await carregar();
+        carregar(true);
     };
 
     return {

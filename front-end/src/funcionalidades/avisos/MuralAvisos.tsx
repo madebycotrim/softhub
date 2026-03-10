@@ -40,10 +40,10 @@ export function MuralAvisos() {
                 {podeCriar && (
                     <button
                         onClick={() => setModalAberto(true)}
-                        className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-medium px-4 py-2 rounded-xl transition-all active:scale-95 shadow-lg shadow-primary/20"
+                        className="h-11 px-5 rounded-xl bg-slate-900 text-white font-bold text-xs shadow-lg hover:bg-black transition-all flex items-center gap-2 active:scale-95"
                     >
-                        <Plus className="w-5 h-5" />
-                        Criar Aviso
+                        <Plus size={18} />
+                        <span>Criar Aviso</span>
                     </button>
                 )}
             </CabecalhoFuncionalidade>

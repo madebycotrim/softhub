@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { UserCog, X, Shield, Mail, Trash2, Loader2, UserCheck, Archive, ListPlus, CheckSquare, Square, Download, AlertCircle, ChevronDown, RotateCcw, Eraser, User, Users as UsersIcon } from 'lucide-react';
+import { UserCog, X, Shield, Mail, Trash2, Loader2, UserCheck, Archive, ListPlus, CheckSquare, Square, Download, AlertCircle, ChevronDown, RotateCcw, Eraser, User, Users as UsersIcon, Plus } from 'lucide-react';
 import { Link } from 'react-router';
 import { api } from '../../compartilhado/servicos/api';
 import { usarMembros } from '../membros/usarMembros';
@@ -779,34 +779,43 @@ export function GerenciarMembros() {
                         />
                     </div>
 
-                    <div className="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0 flex-wrap justify-end">
-                        {/* Toggle Arquivados */}
+                    <div className="flex items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0">
+                        {/* Toggle Arquivados (Compacto) */}
                         <button
                             onClick={() => setAbaAtiva(abaAtiva === 'ativos' ? 'arquivados' : 'ativos')}
-                            className={`shrink-0 p-2.5 rounded-2xl border transition-all flex items-center gap-2 relative ${abaAtiva === 'arquivados' ? 'bg-red-500/10 border-red-500/20 text-red-500 shadow-lg shadow-red-500/10' : 'bg-muted/40 border-border/50 text-muted-foreground hover:border-primary/30 hover:text-primary'}`}
+                            className={`shrink-0 w-11 h-11 rounded-xl border transition-all flex items-center justify-center relative ${
+                                abaAtiva === 'arquivados' 
+                                ? 'bg-red-500/10 border-red-500/20 text-red-500 shadow-lg shadow-red-500/10' 
+                                : 'bg-muted/30 border-border/50 text-muted-foreground hover:border-primary/30 hover:text-primary'
+                            }`}
                             title={abaAtiva === 'ativos' ? "Ver Arquivados" : "Ver Ativos"}
                         >
                             <Archive size={18} />
                             {membros.filter(m => !m.ativo).length > 0 && abaAtiva === 'ativos' && (
-                                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-[10px] font-black text-white flex items-center justify-center border-2 border-background animate-in zoom-in duration-300">
+                                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-[10px] font-black text-white flex items-center justify-center border-2 border-background">
                                     {membros.filter(m => !m.ativo).length}
                                 </span>
                             )}
                         </button>
 
+                        <div className="h-6 w-px bg-border/40 mx-1 hidden sm:block" />
+
                         {podeCadastrar && (
-                            <div className="flex gap-2 shrink-0">
-                                <button
-                                    onClick={() => setModalLoteAberto(true)}
-                                    className="bg-muted/40 hover:bg-muted/60 text-foreground px-4 py-2.5 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all border border-border/50 flex items-center gap-2"
-                                >
-                                    <ListPlus size={18} /> <span className="hidden sm:inline">Lote</span>
-                                </button>
+                            <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => setModalAberto(true)}
-                                    className="bg-primary text-primary-foreground px-4 sm:px-6 py-2.5 rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                                    className="h-11 px-5 bg-slate-900 hover:bg-black text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-lg active:scale-95 whitespace-nowrap"
                                 >
-                                    <UserCog size={18} /> <span className="hidden sm:inline">Novo Membro</span>
+                                    <Plus size={18} />
+                                    <span>Adicionar</span>
+                                </button>
+                                
+                                <button
+                                    onClick={() => setModalLoteAberto(true)}
+                                    className="w-11 h-11 bg-white border border-border/50 text-muted-foreground hover:text-primary hover:border-primary/20 rounded-xl transition-all flex items-center justify-center"
+                                    title="Importar em Lote"
+                                >
+                                    <ListPlus size={18} />
                                 </button>
                             </div>
                         )}

@@ -23,6 +23,7 @@ import { EstadoVazio } from '../../compartilhado/componentes/EstadoVazio';
 import { ModalDetalhesTarefa } from './ModalDetalhesTarefa';
 import { PainelFiltrosKanban } from './PainelFiltrosKanban';
 import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
+import { BarraBusca } from '../../compartilhado/componentes/BarraBusca';
 
 /** Mapeamento amigável das colunas */
 const LABELS_COLUNAS: Record<ColunaKanban, string> = {
@@ -117,7 +118,17 @@ export function QuadroKanban({ projetoId = 'p1' }: { projetoId?: string }) {
                 titulo="Quadro Kanban"
                 subtitulo="Gerencie e acompanhe o fluxo de tarefas do projeto."
                 icone={FolderKanban}
-            />
+            >
+                <div className="flex items-center gap-2">
+                    <div className="relative w-full sm:w-64 xl:w-80">
+                        <BarraBusca 
+                            valor={filtros.busca || ''}
+                            aoMudar={(v) => setFiltros(prev => ({ ...prev, busca: v }))}
+                            placeholder="Buscar tarefas..."
+                        />
+                    </div>
+                </div>
+            </CabecalhoFuncionalidade>
 
             <PainelFiltrosKanban filtros={filtros} aoFiltrar={setFiltros} />
 

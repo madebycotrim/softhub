@@ -101,36 +101,28 @@ export function BaterPonto() {
                     icone={Fingerprint}
                     variante="padrao"
                 >
-                    <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 w-full xl:w-auto mt-4 md:mt-0">
-                        <div className="relative w-full xl:w-64">
-                            <BarraBusca 
-                                valor={busca}
-                                aoMudar={setBusca}
-                                placeholder="Buscar histórico..."
-                            />
-                        </div>
+                    <div className="flex items-center gap-2 sm:gap-3">
+                        <button 
+                            onClick={() => setAbaAtiva(abaAtiva === 'registro' ? 'justificativas' : 'registro')}
+                            className={`flex items-center gap-2 h-11 px-4 rounded-xl border transition-all font-bold text-xs ${
+                                abaAtiva === 'justificativas' 
+                                ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/20' 
+                                : 'bg-white border-slate-200 text-slate-500 hover:border-blue-200 hover:text-blue-600'
+                            }`}
+                        >
+                            <History className="w-4 h-4" />
+                            <span className="hidden sm:inline">Histórico</span>
+                        </button>
                         
-                        <div className="flex items-center gap-2 w-full sm:w-auto">
-                            <button 
-                                onClick={() => setAbaAtiva(abaAtiva === 'registro' ? 'justificativas' : 'registro')}
-                                className="p-2.5 sm:p-2 bg-white border border-slate-200 rounded-2xl text-slate-400 hover:text-blue-600 hover:border-blue-100 transition-all flex items-center justify-center shrink-0"
-                                title="Mudar Visualização"
-                            >
-                                <History className="w-5 h-5 sm:w-4 sm:h-4" />
-                            </button>
-                            
-                            {podeExportarCsv && (
-                                <div className="flex-1 sm:flex-none">
-                                    <BotaoExportarPonto />
-                                </div>
-                            )}
+                        <div className="flex items-center gap-2">
+                            {podeExportarCsv && <BotaoExportarPonto />}
 
                             {podeJustificar && (
                                 <button 
                                     onClick={() => setModalJustificativaAberto(true)}
-                                    className="flex-1 sm:flex-none px-4 sm:px-6 py-2.5 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-[10px] sm:text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-sm shadow-blue-100 active:scale-95"
+                                    className="h-11 px-5 bg-slate-900 hover:bg-black text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-lg shadow-slate-200 active:scale-95"
                                 >
-                                    <Plus className="w-4 h-4 shrink-0" />
+                                    <Plus className="w-4 h-4" />
                                     <span>Justificar</span>
                                 </button>
                             )}
@@ -217,21 +209,31 @@ export function BaterPonto() {
 
                     {/* TILE 4: HISTÓRICO RECENTE (2x2) — Mais Compacto */}
                     <div className="col-span-2 md:col-span-2 md:row-span-2 bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm flex flex-col h-[380px] md:h-auto">
-                        <div className="flex items-center justify-between mb-6 sm:mb-8">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 gap-4">
                             <div className="space-y-1">
                                 <h3 className="text-[9px] sm:text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Linha do Tempo</h3>
                                 <p className="text-base sm:text-lg font-black text-slate-900 truncate">Atividade Diária</p>
                             </div>
-                            <button 
-                                onClick={() => setAbaAtiva(abaAtiva === 'registro' ? 'justificativas' : 'registro')}
-                                className={`p-2.5 sm:p-3 rounded-2xl transition-all active:scale-95 ${
-                                    abaAtiva === 'justificativas' 
-                                    ? 'bg-blue-600 text-white shadow-xl shadow-blue-200' 
-                                    : 'bg-slate-50 text-slate-400 hover:bg-slate-100 border border-slate-100'
-                                }`}
-                            >
-                                <ScrollText className="w-4 h-4 sm:w-5 sm:h-5" />
-                            </button>
+                            
+                            <div className="flex items-center gap-2 w-full sm:w-auto">
+                                <div className="relative w-full sm:w-48">
+                                    <BarraBusca 
+                                        valor={busca}
+                                        aoMudar={setBusca}
+                                        placeholder="Filtrar..."
+                                    />
+                                </div>
+                                <button 
+                                    onClick={() => setAbaAtiva(abaAtiva === 'registro' ? 'justificativas' : 'registro')}
+                                    className={`p-2.5 rounded-xl transition-all active:scale-95 border ${
+                                        abaAtiva === 'justificativas' 
+                                        ? 'bg-blue-600 border-blue-600 text-white shadow-xl shadow-blue-200' 
+                                        : 'bg-slate-50 border-slate-100 text-slate-400 hover:bg-slate-100'
+                                    }`}
+                                >
+                                    <ScrollText className="w-4 h-4 sm:w-5 sm:h-5" />
+                                </button>
+                            </div>
                         </div>
 
                         <div className="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-none">

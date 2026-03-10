@@ -1,4 +1,5 @@
-import { Camera, KeyRound } from 'lucide-react';
+import { Camera, KeyRound, UserCircle } from 'lucide-react';
+import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
 import { usarMembros } from './usarMembros';
 import { Avatar } from '../../compartilhado/componentes/Avatar';
 import { Carregando } from '../../compartilhado/componentes/Carregando';
@@ -111,6 +112,11 @@ export function PerfilMembro({ membroId }: { membroId: string }) {
 
     return (
         <div className="w-full space-y-10 pb-20 animate-in fade-in duration-500">
+            <CabecalhoFuncionalidade 
+                titulo="Perfil do Membro"
+                subtitulo="Informações detalhadas e estatísticas do colaborador."
+                icone={UserCircle}
+            />
 
             {/* Header do Perfil (Capa e Avatar) */}
             <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm relative">
