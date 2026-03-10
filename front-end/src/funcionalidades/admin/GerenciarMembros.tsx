@@ -15,6 +15,7 @@ import { ambiente } from '../../configuracoes/ambiente';
 import { usarConfiguracoes } from './usarConfiguracoes';
 import { usarDebounce } from '../../compartilhado/hooks/usarDebounce';
 import { BarraBusca } from '../../compartilhado/componentes/BarraBusca';
+import { usarAutenticacaoContexto } from '../../contexto/ContextoAutenticacao';
 import { usarToast } from '../../compartilhado/hooks/usarToast';
 import { ToastContainer } from '../../compartilhado/componentes/ToastContainer';
 import { Paginacao } from '../../compartilhado/componentes/Paginacao';
@@ -38,6 +39,7 @@ function useGerenciarMembros() {
 
     const [salvandoIds, setSalvandoIds] = useState<Set<string>>(new Set());
     const { toasts, exibirToast } = usarToast();
+    const { usuario: usuarioAutenticado, atualizarUsuarioLocalmente } = usarAutenticacaoContexto();
 
     const marcarSalvando = useCallback((id: string) => {
         setSalvandoIds(prev => new Set(prev).add(id));
@@ -60,6 +62,15 @@ function useGerenciarMembros() {
         try {
             await api.patch(`/api/usuarios/${membro.id}/role`, { role: roleNova });
             exibirToast(`Role de ${membro.nome} atualizado com sucesso.`);
+
+            // Se for o próprio usuário logado, atualiza o contexto de autenticação
+            // para que as permissões na UI sejam atualizadas instantaneamente.
+            if (membro.id === usuarioAutenticado?.id) {
+                atualizarUsuarioLocalmente({
+                    ...usuarioAutenticado,
+                    role: roleNova
+                });
+            }
         } catch (e: any) {
             atualizarMembro(membro);
             exibirToast(e.response?.data?.erro ?? 'Erro ao alterar papel do membro.', 'erro');

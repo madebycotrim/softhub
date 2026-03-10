@@ -57,7 +57,7 @@ let ultimaBusca = 0;
  */
 export function usarPermissaoAcesso(chavePermissao: string): boolean {
     const { usuario } = usarAutenticacaoContexto();
-    const role = usuario?.role || 'MEMBRO';
+    const role = (usuario?.role || 'MEMBRO').toUpperCase();
     
     // Estado pessimista: inicia oculto (exceto para ADMIN)
     const [permissoesAtivas, setPermissoesAtivas] = useState<boolean>(() => {
