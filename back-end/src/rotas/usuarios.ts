@@ -31,7 +31,7 @@ rotasUsuarios.get('/', autenticacaoRequerida(), verificarPermissao('membros:visu
     try {
         const query = `
             SELECT
-                u.id, u.nome, u.email, u.role, u.ativo, u.foto_perfil, u.bio, u.funcoes, u.criado_em
+                u.id, u.nome, u.email, u.role, u.ativo, u.foto_perfil, u.bio, u.funcoes, u.equipe_id, u.grupo_id, u.criado_em
             FROM usuarios u
             ORDER BY u.nome ASC
         `;
