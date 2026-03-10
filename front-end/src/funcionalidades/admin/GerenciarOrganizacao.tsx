@@ -11,6 +11,7 @@ type MembroSimples = {
     foto_perfil: string | null;
     equipe_id: string | null;
     grupo_id: string | null;
+    grupos_ids?: string | null;
 };
 
 import { Carregando } from '../../compartilhado/componentes/Carregando';
@@ -234,7 +235,7 @@ function ModalAlocacao({ aberto, aoFechar, grupos, equipes, membros, aoAlocar, g
 
                 <div className="flex-1 flex flex-col justify-between">
                     <div className="space-y-6">
-                        <div className="p-5 bg-blue-50/50 border border-blue-100 rounded-3xl">
+                        <div className="p-5 bg-blue-50/50 border border-blue-100 rounded-2xl">
                             <div className="flex items-center gap-4 mb-5">
                                 <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-blue-600 border border-blue-50">
                                     <Users size={22} />
@@ -252,9 +253,9 @@ function ModalAlocacao({ aberto, aoFechar, grupos, equipes, membros, aoAlocar, g
                                     <LayoutGrid size={22} />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none mb-1.5">Grupo (Turno)</p>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none mb-1.5">Grupo</p>
                                     <p className="text-base font-bold text-slate-900 tracking-tight">
-                                        {grupos.find(g => g.id === grupoIdPadrao)?.nome || 'Turno não encontrado'}
+                                        {grupos.find(g => g.id === grupoIdPadrao)?.nome || 'Grupo não encontrado'}
                                     </p>
                                 </div>
                             </div>
@@ -306,14 +307,18 @@ function ModalSelecaoLider({
     membros, 
     aoConfirmar, 
     titulo,
-    valorAtual
+    valorAtual,
+    outroId,
+    tipo
 }: { 
     aberto: boolean, 
     aoFechar: () => void, 
     membros: MembroSimples[], 
     aoConfirmar: (mId: string) => Promise<void>, 
     titulo: string,
-    valorAtual?: string | null
+    valorAtual?: string | null,
+    outroId?: string | null,
+    tipo?: 'lider' | 'sub_lider'
 }) {
     const [busca, setBusca] = useState('');
     const [salvando, setSalvando] = useState(false);
@@ -349,25 +354,37 @@ function ModalSelecaoLider({
                 </div>
 
                 <div className="max-h-[400px] overflow-y-auto space-y-1 pr-2 custom-scrollbar">
-                    {filtrados.map(m => (
-                        <button
-                            key={m.id}
-                            onClick={() => handleSelecionar(m.id)}
-                            disabled={salvando}
-                            className={`w-full flex items-center justify-between p-3 rounded-2xl border transition-all text-left group ${valorAtual === m.id ? 'bg-blue-50 border-blue-200' : 'bg-white border-transparent hover:bg-slate-50'}`}
-                        >
-                            <div className="flex items-center gap-3">
-                                <Avatar nome={m.nome} fotoPerfil={m.foto_perfil} tamanho="sm" />
-                                <div>
-                                    <p className="text-sm font-bold text-slate-900">{m.nome}</p>
-                                    <p className="text-[10px] text-slate-400 font-medium">{m.email}</p>
+                    {filtrados.map(m => {
+                        const ehOutro = outroId === m.id;
+                        const bloqueado = ehOutro && tipo === 'sub_lider';
+                        
+                        return (
+                            <button
+                                key={m.id}
+                                onClick={() => !bloqueado && handleSelecionar(m.id)}
+                                disabled={salvando || bloqueado}
+                                className={`w-full flex items-center justify-between p-3 rounded-2xl border transition-all text-left group 
+                                    ${valorAtual === m.id ? 'bg-blue-50 border-blue-200' : 'bg-white border-transparent hover:bg-slate-50'}
+                                    ${bloqueado ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <Avatar nome={m.nome} fotoPerfil={m.foto_perfil} tamanho="sm" />
+                                    <div>
+                                        <p className="text-sm font-bold text-slate-900">{m.nome}</p>
+                                        <p className="text-[10px] text-slate-400 font-medium">{m.email}</p>
+                                        {ehOutro && (
+                                            <p className="text-[9px] font-bold text-blue-500 uppercase tracking-tight mt-0.5">
+                                                {tipo === 'lider' ? 'Atualmente Sub-líder' : 'Líder (Indisponível)'}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                            <div className={`${valorAtual === m.id ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100 transition-all`}>
-                                <UserCheck size={16} className={valorAtual === m.id ? 'text-blue-600' : 'text-blue-400'} />
-                            </div>
-                        </button>
-                    ))}
+                                <div className={`${valorAtual === m.id ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100 transition-all`}>
+                                    <UserCheck size={16} className={valorAtual === m.id ? 'text-blue-600' : 'text-blue-400'} />
+                                </div>
+                            </button>
+                        );
+                    })}
                     {filtrados.length === 0 && (
                         <div className="py-10 text-center text-slate-300 font-medium uppercase text-[10px] tracking-widest">
                             Nenhum membro encontrado
@@ -434,29 +451,31 @@ function DetalheEquipe({
     const subLider = membros.find(m => m.id === equipe.sub_lider_id);
 
     return (
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col h-full overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm flex flex-col h-full overflow-hidden">
             <div className="shrink-0">
                 {/* Header da Equipe */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-4">
-                <div className="flex items-center gap-5">
-                    <div className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center border border-slate-100">
-                        <Users size={22} />
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+                <div className="flex items-center gap-6">
+                    <div className="w-14 h-14 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center border border-slate-100">
+                        <Users size={24} />
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-slate-900">{equipe.nome}</h2>
-                        <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">{equipe.total_membros} membros totais</p>
+                        <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{equipe.nome}</h2>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                            {equipe.total_membros} membros ativos na unidade
+                        </p>
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
                     <button
                         onClick={aoEditar}
-                        className="h-9 px-4 rounded-2xl bg-white text-slate-600 font-bold text-[10px] uppercase tracking-wider hover:bg-slate-50 transition-all border border-slate-200"
+                        className="h-9 px-4 rounded-xl bg-white text-slate-600 font-bold text-[10px] uppercase tracking-wider hover:bg-slate-50 transition-all border border-slate-200"
                     >
-                        Editar
+                        Configurar Comando
                     </button>
                     <button
                         onClick={aoExcluir}
-                        className="h-9 px-4 rounded-2xl bg-white text-red-400 font-bold text-[10px] uppercase tracking-wider hover:bg-red-50 transition-all border border-slate-200"
+                        className="h-9 px-4 rounded-xl bg-white text-red-400 font-bold text-[10px] uppercase tracking-wider hover:bg-red-50 transition-all border border-slate-200"
                     >
                         Excluir
                     </button>
@@ -464,7 +483,7 @@ function DetalheEquipe({
             </div>
 
             {/* Leadership Section */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
                 <div 
                     onClick={() => aoSelecionarLider('lider')}
                     className={`flex items-center gap-5 p-6 rounded-2xl border transition-all cursor-pointer group/lead ${equipe.lider_id ? 'bg-slate-50/50 border-slate-100 shadow-sm hover:border-blue-200' : 'bg-white border-dashed border-slate-200 hover:bg-slate-50'}`}
@@ -476,8 +495,8 @@ function DetalheEquipe({
                         className={!equipe.lider_id ? 'bg-slate-100 !text-slate-400' : 'ring-4 ring-white shadow-sm'}
                     />
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1.5 leading-none">Líder</p>
-                        <p className={`text-sm font-bold tracking-tight ${equipe.lider_id ? 'text-slate-900' : 'text-slate-400 italic'}`}>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-1.5 leading-none">Líder</p>
+                        <p className={`text-base font-bold tracking-tight ${equipe.lider_id ? 'text-slate-900' : 'text-slate-400 italic'}`}>
                             {equipe.lider_nome || 'Clique para indicar'}
                         </p>
                     </div>
@@ -494,17 +513,17 @@ function DetalheEquipe({
                         className={!equipe.sub_lider_id ? 'bg-slate-100 !text-slate-400' : 'ring-4 ring-white shadow-sm'}
                     />
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1.5 leading-none">Sub-Líder</p>
-                        <p className={`text-sm font-bold tracking-tight ${equipe.sub_lider_id ? 'text-slate-900' : 'text-slate-400 italic'}`}>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-1.5 leading-none">Sub-Líder</p>
+                        <p className={`text-base font-bold tracking-tight ${equipe.sub_lider_id ? 'text-slate-900' : 'text-slate-400 italic'}`}>
                             {equipe.sub_lider_nome || 'Clique para indicar'}
                         </p>
                     </div>
                 </div>
             </div>
 
-            {/* Side-by-Side Groups Header (Fixed) */}
-            <div className="flex items-center justify-between mb-3 shrink-0 pt-2">
-                <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Grupos de Trabalho</h4>
+            {/* Side-by-Side Groups Header */}
+            <div className="flex items-center justify-between mb-4 shrink-0">
+                <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400/80">Grupos de Trabalho</h4>
                 <button
                     onClick={aoAdicionarGrupo}
                     className="text-slate-400 hover:text-blue-600 font-bold text-[10px] uppercase tracking-widest transition-colors flex items-center gap-1.5"
@@ -516,12 +535,12 @@ function DetalheEquipe({
             </div>
 
             {/* Scrollable Groups Area */}
-            <div className="flex-1 overflow-y-auto pr-2 -mr-2 custom-scrollbar">
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 pb-6">
+            <div className="flex-1 overflow-y-auto pr-2 -mr-2">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 {grupos.length === 0 ? (
-                    <div className="col-span-full border-2 border-dashed border-slate-100 rounded-2xl p-20 text-center">
-                        <p className="text-slate-400 font-bold mb-4">Nenhum grupo de trabalho criado para esta equipe.</p>
-                        <button onClick={aoAdicionarGrupo} className="bg-blue-600 text-white px-8 py-3 rounded-2xl text-xs font-bold uppercase tracking-widest hover:bg-blue-700 transition-all shadow-md">Configurar Primeiro Grupo</button>
+                    <div className="col-span-full border-2 border-dashed border-slate-100 rounded-2xl p-16 text-center">
+                        <p className="text-slate-400 font-medium mb-4">Nenhum grupo configurado para este comando.</p>
+                        <button onClick={aoAdicionarGrupo} className="bg-blue-600 text-white px-6 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-blue-700 transition-all shadow-md">Criar Primeiro Grupo</button>
                     </div>
                 ) : (
                     grupos.map(g => {
@@ -531,7 +550,7 @@ function DetalheEquipe({
                             : g.nome.charAt(0).toUpperCase();
 
                         return (
-                            <div key={g.id} className="bg-slate-50 border border-slate-200 rounded-2xl p-6 flex flex-col h-[380px] shadow-sm hover:shadow-md transition-all">
+                            <div key={g.id} className="bg-slate-50/50 border border-slate-200 rounded-2xl p-6 flex flex-col h-[400px] shadow-sm hover:shadow-md transition-all">
                                 <div className="flex items-center justify-between mb-5">
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 rounded-2xl bg-white shadow-sm border border-slate-100 text-slate-400 flex items-center justify-center font-bold text-lg">
@@ -539,34 +558,43 @@ function DetalheEquipe({
                                         </div>
                                         <div>
                                             <h5 className="text-lg font-bold text-slate-900 tracking-tight">{g.nome}</h5>
-                                            <div className="px-2.5 py-1 bg-slate-100 text-slate-500 rounded-lg text-[9px] font-black uppercase tracking-[0.15em] inline-block mt-1.5">
-                                                {g.descricao || 'Sem escala'}
-                                            </div>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <button onClick={() => aoEditarGrupo(g)} className="p-2 text-slate-400 hover:text-slate-600 transition-colors"><Pencil size={18} /></button>
-                                        <button onClick={() => aoExcluirGrupo(g)} className="p-2 text-slate-400 hover:text-red-500 transition-colors"><Trash2 size={18} /></button>
+                                        <button onClick={() => aoEditarGrupo(g)} className="p-2 text-slate-300 hover:text-slate-600 transition-colors"><Pencil size={18} /></button>
+                                        <button onClick={() => aoExcluirGrupo(g)} className="p-2 text-slate-300 hover:text-red-500 transition-colors"><Trash2 size={18} /></button>
                                     </div>
                                 </div>
 
                                 <div className="flex-1 flex flex-col min-h-0">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <h6 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400/60">Integrantes ({membros.filter(m => m.grupo_id === g.id).length})</h6>
-                                        <button onClick={() => aoAlocar(g.id, equipe.id)} className="w-8 h-8 rounded-2xl bg-white border border-slate-100 text-slate-400 flex items-center justify-center hover:bg-slate-50 hover:text-blue-600 transition-all shadow-sm">
-                                            <Plus size={16} />
-                                        </button>
-                                    </div>
-                                    <div className="flex-1 overflow-y-auto space-y-2.5 pr-2 custom-scrollbar">
-                                        {membros.filter(m => m.grupo_id === g.id).map(membro => (
-                                            <CardMembroFino key={membro.id} membro={membro} aoRemover={() => aoRemoverMembro(membro.id)} />
-                                        ))}
-                                        {membros.filter(m => m.grupo_id === g.id).length === 0 && (
-                                            <div className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-slate-200/40 rounded-2xl bg-white/50 my-2">
-                                                <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Vazio</p>
-                                            </div>
-                                        )}
-                                    </div>
+                                    {(() => {
+                                        const membrosDoGrupo = membros.filter(m => {
+                                            const ids = m.grupos_ids ? m.grupos_ids.split(',') : [];
+                                            return ids.includes(g.id);
+                                        });
+                                        return (
+                                            <>
+                                                <div className="flex items-center justify-between mb-3 px-1">
+                                                    <h6 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
+                                                        Pessoas ({membrosDoGrupo.length})
+                                                    </h6>
+                                                    <button onClick={() => aoAlocar(g.id, equipe.id)} className="w-8 h-8 rounded-xl bg-white border border-slate-100 text-slate-400 flex items-center justify-center hover:bg-slate-50 hover:text-blue-600 transition-all shadow-sm">
+                                                        <Plus size={16} />
+                                                    </button>
+                                                </div>
+                                                <div className="flex-1 overflow-y-auto space-y-2.5 pr-2 custom-scrollbar">
+                                                    {membrosDoGrupo.map(membro => (
+                                                        <CardMembroFino key={membro.id} membro={membro} aoRemover={() => aoRemoverMembro(membro.id)} />
+                                                    ))}
+                                                    {membrosDoGrupo.length === 0 && (
+                                                        <div className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-slate-200/40 rounded-2xl bg-white/50 my-2">
+                                                            <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Vazio</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </>
+                                        );
+                                    })()}
                                 </div>
                             </div>
                         );
@@ -652,10 +680,40 @@ export function GerenciarOrganizacao() {
     };
 
     const handleDefinirLider = async (membroId: string) => {
-        if (!modalLider || !idEquipeAtiva) return;
-        const campo = modalLider.tipo === 'lider' ? 'lider_id' : 'sub_lider_id';
+        if (!modalLider || !idEquipeAtiva || !equipeAtiva) return;
+        
+        const isLider = modalLider.tipo === 'lider';
+        const payload: any = {};
+
+        if (isLider) {
+            // Toggle: se clicar no que já é líder, remove (null)
+            if (equipeAtiva.lider_id === membroId) {
+                payload.lider_id = null;
+            } else {
+                payload.lider_id = membroId;
+                // REGRA: Se quem está virando Líder era o Sub-líder, limpa o cargo de Sub
+                if (equipeAtiva.sub_lider_id === membroId) {
+                    payload.sub_lider_id = null;
+                }
+            }
+        } else {
+            // REGRA: Líder não pode ser selecionado como Sub-líder
+            if (equipeAtiva.lider_id === membroId) {
+                // Não faz nada ou poderia mostrar um aviso. 
+                // Como é uma regra de negócio restritiva, vamos apenas ignorar a ação.
+                return;
+            }
+
+            // Toggle: se clicar no que já é sub-líder, remove (null)
+            if (equipeAtiva.sub_lider_id === membroId) {
+                payload.sub_lider_id = null;
+            } else {
+                payload.sub_lider_id = membroId;
+            }
+        }
+
         try {
-            await editarEquipe(idEquipeAtiva, { [campo]: membroId });
+            await editarEquipe(idEquipeAtiva, payload);
             setModalLider(null);
         } catch (err) {
             console.error('Erro ao definir liderança:', err);
@@ -666,10 +724,10 @@ export function GerenciarOrganizacao() {
     if (erro && equipes.length === 0) return <div className="p-20 text-center text-red-500 font-bold">{erro}</div>;
 
     return (
-        <div className="h-[calc(100vh-80px)] lg:h-[calc(100vh-48px)] flex flex-col bg-slate-50/50 overflow-hidden px-0">
+        <div className="h-[calc(100vh-80px)] lg:h-[calc(100vh-48px)] flex flex-col overflow-hidden px-0">
             <CabecalhoFuncionalidade
                 titulo="Gestão de Equipes"
-                subtitulo="Organize a estrutura de comando e os turnos de participação da unidade."
+                subtitulo="Organize a estrutura de comando e os grupos de participação da unidade."
                 icone={LayoutGrid}
                 variante="destaque"
             >
@@ -682,32 +740,32 @@ export function GerenciarOrganizacao() {
                 </button>
             </CabecalhoFuncionalidade>
 
-            <div className="flex-1 flex overflow-hidden py-2 gap-4 px-0">
-                                {/* Sidebar: Lista de Equipes */}
-                                <aside className="w-80 hidden lg:flex flex-col gap-4">
-                    <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm overflow-hidden flex flex-col flex-1">
-                        <div className="flex items-center justify-between mb-4">
+            <div className="flex-1 flex overflow-hidden py-6 gap-6">
+                {/* Sidebar: Lista de Equipes */}
+                <aside className="w-72 hidden lg:flex flex-col shrink-0">
+                    <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm overflow-hidden flex flex-col flex-1">
+                        <div className="flex items-center justify-between mb-4 px-1">
                             <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400">UNIDADE ({equipes.length})</h3>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                        <div className="flex-1 overflow-y-auto space-y-1.5 pr-2 custom-scrollbar">
                             {equipesAtivas.map((e: Equipe) => (
                                 <button
                                     key={e.id}
                                     onClick={() => setIdEquipeAtiva(e.id)}
-                                    className={`w-full text-left p-3 px-6 rounded-2xl transition-all duration-300 group border ${idEquipeAtiva === e.id ? 'bg-blue-50/50 border-blue-200 shadow-sm translate-x-1' : 'bg-white border-transparent hover:bg-slate-50'}`}
+                                    className={`w-full text-left p-4 rounded-2xl transition-all duration-300 group border ${idEquipeAtiva === e.id ? 'bg-blue-50 border-blue-100 shadow-sm' : 'bg-transparent border-transparent hover:bg-slate-50'}`}
                                 >
-                                    <p className={`font-bold text-lg transition-colors ${idEquipeAtiva === e.id ? 'text-blue-700' : 'text-slate-900 group-hover:text-blue-600'}`}>{e.nome}</p>
-                                    <div className="flex items-center gap-2">
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">
-                                            {e.total_membros} membros
+                                    <p className={`font-bold text-base tracking-tight transition-colors ${idEquipeAtiva === e.id ? 'text-blue-700' : 'text-slate-900 group-hover:text-blue-600'}`}>{e.nome}</p>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                        <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest truncate">
+                                            {e.total_membros || 0} Membros
                                         </p>
                                     </div>
                                 </button>
                             ))}
                             {equipes.length === 0 && (
                                 <div className="py-20 text-center border-2 border-dashed border-slate-100 rounded-2xl">
-                                    <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Nenhuma equipe cadastrada</p>
+                                    <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Nenhuma unidade</p>
                                 </div>
                             )}
                         </div>
@@ -715,7 +773,7 @@ export function GerenciarOrganizacao() {
                 </aside>
 
                 {/* Detalhe da Equipe Selecionada */}
-                <main className="flex-1 flex flex-col overflow-hidden">
+                <main className="flex-1 flex flex-col min-w-0">
                     {equipeAtiva ? (
                         <DetalheEquipe
                             equipe={equipeAtiva}
@@ -731,10 +789,12 @@ export function GerenciarOrganizacao() {
                             aoSelecionarLider={(tipo) => setModalLider({ aberto: true, tipo })}
                         />
                     ) : (
-                        <div className="h-full flex flex-col items-center justify-center bg-white border border-slate-200 border-dashed rounded-2xl">
-                            <Users size={48} className="text-slate-200 mb-6" />
-                            <h3 className="text-xl font-bold text-slate-900">Selecione uma Equipe</h3>
-                            <p className="text-slate-400 font-medium">Use a barra lateral para navegar entre os comandos da unidade.</p>
+                        <div className="h-full flex flex-col items-center justify-center bg-white border border-slate-200 border-dashed rounded-2xl p-20 text-center">
+                            <div className="w-24 h-24 rounded-2xl bg-slate-50 text-slate-200 flex items-center justify-center mb-6 border border-slate-100">
+                                <Users size={40} />
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-900 mb-2">Selecione uma Unidade</h3>
+                            <p className="text-slate-400 font-medium max-w-xs mx-auto">Navegue pelos comandos na barra lateral para gerenciar grupos e lideranças.</p>
                         </div>
                     )}
                 </main>
@@ -772,7 +832,7 @@ export function GerenciarOrganizacao() {
                 aoFechar={() => setModalAlocacao(null)}
                 grupos={grupos}
                 equipes={equipesAtivas}
-                membros={membros.map(m => ({ ...m, role: '', foto_perfil: (m as any).foto_perfil ?? null, equipe_id: (m as any).equipe_id ?? null, grupo_id: (m as any).grupo_id ?? null }))}
+                membros={membros}
                 aoAlocar={alocarMembro}
                 grupoIdPadrao={modalAlocacao?.grupoId}
                 equipeIdPadrao={modalAlocacao?.equipeId}
@@ -783,8 +843,10 @@ export function GerenciarOrganizacao() {
                 aoFechar={() => setModalLider(null)}
                 membros={membros}
                 aoConfirmar={handleDefinirLider}
-                titulo={modalLider?.tipo === 'lider' ? 'Definir Líder Master' : 'Definir Sublíder'}
+                titulo={modalLider?.tipo === 'lider' ? 'Definir Líder' : 'Definir Sub-líder'}
                 valorAtual={modalLider?.tipo === 'lider' ? equipeAtiva?.lider_id : equipeAtiva?.sub_lider_id}
+                outroId={modalLider?.tipo === 'lider' ? equipeAtiva?.sub_lider_id : equipeAtiva?.lider_id}
+                tipo={modalLider?.tipo}
             />
         </div>
     );

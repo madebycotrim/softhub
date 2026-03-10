@@ -36,6 +36,7 @@ export interface MembroSimples {
     foto_perfil: string | null;
     equipe_id: string | null;
     grupo_id: string | null;
+    grupos_ids?: string | null; // Lista de IDs de grupos (separados por vírgula)
 }
 
 /**
@@ -112,9 +113,33 @@ export function usarOrganizacao() {
 
     const alocarMembro = async (membroId: string, equipe_id: string | null, grupo_id: string | null) => {
         // Optimistic local update
-        setMembros(prev => prev.map(m => m.id === membroId ? { ...m, equipe_id, grupo_id } : m));
-        await api.patch(`/api/organizacao/membros/${membroId}/alocar`, { equipe_id, grupo_id });
-        carregar(true);
+        setMembros(prev => prev.map(m => {
+            if (m.id !== membroId) return m;
+            
+            let novosGrupos = m.grupos_ids ? m.grupos_ids.split(',') : [];
+            if (equipe_id && grupo_id) {
+                // Adiciona se não existir
+                if (!novosGrupos.includes(grupo_id)) novosGrupos.push(grupo_id);
+            } else if (equipe_id && !grupo_id) {
+                // Se removeu grupo, nesse novo modelo (melhor) removemos de todos os grupos daquela equipe
+                // Mas para simplicidade agora, vamos apenas esperar o refresh do background carregar(true)
+            }
+            
+            return { 
+                ...m, 
+                equipe_id, 
+                grupo_id, 
+                grupos_ids: novosGrupos.join(',') 
+            };
+        }));
+
+        try {
+            await api.patch(`/api/organizacao/membros/${membroId}/alocar`, { equipe_id, grupo_id });
+            await carregar(true); // Confirma estado real do banco
+        } catch (e) {
+            console.error('Erro ao alocar membro:', e);
+            carregar(); 
+        }
     };
 
     return {

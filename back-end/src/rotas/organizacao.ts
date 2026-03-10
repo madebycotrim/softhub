@@ -18,12 +18,13 @@ rotasOrganizacao.get('/grupos', autenticacaoRequerida(), verificarPermissao('org
                 e.nome AS equipe_nome,
                 ul.nome AS lider_nome,
                 us.nome AS sub_lider_nome,
-                COUNT(u.id) AS total_membros
+                COUNT(uo.usuario_id) AS total_membros
             FROM grupos g
             LEFT JOIN equipes e ON g.equipe_id = e.id
             LEFT JOIN usuarios ul ON e.lider_id = ul.id
             LEFT JOIN usuarios us ON e.sub_lider_id = us.id
-            LEFT JOIN usuarios u ON u.grupo_id = g.id AND u.ativo = 1
+            LEFT JOIN usuarios_organizacao uo ON uo.grupo_id = g.id
+            LEFT JOIN usuarios u ON uo.usuario_id = u.id AND u.ativo = 1
             GROUP BY g.id
             ORDER BY e.nome ASC, g.nome ASC
         `).all();
@@ -170,12 +171,13 @@ rotasOrganizacao.get('/equipes', autenticacaoRequerida(), verificarPermissao('or
                 e.lider_id, e.sub_lider_id,
                 ul.nome AS lider_nome,
                 us.nome AS sub_lider_nome,
-                COUNT(DISTINCT u.id) AS total_membros,
+                COUNT(DISTINCT uo.usuario_id) AS total_membros,
                 (SELECT GROUP_CONCAT(nome, ', ') FROM grupos WHERE equipe_id = e.id AND ativo = 1) AS grupos_nomes
             FROM equipes e
             LEFT JOIN usuarios ul ON e.lider_id = ul.id
             LEFT JOIN usuarios us ON e.sub_lider_id = us.id
-            LEFT JOIN usuarios u ON u.equipe_id = e.id AND u.ativo = 1
+            LEFT JOIN usuarios_organizacao uo ON uo.equipe_id = e.id
+            LEFT JOIN usuarios u ON uo.usuario_id = u.id AND u.ativo = 1
             GROUP BY e.id
             ORDER BY e.nome ASC
         `).all();
@@ -326,9 +328,23 @@ rotasOrganizacao.patch('/membros/:id/alocar', autenticacaoRequerida(), verificar
     }
 
     try {
-        await DB.prepare('UPDATE usuarios SET equipe_id = ?, grupo_id = ? WHERE id = ?')
-            .bind(equipe_id, grupo_id, membroId)
-            .run();
+        // Regra para multi-equipes: se equipe_id e grupo_id forem nulos, removemos o vínculo de todos os grupos da equipe
+        // Se ambos forem fornecidos, criamos ou atualizamos o vínculo específico.
+        // Como o frontend envia equipe_id e grupo_id como par, vamos lidar com a criação/emoção
+        
+        if (equipe_id && grupo_id) {
+            // Adiciona ou garante vínculo (Upsert manual no SQLite)
+            await DB.prepare(`
+                INSERT INTO usuarios_organizacao (id, usuario_id, equipe_id, grupo_id)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(usuario_id, equipe_id, grupo_id) DO NOTHING
+            `).bind(crypto.randomUUID(), membroId, equipe_id, grupo_id).run();
+        } else if (equipe_id && !grupo_id) {
+            // Se enviar apenas equipe_id sem grupo, removemos o membro de TODOS os grupos dessa equipe
+            await DB.prepare('DELETE FROM usuarios_organizacao WHERE usuario_id = ? AND equipe_id = ?')
+                .bind(membroId, equipe_id)
+                .run();
+        }
 
         await registrarLog(DB, {
             usuarioId: usuarioLogado.id,
