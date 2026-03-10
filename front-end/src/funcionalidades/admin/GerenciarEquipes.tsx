@@ -1,7 +1,7 @@
-import { useState, useRef, useLayoutEffect, useEffect, useMemo } from 'react';
+import { useState, useRef, useLayoutEffect, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { LayoutGrid, Users, Plus, Pencil, Trash2, UserCheck, Search, ChevronDown } from 'lucide-react';
-import { usarOrganizacao, type Grupo, type Equipe } from './usarOrganizacao';
+import { LayoutGrid, Users, Plus, Pencil, Trash2, UserCheck, Search, ChevronDown, Check } from 'lucide-react';
+import { usarEquipes, type Grupo, type Equipe } from './usarEquipes';
 
 type MembroSimples = {
     id: string;
@@ -243,7 +243,7 @@ function ModalAlocacao({ aberto, aoFechar, grupos, equipes, membros, aoAlocar, g
                                 <div>
                                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none mb-1.5">Equipe (Comando)</p>
                                     <p className="text-base font-bold text-slate-900 tracking-tight">
-                                        {equipes.find(e => e.id === equipeIdPadrao)?.nome || 'Comando não encontrado'}
+                                        {equipes.find(e => e.id === equipeIdPadrao)?.nome || 'Equipe não encontrada'}
                                     </p>
                                 </div>
                             </div>
@@ -265,7 +265,7 @@ function ModalAlocacao({ aberto, aoFechar, grupos, equipes, membros, aoAlocar, g
                             <div className="p-4 border border-slate-100 bg-slate-50/30 rounded-2xl">
                                 <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1.5 leading-none">Status do Membro Selecionado</p>
                                 <p className="text-xs text-slate-600">
-                                    Atualmente vinculado à equipe <span className="font-extrabold text-slate-900">{equipes.find(e => e.id === membroSelecionado.equipe_id)?.nome || 'nenhum comando'}</span>.
+                                    Atualmente vinculado à equipe <span className="font-extrabold text-slate-900">{equipes.find(e => e.id === membroSelecionado.equipe_id)?.nome || 'nenhuma equipe'}</span>.
                                 </p>
                             </div>
                         )}
@@ -426,29 +426,62 @@ function DetalheEquipe({
     equipe,
     grupos,
     membros,
-    aoEditar,
     aoExcluir,
     aoAdicionarGrupo,
-    aoEditarGrupo,
     aoExcluirGrupo,
     aoAlocar,
     aoRemoverMembro,
-    aoSelecionarLider
+    aoSelecionarLider,
+    aoSalvarNomeGrupo,
+    aoSalvarNomeEquipe
 }: {
     equipe: Equipe,
     grupos: Grupo[],
     membros: MembroSimples[],
-    aoEditar: () => void,
     aoExcluir: () => void,
     aoAdicionarGrupo: () => void,
-    aoEditarGrupo: (g: Grupo) => void,
     aoExcluirGrupo: (g: Grupo) => void,
     aoAlocar: (gId: string, eId: string) => void,
     aoRemoverMembro: (mId: string) => void,
-    aoSelecionarLider: (tipo: 'lider' | 'sub_lider') => void
+    aoSelecionarLider: (tipo: 'lider' | 'sub_lider') => void,
+    aoSalvarNomeGrupo: (id: string, nome: string) => Promise<void>,
+    aoSalvarNomeEquipe: (id: string, nome: string) => Promise<void>
 }) {
-    const lider = membros.find(m => m.id === equipe.lider_id);
-    const subLider = membros.find(m => m.id === equipe.sub_lider_id);
+    const [editandoId, setEditandoId] = useState<string | null>(null);
+    const [editandoEquipe, setEditandoEquipe] = useState(false);
+    const [nomeTemp, setNomeTemp] = useState('');
+    const [salvandoInline, setSalvandoInline] = useState(false);
+
+    const handleSalvarInline = async (id: string) => {
+        if (!nomeTemp.trim() || salvandoInline) {
+            setEditandoId(null);
+            return;
+        }
+        setSalvandoInline(true);
+        try {
+            await aoSalvarNomeGrupo(id, nomeTemp);
+            setEditandoId(null);
+        } finally {
+            setSalvandoInline(false);
+        }
+    };
+
+    const handleSalvarEquipeInline = async () => {
+        if (!nomeTemp.trim() || salvandoInline) {
+            setEditandoEquipe(false);
+            return;
+        }
+        setSalvandoInline(true);
+        try {
+            await aoSalvarNomeEquipe(equipe.id, nomeTemp);
+            setEditandoEquipe(false);
+        } finally {
+            setSalvandoInline(false);
+        }
+    };
+
+    const lider = useMemo(() => membros.find(m => m.id === equipe.lider_id), [membros, equipe.lider_id]);
+    const subLider = useMemo(() => membros.find(m => m.id === equipe.sub_lider_id), [membros, equipe.sub_lider_id]);
 
     return (
         <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm flex flex-col h-full overflow-hidden">
@@ -460,24 +493,51 @@ function DetalheEquipe({
                         <Users size={24} />
                     </div>
                     <div>
-                        <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{equipe.nome}</h2>
+                        {editandoEquipe ? (
+                            <div className="flex items-center gap-2">
+                                <input
+                                    autoFocus
+                                    value={nomeTemp}
+                                    onChange={e => setNomeTemp(e.target.value)}
+                                    onKeyDown={e => {
+                                        if (e.key === 'Enter') handleSalvarEquipeInline();
+                                        if (e.key === 'Escape') setEditandoEquipe(false);
+                                    }}
+                                    onBlur={() => handleSalvarEquipeInline()}
+                                    className="bg-transparent border-b-2 border-slate-900 outline-none text-2xl font-bold text-slate-900 p-0 tracking-tight"
+                                />
+                                <div className="flex items-center gap-1">
+                                    <button onClick={handleSalvarEquipeInline} className="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all" title="Salvar">
+                                        <Check size={16} strokeWidth={2.5} />
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-2 group/title">
+                                <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{equipe.nome}</h2>
+                                <button 
+                                    onClick={() => {
+                                        setEditandoEquipe(true);
+                                        setNomeTemp(equipe.nome);
+                                    }}
+                                    className="opacity-0 group-hover/title:opacity-100 p-1 text-slate-300 hover:text-slate-600 transition-all"
+                                >
+                                    <Pencil size={14} />
+                                </button>
+                            </div>
+                        )}
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                            {equipe.total_membros} membros ativos na unidade
+                            {equipe.total_membros} membros ativos na equipe
                         </p>
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
                     <button
-                        onClick={aoEditar}
-                        className="h-9 px-4 rounded-xl bg-white text-slate-600 font-bold text-[10px] uppercase tracking-wider hover:bg-slate-50 transition-all border border-slate-200"
-                    >
-                        Configurar Comando
-                    </button>
-                    <button
                         onClick={aoExcluir}
-                        className="h-9 px-4 rounded-xl bg-white text-red-400 font-bold text-[10px] uppercase tracking-wider hover:bg-red-50 transition-all border border-slate-200"
+                        title="Arquivar esta equipe"
+                        className="h-9 px-4 rounded-xl bg-white text-red-500/80 font-bold text-[10px] uppercase tracking-wider hover:bg-red-50 transition-all border border-slate-200"
                     >
-                        Excluir
+                        Excluir Equipe
                     </button>
                 </div>
             </div>
@@ -535,34 +595,64 @@ function DetalheEquipe({
             </div>
 
             {/* Scrollable Groups Area */}
-            <div className="flex-1 overflow-y-auto pr-2 -mr-2">
+            <div className="flex-1 overflow-y-auto min-h-0 pr-2 -mr-2 custom-scrollbar">
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 {grupos.length === 0 ? (
                     <div className="col-span-full border-2 border-dashed border-slate-100 rounded-2xl p-16 text-center">
-                        <p className="text-slate-400 font-medium mb-4">Nenhum grupo configurado para este comando.</p>
+                        <p className="text-slate-400 font-medium mb-4">Nenhum grupo configurado para esta equipe.</p>
                         <button onClick={aoAdicionarGrupo} className="bg-blue-600 text-white px-6 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-blue-700 transition-all shadow-md">Criar Primeiro Grupo</button>
                     </div>
                 ) : (
                     grupos.map(g => {
-                        const partes = g.nome.split(' ').filter(p => p.trim() !== '');
-                        const inicial = (partes.length > 1 && (partes[0].toLowerCase() === 'grupo' || partes[0].toLowerCase() === 'grupos'))
-                            ? partes[1].charAt(0).toUpperCase()
-                            : g.nome.charAt(0).toUpperCase();
+                        const partes = g.nome.trim().split(/\s+/);
+                        const devePularPrimeira = partes.length > 1 && /^(grupo|grupos)$/i.test(partes[0]);
+                        const inicial = devePularPrimeira ? partes[1].charAt(0).toUpperCase() : partes[0].charAt(0).toUpperCase();
 
                         return (
-                            <div key={g.id} className="bg-slate-50/50 border border-slate-200 rounded-2xl p-6 flex flex-col h-[400px] shadow-sm hover:shadow-md transition-all">
+                            <div key={g.id} className="bg-slate-50/50 border border-slate-200 rounded-2xl p-6 flex flex-col h-full min-h-[400px] shadow-sm hover:shadow-md transition-all overflow-hidden">
                                 <div className="flex items-center justify-between mb-5">
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 rounded-2xl bg-white shadow-sm border border-slate-100 text-slate-400 flex items-center justify-center font-bold text-lg">
                                             {inicial}
                                         </div>
-                                        <div>
-                                            <h5 className="text-lg font-bold text-slate-900 tracking-tight">{g.nome}</h5>
+                                        <div className="flex-1">
+                                            {editandoId === g.id ? (
+                                                <input
+                                                    autoFocus
+                                                    value={nomeTemp}
+                                                    onChange={e => setNomeTemp(e.target.value)}
+                                                    onKeyDown={e => {
+                                                        if (e.key === 'Enter') handleSalvarInline(g.id);
+                                                        if (e.key === 'Escape') setEditandoId(null);
+                                                    }}
+                                                    onBlur={() => handleSalvarInline(g.id)}
+                                                    className="w-full bg-transparent border-b-2 border-slate-900 outline-none text-lg font-bold text-slate-900 p-0 tracking-tight"
+                                                    disabled={salvandoInline}
+                                                />
+                                            ) : (
+                                                <div className="flex items-center gap-2 group/title">
+                                                    <h5 className="text-lg font-bold text-slate-900 tracking-tight">{g.nome}</h5>
+                                                    <button 
+                                                        onClick={() => {
+                                                            setEditandoId(g.id);
+                                                            setNomeTemp(g.nome);
+                                                        }}
+                                                        className="opacity-0 group-hover/title:opacity-100 p-1 text-slate-300 hover:text-slate-600 transition-all"
+                                                    >
+                                                        <Pencil size={14} />
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <button onClick={() => aoEditarGrupo(g)} className="p-2 text-slate-300 hover:text-slate-600 transition-colors"><Pencil size={18} /></button>
-                                        <button onClick={() => aoExcluirGrupo(g)} className="p-2 text-slate-300 hover:text-red-500 transition-colors"><Trash2 size={18} /></button>
+                                        {editandoId === g.id ? (
+                                            <button onClick={() => handleSalvarInline(g.id)} className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-xl transition-all" title="Confirmar">
+                                                <Check size={18} strokeWidth={2.5} />
+                                            </button>
+                                        ) : (
+                                            <button onClick={() => aoExcluirGrupo(g)} className="p-2 text-slate-300 hover:text-red-500 transition-colors"><Trash2 size={18} /></button>
+                                        )}
                                     </div>
                                 </div>
 
@@ -582,7 +672,7 @@ function DetalheEquipe({
                                                         <Plus size={16} />
                                                     </button>
                                                 </div>
-                                                <div className="flex-1 overflow-y-auto space-y-2.5 pr-2 custom-scrollbar">
+                                                <div className="flex-1 overflow-y-auto min-h-0 space-y-2.5 pr-2 custom-scrollbar">
                                                     {membrosDoGrupo.map(membro => (
                                                         <CardMembroFino key={membro.id} membro={membro} aoRemover={() => aoRemoverMembro(membro.id)} />
                                                     ))}
@@ -608,13 +698,13 @@ function DetalheEquipe({
 
 // ─── Componente Principal: GerenciarOrganizacao ───────────────────────────────
 
-export function GerenciarOrganizacao() {
+export function GerenciarEquipes() {
     const {
         grupos, equipes, membros, carregando, erro,
         criarGrupo, editarGrupo, desativarGrupo,
         criarEquipe, editarEquipe, desativarEquipe,
         alocarMembro
-    } = usarOrganizacao();
+    } = usarEquipes();
 
     const [idEquipeAtiva, setIdEquipeAtiva] = useState<string | null>(null);
     const [modalOrg, setModalOrg] = useState<{ aberto: boolean; tipo: 'equipe' | 'grupo'; dados?: any } | null>(null);
@@ -643,68 +733,60 @@ export function GerenciarOrganizacao() {
         equipes.filter(e => e.ativo),
     [equipes]);
 
-    const handleSalvarOrg = async (dados: any) => {
+    const handleSalvarOrg = useCallback(async (dados: any) => {
         if (!modalOrg) return;
-        setDesativando(true); // Assuming salvando state is managed by the form itself, this is for the parent component if needed.
+        setDesativando(true);
         try {
             if (modalOrg.tipo === 'grupo') {
-                modalOrg.dados?.id ? await editarGrupo(modalOrg.dados.id, dados) : await criarGrupo(dados);
-            } else { // tipo === 'equipe'
-                modalOrg.dados?.id ? await editarEquipe(modalOrg.dados.id, dados) : await criarEquipe(dados);
+                await criarGrupo(dados);
+            } else {
+                await criarEquipe(dados);
             }
             setModalOrg(null);
         } catch (error) {
-            console.error("Erro ao salvar organização:", error);
-            // Optionally set an error state here
+            console.error("Erro ao salvar:", error);
         } finally {
             setDesativando(false);
         }
-    };
+    }, [modalOrg, criarGrupo, criarEquipe]);
 
-    const handleConfirmarExclusao = async () => {
+    const handleConfirmarExclusao = useCallback(async () => {
         if (!confirmacaoExclusao) return;
         setDesativando(true);
         try {
             if (confirmacaoExclusao.tipo === 'grupo') {
                 await desativarGrupo(confirmacaoExclusao.id);
-            } else { // tipo === 'equipe'
+            } else {
                 await desativarEquipe(confirmacaoExclusao.id);
             }
         } catch (error) {
             console.error("Erro ao desativar:", error);
-            // Optionally set an error state here
         } finally {
             setDesativando(false);
             setConfirmacaoExclusao(null);
         }
-    };
+    }, [confirmacaoExclusao, desativarGrupo, desativarEquipe]);
 
-    const handleDefinirLider = async (membroId: string) => {
+    const handleDefinirLider = useCallback(async (membroId: string) => {
         if (!modalLider || !idEquipeAtiva || !equipeAtiva) return;
         
         const isLider = modalLider.tipo === 'lider';
         const payload: any = {};
 
         if (isLider) {
-            // Toggle: se clicar no que já é líder, remove (null)
             if (equipeAtiva.lider_id === membroId) {
                 payload.lider_id = null;
             } else {
                 payload.lider_id = membroId;
-                // REGRA: Se quem está virando Líder era o Sub-líder, limpa o cargo de Sub
                 if (equipeAtiva.sub_lider_id === membroId) {
                     payload.sub_lider_id = null;
                 }
             }
         } else {
-            // REGRA: Líder não pode ser selecionado como Sub-líder
             if (equipeAtiva.lider_id === membroId) {
-                // Não faz nada ou poderia mostrar um aviso. 
-                // Como é uma regra de negócio restritiva, vamos apenas ignorar a ação.
                 return;
             }
 
-            // Toggle: se clicar no que já é sub-líder, remove (null)
             if (equipeAtiva.sub_lider_id === membroId) {
                 payload.sub_lider_id = null;
             } else {
@@ -718,7 +800,7 @@ export function GerenciarOrganizacao() {
         } catch (err) {
             console.error('Erro ao definir liderança:', err);
         }
-    };
+    }, [modalLider, idEquipeAtiva, equipeAtiva, editarEquipe]);
 
     if (carregando && equipes.length === 0) return <div className="h-screen flex items-center justify-center"><Carregando /></div>;
     if (erro && equipes.length === 0) return <div className="p-20 text-center text-red-500 font-bold">{erro}</div>;
@@ -727,7 +809,7 @@ export function GerenciarOrganizacao() {
         <div className="h-[calc(100vh-80px)] lg:h-[calc(100vh-48px)] flex flex-col overflow-hidden px-0">
             <CabecalhoFuncionalidade
                 titulo="Gestão de Equipes"
-                subtitulo="Organize a estrutura de comando e os grupos de participação da unidade."
+                subtitulo="Organize a estrutura de comando e os grupos de participação da equipe."
                 icone={LayoutGrid}
                 variante="destaque"
             >
@@ -745,7 +827,7 @@ export function GerenciarOrganizacao() {
                 <aside className="w-72 hidden lg:flex flex-col shrink-0">
                     <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm overflow-hidden flex flex-col flex-1">
                         <div className="flex items-center justify-between mb-4 px-1">
-                            <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400">UNIDADE ({equipes.length})</h3>
+                            <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400">EQUIPES ({equipes.length})</h3>
                         </div>
 
                         <div className="flex-1 overflow-y-auto space-y-1.5 pr-2 custom-scrollbar">
@@ -765,7 +847,7 @@ export function GerenciarOrganizacao() {
                             ))}
                             {equipes.length === 0 && (
                                 <div className="py-20 text-center border-2 border-dashed border-slate-100 rounded-2xl">
-                                    <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Nenhuma unidade</p>
+                                    <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Nenhuma equipe</p>
                                 </div>
                             )}
                         </div>
@@ -776,25 +858,26 @@ export function GerenciarOrganizacao() {
                 <main className="flex-1 flex flex-col min-w-0">
                     {equipeAtiva ? (
                         <DetalheEquipe
+                            key={equipeAtiva.id}
                             equipe={equipeAtiva}
                             grupos={gruposDaEquipe}
                             membros={membros}
-                            aoEditar={() => setModalOrg({ aberto: true, tipo: 'equipe', dados: equipeAtiva })}
                             aoExcluir={() => setConfirmacaoExclusao({ id: equipeAtiva.id, nome: equipeAtiva.nome, tipo: 'equipe' })}
                             aoAdicionarGrupo={() => setModalOrg({ aberto: true, tipo: 'grupo', dados: { equipe_id: idEquipeAtiva } })}
-                            aoEditarGrupo={(g) => setModalOrg({ aberto: true, tipo: 'grupo', dados: g })}
                             aoExcluirGrupo={(g) => setConfirmacaoExclusao({ id: g.id, nome: g.nome, tipo: 'grupo' })}
                             aoAlocar={(gId, eId) => setModalAlocacao({ grupoId: gId, equipeId: eId })}
                             aoRemoverMembro={(mId) => alocarMembro(mId, equipeAtiva.id, null)}
                             aoSelecionarLider={(tipo) => setModalLider({ aberto: true, tipo })}
+                            aoSalvarNomeGrupo={async (id, nome) => { await editarGrupo(id, { nome }); }}
+                            aoSalvarNomeEquipe={async (id, nome) => { await editarEquipe(id, { nome }); }}
                         />
                     ) : (
                         <div className="h-full flex flex-col items-center justify-center bg-white border border-slate-200 border-dashed rounded-2xl p-20 text-center">
                             <div className="w-24 h-24 rounded-2xl bg-slate-50 text-slate-200 flex items-center justify-center mb-6 border border-slate-100">
                                 <Users size={40} />
                             </div>
-                            <h3 className="text-xl font-bold text-slate-900 mb-2">Selecione uma Unidade</h3>
-                            <p className="text-slate-400 font-medium max-w-xs mx-auto">Navegue pelos comandos na barra lateral para gerenciar grupos e lideranças.</p>
+                            <h3 className="text-xl font-bold text-slate-900 mb-2">Selecione uma Equipe</h3>
+                            <p className="text-slate-400 font-medium max-w-xs mx-auto">Navegue pelas equipes na barra lateral para gerenciar grupos e lideranças.</p>
                         </div>
                     )}
                 </main>
@@ -805,12 +888,12 @@ export function GerenciarOrganizacao() {
                 <Modal
                     aberto={modalOrg.aberto}
                     aoFechar={() => setModalOrg(null)}
-                    titulo={modalOrg.dados?.id ? `Editar ${modalOrg.tipo}` : `Novo(a) ${modalOrg.tipo === 'equipe' ? 'Equipe' : 'Grupo'}`}
+                    titulo={`Novo(a) ${modalOrg.tipo === 'equipe' ? 'Equipe' : 'Grupo'}`}
                 >
                     <FormGrupoEquipe
                         titulo={modalOrg.tipo === 'equipe' ? 'Equipe' : 'Grupo'}
                         tipo={modalOrg.tipo}
-                        inicial={modalOrg.dados}
+                        equipeAtivaId={modalOrg.dados?.equipe_id}
                         equipes={equipes.map(e => ({ id: e.id, nome: e.nome }))}
                         aoSalvar={handleSalvarOrg}
                         aoFechar={() => setModalOrg(null)}
@@ -857,16 +940,16 @@ export function GerenciarOrganizacao() {
 interface FormGrupoEquipeProps {
     titulo: string;
     tipo: 'equipe' | 'grupo';
-    inicial?: any;
     equipes?: { id: string; nome: string }[];
+    equipeAtivaId?: string;
     aoSalvar: (dados: any) => Promise<void>;
     aoFechar: () => void;
 }
 
-function FormGrupoEquipe({ titulo, tipo, inicial, equipes, aoSalvar, aoFechar }: FormGrupoEquipeProps) {
+function FormGrupoEquipe({ titulo, tipo, equipes, equipeAtivaId, aoSalvar, aoFechar }: FormGrupoEquipeProps) {
     const [salvando, setSalvando] = useState(false);
-    const [nome, setNome] = useState(inicial?.nome || '');
-    const [equipeId, setEquipeId] = useState(inicial?.equipe_id || '');
+    const [nome, setNome] = useState('');
+    const [equipeId, setEquipeId] = useState(equipeAtivaId || '');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -914,10 +997,10 @@ function FormGrupoEquipe({ titulo, tipo, inicial, equipes, aoSalvar, aoFechar }:
                 </button>
                 <button
                     type="submit"
-                    disabled={salvando}
+                    disabled={salvando || !nome.trim()}
                     className="flex-[2] h-12 bg-blue-600 text-white rounded-2xl text-sm font-bold shadow-md hover:bg-blue-700 transition-all disabled:opacity-30 flex items-center justify-center uppercase tracking-widest"
                 >
-                    {salvando ? <Carregando /> : 'Salvar Alterações'}
+                    {salvando ? <Carregando /> : `Criar ${titulo}`}
                 </button>
             </div>
         </form>

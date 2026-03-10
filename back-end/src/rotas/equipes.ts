@@ -3,11 +3,11 @@ import { Env } from '../index';
 import { autenticacaoRequerida, verificarPermissao } from '../middleware/auth';
 import { registrarLog } from '../servicos/servico-logs';
 
-const rotasOrganizacao = new Hono<{ Bindings: Env; Variables: { usuario: any } }>();
+const rotasEquipes = new Hono<{ Bindings: Env; Variables: { usuario: any } }>();
 
 // ─── GET /grupos — Listar todos os grupos ────────────────────────────────────
 
-rotasOrganizacao.get('/grupos', autenticacaoRequerida(), verificarPermissao('organizacao:visualizar'), async (c: Context) => {
+rotasEquipes.get('/grupos', autenticacaoRequerida(), verificarPermissao('equipes:visualizar'), async (c: Context) => {
     const { DB } = c.env;
 
     try {
@@ -31,14 +31,14 @@ rotasOrganizacao.get('/grupos', autenticacaoRequerida(), verificarPermissao('org
 
         return c.json({ grupos: grupos.results ?? [] });
     } catch (erro: any) {
-        console.error('[ERRO] GET /api/organizacao/grupos', erro);
+        console.error('[ERRO] GET /api/equipes/grupos', erro);
         return c.json({ erro: 'Falha ao listar grupos.' }, 500);
     }
 });
 
 // ─── POST /grupos — Criar grupo ──────────────────────────────────────────────
 
-rotasOrganizacao.post('/grupos', autenticacaoRequerida(), verificarPermissao('organizacao:criar_grupo'), async (c: Context) => {
+rotasEquipes.post('/grupos', autenticacaoRequerida(), verificarPermissao('equipes:criar_grupo'), async (c: Context) => {
     const { DB } = c.env;
     const usuarioLogado = c.get('usuario') as any;
 
@@ -64,7 +64,7 @@ rotasOrganizacao.post('/grupos', autenticacaoRequerida(), verificarPermissao('or
             usuarioEmail: usuarioLogado.email,
             usuarioRole: usuarioLogado.role,
             acao: 'GRUPO_CRIADO',
-            modulo: 'organizacao',
+            modulo: 'equipes',
             descricao: `Grupo "${nome}" criado`,
             ip: c.req.header('CF-Connecting-IP') ?? '',
             entidadeTipo: 'grupos',
@@ -74,14 +74,14 @@ rotasOrganizacao.post('/grupos', autenticacaoRequerida(), verificarPermissao('or
 
         return c.json({ sucesso: true, id }, 201);
     } catch (erro: any) {
-        console.error('[ERRO] POST /api/organizacao/grupos', erro);
+        console.error('[ERRO] POST /api/equipes/grupos', erro);
         return c.json({ erro: 'Falha ao criar grupo.' }, 500);
     }
 });
 
 // ─── PATCH /grupos/:id — Editar grupo ────────────────────────────────────────
 
-rotasOrganizacao.patch('/grupos/:id', autenticacaoRequerida(), verificarPermissao('organizacao:editar_grupo'), async (c: Context) => {
+rotasEquipes.patch('/grupos/:id', autenticacaoRequerida(), verificarPermissao('equipes:editar_grupo'), async (c: Context) => {
     const { DB } = c.env;
     const usuarioLogado = c.get('usuario') as any;
     const id = c.req.param('id');
@@ -113,7 +113,7 @@ rotasOrganizacao.patch('/grupos/:id', autenticacaoRequerida(), verificarPermissa
             usuarioEmail: usuarioLogado.email,
             usuarioRole: usuarioLogado.role,
             acao: 'GRUPO_EDITADO',
-            modulo: 'organizacao',
+            modulo: 'equipes',
             descricao: `Grupo "${nome}" atualizado`,
             ip: c.req.header('CF-Connecting-IP') ?? '',
             entidadeTipo: 'grupos',
@@ -123,14 +123,14 @@ rotasOrganizacao.patch('/grupos/:id', autenticacaoRequerida(), verificarPermissa
 
         return c.json({ sucesso: true });
     } catch (erro: any) {
-        console.error('[ERRO] PATCH /api/organizacao/grupos/:id', erro);
+        console.error('[ERRO] PATCH /api/equipes/grupos/:id', erro);
         return c.json({ erro: 'Falha ao editar grupo.' }, 500);
     }
 });
 
 // ─── DELETE /grupos/:id — Soft delete grupo ───────────────────────────────────
 
-rotasOrganizacao.delete('/grupos/:id', autenticacaoRequerida(), verificarPermissao('organizacao:editar_grupo'), async (c: Context) => {
+rotasEquipes.delete('/grupos/:id', autenticacaoRequerida(), verificarPermissao('equipes:editar_grupo'), async (c: Context) => {
     const { DB } = c.env;
     const usuarioLogado = c.get('usuario') as any;
     const id = c.req.param('id');
@@ -145,7 +145,7 @@ rotasOrganizacao.delete('/grupos/:id', autenticacaoRequerida(), verificarPermiss
             usuarioEmail: usuarioLogado.email,
             usuarioRole: usuarioLogado.role,
             acao: 'GRUPO_DESATIVADO',
-            modulo: 'organizacao',
+            modulo: 'equipes',
             descricao: `Grupo ${id} desativado (soft delete)`,
             ip: c.req.header('CF-Connecting-IP') ?? '',
             entidadeTipo: 'grupos',
@@ -154,14 +154,14 @@ rotasOrganizacao.delete('/grupos/:id', autenticacaoRequerida(), verificarPermiss
 
         return c.json({ sucesso: true });
     } catch (erro: any) {
-        console.error('[ERRO] DELETE /api/organizacao/grupos/:id', erro);
+        console.error('[ERRO] DELETE /api/equipes/grupos/:id', erro);
         return c.json({ erro: 'Falha ao desativar grupo.' }, 500);
     }
 });
 
 // ─── GET /equipes — Listar todas as equipes ───────────────────────────────────
 
-rotasOrganizacao.get('/equipes', autenticacaoRequerida(), verificarPermissao('organizacao:visualizar'), async (c: Context) => {
+rotasEquipes.get('/equipes', autenticacaoRequerida(), verificarPermissao('equipes:visualizar'), async (c: Context) => {
     const { DB } = c.env;
 
     try {
@@ -184,14 +184,14 @@ rotasOrganizacao.get('/equipes', autenticacaoRequerida(), verificarPermissao('or
 
         return c.json({ equipes: equipes.results ?? [] });
     } catch (erro: any) {
-        console.error('[ERRO] GET /api/organizacao/equipes', erro);
+        console.error('[ERRO] GET /api/equipes/equipes', erro);
         return c.json({ erro: 'Falha ao listar equipes.' }, 500);
     }
 });
 
 // ─── POST /equipes — Criar equipe ─────────────────────────────────────────────
 
-rotasOrganizacao.post('/equipes', autenticacaoRequerida(), verificarPermissao('organizacao:criar_equipe'), async (c: Context) => {
+rotasEquipes.post('/equipes', autenticacaoRequerida(), verificarPermissao('equipes:criar_equipe'), async (c: Context) => {
     const { DB } = c.env;
     const usuarioLogado = c.get('usuario') as any;
 
@@ -216,7 +216,7 @@ rotasOrganizacao.post('/equipes', autenticacaoRequerida(), verificarPermissao('o
             usuarioEmail: usuarioLogado.email,
             usuarioRole: usuarioLogado.role,
             acao: 'EQUIPE_CRIADA',
-            modulo: 'organizacao',
+            modulo: 'equipes',
             descricao: `Equipe "${nome}" criada`,
             ip: c.req.header('CF-Connecting-IP') ?? '',
             entidadeTipo: 'equipes',
@@ -226,14 +226,14 @@ rotasOrganizacao.post('/equipes', autenticacaoRequerida(), verificarPermissao('o
 
         return c.json({ sucesso: true, id }, 201);
     } catch (erro: any) {
-        console.error('[ERRO] POST /api/organizacao/equipes', erro);
+        console.error('[ERRO] POST /api/equipes/equipes', erro);
         return c.json({ erro: 'Falha ao criar equipe.' }, 500);
     }
 });
 
 // ─── PATCH /equipes/:id — Editar equipe ──────────────────────────────────────
 
-rotasOrganizacao.patch('/equipes/:id', autenticacaoRequerida(), verificarPermissao('organizacao:editar_equipe'), async (c: Context) => {
+rotasEquipes.patch('/equipes/:id', autenticacaoRequerida(), verificarPermissao('equipes:editar_equipe'), async (c: Context) => {
     const { DB } = c.env;
     const usuarioLogado = c.get('usuario') as any;
     const id = c.req.param('id');
@@ -266,7 +266,7 @@ rotasOrganizacao.patch('/equipes/:id', autenticacaoRequerida(), verificarPermiss
             usuarioEmail: usuarioLogado.email,
             usuarioRole: usuarioLogado.role,
             acao: 'EQUIPE_EDITADA',
-            modulo: 'organizacao',
+            modulo: 'equipes',
             descricao: `Equipe "${nome}" atualizada`,
             ip: c.req.header('CF-Connecting-IP') ?? '',
             entidadeTipo: 'equipes',
@@ -276,14 +276,14 @@ rotasOrganizacao.patch('/equipes/:id', autenticacaoRequerida(), verificarPermiss
 
         return c.json({ sucesso: true });
     } catch (erro: any) {
-        console.error('[ERRO] PATCH /api/organizacao/equipes/:id', erro);
+        console.error('[ERRO] PATCH /api/equipes/equipes/:id', erro);
         return c.json({ erro: 'Falha ao editar equipe.' }, 500);
     }
 });
 
 // ─── DELETE /equipes/:id — Soft delete equipe ─────────────────────────────────
 
-rotasOrganizacao.delete('/equipes/:id', autenticacaoRequerida(), verificarPermissao('organizacao:editar_equipe'), async (c: Context) => {
+rotasEquipes.delete('/equipes/:id', autenticacaoRequerida(), verificarPermissao('equipes:editar_equipe'), async (c: Context) => {
     const { DB } = c.env;
     const usuarioLogado = c.get('usuario') as any;
     const id = c.req.param('id');
@@ -297,7 +297,7 @@ rotasOrganizacao.delete('/equipes/:id', autenticacaoRequerida(), verificarPermis
             usuarioEmail: usuarioLogado.email,
             usuarioRole: usuarioLogado.role,
             acao: 'EQUIPE_DESATIVADA',
-            modulo: 'organizacao',
+            modulo: 'equipes',
             descricao: `Equipe ${id} desativada (soft delete)`,
             ip: c.req.header('CF-Connecting-IP') ?? '',
             entidadeTipo: 'equipes',
@@ -306,7 +306,7 @@ rotasOrganizacao.delete('/equipes/:id', autenticacaoRequerida(), verificarPermis
 
         return c.json({ sucesso: true });
     } catch (erro: any) {
-        console.error('[ERRO] DELETE /api/organizacao/equipes/:id', erro);
+        console.error('[ERRO] DELETE /api/equipes/equipes/:id', erro);
         return c.json({ erro: 'Falha ao desativar equipe.' }, 500);
     }
 });
@@ -315,7 +315,7 @@ rotasOrganizacao.delete('/equipes/:id', autenticacaoRequerida(), verificarPermis
 // Regra: membro pertence a apenas UMA equipe por vez.
 // Ao trocar, atualiza usuarios.equipe_id E usuarios.grupo_id.
 
-rotasOrganizacao.patch('/membros/:id/alocar', autenticacaoRequerida(), verificarPermissao('organizacao:editar_equipe'), async (c: Context) => {
+rotasEquipes.patch('/membros/:id/alocar', autenticacaoRequerida(), verificarPermissao('equipes:editar_equipe'), async (c: Context) => {
     const { DB } = c.env;
     const usuarioLogado = c.get('usuario') as any;
     const membroId = c.req.param('id');
@@ -352,7 +352,7 @@ rotasOrganizacao.patch('/membros/:id/alocar', autenticacaoRequerida(), verificar
             usuarioEmail: usuarioLogado.email,
             usuarioRole: usuarioLogado.role,
             acao: 'MEMBRO_ALOCADO',
-            modulo: 'organizacao',
+            modulo: 'equipes',
             descricao: `Membro ${membroId} alocado → equipe: ${equipe_id ?? 'nenhuma'} / grupo: ${grupo_id ?? 'nenhum'}`,
             ip: c.req.header('CF-Connecting-IP') ?? '',
             entidadeTipo: 'usuarios',
@@ -362,9 +362,9 @@ rotasOrganizacao.patch('/membros/:id/alocar', autenticacaoRequerida(), verificar
 
         return c.json({ sucesso: true });
     } catch (erro: any) {
-        console.error('[ERRO] PATCH /api/organizacao/membros/:id/alocar', erro);
+        console.error('[ERRO] PATCH /api/equipes/membros/:id/alocar', erro);
         return c.json({ erro: 'Falha ao alocar membro.' }, 500);
     }
 });
 
-export default rotasOrganizacao;
+export default rotasEquipes;

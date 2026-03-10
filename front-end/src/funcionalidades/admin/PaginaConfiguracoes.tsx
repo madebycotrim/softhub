@@ -65,15 +65,15 @@ const PERMISSOES_SISTEMA = [
         ],
     },
     {
-        modulo: 'organizacao',
-        label: 'Estrutura Organizacional',
+        modulo: 'equipes',
+        label: 'Estrutura de Equipes',
         icone: LayoutGrid,
         permissoes: [
-            { chave: 'organizacao:visualizar', label: 'Visualizar' },
-            { chave: 'organizacao:criar_grupo', label: 'Criar Grupo' },
-            { chave: 'organizacao:editar_grupo', label: 'Editar Grupo' },
-            { chave: 'organizacao:criar_equipe', label: 'Criar Equipe' },
-            { chave: 'organizacao:editar_equipe', label: 'Editar Equipe' },
+            { chave: 'equipes:visualizar', label: 'Visualizar' },
+            { chave: 'equipes:criar_grupo', label: 'Criar Grupo' },
+            { chave: 'equipes:editar_grupo', label: 'Editar Grupo' },
+            { chave: 'equipes:criar_equipe', label: 'Criar Equipe' },
+            { chave: 'equipes:editar_equipe', label: 'Editar Equipe' },
         ],
     },
     {

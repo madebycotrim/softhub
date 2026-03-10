@@ -21,14 +21,14 @@ const CORES = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
 export default function PaginaRelatorios() {
     const { 
-        organizacao, 
+        equipesRelatorio, 
         frequenciaGeral, 
         frequenciaMembros, 
         carregando, 
         erro 
     } = usarRelatorios();
 
-    const [abaAtiva, setAbaAtiva] = useState<'geral' | 'organizacao' | 'membros'>('geral');
+    const [abaAtiva, setAbaAtiva] = useState<'geral' | 'equipes' | 'membros'>('geral');
     const [busca, setBusca] = useState('');
 
     const membrosFiltrados = frequenciaMembros.filter(m => 
@@ -57,7 +57,7 @@ export default function PaginaRelatorios() {
                 <div className="flex p-1 bg-muted/20 border border-border/10 rounded-3xl w-fit">
                     {[
                         { id: 'geral', label: 'Frequência Geral', icone: BarChart4 },
-                        { id: 'organizacao', label: 'Estrutura Org.', icone: Users },
+                        { id: 'equipes', label: 'Equipes (Estrutura)', icone: Users },
                         { id: 'membros', label: 'Por Membro', icone: User },
                     ].map(tab => (
                         <button
@@ -136,8 +136,8 @@ export default function PaginaRelatorios() {
                     </div>
                 )}
 
-                {/* ── SEÇÃO: ORGANIZAÇÃO ── */}
-                {abaAtiva === 'organizacao' && organizacao && (
+                {/* ── SEÇÃO: EQUIPES ── */}
+                {abaAtiva === 'equipes' && equipesRelatorio && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="bg-card/40 backdrop-blur-md border border-border/40 rounded-[40px] p-8 shadow-sm overflow-hidden relative">
                              <div className="flex items-center gap-3 mb-8">
@@ -147,7 +147,7 @@ export default function PaginaRelatorios() {
                                 <h3 className="text-sm font-black uppercase tracking-widest leading-none">Resumo de Grupos</h3>
                             </div>
                             <div className="divide-y divide-border/10">
-                                {organizacao.grupos.map((grupo) => (
+                                {equipesRelatorio.grupos.map((grupo) => (
                                     <div key={grupo.id} className="py-4 flex justify-between items-center group">
                                         <div>
                                             <p className="text-[13px] font-bold text-foreground mb-0.5">{grupo.nome}</p>
@@ -176,7 +176,7 @@ export default function PaginaRelatorios() {
                                 <h3 className="text-sm font-black uppercase tracking-widest leading-none">Resumo de Equipes</h3>
                             </div>
                             <div className="divide-y divide-border/10">
-                                {organizacao.equipes.map((equipe) => (
+                                {equipesRelatorio.equipes.map((equipe) => (
                                     <div key={equipe.id} className="py-4 flex justify-between items-center group">
                                         <div>
                                             <p className="text-[13px] font-bold text-foreground mb-0.5">{equipe.nome}</p>

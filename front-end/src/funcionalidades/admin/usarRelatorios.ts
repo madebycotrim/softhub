@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { api } from '../../compartilhado/servicos/api';
 
-export interface RelatorioOrganizacao {
+export interface RelatorioEquipes {
     grupos: {
         id: string;
         nome: string;
@@ -47,18 +47,18 @@ export interface RelatorioFrequenciaMembro {
 }
 
 export function usarRelatorios() {
-    const [organizacao, setOrganizacao] = useState<RelatorioOrganizacao | null>(null);
+    const [equipesRelatorio, setEquipesRelatorio] = useState<RelatorioEquipes | null>(null);
     const [frequenciaGeral, setFrequenciaGeral] = useState<RelatorioFrequenciaGeral | null>(null);
     const [frequenciaMembros, setFrequenciaMembros] = useState<RelatorioFrequenciaMembro[]>([]);
     const [carregando, setCarregando] = useState(false);
     const [erro, setErro] = useState<string | null>(null);
 
-    const carregarRelatorioOrganizacao = useCallback(async () => {
+    const carregarRelatorioEquipes = useCallback(async () => {
         try {
-            const res = await api.get('/api/relatorios/organizacao');
-            setOrganizacao(res.data);
+            const res = await api.get('/api/relatorios/equipes');
+            setEquipesRelatorio(res.data);
         } catch (e: any) {
-            setErro(e.response?.data?.erro || 'Erro ao carregar relatório organizacional');
+            setErro(e.response?.data?.erro || 'Erro ao carregar relatório de equipes');
         }
     }, []);
 
@@ -84,19 +84,19 @@ export function usarRelatorios() {
         setCarregando(true);
         setErro(null);
         await Promise.all([
-            carregarRelatorioOrganizacao(),
+            carregarRelatorioEquipes(),
             carregarRelatorioFrequenciaGeral(),
             carregarRelatorioFrequenciaMembros()
         ]);
         setCarregando(false);
-    }, [carregarRelatorioOrganizacao, carregarRelatorioFrequenciaGeral, carregarRelatorioFrequenciaMembros]);
+    }, [carregarRelatorioEquipes, carregarRelatorioFrequenciaGeral, carregarRelatorioFrequenciaMembros]);
 
     useEffect(() => {
         carregarTudo();
     }, [carregarTudo]);
 
     return {
-        organizacao,
+        equipesRelatorio,
         frequenciaGeral,
         frequenciaMembros,
         carregando,

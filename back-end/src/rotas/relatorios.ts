@@ -5,10 +5,10 @@ import { autenticacaoRequerida, verificarPermissao } from '../middleware/auth';
 const rotasRelatorios = new Hono<{ Bindings: Env, Variables: { usuario: any } }>();
 
 /**
- * 📊 RELATÓRIO DE ESTRUTURA ORGANIZACIONAL
+ * 📊 RELATÓRIO DE ESTRUTURA DE EQUIPES
  * Retorna contagem de membros por grupo e equipe, além de lideranças.
  */
-rotasRelatorios.get('/organizacao', autenticacaoRequerida(), verificarPermissao('relatorios:visualizar'), async (c: Context) => {
+rotasRelatorios.get('/equipes', autenticacaoRequerida(), verificarPermissao('relatorios:visualizar'), async (c: Context) => {
     const { DB } = c.env;
 
     try {
@@ -43,8 +43,8 @@ rotasRelatorios.get('/organizacao', autenticacaoRequerida(), verificarPermissao(
             equipes: equipesResumo.results
         });
     } catch (erro) {
-        console.error('[ERRO DB] GET /relatorios/organizacao', erro);
-        return c.json({ erro: 'Falha ao gerar relatório organizacional' }, 500);
+        console.error('[ERRO DB] GET /relatorios/equipes', erro);
+        return c.json({ erro: 'Falha ao gerar relatório de equipes' }, 500);
     }
 });
 

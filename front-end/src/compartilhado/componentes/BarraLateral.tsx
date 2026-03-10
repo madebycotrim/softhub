@@ -28,7 +28,7 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
 
     const podeVerRelatorios = usarPermissaoAcesso('relatorios:visualizar');
     const podeVerLogs = usarPermissaoAcesso('logs:visualizar');
-    const podeVerOrganizacao = usarPermissaoAcesso('organizacao:visualizar');
+    const podeVerEquipes = usarPermissaoAcesso('equipes:visualizar');
     const podeVerConfiguracoes = usarPermissaoAcesso('configuracoes:visualizar');
 
     const gruposBrutos = [
@@ -57,7 +57,7 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
             links: [
                 { label: 'Membros', path: '/app/admin/membros', icon: Users, visivel: podeVerMembrosAdmin },
                 { label: 'Justificativas', path: '/app/admin/justificativas', icon: ClipboardCheck, visivel: podeVerJustificativas },
-                { label: 'Organização', path: '/app/admin/organizacao', icon: LayoutGrid, visivel: podeVerOrganizacao },
+                { label: 'Equipes', path: '/app/admin/equipes', icon: LayoutGrid, visivel: podeVerEquipes },
                 { label: 'Relatórios', path: '/app/admin/relatorios', icon: FileText, visivel: podeVerRelatorios },
                 { label: 'Configurações', path: '/app/admin/configuracoes', icon: Settings, visivel: podeVerConfiguracoes },
                 { label: 'Painel de Logs', path: '/app/admin/logs', icon: Database, visivel: podeVerLogs },
