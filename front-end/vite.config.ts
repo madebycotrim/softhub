@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
+import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 
 export default defineConfig(({ mode }) => {
@@ -11,6 +12,37 @@ export default defineConfig(({ mode }) => {
         plugins: [
             react(),
             tailwindcss(),
+            VitePWA({
+                registerType: 'autoUpdate',
+                includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+                manifest: {
+                    name: 'SoftHub - Fábrica de Software',
+                    short_name: 'SoftHub',
+                    description: 'Sistema de gestão da Fábrica de Software UNIEURO',
+                    theme_color: '#020617',
+                    background_color: '#020617',
+                    display: 'standalone',
+                    lang: 'pt-BR',
+                    icons: [
+                        {
+                            src: 'icons/icon-192x192.png',
+                            sizes: '192x192',
+                            type: 'image/png'
+                        },
+                        {
+                            src: 'icons/icon-512x512.png',
+                            sizes: '512x512',
+                            type: 'image/png'
+                        },
+                        {
+                            src: 'icons/icon-512x512.png',
+                            sizes: '512x512',
+                            type: 'image/png',
+                            purpose: 'any maskable'
+                        }
+                    ]
+                }
+            }),
             // Plugin que substitui __VITE_MSAL_CLIENT_ID__ e __VITE_MSAL_TENANT_ID__
             // no auth-callback.html em tempo de build
             {

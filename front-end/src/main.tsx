@@ -78,14 +78,10 @@ async function inicializar(): Promise<void> {
     renderizarApp();
 }
 
-// Registro do Service Worker para PWA
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('[PWA] Service Worker registrado:', reg.scope))
-            .catch(err => console.error('[PWA] Erro ao registrar Service Worker:', err));
-    });
-}
+// Registro do Service Worker para PWA (Vite Plugin PWA)
+import { registerSW } from 'virtual:pwa-register';
+
+registerSW({ immediate: true });
 
 inicializar().catch((erro: unknown) => {
     console.error('[Main] Erro crítico na inicialização MSAL:', erro);

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { api } from '../servicos/api';
 import { usarAutenticacao } from '../../funcionalidades/autenticacao/usarAutenticacao';
 
@@ -18,14 +18,43 @@ export interface Notificacao {
 export function usarNotificacoes() {
     const [notificacoes, setNotificacoes] = useState<Notificacao[]>([]);
     const [carregando, setCarregando] = useState(true);
+    const idNotificados = useRef<Set<string>>(new Set());
+    const primeiraCarga = useRef(true);
     const { usuario } = usarAutenticacao();
     const estaAutenticado = !!usuario;
+
+    // Solicitar permissão apenas uma vez no mount
+    useEffect(() => {
+        if (estaAutenticado && 'Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+    }, [estaAutenticado]);
 
     const buscar = useCallback(async () => {
         if (!estaAutenticado) return;
         try {
             const { data } = await api.get('/api/notificacoes');
-            setNotificacoes(data.notificacoes ?? []);
+            const novasNotificacoes: Notificacao[] = data.notificacoes ?? [];
+            
+            // Lógica de Notificação Nativa
+            if ('Notification' in window && Notification.permission === 'granted') {
+                novasNotificacoes.forEach(n => {
+                    if (!idNotificados.current.has(n.id)) {
+                        // Só dispara se não for a primeira carga da página para evitar spam de coisas antigas
+                        if (!primeiraCarga.current) {
+                            new Notification(n.titulo, {
+                                body: n.mensagem,
+                                icon: '/icons/icon-192x192.png',
+                                badge: '/icons/icon-192x192.png'
+                            });
+                        }
+                        idNotificados.current.add(n.id);
+                    }
+                });
+            }
+
+            setNotificacoes(novasNotificacoes);
+            primeiraCarga.current = false;
         } catch (e) {
             console.error('Falha temporária ao buscar notificações');
         } finally {

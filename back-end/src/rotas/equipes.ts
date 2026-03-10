@@ -310,7 +310,11 @@ rotasEquipes.delete('/equipes/:id', autenticacaoRequerida(), verificarPermissao(
     const id = c.req.param('id');
 
     try {
-        await DB.prepare('UPDATE equipes SET ativo = 0 WHERE id = ?').bind(id).run();
+        // Soft delete na equipe e em todos os grupos vinculados
+        await DB.batch([
+            DB.prepare('UPDATE equipes SET ativo = 0 WHERE id = ?').bind(id),
+            DB.prepare('UPDATE grupos SET ativo = 0 WHERE equipe_id = ?').bind(id)
+        ]);
 
         await registrarLog(DB, {
             usuarioId: usuarioLogado.id,
@@ -350,11 +354,19 @@ rotasEquipes.patch('/membros/:id/alocar', autenticacaoRequerida(), verificarPerm
         let desc = '';
 
         if (equipe_id && grupo_id) {
+            // Workflow 27: Garantir que membro pertence a apenas UMA equipe+grupo por vez
+            // 1. Remove vínculos anteriores (Blindagem)
+            await DB.prepare('DELETE FROM usuarios_organizacao WHERE usuario_id = ?').bind(membroId).run();
+
+            // 2. Insere novo vínculo
             await DB.prepare(`
                 INSERT INTO usuarios_organizacao (id, usuario_id, equipe_id, grupo_id)
                 VALUES (?, ?, ?, ?)
-                ON CONFLICT(usuario_id, equipe_id, grupo_id) DO NOTHING
             `).bind(crypto.randomUUID(), membroId, equipe_id, grupo_id).run();
+
+            // 3. Sincroniza tabela usuarios (Regra 13)
+            await DB.prepare('UPDATE usuarios SET equipe_id = ?, grupo_id = ? WHERE id = ?')
+                .bind(equipe_id, grupo_id, membroId).run();
 
             const info = await DB.prepare('SELECT e.nome as e_nome, g.nome as g_nome FROM equipes e, grupos g WHERE e.id = ? AND g.id = ?')
                 .bind(equipe_id, grupo_id).first() as any;
@@ -370,10 +382,15 @@ rotasEquipes.patch('/membros/:id/alocar', autenticacaoRequerida(), verificarPerm
             });
 
         } else if (equipe_id && !grupo_id) {
+            // Remoção específica da equipe
             acao = 'MEMBRO_REMOVIDO_EQUIPE';
             await DB.prepare('DELETE FROM usuarios_organizacao WHERE usuario_id = ? AND equipe_id = ?')
                 .bind(membroId, equipe_id)
                 .run();
+            
+            // Limpa se era a equipe atual
+            await DB.prepare('UPDATE usuarios SET equipe_id = NULL, grupo_id = NULL WHERE id = ? AND equipe_id = ?')
+                .bind(membroId, equipe_id).run();
             
             desc = `Membro removido da equipe ${equipe_id}`;
         }
@@ -426,10 +443,13 @@ rotasEquipes.patch('/membros/:id/mover', autenticacaoRequerida(), verificarPermi
         await DB.prepare(`
             INSERT INTO usuarios_organizacao (id, usuario_id, equipe_id, grupo_id)
             VALUES (?, ?, ?, ?)
-            ON CONFLICT(usuario_id, equipe_id, grupo_id) DO NOTHING
         `).bind(crypto.randomUUID(), membroId, equipe_id, grupo_id).run();
 
-        // 3. Notifica
+        // 3. Sincroniza usuarios (Blindagem)
+        await DB.prepare('UPDATE usuarios SET grupo_id = ? WHERE id = ? AND equipe_id = ?')
+            .bind(grupo_id, membroId, equipe_id).run();
+
+        // 4. Notifica
         const info = await DB.prepare('SELECT nome FROM grupos WHERE id = ?').bind(grupo_id).first() as any;
         await criarNotificacoes(DB, {
             usuarioId: membroId,
