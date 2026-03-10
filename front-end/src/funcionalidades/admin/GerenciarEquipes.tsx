@@ -535,7 +535,6 @@ function DetalheEquipe({
     equipe,
     grupos,
     membros,
-    aoExcluir,
     aoAdicionarGrupo,
     aoExcluirGrupo,
     aoAlocar,
@@ -548,7 +547,6 @@ function DetalheEquipe({
     equipe: Equipe,
     grupos: Grupo[],
     membros: MembroSimples[],
-    aoExcluir: () => void,
     aoAdicionarGrupo: () => void,
     aoExcluirGrupo: (g: Grupo) => void,
     aoAlocar: (gId: string, eId: string) => void,
@@ -643,13 +641,6 @@ function DetalheEquipe({
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button
-                        onClick={aoExcluir}
-                        title="Arquivar esta equipe"
-                        className="h-9 px-4 rounded-xl bg-white text-red-500/80 font-bold text-[10px] uppercase tracking-wider hover:bg-red-50 transition-all border border-slate-200"
-                    >
-                        Excluir Equipe
-                    </button>
                 </div>
             </div>
 
@@ -949,18 +940,29 @@ export function GerenciarEquipes() {
 
                         <div className="flex-1 overflow-y-auto space-y-1.5 pr-2 custom-scrollbar">
                             {equipesAtivas.map((e: Equipe) => (
-                                <button
-                                    key={e.id}
-                                    onClick={() => setIdEquipeAtiva(e.id)}
-                                    className={`w-full text-left p-4 rounded-2xl transition-all duration-300 group border ${idEquipeAtiva === e.id ? 'bg-blue-50 border-blue-100 shadow-sm' : 'bg-transparent border-transparent hover:bg-slate-50'}`}
-                                >
-                                    <p className={`font-bold text-base tracking-tight transition-colors ${idEquipeAtiva === e.id ? 'text-blue-700' : 'text-slate-900 group-hover:text-blue-600'}`}>{e.nome}</p>
-                                    <div className="flex items-center gap-2 mt-0.5">
-                                        <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest truncate">
-                                            {e.total_membros || 0} Membros
-                                        </p>
-                                    </div>
-                                </button>
+                                <div key={e.id} className="relative group/card">
+                                    <button
+                                        onClick={() => setIdEquipeAtiva(e.id)}
+                                        className={`w-full text-left p-4 rounded-2xl transition-all duration-300 border ${idEquipeAtiva === e.id ? 'bg-blue-50 border-blue-100 shadow-sm' : 'bg-transparent border-transparent hover:bg-slate-50'}`}
+                                    >
+                                        <p className={`font-bold text-base tracking-tight transition-colors ${idEquipeAtiva === e.id ? 'text-blue-700' : 'text-slate-900 group-hover:text-blue-600'}`}>{e.nome}</p>
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                            <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest truncate">
+                                                {e.total_membros || 0} Membros
+                                            </p>
+                                        </div>
+                                    </button>
+                                    <button
+                                        onClick={(ev) => {
+                                            ev.stopPropagation();
+                                            setConfirmacaoExclusao({ id: e.id, nome: e.nome, tipo: 'equipe' });
+                                        }}
+                                        className="absolute top-4 right-4 p-1.5 text-slate-300 hover:text-red-500 opacity-0 group-hover/card:opacity-100 transition-all"
+                                        title="Excluir equipe"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                </div>
                             ))}
                             {equipes.length === 0 && (
                                 <div className="py-20 text-center border-2 border-dashed border-slate-100 rounded-2xl">
@@ -979,7 +981,6 @@ export function GerenciarEquipes() {
                             equipe={equipeAtiva}
                             grupos={gruposDaEquipe}
                             membros={membros}
-                            aoExcluir={() => setConfirmacaoExclusao({ id: equipeAtiva.id, nome: equipeAtiva.nome, tipo: 'equipe' })}
                             aoAdicionarGrupo={() => setModalOrg({ aberto: true, tipo: 'grupo', dados: { equipe_id: idEquipeAtiva } })}
                             aoExcluirGrupo={(g) => setConfirmacaoExclusao({ id: g.id, nome: g.nome, tipo: 'grupo' })}
                             aoAlocar={(gId, eId) => setModalAlocacao({ grupoId: gId, equipeId: eId })}
