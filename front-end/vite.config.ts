@@ -23,7 +23,7 @@ export default defineConfig(({ mode }) => {
             // Proxy mantido por ser essencial para o desenvolvimento.
             proxy: {
                 '/api': {
-                    target: env.VITE_PROXY_TARGET || 'https://softhub.madebycotrim-67c.workers.dev',
+                    target: env.VITE_API|| 'https://api.softhub.workers.dev',
                     changeOrigin: true,
                     secure: false,
                 },
