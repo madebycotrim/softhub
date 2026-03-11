@@ -127,7 +127,7 @@ export function verificarRole(rolesPermitidos: string[]) {
 export function verificarPermissao(permissao: string) {
     return async (c: Context<HonoEnv>, next: Next) => {
         const usuario = c.get('usuario');
-        const { DB } = c.env;
+        const { DB, SISTEMA_KV } = c.env;
 
         if (!usuario) {
             return c.json({ erro: 'Usuário não autenticado.' }, 401);
@@ -140,21 +140,30 @@ export function verificarPermissao(permissao: string) {
         }
 
         try {
-            // Busca a matriz de permissões
-            const resConfig = await DB.prepare('SELECT valor FROM configuracoes_sistema WHERE chave = ?')
-                .bind('permissoes_roles')
-                .first();
-            const config = resConfig as any;
+            // 1. Tenta buscar da "borda" (KV) - Muito mais rápido
+            let configValor = await SISTEMA_KV.get('permissoes_roles');
 
-            if (!config) {
-                // Se não houver configuração, por segurança, nega para não-admins
-                console.warn(`[PERMISSAO] Matriz de permissões não encontrada no banco.`);
+            // 2. Fallback para o D1 se não estiver no cache
+            if (!configValor) {
+                console.log(`[PERMISSAO] Cache miss para ${permissao}. Buscando no D1...`);
+                const resConfig = await DB.prepare('SELECT valor FROM configuracoes_sistema WHERE chave = ?')
+                    .bind('permissoes_roles')
+                    .first();
+                
+                if (resConfig) {
+                    configValor = (resConfig as any).valor;
+                    // Salva no KV por 1 hora (60 min)
+                    await SISTEMA_KV.put('permissoes_roles', configValor as string, { expirationTtl: 3600 });
+                }
+            }
+
+            if (!configValor) {
+                console.warn(`[PERMISSAO] Matriz de permissões não encontrada.`);
                 return c.json({ erro: 'Acesso negado: Matriz de permissões não configurada.' }, 403);
             }
 
-            const permissoesRoles = JSON.parse(config.valor);
+            const permissoesRoles = JSON.parse(configValor);
             
-            // Cargo universal: se 'TODOS' tem a permissão, qualquer um tem.
             const universal = permissoesRoles['TODOS']?.[permissao] === true;
             const temPermissao = universal || (permissoesRoles[usuario.role]?.[permissao] === true);
 

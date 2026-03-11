@@ -26,6 +26,7 @@ export type Env = {
     DOMINIO_INSTITUCIONAL: string;
     BOOTSTRAP_ADMIN_EMAIL: string;
     SESSOES_QR: KVNamespace;
+    SISTEMA_KV: KVNamespace;
 };
 
 const app = new Hono<{ Bindings: Env }>();
@@ -40,6 +41,21 @@ const limiteGlobal = rateLimiter({
 });
 
 app.use("*", limiteGlobal); 
+
+// ─── Modo de Manutenção (WF 21) ────────────────────────────────────────────────
+app.use('*', async (c, next) => {
+    const { SISTEMA_KV } = c.env;
+    const emManutencao = await SISTEMA_KV.get('MODO_MANUTENCAO');
+    
+    // Ignora bloqueio para a própria rota de manutenção (se houver) ou para o path de login para admins
+    if (emManutencao === 'true' && !c.req.path.includes('/auth') && !c.req.path.includes('/configuracoes')) {
+        return c.json({ 
+            erro: 'Sistema em manutenção programada.',
+            detalhe: 'Estamos realizando melhorias. Voltamos em breve!' 
+        }, 503);
+    }
+    await next();
+});
 
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────

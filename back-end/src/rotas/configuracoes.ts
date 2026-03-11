@@ -93,6 +93,10 @@ rotasConfiguracoes.patch('/:chave', autenticacaoRequerida(), verificarPermissao(
             `).bind(crypto.randomUUID(), chave, valorString).run();
         }
 
+        if (chave === 'permissoes_roles') {
+            await c.env.SISTEMA_KV.delete('permissoes_roles');
+        }
+
         const usuario = c.get('usuario');
         await registrarLog(DB, {
             usuarioId: usuario.id,
@@ -173,10 +177,31 @@ rotasConfiguracoes.patch('/roles/:antigo/renomear', autenticacaoRequerida(), ver
             dadosNovos: { role: novoFormatado, permissoes: permissoesRolesNovas[novoFormatado] }
         });
 
+        // Invalida cache de permissões no KV
+        await c.env.SISTEMA_KV.delete('permissoes_roles');
+
         return c.json({ sucesso: true });
     } catch (e: any) {
         console.error('[CONFIGS] Erro ao renomear cargo:', e);
         return c.json({ erro: 'Falha ao renomear cargo.', detalhe: e.message }, 500);
+    }
+});
+
+// ─── POST /manutencao — Ativar/Desativar modo de manutenção ───────────────────
+rotasConfiguracoes.post('/manutencao', autenticacaoRequerida(), verificarPermissao('configuracoes:editar'), async (c: Context) => {
+    const { SISTEMA_KV } = c.env;
+    const { ativo } = await c.req.json();
+
+    try {
+        if (ativo) {
+            await SISTEMA_KV.put('MODO_MANUTENCAO', 'true');
+        } else {
+            await SISTEMA_KV.delete('MODO_MANUTENCAO');
+        }
+
+        return c.json({ sucesso: true, em_manutencao: !!ativo });
+    } catch (e: any) {
+        return c.json({ erro: 'Falha ao alterar modo de manutenção.', detalhe: e.message }, 500);
     }
 });
 
