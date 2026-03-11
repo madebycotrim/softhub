@@ -62,8 +62,10 @@ export default function TelaLogin() {
             return;
         }
 
-        // Se já temos um erro na tela, não tenta autenticar automático (morte do combo 401+loop)
-        if (erroLocal) return;
+        // Se já temos um erro na tela OU já está processando, bloqueia tudo (Morte do Loop)
+        if (erroLocal || travaAuthGlobal) {
+            return;
+        }
 
         const realizarAutenticacaoNoBackend = async (conta: any) => {
             if (travaAuthGlobal) return;

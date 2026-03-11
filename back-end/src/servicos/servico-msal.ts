@@ -45,8 +45,9 @@ export function validarClaims(
     }
 
     // 4. Issuer (Aceita o tenant específico ou o comum v2.0)
-    if (!payload.iss.includes(tenantId) && !payload.iss.includes('9188040d-6c67-4c5b-b112-36a304b66dad') && !payload.iss.includes('personal')) {
-         console.warn('[Auth] Issuer alternativo detectado:', payload.iss);
+    // A Microsoft envia issuers com IDs de tenant variáveis dependendo do tipo de conta
+    if (!payload.iss.includes(tenantId) && !payload.iss.includes('9188040d-6c67-4c5b-b112-36a304b66dad') && !payload.iss.includes('v2.0')) {
+         console.warn('[Auth] Issuer não reconhecido:', payload.iss);
     }
 
     // 5. Expiração

@@ -36,7 +36,9 @@ async function doFetch(method: string, url: string, data?: any, config?: any) {
         body: data ? JSON.stringify(data) : undefined,
     });
 
-    if (res.status === 401) {
+    // Redireciona para login se token expirar (401), exceto em rotas de autenticação
+    const isAuthRoute = url.includes('/api/auth');
+    if (res.status === 401 && !isAuthRoute) {
         localStorage.removeItem('softhub_token');
         localStorage.removeItem('softhub_usuario');
         if (typeof window !== 'undefined') {
@@ -57,7 +59,7 @@ async function doFetch(method: string, url: string, data?: any, config?: any) {
         throw new ApiError(`Erro HTTP ${res.status}`, resData, res.status);
     }
 
-    // Formato retrocompatível com a codebase legada
+    // Formato retrocompatível com a codebase legada (sem axios)
     return { data: resData, status: res.status };
 }
 
