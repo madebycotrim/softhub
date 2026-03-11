@@ -47,8 +47,11 @@ export function validarClaims(
 
     // 5. Domínio institucional
     const email = (payload.upn || payload.preferred_username || '').toLowerCase();
-    if (!email.endsWith(`@${dominioInstitucional}`)) {
-        return `Domínio não autorizado: ${email}`;
+    const dominiosValidos = [dominioInstitucional, 'unieuro.com.br'];
+    const possuiDominioValido = dominiosValidos.some(d => email.endsWith(`@${d}`));
+
+    if (!possuiDominioValido) {
+        return `Domínio não autorizado: ${email}. Esperava-se @${dominiosValidos.join(' ou @')}`;
     }
 
     return null;

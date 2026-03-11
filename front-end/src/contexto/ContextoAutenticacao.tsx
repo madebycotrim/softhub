@@ -36,29 +36,25 @@ const CHAVE_USUARIO = 'softhub_usuario';
  * que fica DENTRO do router (em rotas.tsx).
  */
 export function ProvedorAutenticacao({ children }: { children: ReactNode }) {
-    const [usuario, setUsuario] = useState<Usuario | null>(null);
-    const [token, setToken] = useState<string | null>(null);
-    const [carregando, setCarregando] = useState(true);
+    // Restaura sessão do localStorage de forma SÍNCRONA no estado inicial
+    const [token, setToken] = useState<string | null>(() => {
+        const salvo = localStorage.getItem(CHAVE_TOKEN);
+        if (salvo) console.log('[Auth] Token restaurado do cache');
+        return salvo;
+    });
 
-    // Restaura sessão do localStorage na inicialização
-    useEffect(() => {
-        const tokenSalvo = localStorage.getItem(CHAVE_TOKEN);
-        const usuarioSalvo = localStorage.getItem(CHAVE_USUARIO);
-
-        if (tokenSalvo && usuarioSalvo) {
-            try {
-                setToken(tokenSalvo);
-                setUsuario(JSON.parse(usuarioSalvo));
-            } catch {
-                localStorage.removeItem(CHAVE_TOKEN);
-                localStorage.removeItem(CHAVE_USUARIO);
-            }
+    const [usuario, setUsuario] = useState<Usuario | null>(() => {
+        const salvo = localStorage.getItem(CHAVE_USUARIO);
+        if (salvo) {
+            try { return JSON.parse(salvo); } catch { return null; }
         }
+        return null;
+    });
 
-        setCarregando(false);
-    }, []);
+    const [carregando, setCarregando] = useState(false);
 
     const entrar = useCallback((novoUsuario: Usuario, novoToken: string) => {
+        console.log('[Auth] Entrando com usuário:', novoUsuario.email);
         setUsuario(novoUsuario);
         setToken(novoToken);
         localStorage.setItem(CHAVE_TOKEN, novoToken);

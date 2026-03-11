@@ -61,7 +61,7 @@ app.use("*", (c, next) => {
     if (!_limiteGlobal) {
         _limiteGlobal = rateLimiter({
             windowMs: 60 * 1000, 
-            limit: 120, 
+            limit: 300, 
             standardHeaders: "draft-6",
             keyGenerator: (c) => c.req.header("cf-connecting-ip") ?? "",
             message: { erro: "Muitas requisições. O sistema identificou spam." }

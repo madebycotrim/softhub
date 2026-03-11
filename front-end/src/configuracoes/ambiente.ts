@@ -11,7 +11,7 @@ const esquemaAmbiente = z
         VITE_DOMINIO_INSTITUCIONAL: z
             .string()
             .min(1, 'VITE_DOMINIO_INSTITUCIONAL é obrigatório')
-            .default('unieuro.com.br'),
+            .default('unieuro.edu.br'),
     })
     .readonly();
 
