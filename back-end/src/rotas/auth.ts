@@ -33,9 +33,9 @@ rotasAuth.post('/msal', async (c) => {
             });
             payload = rawPayload as unknown as AzureAdClaims;
         } catch (e: any) {
-            console.warn('[Auth] Falha na verificação do idToken:', e.message);
+            console.error('[Auth] ❌ FALHA JWKS:', e.message, '| Token capturado:', idToken.substring(0, 15) + '...');
             return c.json({
-                erro: 'Token inválido ou falha na comunicação com Microsoft.',
+                erro: 'Token inválido (Microsoft REJEITOU a assinatura).',
                 detalhe: e.message
             }, 401);
         }

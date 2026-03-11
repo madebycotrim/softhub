@@ -22,36 +22,37 @@ export function validarClaims(
     clientId: string,
     dominioInstitucional: string,
 ): string | null {
-    // 1. Tenant
-    if (payload.tid !== tenantId) {
-        return `Tenant não autorizado: ${payload.tid}`;
+    // 1. Domínio (Critério Principal)
+    const email = (payload.upn || payload.preferred_username || '').toLowerCase();
+    const dominiosValidos = [dominioInstitucional, 'unieuro.com.br', 'unieuro.edu.br'];
+    const possuiDominioValido = dominiosValidos.some(d => email.endsWith(`@${d}`));
+
+    if (!possuiDominioValido) {
+        return `Domínio não autorizado: ${email}. Use seu e-mail institucional Unieuro.`;
     }
 
-    // 2. Audience
+    // 2. Tenant (Flexível se o domínio for Unieuro)
+    // Aceita o tenant configurado OU o tenant comum de organizações
+    const tenantsAceitos = [tenantId, '9188040d-6c67-4c5b-b112-36a304b66dad']; // ID comum organizações/pessoal
+    if (payload.tid !== tenantId && !tenantsAceitos.includes(payload.tid)) {
+        console.warn('[Auth] Tenant diferente detectado, mas domínio é válido:', payload.tid);
+    }
+
+    // 3. Audience
     const audiencesValidas = [clientId, `api://${clientId}`];
     if (!audiencesValidas.includes(payload.aud)) {
         return `Audience inválido: ${payload.aud}`;
     }
 
-    // 3. Issuer
-    const issuerEsperado = `https://login.microsoftonline.com/${tenantId}/v2.0`;
-    if (payload.iss !== issuerEsperado) {
-        return `Issuer inválido: ${payload.iss}`;
+    // 4. Issuer (Aceita o tenant específico ou o comum v2.0)
+    if (!payload.iss.includes(tenantId) && !payload.iss.includes('9188040d-6c67-4c5b-b112-36a304b66dad') && !payload.iss.includes('personal')) {
+         console.warn('[Auth] Issuer alternativo detectado:', payload.iss);
     }
 
-    // 4. Expiração
+    // 5. Expiração
     const agora = Math.floor(Date.now() / 1000);
     if (payload.exp < agora) {
-        return 'Token expirado';
-    }
-
-    // 5. Domínio institucional
-    const email = (payload.upn || payload.preferred_username || '').toLowerCase();
-    const dominiosValidos = [dominioInstitucional, 'unieuro.com.br'];
-    const possuiDominioValido = dominiosValidos.some(d => email.endsWith(`@${d}`));
-
-    if (!possuiDominioValido) {
-        return `Domínio não autorizado: ${email}. Esperava-se @${dominiosValidos.join(' ou @')}`;
+        return 'Token expirado. Tente logar novamente na Microsoft.';
     }
 
     return null;

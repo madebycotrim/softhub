@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useMsal } from '@azure/msal-react';
 import { useSearchParams, useNavigate } from 'react-router';
 import { Globe, Code, Info, Download } from 'lucide-react';
@@ -15,6 +15,9 @@ import { Alerta } from '@/compartilhado/componentes/Alerta';
 /**
  * Tela de login com estética Discord-Style (Minimalista e Funcional).
  */
+// Trava global fora do componente para evitar execução dupla em remontagens do React 18+
+let travaAuthGlobal = false;
+
 export default function TelaLogin() {
     const { instance } = useMsal();
     const [searchParams] = useSearchParams();
@@ -25,7 +28,6 @@ export default function TelaLogin() {
     const [carregando, setCarregando] = useState(false);
     const [erroLocal, setErroLocal] = useState<string | null>(null);
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-    const authJaExecutada = useRef(false);
 
     useEffect(() => {
         const handleBeforeInstallPrompt = (e: any) => {
@@ -54,77 +56,64 @@ export default function TelaLogin() {
     const erro = erroLocal ?? (erroRedirect ? mensagemErroRedirect[erroRedirect] : null);
 
     useEffect(() => {
-        // SE já está autenticado no sistema SoftHub, não faz nada (evita loop)
+        // Redirecionamento instantâneo se já estiver logado
         if (estaAutenticado) {
-            console.log('[Login] 🛡️ Usuário já autenticado no SoftHub. Redirecionando...');
             navigate('/app/dashboard', { replace: true });
             return;
         }
 
-        const completarAutenticacaoNoBackend = async (conta: any) => {
-            if (authJaExecutada.current) return;
-            authJaExecutada.current = true;
+        const autenticarNoBackend = async (conta: any) => {
+            if (travaAuthGlobal) return;
+            travaAuthGlobal = true;
 
-            console.log('[Login] 🚀 Iniciando autenticação no backend para:', conta.username);
+            const email = (conta.username || '').toLowerCase();
+            const dominiosValidos = [ambiente.dominioInstitucional, 'unieuro.com.br'];
             
-            const emailUsuario = conta.username ?? '';
-            const emailMinusculo = emailUsuario.toLowerCase();
-            
-            // Aceita o domínio oficial (.edu.br) e o alternativo (.com.br) para o admin
-            const dominiosAceitos = [ambiente.dominioInstitucional, 'unieuro.com.br'];
-            const ehValido = dominiosAceitos.some(d => emailMinusculo.endsWith(`@${d}`));
-
-            if (!ehValido) {
-                console.warn('[Login] ❌ Domínio inválido:', emailMinusculo, 'Esperados:', dominiosAceitos.join(' ou '));
-                setErroLocal(`Use seu email institucional. (${dominiosAceitos.join('/')})`);
+            if (!dominiosValidos.some(d => email.endsWith(`@${d}`))) {
+                console.warn('[Login] ❌ Domínio inválido:', email);
+                setErroLocal(`Use seu email institucional (@unieuro.edu.br ou @unieuro.com.br).`);
                 return;
             }
 
             try {
                 setCarregando(true);
-                const respostaMsal = await instance.acquireTokenSilent({
+                const tokenResponse = await instance.acquireTokenSilent({
                     ...loginRequest,
-                    account: conta,
+                    account: conta
                 });
 
-                const res = await api.post('/api/auth/msal', {
-                    accessToken: respostaMsal.accessToken,
-                    idToken: respostaMsal.idToken,
+                const response = await api.post('/api/auth/msal', {
+                    accessToken: tokenResponse.accessToken,
+                    idToken: tokenResponse.idToken
                 });
 
-                console.log('[Login] ✅ Backend autorizou. Gravando sessão...');
-                entrar(res.data.usuario, res.data.token);
-                setTimeout(() => navigate('/app/dashboard', { replace: true }), 100);
-            } catch (e: any) {
-                console.error('[Login] ❌ Erro backend:', e);
-                const mensagem = e.response?.data?.erro || e.response?.data?.detalhe || 'Falha ao autenticar no servidor.';
-                setErroLocal(mensagem);
+                console.log('[Login] ✅ Autorizado como:', email);
+                entrar(response.data.usuario, response.data.token);
+                navigate('/app/dashboard', { replace: true });
+            } catch (error: any) {
+                console.error('[Login] ❌ Falha:', error);
+                setErroLocal(error.response?.data?.erro || 'Erro ao conectar com o servidor.');
                 setCarregando(false);
-                // NÃO damos reset no authJaExecutada.current aqui para evitar o looping
-                // Se o usuário quiser tentar de novo, ele deve recarregar a página ou clicar no botão.
+                // Mantemos a trava true para evitar loops. O usuário deve dar F5 em caso de erro real.
             }
         };
 
+        // Processa o retorno da Microsoft e cache de uma vez
         instance.handleRedirectPromise().then((response) => {
-            if (response && response.account) {
-                completarAutenticacaoNoBackend(response.account);
+            if (response?.account) {
+                autenticarNoBackend(response.account);
             } else {
-                const contasExistentes = instance.getAllAccounts();
-                if (contasExistentes.length > 0 && !estaAutenticado) {
-                    completarAutenticacaoNoBackend(contasExistentes[0]);
+                const accounts = instance.getAllAccounts();
+                if (accounts.length > 0 && !estaAutenticado) {
+                    autenticarNoBackend(accounts[0]);
                 }
             }
-        }).catch((e) => {
-            console.error('[Login] ❌ Erro MSAL:', e);
-        });
+        }).catch(err => console.error('[Login] MSAL Error:', err));
 
+        // Eventos para Popup ou Login automático
         const callbackId = instance.addEventCallback((event: any) => {
             if (event.eventType === 'msal:loginSuccess' && event.payload?.account) {
-                completarAutenticacaoNoBackend(event.payload.account);
-            }
-            if (event.eventType === 'msal:loginFailure') {
-                setErroLocal('Falha ao autenticar. Tente novamente.');
-                setCarregando(false);
+                autenticarNoBackend(event.payload.account);
             }
         });
 
@@ -253,7 +242,7 @@ export default function TelaLogin() {
                                 <div className="flex items-center justify-center lg:justify-start gap-1.5 text-slate-500 text-[11px] lg:text-[11.5px] font-medium">
                                     <Info size={11} className="shrink-0" />
                                     <span>
-                                        Use seu e-mail <span className="text-slate-900 font-bold">@{ambiente.dominioInstitucional}</span>
+                                        Use seu e-mail <span className="text-slate-900 font-bold">@unieuro.edu.br</span> ou <span className="text-slate-900 font-bold">.com.br</span>
                                     </span>
                                 </div>
 
