@@ -228,7 +228,7 @@ formatarHoras(125)                          // → "2h 5min"
 ```env
 VITE_MSAL_CLIENT_ID=        # pegar com TI da UNIEURO
 VITE_MSAL_TENANT_ID=        # pegar com TI da UNIEURO
-VITE_API_URL=               # URL do Worker (ex: https://softhub-api.workers.dev)
+VITE_API=               # URL do Worker (ex: https://softhub-api.workers.dev)
 VITE_DOMINIO_INSTITUCIONAL=unieuro.edu.br
 ```
 
