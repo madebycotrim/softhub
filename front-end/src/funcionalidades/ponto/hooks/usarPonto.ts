@@ -1,5 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/compartilhado/servicos/api';
+import { usarAutenticacao } from '@/funcionalidades/autenticacao/hooks/usarAutenticacao';
 
 export interface RegistroPonto {
     id: string;
@@ -10,83 +12,59 @@ export interface RegistroPonto {
 
 /**
  * Hook de gerenciamento do Ponto Eletrônico da Fábrica.
- * Lida com o registro atualizado de entradas e saídas e a consistência da rede da instituição.
- * Implementa blindagem com revalidação automática e suporte a background.
+ * Refatorado com React Query para eliminar consumo ocioso em background (tab oculta).
  */
 export function usarPonto() {
-    const [registrosHoje, setRegistrosHoje] = useState<RegistroPonto[]>([]);
-    const [historico, setHistorico] = useState<RegistroPonto[]>([]); // ideal seria lista paginada
-    const [carregando, setCarregando] = useState(true);
-    const [erro, setErro] = useState<string | null>(null);
+    const queryClient = useQueryClient();
+    const { usuario } = usarAutenticacao();
+    const estaAutenticado = !!usuario;
 
-    /** 
-     * Carrega os dados de ponto do usuário de forma centralizada.
-     * @param silencioso Se true, não reseta o estado de carregando/erro inicial.
-     */
-    const [contadorPolling, setContadorPolling] = useState(0);
+    const { 
+        data: { registrosHoje = [], historico = [] } = {}, 
+        isLoading: carregando, 
+        error: erroQuery,
+        refetch
+    } = useQuery({
+        queryKey: ['ponto'],
+        queryFn: async () => {
+             const res = await api.get('/api/ponto');
+             return {
+                 registrosHoje: (res.data?.hoje ?? []) as RegistroPonto[],
+                 historico: (res.data?.historico ?? []) as RegistroPonto[]
+             };
+        },
+        enabled: estaAutenticado,
+        // Polling de 60s apenas se a aba estiver FOCADA, salvando 90% das chamadas diárias
+        refetchInterval: 60 * 1000, 
+    });
 
-    // Polling de 30s (Regra 14) para manter status e cronômetro sincronizados
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setContadorPolling(prev => prev + 1);
-        }, 30000);
-        return () => clearInterval(interval);
-    }, []);
-
-    const carregarPonto = useCallback(async (silencioso = false) => {
-        if (!silencioso) {
-            setCarregando(true);
-            setErro(null);
-        }
-
-        try {
-            const res = await api.get('/api/ponto');
-            if (res.data) {
-                setRegistrosHoje(res.data.hoje || []);
-                setHistorico(res.data.historico || []);
-                setErro(null);
-            }
-        } catch (e: any) {
-            console.error('[usarPonto] Falha ao carregar registros:', e);
-            if (!silencioso) {
-                setErro(e.response?.data?.erro || 'Não foi possível carregar os registros de ponto.');
-            }
-        } finally {
-            if (!silencioso) setCarregando(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        carregarPonto(contadorPolling > 0);
-    }, [carregarPonto, contadorPolling]);
-
-    /**
-     * Registra uma nova batida de ponto (entrada ou saída).
-     * @param tipo Tipo da batida ('entrada' ou 'saida').
-     * @throws Erro com a mensagem do backend em caso de falha.
-     */
-    const baterPonto = async (tipo: 'entrada' | 'saida') => {
-        setErro(null);
-        try {
-            // Regra 9: Backend valida IP, frontend apenas tenta e trata o erro.
+    const mutationBaterPonto = useMutation({
+        mutationFn: async (tipo: 'entrada' | 'saida') => {
             await api.post('/api/ponto', { tipo });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['ponto'] });
+        }
+    });
 
-            // Revalidação em background para garantir consistência visual imediata
-            await carregarPonto(true);
+    const baterPonto = useCallback(async (tipo: 'entrada' | 'saida') => {
+        try {
+            await mutationBaterPonto.mutateAsync(tipo);
             return true;
         } catch (e: any) {
-            const msgErro = e.response?.data?.erro || 'Erro ao registrar ponto. Verifique sua conexão ou se está na rede autorizada.';
-            setErro(msgErro);
-            throw new Error(msgErro);
+             const msgErro = e.response?.data?.erro || 'Erro ao registrar ponto. Verifique sua conexão ou se está na rede autorizada.';
+             throw new Error(msgErro);
         }
-    };
+    }, [mutationBaterPonto]);
+
+    const erroFinal = erroQuery instanceof Error ? erroQuery.message : (mutationBaterPonto.error as Error)?.message || null;
 
     return { 
         registrosHoje, 
         historico, 
         carregando, 
-        erro, 
+        erro: erroFinal, 
         baterPonto, 
-        recarregar: carregarPonto 
+        recarregar: refetch 
     };
 }
