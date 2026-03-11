@@ -14,7 +14,7 @@ import { EstadoVazio } from '@/compartilhado/componentes/EstadoVazio';
 // import { usarAutenticacao } from '@/funcionalidades/avisos/autenticacao/usarAutenticacao';
 
 export function MuralAvisos() {
-    const { avisos, carregando, erro } = usarAvisos();
+    const { avisos, carregando, erro, removerAviso } = usarAvisos();
     const podeCriar = usarPermissaoAcesso('avisos:criar');
     const podeRemoverGeral = usarPermissaoAcesso('avisos:remover');
     const isAdmin = usarPermissao('ADMIN');
@@ -117,7 +117,10 @@ export function MuralAvisos() {
                                     </div>
 
                                         {podeDeletar && (
-                                            <button className="p-2 sm:mt-auto text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-2xl transition-colors opacity-0 group-hover:opacity-100">
+                                            <button 
+                                                onClick={() => removerAviso(aviso.id)}
+                                                className="p-2 sm:mt-auto text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-2xl transition-colors opacity-0 group-hover:opacity-100"
+                                            >
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
                                         )}

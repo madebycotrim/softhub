@@ -1,11 +1,9 @@
 import { useState } from 'react';
 import { 
     FileText, 
-    Users, 
     Download, 
     Network,
-    Search,
-    Calendar
+    Users as UsersIcon
 } from 'lucide-react';
 import { usarRelatorios } from '@/funcionalidades/admin/hooks/usarRelatorios';
 import type { RelatorioFrequenciaMembro } from '@/funcionalidades/admin/hooks/usarRelatorios';
@@ -16,6 +14,7 @@ import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 import { formatarDataHora } from '@/utilitarios/formatadores';
+import { BarraFiltros, FiltroDataRange } from '@/compartilhado/componentes/BarraFiltros';
 
 const CORES = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
@@ -55,68 +54,50 @@ export default function PaginaRelatorios() {
                     </button>
                 </CabecalhoFuncionalidade>
 
-                {/* ── ACTION BAR (FILTROS E NAVEGAÇÃO COMPACTA) ── */}
-                <div className="flex flex-col lg:flex-row items-center gap-3 bg-card p-2 border border-border rounded-[2rem] shadow-sm mb-6 w-full max-w-full overflow-x-auto">
-                    {/* Pesquisa */}
-                    <div className="flex-1 min-w-[200px] w-full flex items-center gap-2 px-4 py-2 hover:bg-muted/30 rounded-full transition-colors border border-transparent hover:border-border/30">
-                        <Search className="text-muted-foreground w-4 h-4 shrink-0" />
-                        <input
-                            type="text"
-                            placeholder="Pesquisa global em relatórios..."
-                            value={busca}
-                            onChange={(e) => setBusca(e.target.value)}
-                            disabled={abaAtiva === 'geral'}
-                            className="bg-transparent text-[13px] font-medium text-foreground w-full focus:outline-none placeholder:text-muted-foreground/40 disabled:opacity-30 disabled:cursor-not-allowed"
+                <BarraFiltros
+                    busca={busca}
+                    aoMudarBusca={setBusca}
+                    placeholderBusca="Pesquisa global em relatórios..."
+                    temFiltrosAtivos={busca !== '' || dataInicio !== '' || dataFim !== ''}
+                    aoLimparFiltros={() => {
+                        setBusca('');
+                        setDataInicio('');
+                        setDataFim('');
+                    }}
+                    desabilitarBusca={abaAtiva === 'geral'}
+                >
+                    <div className="flex flex-col lg:flex-row items-center gap-6">
+                        <FiltroDataRange 
+                            inicio={dataInicio}
+                            fim={dataFim}
+                            aoMudarInicio={setDataInicio}
+                            aoMudarFim={setDataFim}
                         />
-                    </div>
-                    
-                    <div className="h-6 w-px bg-border/50 hidden lg:block shrink-0" />
 
-                    {/* Datas */}
-                    <div className="flex items-center justify-center gap-2 px-4 py-2 border border-border/40 bg-muted/10 rounded-full hover:bg-muted/30 transition-colors w-full lg:w-auto shrink-0">
-                        <Calendar className="w-4 h-4 text-muted-foreground shrink-0" />
-                        <input 
-                            type="date" 
-                            title="Data Início"
-                            value={dataInicio}
-                            tabIndex={-1}
-                            onChange={(e) => setDataInicio(e.target.value)}
-                            className="bg-transparent text-[12px] font-bold text-muted-foreground hover:text-foreground focus:outline-none w-[105px] cursor-pointer color-scheme-dark"
-                        />
-                        <span className="text-[10px] font-black uppercase text-muted-foreground/30 mx-1">até</span>
-                        <input 
-                            type="date"
-                            title="Data Fim"
-                            value={dataFim}
-                            tabIndex={-1}
-                            onChange={(e) => setDataFim(e.target.value)}
-                            className="bg-transparent text-[12px] font-bold text-muted-foreground hover:text-foreground focus:outline-none w-[105px] cursor-pointer color-scheme-dark"
-                        />
-                    </div>
+                        <div className="h-6 w-px bg-white/5 hidden lg:block" />
 
-                    <div className="h-6 w-px bg-border/50 hidden lg:block shrink-0" />
-
-                    {/* Tabs / Navegação Interna */}
-                    <div className="flex p-1 bg-muted/30 border border-border/40 rounded-full shadow-inner shrink-0 w-full lg:w-auto overflow-x-auto custom-scrollbar">
-                        {[
-                            { id: 'geral', label: 'Visão Geral' },
-                            { id: 'equipes', label: 'Equipes' },
-                            { id: 'membros', label: 'Membros' },
-                        ].map(tab => (
-                            <button
-                                key={tab.id}
-                                onClick={() => setAbaAtiva(tab.id as any)}
-                                className={`flex items-center justify-center gap-2 px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
-                                    abaAtiva === tab.id 
-                                    ? 'bg-foreground text-background shadow-md scale-100' 
-                                    : 'text-muted-foreground/50 hover:text-foreground hover:bg-muted/40 scale-95 hover:scale-100'
-                                }`}
-                            >
-                                {tab.label}
-                            </button>
-                        ))}
+                        {/* Tabs / Navegação Interna */}
+                        <div className="flex p-1 bg-white/5 border border-white/10 rounded-full shadow-inner overflow-x-auto custom-scrollbar">
+                            {[
+                                { id: 'geral', label: 'Visão Geral' },
+                                { id: 'equipes', label: 'Equipes' },
+                                { id: 'membros', label: 'Membros' },
+                            ].map(tab => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setAbaAtiva(tab.id as any)}
+                                    className={`flex items-center justify-center gap-2 px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+                                        abaAtiva === tab.id 
+                                        ? 'bg-white text-slate-950 shadow-md scale-100' 
+                                        : 'text-muted-foreground/50 hover:text-white hover:bg-white/10 scale-95 hover:scale-100'
+                                    }`}
+                                >
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                </div>
+                </BarraFiltros>
 
                 {carregando && frequenciaMembros.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-32 gap-4 bg-card/40 backdrop-blur-md border border-border/40 rounded-[32px] w-full mt-4">
@@ -257,7 +238,7 @@ export default function PaginaRelatorios() {
                         <div className="bg-card/40 backdrop-blur-md border border-border/40 rounded-[32px] p-8 shadow-sm relative">
                              <div className="flex items-center gap-4 mb-8">
                                 <div className="p-3 bg-purple-500/10 rounded-2xl text-purple-500">
-                                    <Users size={22} className="opacity-80"/>
+                                    <UsersIcon size={22} className="opacity-80"/>
                                 </div>
                                 <div>
                                     <h3 className="text-sm font-black uppercase tracking-widest text-foreground">Grupos Internos</h3>

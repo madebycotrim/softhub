@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Filter, X } from 'lucide-react';
 import type { FiltrosKanban } from '@/funcionalidades/kanban/hooks/usarKanban';
 import { LABELS_PRIORIDADE } from '@/utilitarios/constantes';
 import { usarDebounce } from '@/compartilhado/hooks/usarDebounce';
+import { BarraFiltros, FiltroPills } from '@/compartilhado/componentes/BarraFiltros';
 
 interface PainelFiltrosProps {
     filtros: FiltrosKanban;
     aoFiltrar: (filtros: FiltrosKanban) => void;
 }
 
-// Custom Top-Bar component atuando c/ Debounce Time
+/** Painel de filtros do Kanban padronizado com design premium. */
 export function PainelFiltrosKanban({ filtros, aoFiltrar }: PainelFiltrosProps) {
     const [buscaText, setBuscaText] = useState(filtros.busca || '');
     const [prioridades, setPrioridades] = useState<string[]>(filtros.prioridades || []);
@@ -18,7 +18,9 @@ export function PainelFiltrosKanban({ filtros, aoFiltrar }: PainelFiltrosProps) 
 
     // Efeito para disparar aoFiltrar quando debounce atualiza
     useEffect(() => {
-        aoFiltrar({ ...filtros, busca: buscaDebounced, prioridades });
+        if (buscaDebounced !== filtros.busca) {
+            aoFiltrar({ ...filtros, busca: buscaDebounced });
+        }
     }, [buscaDebounced]);
 
     const togglePrioridade = (pri: string) => {
@@ -26,7 +28,7 @@ export function PainelFiltrosKanban({ filtros, aoFiltrar }: PainelFiltrosProps) 
             ? prioridades.filter(p => p !== pri)
             : [...prioridades, pri];
         setPrioridades(novo);
-        aoFiltrar({ ...filtros, busca: buscaText, prioridades: novo });
+        aoFiltrar({ ...filtros, prioridades: novo });
     };
 
     const limparFiltros = () => {
@@ -35,45 +37,25 @@ export function PainelFiltrosKanban({ filtros, aoFiltrar }: PainelFiltrosProps) 
         aoFiltrar({ busca: '', prioridades: [], responsavelId: undefined });
     };
 
-    const temFiltroSimples = buscaText.length > 0 || prioridades.length > 0 || filtros.responsavelId;
+    const temFiltroAtivo = !!(buscaText || prioridades.length > 0 || filtros.responsavelId);
 
     return (
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between px-2 mb-2 transition-all duration-300">
-            <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1.5 p-1 bg-card border border-border rounded-xl shadow-sm">
-                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 opacity-50 px-3">
-                        <Filter className="w-3 h-3" />
-                        Prioridade
-                    </span>
-                    <div className="flex items-center gap-1 pr-1">
-                        {Object.entries(LABELS_PRIORIDADE).map(([key, label]) => {
-                            const ativo = prioridades.includes(key);
-                            return (
-                                <button
-                                    key={key}
-                                    onClick={() => togglePrioridade(key)}
-                                    className={`transition-all px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-tight ${
-                                        ativo 
-                                        ? 'bg-primary text-primary-foreground shadow-sm' 
-                                        : 'text-muted-foreground hover:bg-accent hover:text-foreground opacity-60'
-                                    }`}
-                                >
-                                    {label}
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-
-                {temFiltroSimples && (
-                    <button
-                        onClick={limparFiltros}
-                        className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-destructive transition-colors px-2"
-                    >
-                        <X className="w-3 h-3" /> Limpar
-                    </button>
-                )}
-            </div>
+        <div className="mb-6">
+            <BarraFiltros
+                busca={buscaText}
+                aoMudarBusca={setBuscaText}
+                placeholderBusca="Filtrar tarefas no quadro..."
+                temFiltrosAtivos={temFiltroAtivo}
+                aoLimparFiltros={limparFiltros}
+            >
+                <FiltroPills 
+                    label="Prioridade" 
+                    opcoes={LABELS_PRIORIDADE} 
+                    valoresAtivos={prioridades} 
+                    aoToggle={togglePrioridade} 
+                    variante="primary"
+                />
+            </BarraFiltros>
         </div>
     );
 }

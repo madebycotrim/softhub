@@ -58,7 +58,7 @@ rotasAvisos.get('/', autenticacaoRequerida(), verificarPermissao('avisos:visuali
 const CriarAvisoSchema = z.object({
     titulo: z.string().min(3),
     conteudo: z.string().min(5),
-    prioridade: z.enum(['baixa', 'media', 'alta', 'urgente']),
+    prioridade: z.enum(['info', 'importante', 'urgente']),
     expira_em: z.string().nullable().optional()
 });
 

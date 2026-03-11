@@ -24,7 +24,6 @@ import { EstadoErro } from '@/compartilhado/componentes/EstadoErro';
 import { ModalDetalhesTarefa } from './ModalDetalhesTarefa';
 import { PainelFiltrosKanban } from './PainelFiltrosKanban';
 import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
-import { BarraBusca } from '@/compartilhado/componentes/BarraBusca';
 
 /** Mapeamento amigável das colunas */
 const LABELS_COLUNAS: Record<ColunaKanban, string> = {
@@ -45,19 +44,19 @@ function ColunaDropZone({ id, titulo, tarefas, aoApertarTarefa }: { id: ColunaKa
     });
 
     return (
-        <div className="flex flex-col flex-1 min-w-[300px] max-w-[350px] bg-card/60 rounded-2xl border border-border/60 shadow-none overflow-hidden h-full">
-            <div className="p-4 border-b border-border bg-card/50 flex items-center justify-between shrink-0">
-                <h3 className="font-semibold text-card-foreground">
+        <div className="flex flex-col flex-1 min-w-[300px] max-w-[350px] bg-white/[0.03] backdrop-blur-xl rounded-[32px] border border-white/10 shadow-2xl shadow-black/20 overflow-hidden h-full transition-all duration-500">
+            <div className="p-5 border-b border-white/5 bg-white/[0.02] flex items-center justify-between shrink-0">
+                <h3 className="font-black text-[12px] uppercase tracking-[0.2em] text-white/50">
                     {titulo}
                 </h3>
-                <span className="px-2 py-0.5 rounded-2xl bg-secondary text-xs font-medium text-secondary-foreground border border-border">
+                <span className="px-3 py-1 rounded-xl bg-primary/10 text-[10px] font-black text-primary border border-primary/20 shadow-[0_0_15px_rgba(37,99,235,0.1)]">
                     {tarefas.length}
                 </span>
             </div>
 
             <div
                 ref={setNodeRef}
-                className={`flex-1 p-3 overflow-y-auto flex flex-col gap-3 transition-all duration-300 ${isOver ? 'bg-accent/50 ring-2 ring-inset ring-primary/50' : ''
+                className={`flex-1 p-4 overflow-y-auto flex flex-col gap-4 scrollbar-none transition-all duration-300 ${isOver ? 'bg-primary/5 ring-2 ring-inset ring-primary/20' : ''
                     }`}
             >
                 {tarefas.map(tarefa => (
@@ -89,7 +88,7 @@ export function QuadroKanban({ projetoId = 'p1' }: { projetoId?: string }) {
     const handleDragStart = (event: DragStartEvent) => {
         if (!podeMover) return;
         const { active } = event;
-        const tarefa = tarefas.find(t => t.id === active.id);
+        const tarefa = tarefas.find((t: Tarefa) => t.id === active.id);
         if (tarefa) setActiveTarefa(tarefa);
     };
 
@@ -102,10 +101,10 @@ export function QuadroKanban({ projetoId = 'p1' }: { projetoId?: string }) {
 
         const tarefaId = active.id as string;
         const colunaDestino = over.id as ColunaKanban;
-        const tarefa = tarefas.find(t => t.id === tarefaId);
+        const tarefa = tarefas.find((t: Tarefa) => t.id === tarefaId);
 
-        if (tarefa && tarefa.status !== colunaDestino) {
-            moverCard(tarefaId, colunaDestino);
+        if (tarefa && tarefa.status !== (colunaDestino as any)) {
+            moverCard(tarefaId, colunaDestino as any);
         }
     };
 
@@ -123,13 +122,6 @@ export function QuadroKanban({ projetoId = 'p1' }: { projetoId?: string }) {
                             <span className="text-[9px] font-black uppercase tracking-widest text-primary">Sincronizando...</span>
                         </div>
                     )}
-                    <div className="relative w-full sm:w-64 xl:w-80">
-                        <BarraBusca 
-                            valor={filtros.busca || ''}
-                            aoMudar={(v) => setFiltros(prev => ({ ...prev, busca: v }))}
-                            placeholder="Buscar tarefas..."
-                        />
-                    </div>
                 </div>
             </CabecalhoFuncionalidade>
 
@@ -180,7 +172,7 @@ export function QuadroKanban({ projetoId = 'p1' }: { projetoId?: string }) {
                                     key={coluna}
                                     id={coluna}
                                     titulo={LABELS_COLUNAS[coluna]}
-                                    tarefas={tarefas.filter(t => t.status === coluna)}
+                                    tarefas={tarefas.filter((t: Tarefa) => t.status === (coluna as any))}
                                     aoApertarTarefa={setTarefaDetalhes}
                                 />
                             ))}

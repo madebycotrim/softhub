@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, memo } from 'react';
-import { UserCog, X, Shield, Mail, Trash2, Loader2, ListPlus, Download, ChevronDown, Users as UsersIcon, Plus, CheckSquare, Square, History } from 'lucide-react';
+import { UserCog, X, Shield, Mail, Trash2, Loader2, ListPlus, Download, ChevronDown, Users as UsersIcon, Plus, CheckSquare, Square, History, Search } from 'lucide-react';
 import { Tooltip } from '@/compartilhado/componentes/Tooltip';
 
 import { api } from '@/compartilhado/servicos/api';
@@ -18,7 +18,6 @@ import { Alerta } from '@/compartilhado/componentes/Alerta';
 import { ambiente } from '@/configuracoes/ambiente';
 import { usarConfiguracoes } from '@/funcionalidades/admin/hooks/usarConfiguracoes';
 import { usarDebounce } from '@/compartilhado/hooks/usarDebounce';
-import { BarraBusca } from '@/compartilhado/componentes/BarraBusca';
 import { usarAutenticacaoContexto } from '@/contexto/ContextoAutenticacao';
 import { usarToast } from '@/compartilhado/hooks/usarToast';
 import { ToastContainer } from '@/compartilhado/componentes/ToastContainer';
@@ -754,21 +753,31 @@ export default function GerenciarMembros() {
                             <span className="text-[9px] font-black uppercase tracking-widest text-primary">Sincronizando...</span>
                         </div>
                     )}
-                    {/* Barra de Busca Dinâmica */}
-                    <div className="relative w-full sm:w-64 xl:w-80">
-                        <BarraBusca 
-                            valor={busca}
-                            aoMudar={setBusca}
-                            placeholder="Buscar por nome ou email..."
-                        />
-                    </div>
 
-                    <div className="flex items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0">
-                        <div className="h-6 w-px bg-border/40 mx-1 hidden sm:block" />
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                        <div className="relative group/search flex-1 sm:w-64">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within/search:text-primary transition-colors" size={16} />
+                            <input 
+                                placeholder="Buscar membro..."
+                                value={busca}
+                                onChange={e => { setBusca(e.target.value); setPagina(1); }}
+                                className="w-full h-11 bg-background border border-border rounded-xl pl-10 pr-4 text-sm font-medium outline-none focus:bg-background focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-foreground placeholder:text-muted-foreground"
+                            />
+                            {busca && (
+                                <button
+                                    onClick={() => { setBusca(''); setPagina(1); }}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                    <X size={14} />
+                                </button>
+                            )}
+                        </div>
 
                         {podeCadastrar && (
-                            <div className="flex items-center gap-2">
-                                <button
+                            <>
+                                <div className="hidden sm:block w-px h-8 bg-border shrink-0 mx-1" />
+                                <div className="flex items-center gap-2">
+                                    <button
                                     onClick={() => setModalAberto(true)}
                                     className="h-11 px-5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-md active:scale-95 whitespace-nowrap"
                                 >
@@ -785,6 +794,7 @@ export default function GerenciarMembros() {
                                     </button>
                                 </Tooltip>
                             </div>
+                            </>
                         )}
                     </div>
                 </div>

@@ -1,4 +1,4 @@
-import { ShieldAlert, Activity, FileText, Search, Calendar, X, FolderKanban, Clock, Users, Key, Settings, ChevronDown } from 'lucide-react';
+import { ShieldAlert, Activity, FileText, FolderKanban, Clock, Users, Key, Settings } from 'lucide-react';
 import { EstadoVazio } from '@/compartilhado/componentes/EstadoVazio';
 import { Paginacao } from '@/compartilhado/componentes/Paginacao';
 import { formatarDataHora } from '@/utilitarios/formatadores';
@@ -8,6 +8,7 @@ import { Emblema } from '@/compartilhado/componentes/Emblema';
 import { EstadoErro } from '@/compartilhado/componentes/EstadoErro';
 import { useState, Fragment } from 'react';
 import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
+import { BarraFiltros, FiltroSelect, FiltroDataRange, FiltroToggle } from '@/compartilhado/componentes/BarraFiltros';
 
 /** Painel de auditoria com tabela semântica padronizada. */
 export function PainelLogs() {    const {
@@ -40,27 +41,6 @@ export function PainelLogs() {    const {
         return { icone: FileText, cor: 'text-slate-400', bg: 'bg-slate-100', borda: 'border-slate-200', label: modulo || 'Geral' };
     };
 
-    const getCorAcaoFiltro = (filtro: string) => {
-        if (!filtro) return 'bg-white border-slate-200 text-slate-500 hover:border-primary/30';
-        const variante = getVarianteAcao(filtro);
-        const estilos: Record<string, string> = {
-            azul: 'bg-blue-100 text-blue-700 border-blue-300 shadow-[0_0_10px_rgba(59,130,246,0.2)]',
-            verde: 'bg-emerald-100 text-emerald-700 border-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.2)]',
-            vermelho: 'bg-rose-100 text-rose-700 border-rose-300 shadow-[0_0_10px_rgba(244,63,94,0.2)] font-bold',
-            amarelo: 'bg-amber-100 text-amber-900 border-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.2)]',
-            roxo: 'bg-violet-100 text-violet-700 border-violet-300 shadow-[0_0_10px_rgba(139,92,246,0.2)] font-black italic',
-            cinza: 'bg-slate-200 text-slate-700 border-slate-300',
-            alerta: 'bg-orange-100 text-orange-800 border-orange-300 shadow-[0_0_10px_rgba(249,115,22,0.2)]',
-        };
-        return estilos[variante] || 'bg-white border-slate-200 text-slate-500';
-    };
-
-    const getCorModuloFiltro = (filtro: string) => {
-        if (!filtro) return 'bg-white border-slate-200 text-slate-500';
-        const info = getModuloInfo(filtro);
-        return `${info.bg} ${info.borda} ${info.cor}`;
-    };
-
     return (
         <div className="flex flex-col h-full bg-background animate-in fade-in duration-500">
             <CabecalhoFuncionalidade
@@ -77,119 +57,65 @@ export function PainelLogs() {    const {
                 )}
             </CabecalhoFuncionalidade>
 
-            {/* Barra de Filtros */}
-            <div className="bg-card my-6 border border-border p-4 rounded-2xl shadow-sm">
-                <div className="flex flex-wrap items-center gap-4 w-full">
-                    <div className="flex-1 min-w-[280px]">
-                        <div className="relative group">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
-                            <input
-                                type="text"
-                                placeholder="Pesquisa global em logs..."
-                                value={busca}
-                                onChange={e => { setBusca(e.target.value); setPagina(1); }}
-                                className="w-full h-11 bg-white border border-slate-200 rounded-2xl pl-11 pr-4 text-sm focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/30 transition-all placeholder:text-slate-400"
-                            />
-                        </div>
-                    </div>
+            <BarraFiltros
+                busca={busca}
+                aoMudarBusca={(v: string) => { setBusca(v); setPagina(1); }}
+                placeholderBusca="Pesquisa global em logs..."
+                temFiltrosAtivos={!!(busca || filtroModulo || filtroAcao || dataInicio || dataFim)}
+                aoLimparFiltros={() => {
+                    setBusca('');
+                    setFiltroModulo('');
+                    setFiltroAcao('');
+                    setDataInicio('');
+                    setDataFim('');
+                    setPagina(1);
+                }}
+            >
+                <div className="flex flex-wrap items-center gap-4">
+                    <FiltroSelect 
+                        valor={filtroModulo} 
+                        aoMudar={(v: string) => { setFiltroModulo(v); setPagina(1); }}
+                        rotuloPadrao="Módulos"
+                        opcoes={[
+                            { valor: "kanban", rotulo: "Kanban" },
+                            { valor: "ponto", rotulo: "Ponto" },
+                            { valor: "membros", rotulo: "Membros" },
+                            { valor: "autenticacao", rotulo: "Auth" },
+                            { valor: "admin", rotulo: "Admin" }
+                        ]}
+                    />
 
-                    <div className="flex items-center gap-2">
-                        <div className="relative flex items-center">
-                            <select 
-                                value={filtroModulo}
-                                onChange={e => { setFiltroModulo(e.target.value); setPagina(1); }}
-                                className={`h-11 border rounded-2xl pl-4 pr-10 text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer appearance-none min-w-[120px] focus:outline-none focus:ring-4 focus:ring-primary/5 ${getCorModuloFiltro(filtroModulo)}`}
-                            >
-                                <option value="" className="bg-white text-slate-500">Módulos</option>
-                                <option value="kanban" className="bg-white text-slate-900">Kanban</option>
-                                <option value="ponto" className="bg-white text-slate-900">Ponto</option>
-                                <option value="membros" className="bg-white text-slate-900">Membros</option>
-                                <option value="autenticacao" className="bg-white text-slate-900">Auth</option>
-                                <option value="admin" className="bg-white text-slate-900">Admin</option>
-                            </select>
-                            <ChevronDown size={12} className={`absolute right-4 pointer-events-none transition-colors ${filtroModulo ? 'text-current opacity-60' : 'text-slate-400'}`} />
-                        </div>
+                    <FiltroSelect 
+                        valor={filtroAcao} 
+                        aoMudar={(v: string) => { setFiltroAcao(v); setPagina(1); }}
+                        rotuloPadrao="Ações"
+                        opcoes={[
+                            { valor: "LOGIN", rotulo: "Acesso" },
+                            { valor: "CRIAR", rotulo: "Criação" },
+                            { valor: "ATUALIZAR", rotulo: "Edição" },
+                            { valor: "DELETAR", rotulo: "Exclusão" },
+                            { valor: "ROLE", rotulo: "Permissões" }
+                        ]}
+                    />
 
-                        <div className="relative flex items-center">
-                            <select 
-                                value={filtroAcao}
-                                onChange={e => { setFiltroAcao(e.target.value); setPagina(1); }}
-                                className={`h-11 border rounded-2xl pl-4 pr-10 text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer appearance-none min-w-[110px] focus:outline-none focus:ring-4 focus:ring-primary/5 shadow-sm ${getCorAcaoFiltro(filtroAcao)}`}
-                            >
-                                <option value="" className="text-slate-500">Ações</option>
-                                <option value="LOGIN" className="text-blue-600 font-bold">Acesso</option>
-                                <option value="CRIAR" className="text-emerald-600 font-bold">Criação</option>
-                                <option value="ATUALIZAR" className="text-slate-600 font-bold">Edição</option>
-                                <option value="DELETAR" className="text-rose-600 font-bold">Exclusão</option>
-                                <option value="ROLE" className="text-violet-600 font-bold">Permissões</option>
-                            </select>
-                            <ChevronDown size={12} className={`absolute right-4 pointer-events-none transition-colors ${filtroAcao ? 'text-current opacity-60' : 'text-slate-400'}`} />
-                        </div>
-                    </div>
+                    <FiltroDataRange 
+                        inicio={dataInicio} 
+                        fim={dataFim} 
+                        aoMudarInicio={(v: string) => { setDataInicio(v); setPagina(1); }}
+                        aoMudarFim={(v: string) => { setDataFim(v); setPagina(1); }}
+                        desabilitado={modoVisualizacao === 'otimizada'}
+                    />
 
-                    <div className="flex items-center gap-2">
-                        <div className="flex items-center bg-white border border-slate-200 rounded-2xl px-3 h-11 focus-within:border-primary/30 transition-all">
-                            <Calendar size={14} className="text-slate-400 mr-2" />
-                            <input
-                                type="date"
-                                value={dataInicio}
-                                disabled={modoVisualizacao === 'otimizada'}
-                                onChange={e => { setDataInicio(e.target.value); setPagina(1); }}
-                                className="bg-transparent border-none text-[11px] font-bold text-slate-600 focus:outline-none w-24 disabled:opacity-30"
-                            />
-                            <span className="mx-2 text-slate-300 text-xs">até</span>
-                            <input
-                                type="date"
-                                value={dataFim}
-                                disabled={modoVisualizacao === 'otimizada'}
-                                onChange={e => { setDataFim(e.target.value); setPagina(1); }}
-                                className="bg-transparent border-none text-[11px] font-bold text-slate-600 focus:outline-none w-24 disabled:opacity-30"
-                            />
-                        </div>
-
-                        {/* Toggle de Visualização */}
-                        <div className="flex items-center bg-white border border-slate-200 rounded-2xl px-1 h-11 shadow-sm">
-                            <button
-                                onClick={() => setModoVisualizacao('otimizada')}
-                                className={`px-3 h-9 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                                    modoVisualizacao === 'otimizada'
-                                        ? 'bg-slate-900 text-white shadow-md'
-                                        : 'text-slate-400 hover:text-slate-600'
-                                }`}
-                            >
-                                Otimizada
-                            </button>
-                            <button
-                                onClick={() => setModoVisualizacao('historico')}
-                                className={`px-3 h-9 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                                    modoVisualizacao === 'historico'
-                                        ? 'bg-primary text-primary-foreground shadow-md'
-                                        : 'text-slate-400 hover:text-slate-600'
-                                }`}
-                            >
-                                Histórico
-                            </button>
-                        </div>
-                    </div>
-
-                    {(busca || filtroModulo || filtroAcao || dataInicio || dataFim) && (
-                        <button
-                            onClick={() => {
-                                setBusca('');
-                                setFiltroModulo('');
-                                setFiltroAcao('');
-                                setDataInicio('');
-                                setDataFim('');
-                                setPagina(1);
-                            }}
-                            className="h-11 px-4 text-rose-500 hover:bg-rose-50 rounded-2xl transition-all border border-transparent hover:border-rose-100 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest"
-                        >
-                            <X size={14} />
-                            Limpar
-                        </button>
-                    )}
+                    <FiltroToggle 
+                        valorAtivo={modoVisualizacao}
+                        aoMudar={(v: 'otimizada' | 'historico') => setModoVisualizacao(v)}
+                        opcoes={[
+                            { valor: 'otimizada', rotulo: 'Otimizada' },
+                            { valor: 'historico', rotulo: 'Histórico' }
+                        ]}
+                    />
                 </div>
-            </div>
+            </BarraFiltros>
 
             {/* Tabela Semântica */}
             <div className="flex-1 min-h-0 bg-card border border-border rounded-2xl flex flex-col shadow-sm overflow-hidden">

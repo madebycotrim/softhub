@@ -5,6 +5,7 @@ import { Carregando } from '@/compartilhado/componentes/Carregando';
 import { api } from '@/compartilhado/servicos/api';
 import { Sparkles } from 'lucide-react';
 import { useState } from 'react';
+import { usarAvisos } from '@/funcionalidades/avisos/hooks/usarAvisos';
 
 const esquemaAviso = z.object({
     titulo: z.string().min(5, 'O título deve ter pelo menos 5 caracteres.').max(100, 'Máximo de 100 caracteres.'),
@@ -24,6 +25,7 @@ interface FormularioAvisoProps {
  * Baseado no React Hook Form e Zod.
  */
 export function FormularioAviso({ aoSalvar }: FormularioAvisoProps) {
+    const { criarAviso } = usarAvisos();
     const { register, handleSubmit, setValue, watch, formState: { errors, isSubmitting } } = useForm<FormularioAvisoDados>({
         resolver: zodResolver(esquemaAviso),
         defaultValues: { prioridade: 'info' }
@@ -47,14 +49,15 @@ export function FormularioAviso({ aoSalvar }: FormularioAvisoProps) {
     };
 
     const onSubmit = async (dados: FormularioAvisoDados) => {
-        // API Call simulada pro MOCK
-        return new Promise(resolve => {
-            setTimeout(() => {
-                console.log('Dados do Aviso:', dados);
-                aoSalvar();
-                resolve(true);
-            }, 1000);
-        });
+        try {
+            await criarAviso({
+                ...dados,
+                expira_em: dados.expira_em || null,
+            });
+            aoSalvar();
+        } catch (e) {
+            console.error('Erro ao criar aviso', e);
+        }
     };
 
     return (

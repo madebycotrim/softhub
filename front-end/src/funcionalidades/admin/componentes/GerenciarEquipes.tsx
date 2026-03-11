@@ -23,6 +23,7 @@ import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFu
 import { EstadoErro } from '@/compartilhado/componentes/EstadoErro';
 import { EstadoVazio } from '@/compartilhado/componentes/EstadoVazio';
 import { Alerta } from '@/compartilhado/componentes/Alerta';
+import { BarraFiltros } from '@/compartilhado/componentes/BarraFiltros';
 
 // ─── Componentes Auxiliares ───────────────────────────────────────────────────
 
@@ -1023,15 +1024,12 @@ export function GerenciarEquipes() {
                             <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400">EQUIPES ({equipesFiltradas.length})</h3>
                         </div>
 
-                        <div className="relative mb-4 group/search">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within/search:text-blue-500 transition-colors" size={14} />
-                            <input 
-                                placeholder="Buscar equipe..."
-                                value={buscaEquipe}
-                                onChange={e => setBuscaEquipe(e.target.value)}
-                                className="w-full h-9 bg-slate-50 border border-slate-100 rounded-xl pl-9 pr-3 text-[11px] font-medium outline-none focus:bg-white focus:border-blue-200 focus:ring-4 focus:ring-blue-50/50 transition-all"
-                            />
-                        </div>
+                        <BarraFiltros
+                            busca={buscaEquipe}
+                            aoMudarBusca={setBuscaEquipe}
+                            placeholderBusca="Buscar equipe..."
+                            className="!p-1 !rounded-2xl !bg-slate-50 border-slate-100 shadow-none mb-4"
+                        />
 
                         <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
                             {equipesFiltradas.map((e: Equipe) => (
