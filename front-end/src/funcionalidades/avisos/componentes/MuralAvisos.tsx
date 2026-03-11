@@ -21,9 +21,9 @@ export function MuralAvisos() {
     // const { usuario } = usarAutenticacao();
     const usuarioIdMock = 'u1';
 
-    // Ordenamos os avisos para Urgente aparecer primeiro (Z-A simples usando string compare de prioridade funciona aqui via mock)
+    // Ordenamos os avisos para Urgente aparecer primeiro
     const avisosOrdenados = [...avisos].sort((a, b) => {
-        const pVal = { urgente: 3, importante: 2, info: 1 };
+        const pVal: Record<string, number> = { urgente: 3, importante: 2, info: 1 };
         return pVal[b.prioridade] - pVal[a.prioridade];
     });
 
@@ -68,7 +68,6 @@ export function MuralAvisos() {
                     <EstadoVazio 
                         titulo="Mural Silencioso"
                         descricao="Nenhum comunicado importante foi publicado recentemente. Aproveite o foco!"
-                        compacto={true}
                     />
                 ) : (
                     avisosOrdenados.map(aviso => {

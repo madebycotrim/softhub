@@ -5,7 +5,7 @@ export interface Aviso {
     id: string;
     titulo: string;
     conteudo: string;
-    prioridade: 'baixa' | 'media' | 'alta' | 'urgente';
+    prioridade: 'info' | 'importante' | 'urgente';
     criado_por: {
         id: string;
         nome: string;

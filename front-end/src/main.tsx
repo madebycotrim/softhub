@@ -4,6 +4,7 @@ import { RouterProvider } from 'react-router';
 import { msalInstance } from './configuracoes/msal';
 import { rotas } from './configuracoes/rotas';
 import { aplicarTemaSalvo } from './utilitarios/tema';
+import { registerSW } from 'virtual:pwa-register';
 import './index.css';
 
 const ERROS_MSAL_ESPERADOS = new Set([
@@ -76,12 +77,15 @@ async function inicializar(): Promise<void> {
     }
 
     renderizarApp();
+
+    // Registro do Service Worker movido para APÓS o carregamento inicial
+    // para evitar ruído de comunicação (tabs:outgoing) durante o boot
+    try {
+        registerSW({ immediate: true });
+    } catch (e) {
+        console.warn('[PWA] Falha ao registrar SW:', e);
+    }
 }
-
-// Registro do Service Worker para PWA (Vite Plugin PWA)
-import { registerSW } from 'virtual:pwa-register';
-
-registerSW({ immediate: true });
 
 inicializar().catch((erro: unknown) => {
     console.error('[Main] Erro crítico na inicialização MSAL:', erro);
