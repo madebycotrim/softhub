@@ -2,6 +2,9 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Carregando } from '@/compartilhado/componentes/Carregando';
+import { api } from '@/compartilhado/servicos/api';
+import { Sparkles } from 'lucide-react';
+import { useState } from 'react';
 
 const esquemaAviso = z.object({
     titulo: z.string().min(5, 'O título deve ter pelo menos 5 caracteres.').max(100, 'Máximo de 100 caracteres.'),
@@ -21,10 +24,27 @@ interface FormularioAvisoProps {
  * Baseado no React Hook Form e Zod.
  */
 export function FormularioAviso({ aoSalvar }: FormularioAvisoProps) {
-    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormularioAvisoDados>({
+    const { register, handleSubmit, setValue, watch, formState: { errors, isSubmitting } } = useForm<FormularioAvisoDados>({
         resolver: zodResolver(esquemaAviso),
         defaultValues: { prioridade: 'info' }
     });
+
+    const [refinando, setRefinando] = useState(false);
+    const rascunho = watch('conteudo');
+
+    const handleRefinarIA = async () => {
+        if (!rascunho || rascunho.length < 10) return;
+        setRefinando(true);
+        try {
+            const res = await api.post('/ia/refinar-aviso', { rascunho });
+            if (res.data.titulo) setValue('titulo', res.data.titulo);
+            if (res.data.conteudo) setValue('conteudo', res.data.conteudo);
+        } catch (e) {
+            console.error('Erro ao refinar com IA', e);
+        } finally {
+            setRefinando(false);
+        }
+    };
 
     const onSubmit = async (dados: FormularioAvisoDados) => {
         // API Call simulada pro MOCK
@@ -57,9 +77,24 @@ export function FormularioAviso({ aoSalvar }: FormularioAvisoProps) {
             </div>
 
             <div>
-                <label htmlFor="conteudo" className="block text-sm font-medium text-foreground mb-1">
-                    Conteúdo
-                </label>
+                <div className="flex justify-between items-end mb-1">
+                    <label htmlFor="conteudo" className="block text-sm font-medium text-foreground">
+                        Conteúdo
+                    </label>
+                    <button
+                        type="button"
+                        onClick={handleRefinarIA}
+                        disabled={refinando || !rascunho || rascunho.length < 10}
+                        className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-primary hover:text-primary/80 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                        {refinando ? (
+                            <Carregando tamanho="sm" Centralizar={false} className="border-primary" />
+                        ) : (
+                            <Sparkles size={12} />
+                        )}
+                        Refinar com IA
+                    </button>
+                </div>
                 <textarea
                     id="conteudo"
                     rows={4}

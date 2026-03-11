@@ -14,8 +14,10 @@ import { Emblema } from '@/compartilhado/componentes/Emblema';
 import { LABELS_PRIORIDADE, LABELS_STATUS } from '@/utilitarios/constantes';
 import { Avatar } from '@/compartilhado/componentes/Avatar';
 import { useState } from 'react';
+import { ModalCriarTarefa } from './ModalCriarTarefa';
 
 export default function PaginaBacklog() {
+    const [modalCriarAberto, setModalCriarAberto] = useState(false);
     const [busca, setBusca] = useState('');
     const [statusFiltro, setStatusFiltro] = useState<string[]>([]);
     const [prioridadeFiltro, setPrioridadeFiltro] = useState<string[]>([]);
@@ -23,7 +25,8 @@ export default function PaginaBacklog() {
     const {
         tarefas,
         carregando,
-        erro
+        erro,
+        criarTarefa
     } = usarBacklog('p1', {
         busca,
         status: statusFiltro.length > 0 ? statusFiltro : undefined,
@@ -46,6 +49,7 @@ export default function PaginaBacklog() {
                 icone={ListTodo}
             >
                 <button
+                    onClick={() => setModalCriarAberto(true)}
                     className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
                 >
                     <Plus className="w-4 h-4" /> Nova Tarefa
@@ -187,6 +191,14 @@ export default function PaginaBacklog() {
                     </div>
                 </div>
             )}
+
+            <ModalCriarTarefa 
+                aberto={modalCriarAberto} 
+                aoFechar={() => setModalCriarAberto(false)} 
+                aoCriar={async (dados) => {
+                    await criarTarefa(dados);
+                }}
+            />
         </div>
     );
 }

@@ -16,6 +16,7 @@ import rotasConfiguracoes from './rotas/configuracoes';
 import rotasRelatorios from './rotas/relatorios';
 import rotasEquipes from './rotas/equipes';
 import rotasNotificacoes from './rotas/notificacoes';
+import rotasIA from './rotas/ia';
 import { lidarExcecao } from './middleware/erros';
 
 export type Env = {
@@ -27,6 +28,7 @@ export type Env = {
     BOOTSTRAP_ADMIN_EMAIL: string;
     SESSOES_QR: KVNamespace;
     SISTEMA_KV: KVNamespace;
+    AI: any;
 };
 
 const app = new Hono<{ Bindings: Env }>();
@@ -100,6 +102,7 @@ app.route('/api/configuracoes', rotasConfiguracoes);
 app.route('/api/relatorios', rotasRelatorios);
 app.route('/api/equipes', rotasEquipes);
 app.route('/api/notificacoes', rotasNotificacoes);
+app.route('/api/ia', rotasIA);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
 

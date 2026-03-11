@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Bot, CheckCircle, XCircle, Loader2, AlertTriangle } from 'lucide-react';
+import { Bot, CheckCircle, XCircle, Loader2, AlertTriangle, Wand2 } from 'lucide-react';
+import { api } from '@/compartilhado/servicos/api';
 import { Tooltip } from '@/compartilhado/componentes/Tooltip';
 import { formatarDataHora } from '@/utilitarios/formatadores';
 import { Emblema } from '@/compartilhado/componentes/Emblema';
@@ -29,6 +30,20 @@ export function PainelJustificativas() {
     const [processandoAcao, setProcessandoAcao] = useState<string | null>(null);
     const [justificativaSelecionada, setJustificativaSelecionada] = useState<string | null>(null);
     const [motivoRejeicao, setMotivoRejeicao] = useState('');
+    const [analisesIA, setAnalisesIA] = useState<Record<string, { sugestao: string, analise: string }>>({});
+    const [carregandoIA, setCarregandoIA] = useState<string | null>(null);
+
+    const handleAnalisarIA = async (id: string, motivo: string) => {
+        setCarregandoIA(id);
+        try {
+            const res = await api.post('/ia/analisar-justificativa', { motivo });
+            setAnalisesIA(prev => ({ ...prev, [id]: res.data }));
+        } catch (e) {
+            console.error('Erro ao analisar com IA:', e);
+        } finally {
+            setCarregandoIA(null);
+        }
+    };
 
     const handleAprovar = async (id: string) => {
         setProcessandoAcao(id);
@@ -151,6 +166,20 @@ export function PainelJustificativas() {
                                                 <span className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
                                                     {just.motivo}
                                                 </span>
+                                                {analisesIA[just.id] && (
+                                                    <div className={`mt-2 p-2.5 rounded-xl border text-[11px] leading-snug animate-in slide-in-from-top-2 duration-300 ${
+                                                        analisesIA[just.id].sugestao === 'aprovar' 
+                                                        ? 'bg-emerald-50/50 border-emerald-100 text-emerald-700' 
+                                                        : analisesIA[just.id].sugestao === 'rejeitar'
+                                                        ? 'bg-rose-50/50 border-rose-100 text-rose-700'
+                                                        : 'bg-amber-50/50 border-amber-100 text-amber-700'
+                                                    }`}>
+                                                        <div className="flex items-center gap-1.5 mb-1 font-black uppercase tracking-widest text-[9px]">
+                                                            <Wand2 size={10} /> Sugestão da IA
+                                                        </div>
+                                                        {analisesIA[just.id].analise}
+                                                    </div>
+                                                )}
                                                 {just.status === 'rejeitada' && just.motivo_rejeicao && (
                                                     <div className="mt-1 p-2 bg-destructive/10 border border-destructive/20 rounded-lg text-xs text-destructive">
                                                         <span className="font-bold">Reprovação:</span> {just.motivo_rejeicao}
@@ -164,6 +193,15 @@ export function PainelJustificativas() {
                                             <div className="flex items-center justify-end gap-2">
                                                 {just.status === 'pendente' ? (
                                                     <>
+                                                        <Tooltip texto="Pedir Opinião da IA">
+                                                            <button
+                                                                onClick={() => handleAnalisarIA(just.id, just.motivo)}
+                                                                disabled={carregandoIA === just.id || !!analisesIA[just.id]}
+                                                                className="w-9 h-9 rounded-full flex items-center justify-center bg-primary/5 text-primary hover:bg-primary hover:text-white transition-colors border border-primary/10 disabled:opacity-50"
+                                                            >
+                                                                {carregandoIA === just.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+                                                            </button>
+                                                        </Tooltip>
                                                         <Tooltip texto="Aprovar Justificativa">
                                                             <button
                                                                 onClick={() => handleAprovar(just.id)}
