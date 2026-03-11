@@ -7,7 +7,7 @@ const rotasDashboard = new Hono<{ Bindings: Env, Variables: { usuario: any } }>(
 // Obter dados agregados do dashboard
 rotasDashboard.get('/', autenticacaoRequerida(), verificarPermissao('dashboard:visualizar'), async (c: Context) => {
     const { DB, SISTEMA_KV } = c.env;
-    const projetoId = c.req.query('projetoId') || 'p1';
+    const projetoId = c.req.query('projetoId');
     const cacheKey = `dashboard_metrics_${projetoId}`;
 
     try {
@@ -42,10 +42,27 @@ rotasDashboard.get('/', autenticacaoRequerida(), verificarPermissao('dashboard:v
             progressoGeral: total > 0 ? Math.round((concluidas / total) * 100) : 0
         };
 
+        // 3. Buscar os 3 últimos avisos ativos
+        const { results: avisos } = await DB.prepare(`
+            SELECT id, titulo, prioridade, criado_em FROM avisos 
+            WHERE expira_em IS NULL OR expira_em > datetime('now')
+            ORDER BY criado_em DESC LIMIT 3
+        `).all();
+
+        // 4. Buscar as 5 tarefas mais recentes atribuídas ao usuário logado
+        const usuario = c.get('usuario') as any;
+        const { results: minhasTarefas } = await DB.prepare(`
+            SELECT t.id, t.titulo, t.status, t.prioridade 
+            FROM tarefas t
+            JOIN tarefas_responsaveis tr ON tr.tarefa_id = t.id
+            WHERE tr.usuario_id = ? AND t.status != 'concluida'
+            ORDER BY t.criado_em DESC LIMIT 5
+        `).bind(usuario.id).all();
+
         const resposta = {
             metricas,
-            avisos: [],
-            minhasTarefas: []
+            avisos,
+            minhasTarefas
         };
 
         // 3. Salva no cache por 5 minutos

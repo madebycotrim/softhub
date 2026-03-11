@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/compartilhado/servicos/api';
 import type { Tarefa } from '@/funcionalidades/kanban/hooks/usarKanban';
+import { PROJETO_PADRAO_ID } from '@/utilitarios/constantes';
 
 export interface FiltrosBacklog {
     busca?: string;
@@ -13,7 +14,7 @@ export interface FiltrosBacklog {
 /**
  * Hook para gerenciar o Backlog (Lista de Tarefas) com filtros avançados.
  */
-export function usarBacklog(projetoId: string = 'p1', filtros: FiltrosBacklog = {}) {
+export function usarBacklog(projetoId: string = PROJETO_PADRAO_ID, filtros: FiltrosBacklog = {}) {
     const queryClient = useQueryClient();
 
     const queryKey = ['backlog', projetoId, filtros];

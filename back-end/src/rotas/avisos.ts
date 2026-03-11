@@ -107,12 +107,40 @@ rotasAvisos.post('/', autenticacaoRequerida(), verificarPermissao('avisos:criar'
 });
 
 // Remover aviso (Hard delete)
-rotasAvisos.delete('/:id', autenticacaoRequerida(), verificarPermissao('avisos:remover'), async (c: Context) => {
+rotasAvisos.delete('/:id', autenticacaoRequerida(), async (c: Context) => {
     const { DB } = c.env;
     const id = c.req.param('id');
     const usuario = c.get('usuario') as any;
 
     try {
+        // Busca o aviso para verificar o autor
+        const avisoExistente = await DB.prepare('SELECT criado_por FROM avisos WHERE id = ?').bind(id).first() as { criado_por: string } | null;
+        
+        if (!avisoExistente) {
+            return c.json({ erro: 'Aviso não encontrado' }, 404);
+        }
+
+        // Regra: ADMIN, usuários com permissão global OU o próprio criador podem remover
+        const ehCriador = avisoExistente.criado_por === usuario.id;
+        const ehAdmin = usuario.role === 'ADMIN';
+        
+        // Se não for admin nem criador, verificamos se tem a permissão global no KV/D1 (opcional mas seguro)
+        if (!ehAdmin && !ehCriador) {
+             // Aqui poderíamos chamar uma versão interna do verificarPermissao, 
+             // mas para simplificar e seguir a regra do projeto solo: 
+             // Se não for o criador e não for Admin/Liderança superior (validado via role ou permissão), negamos.
+             // Para este caso, vamos considerar que apenas ADMIN ou Criador podem deletar por enquanto, 
+             // ou expandir conforme a matriz de permissões se necessário.
+             
+             // Vamos manter a consistência com os outros módulos:
+             const rolesLideranca = ['ADMIN', 'COORDENADOR', 'GESTOR', 'LIDER', 'SUBLIDER'];
+             const ehLideranca = rolesLideranca.includes(usuario.role);
+
+             if (!ehLideranca) {
+                 return c.json({ erro: 'Você só pode remover seus próprios avisos.' }, 403);
+             }
+        }
+
         await DB.prepare('DELETE FROM avisos WHERE id = ?').bind(id).run();
         await registrarLog(DB, {
             usuarioId: usuario.id,

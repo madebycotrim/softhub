@@ -12,6 +12,7 @@ import { EstadoVazio } from '@/compartilhado/componentes/EstadoVazio';
 import { Emblema } from '@/compartilhado/componentes/Emblema';
 import { LABELS_PRIORIDADE, LABELS_STATUS } from '@/utilitarios/constantes';
 import { Avatar } from '@/compartilhado/componentes/Avatar';
+import { PROJETO_PADRAO_ID } from '@/utilitarios/constantes';
 import { useState } from 'react';
 import { ModalCriarTarefa } from './ModalCriarTarefa';
 import { BarraFiltros, FiltroPills } from '@/compartilhado/componentes/BarraFiltros';
@@ -27,7 +28,7 @@ export default function PaginaBacklog() {
         carregando,
         erro,
         criarTarefa
-    } = usarBacklog('p1', {
+    } = usarBacklog(PROJETO_PADRAO_ID, {
         busca,
         status: statusFiltro.length > 0 ? statusFiltro : undefined,
         prioridades: prioridadeFiltro.length > 0 ? prioridadeFiltro : undefined

@@ -11,7 +11,7 @@ export const validarRedeLocal = async (c: Context, next: Next) => {
     // Logar pra ver de onde veio na Cloudflare
     console.log('[REDE] Requisição do IP:', ipClient);
 
-    // MOCK: Regra de rede interna da UNIEURO pra testar o Ponto
+    // Regra de rede interna da UNIEURO para o Ponto Eletrônico
     const isOnCampus = ipClient.startsWith('192.168.') || ipClient.startsWith('10.') || ipClient === '127.0.0.1' || ipClient === '::1';
 
     if (!isOnCampus) {

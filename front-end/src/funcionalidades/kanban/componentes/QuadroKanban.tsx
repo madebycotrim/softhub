@@ -11,7 +11,7 @@ import {
 } from '@dnd-kit/core';
 import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { COLUNAS_KANBAN } from '@/utilitarios/constantes';
+import { COLUNAS_KANBAN, PROJETO_PADRAO_ID } from '@/utilitarios/constantes';
 import type { ColunaKanban } from '@/utilitarios/constantes';
 import { usarKanban } from '@/funcionalidades/kanban/hooks/usarKanban';
 import type { Tarefa, FiltrosKanban } from '@/funcionalidades/kanban/hooks/usarKanban';
@@ -86,7 +86,7 @@ function ColunaDropZone({ id, titulo, tarefas, aoApertarTarefa }: { id: ColunaKa
 /**
  * O Quadro Kanban que exibe as colunas com Drag and Drop funcional.
  */
-export function QuadroKanban({ projetoId = 'p1' }: { projetoId?: string }) {
+export function QuadroKanban({ projetoId = PROJETO_PADRAO_ID }: { projetoId?: string }) {
     const [filtros, setFiltros] = useState<FiltrosKanban>({});
     const { tarefas, carregando, erro, moverCard } = usarKanban(projetoId, filtros);
     const [activeTarefa, setActiveTarefa] = useState<Tarefa | null>(null);

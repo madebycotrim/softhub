@@ -7,13 +7,14 @@ import { Avatar } from '@/compartilhado/componentes/Avatar';
 import { EstadoErro } from '@/compartilhado/componentes/EstadoErro';
 import { formatarDataHora } from '@/utilitarios/formatadores';
 import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
+import { PROJETO_PADRAO_ID } from '@/utilitarios/constantes';
 
 /**
  * Dashboard principal (Página inicial logada).
  * Focado na operação geral do projeto, sem terminologia de Sprints.
  */
 export function PaginaDashboard() {
-    const projetoId = 'p1';
+    const projetoId = PROJETO_PADRAO_ID;
     const { metricas, avisos, minhasTarefas, carregando, erro } = usarDashboard(projetoId);
 
     return (

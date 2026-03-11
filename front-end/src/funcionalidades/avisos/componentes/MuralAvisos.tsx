@@ -10,7 +10,7 @@ import { Modal } from '@/compartilhado/componentes/Modal';
 import { FormularioAviso } from './FormularioAviso';
 import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
 import { EstadoVazio } from '@/compartilhado/componentes/EstadoVazio';
-// import { usarAutenticacao } from '@/funcionalidades/avisos/autenticacao/usarAutenticacao';
+import { usarAutenticacao } from '@/funcionalidades/autenticacao/hooks/usarAutenticacao';
 
 export function MuralAvisos() {
     const { avisos, carregando, erro, removerAviso } = usarAvisos();
@@ -18,8 +18,7 @@ export function MuralAvisos() {
     const podeRemoverGeral = usarPermissaoAcesso('avisos:remover');
     const isAdmin = usarPermissao('ADMIN');
     const [modalAberto, setModalAberto] = useState(false);
-    // const { usuario } = usarAutenticacao();
-    const usuarioIdMock = 'u1';
+    const { usuario } = usarAutenticacao();
 
     // Ordenamos os avisos para Urgente aparecer primeiro
     const avisosOrdenados = [...avisos].sort((a, b) => {
@@ -72,7 +71,7 @@ export function MuralAvisos() {
                 ) : (
                     avisosOrdenados.map(aviso => {
                         // Lideres podem apagar os próprios
-                        const podeDeletar = isAdmin || podeRemoverGeral || usuarioIdMock === aviso.criado_por.id;
+                        const podeDeletar = isAdmin || podeRemoverGeral || usuario?.id === aviso.criado_por.id;
                         const IconePrioridade = aviso.prioridade === 'urgente' ? Megaphone : null; // Destaque extra
 
                         return (

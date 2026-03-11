@@ -12,7 +12,7 @@ const rotasTarefas = new Hono<{ Bindings: Env, Variables: { usuario: any } }>();
 // Listar Tarefas do Projeto
 rotasTarefas.get('/', autenticacaoRequerida(), verificarPermissao('tarefas:visualizar'), async (c: Context) => {
     const { DB } = c.env;
-    const projetoId = c.req.query('projetoId') || 'p1';
+    const projetoId = c.req.query('projetoId');
 
     // Workflow 26 - Parâmetros de Filtro
     const busca = c.req.query('busca');
