@@ -27,9 +27,6 @@ export function MuralAvisos() {
         return pVal[b.prioridade] - pVal[a.prioridade];
     });
 
-    if (carregando) return <Carregando />;
-    if (erro) return <p className="text-destructive text-center py-8">{erro}</p>;
-
     return (
         <div className="w-full space-y-10 pb-20 animate-in fade-in duration-500">
             <CabecalhoFuncionalidade
@@ -38,19 +35,36 @@ export function MuralAvisos() {
                 icone={Megaphone}
                 variante="destaque"
             >
-                {podeCriar && (
-                    <button
-                        onClick={() => setModalAberto(true)}
-                        className="h-11 px-5 rounded-2xl bg-slate-900 text-white font-bold text-xs shadow-lg hover:bg-black transition-all flex items-center gap-2 active:scale-95"
-                    >
-                        <Plus size={18} />
-                        <span>Criar Aviso</span>
-                    </button>
-                )}
+                <div className="flex items-center gap-4">
+                    {carregando && avisos.length > 0 && (
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/5 rounded-full border border-primary/10 animate-pulse transition-all">
+                            <Carregando Centralizar={false} tamanho="sm" />
+                            <span className="text-[9px] font-black uppercase tracking-widest text-primary">Sincronizando...</span>
+                        </div>
+                    )}
+                    {podeCriar && (
+                        <button
+                            onClick={() => setModalAberto(true)}
+                            className="h-11 px-5 rounded-2xl bg-slate-900 text-white font-bold text-xs shadow-lg hover:bg-black transition-all flex items-center gap-2 active:scale-95"
+                        >
+                            <Plus size={18} />
+                            <span>Criar Aviso</span>
+                        </button>
+                    )}
+                </div>
             </CabecalhoFuncionalidade>
 
-            <div className="grid grid-cols-1 gap-4">
-                {avisosOrdenados.length === 0 ? (
+            <div className={`grid grid-cols-1 gap-4 transition-opacity duration-300 ${carregando && avisos.length > 0 ? 'opacity-70' : 'opacity-100'}`}>
+                {carregando && avisos.length === 0 ? (
+                    <div className="py-24 flex flex-col items-center justify-center gap-4 bg-card/20 border border-border/40 rounded-3xl">
+                        <Carregando Centralizar={false} tamanho="lg" />
+                        <span className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Buscando Comunicados</span>
+                    </div>
+                ) : erro ? (
+                    <div className="py-24 flex flex-col items-center justify-center bg-card/10 border border-red-500/10 rounded-3xl">
+                         <p className="text-destructive font-black uppercase tracking-widest text-[10px]">{erro}</p>
+                    </div>
+                ) : avisosOrdenados.length === 0 ? (
                     <EstadoVazio 
                         titulo="Mural Silencioso"
                         descricao="Nenhum comunicado importante foi publicado recentemente. Aproveite o foco!"
@@ -102,11 +116,11 @@ export function MuralAvisos() {
                                         </div>
                                     </div>
 
-                                    {podeDeletar && (
-                                        <button className="p-2 sm:mt-auto text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-2xl transition-colors opacity-0 group-hover:opacity-100">
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
-                                    )}
+                                        {podeDeletar && (
+                                            <button className="p-2 sm:mt-auto text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-2xl transition-colors opacity-0 group-hover:opacity-100">
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        )}
                                 </div>
 
                             </div>
@@ -116,7 +130,7 @@ export function MuralAvisos() {
             </div>
 
             {modalAberto && (
-                <Modal aberto={modalAberto} aoFechar={() => setModalAberto(false)} titulo="Criar Novo Aviso">
+                <Modal aberto={modalAberto} aoFechar={() => setModalAberto(false)} titulo="Criar Novo Aviso" largura="sm">
                     <FormularioAviso aoSalvar={() => setModalAberto(false)} />
                 </Modal>
             )}

@@ -14,6 +14,8 @@ export interface LogSistema {
     email: string | null;
     role: string | null;
     ip: string | null;
+    dados_anteriores: string | null;
+    dados_novos: string | null;
 }
 
 export interface EstatisticaLog {
@@ -41,6 +43,7 @@ export function usarLogs() {
     const [dataInicio, setDataInicio] = useState('');
     const [dataFim, setDataFim] = useState('');
     const [filtroMeusLogs, setFiltroMeusLogs] = useState(false);
+    const [modoVisualizacao, setModoVisualizacao] = useState<'otimizada' | 'historico'>('otimizada');
 
     const [buscaDebounced, setBuscaDebounced] = useState(busca);
     const [contadorPolling, setContadorPolling] = useState(0);
@@ -69,8 +72,17 @@ export function usarLogs() {
             if (filtroModulo) params.modulo = filtroModulo;
             if (filtroAcao) params.acao = filtroAcao;
             if (buscaDebounced) params.busca = buscaDebounced;
-            if (dataInicio) params.dataInicio = dataInicio;
-            if (dataFim) params.dataFim = dataFim;
+            
+            // Lógica Blindada: Otimizada (Últimos 90 dias) vs Histórico Completo
+            if (modoVisualizacao === 'otimizada') {
+                const tresMesesAtras = new Date();
+                tresMesesAtras.setDate(tresMesesAtras.getDate() - 90);
+                params.dataInicio = tresMesesAtras.toISOString();
+            } else {
+                if (dataInicio) params.dataInicio = dataInicio;
+                if (dataFim) params.dataFim = dataFim;
+            }
+
             if (filtroMeusLogs) params.meus = true;
 
             const [resLogs, resStats] = await Promise.all([
@@ -93,7 +105,7 @@ export function usarLogs() {
 
     useEffect(() => {
         carregar(contadorPolling === 0); // Só mostra loading na primeira carga ou troca de filtro
-    }, [pagina, itensPorPagina, filtroModulo, filtroAcao, buscaDebounced, dataInicio, dataFim, filtroMeusLogs, contadorPolling]);
+    }, [pagina, itensPorPagina, filtroModulo, filtroAcao, buscaDebounced, dataInicio, dataFim, filtroMeusLogs, modoVisualizacao, contadorPolling]);
 
     return {
         logs,
@@ -118,6 +130,8 @@ export function usarLogs() {
         dataFim,
         setDataFim,
         filtroMeusLogs,
-        setFiltroMeusLogs
+        setFiltroMeusLogs,
+        modoVisualizacao,
+        setModoVisualizacao
     };
 }

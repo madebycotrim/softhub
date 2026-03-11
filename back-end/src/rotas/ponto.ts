@@ -20,7 +20,7 @@ rotasPonto.get('/', autenticacaoRequerida(), verificarPermissao('ponto:visualiza
         // Busca batida mais recente de hoje
         const ultimo = await DB.prepare(`
             SELECT * FROM ponto_registros 
-            WHERE usuario_id = ? AND date(registrado_em) = date('now')
+            WHERE usuario_id = ? AND date(registrado_em) = date('now', '-3 hours')
             ORDER BY registrado_em DESC LIMIT 1
         `).bind(usuario.id).first() as any;
 
@@ -49,7 +49,7 @@ rotasPonto.get('/', autenticacaoRequerida(), verificarPermissao('ponto:visualiza
         // Busca batidas de hoje (atualizado)
         const hoje = await DB.prepare(`
             SELECT * FROM ponto_registros 
-            WHERE usuario_id = ? AND date(registrado_em) = date('now')
+            WHERE usuario_id = ? AND date(registrado_em) = date('now', '-3 hours')
             ORDER BY registrado_em ASC
         `).bind(usuario.id).all();
 
@@ -89,7 +89,7 @@ rotasPonto.post('/', autenticacaoRequerida(), verificarPermissao('ponto:registra
         // Workflow 9 - Verificar sequência
         const ultimo = await DB.prepare(`
             SELECT tipo FROM ponto_registros
-            WHERE usuario_id = ? AND DATE(registrado_em) = DATE('now')
+            WHERE usuario_id = ? AND DATE(registrado_em) = DATE('now', '-3 hours')
             ORDER BY registrado_em DESC LIMIT 1
         `).bind(usuario.id).first() as any;
 

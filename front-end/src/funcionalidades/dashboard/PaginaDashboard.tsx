@@ -15,15 +15,6 @@ export function PaginaDashboard() {
     const projetoId = 'p1';
     const { metricas, avisos, minhasTarefas, carregando, erro } = usarDashboard(projetoId);
 
-    if (carregando) return <Carregando />;
-    if (erro) return <p className="text-red-400 text-center py-8">{erro}</p>;
-    if (!metricas) return (
-        <EstadoVazio 
-            titulo="Operação Silenciosa" 
-            descricao="Ainda não temos dados suficientes para gerar as métricas de performance. Comece a movimentar tarefas no Kanban!"
-        />
-    );
-
     return (
         <div className="w-full space-y-10 pb-20 animate-in fade-in duration-500">
             <CabecalhoFuncionalidade
@@ -31,9 +22,31 @@ export function PaginaDashboard() {
                 subtitulo="Visão geral e status em tempo real do projeto."
                 icone={LayoutDashboard}
                 variante="destaque"
-            />
+            >
+                {carregando && metricas && (
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/5 rounded-full border border-primary/10 animate-pulse transition-all">
+                        <Carregando Centralizar={false} tamanho="sm" />
+                        <span className="text-[9px] font-black uppercase tracking-widest text-primary">Atualizando...</span>
+                    </div>
+                )}
+            </CabecalhoFuncionalidade>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {carregando && !metricas ? (
+                <div className="py-24 flex flex-col items-center justify-center gap-4">
+                    <Carregando Centralizar={false} tamanho="lg" />
+                    <span className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Consolidando Métricas</span>
+                </div>
+            ) : erro ? (
+                <div className="py-24 text-center">
+                    <p className="text-destructive font-black uppercase tracking-widest text-[10px]">{erro}</p>
+                </div>
+            ) : !metricas ? (
+                <EstadoVazio 
+                    titulo="Operação Silenciosa" 
+                    descricao="Ainda não temos dados suficientes para gerar as métricas de performance. Comece a movimentar tarefas no Kanban!"
+                />
+            ) : (
+                <div className={`grid grid-cols-1 lg:grid-cols-12 gap-8 transition-opacity duration-500 ${carregando ? 'opacity-70' : 'opacity-100'}`}>
                 {/* Coluna da Esquerda: Avisos e Métricas */}
                 <div className="lg:col-span-8 space-y-8">
                     {avisos.length > 0 && (
@@ -126,7 +139,8 @@ export function PaginaDashboard() {
                         </Link>
                     </section>
                 </div>
-            </div>
+                </div>
+            )}
         </div>
     );
 }

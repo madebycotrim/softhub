@@ -52,6 +52,30 @@ export function usarJustificativas() {
         }
     };
 
+    /**
+     * Edita uma justificativa pendente.
+     */
+    const editarJustificativa = async (id: string, dados: { data: string; tipo: string; motivo: string }) => {
+        try {
+            await api.patch(`/api/ponto/justificativas/${id}`, dados);
+            await carregar();
+        } catch (e: any) {
+            throw new Error(e.response?.data?.erro || 'Erro ao editar justificativa.');
+        }
+    };
+
+    /**
+     * Exclui (soft delete) uma justificativa pendente.
+     */
+    const excluirJustificativa = async (id: string) => {
+        try {
+            await api.delete(`/api/ponto/justificativas/${id}`);
+            await carregar();
+        } catch (e: any) {
+            throw new Error(e.response?.data?.erro || 'Erro ao excluir justificativa.');
+        }
+    };
+
     useEffect(() => {
         carregar();
     }, [pagina]);
@@ -64,6 +88,8 @@ export function usarJustificativas() {
         setPagina,
         totalPaginas,
         enviarJustificativa,
+        editarJustificativa,
+        excluirJustificativa,
         recarregar: carregar
     };
 }

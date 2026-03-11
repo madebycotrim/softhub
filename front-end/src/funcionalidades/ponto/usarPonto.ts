@@ -23,6 +23,16 @@ export function usarPonto() {
      * Carrega os dados de ponto do usuário de forma centralizada.
      * @param silencioso Se true, não reseta o estado de carregando/erro inicial.
      */
+    const [contadorPolling, setContadorPolling] = useState(0);
+
+    // Polling de 30s (Regra 14) para manter status e cronômetro sincronizados
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setContadorPolling(prev => prev + 1);
+        }, 30000);
+        return () => clearInterval(interval);
+    }, []);
+
     const carregarPonto = useCallback(async (silencioso = false) => {
         if (!silencioso) {
             setCarregando(true);
@@ -47,8 +57,8 @@ export function usarPonto() {
     }, []);
 
     useEffect(() => {
-        carregarPonto();
-    }, [carregarPonto]);
+        carregarPonto(contadorPolling > 0);
+    }, [carregarPonto, contadorPolling]);
 
     /**
      * Registra uma nova batida de ponto (entrada ou saída).

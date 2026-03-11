@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Bot, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Bot, CheckCircle, XCircle, Loader2, AlertTriangle } from 'lucide-react';
+import { Tooltip } from '../../compartilhado/componentes/Tooltip';
 import { formatarDataHora } from '../../utilitarios/formatadores';
 import { Emblema } from '../../compartilhado/componentes/Emblema';
 import { Avatar } from '../../compartilhado/componentes/Avatar';
@@ -7,6 +8,7 @@ import { ConfirmacaoExclusao } from '../../compartilhado/componentes/Confirmacao
 import { usarJustificativasAdmin } from './usarJustificativasAdmin';
 import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
 import { Modal } from '../../compartilhado/componentes/Modal';
+import { Carregando } from '../../compartilhado/componentes/Carregando';
 
 /** Mapeia o tipo técnico para rótulo amigável. */
 const formatarTipo = (tipo: string): string => {
@@ -53,22 +55,6 @@ export function PainelJustificativas() {
         }
     };
 
-    if (carregando) {
-        return (
-            <div className="flex justify-center items-center h-48 bg-card border border-border/50 rounded-2xl">
-                <span className="text-muted-foreground">Carregando painel...</span>
-            </div>
-        );
-    }
-
-    if (erro) {
-        return (
-            <div className="flex justify-center items-center h-48 bg-card border border-border/50 rounded-2xl">
-                <span className="text-destructive">{erro}</span>
-            </div>
-        );
-    }
-
     return (
         <div className="space-y-10 flex flex-col h-full bg-background animate-in fade-in duration-500 pb-10">
             <CabecalhoFuncionalidade
@@ -78,9 +64,28 @@ export function PainelJustificativas() {
                 variante="padrao"
             />
 
-            <div className="bg-card border border-border rounded-2xl flex flex-col flex-1 overflow-hidden shadow-sm">
+            <div className="bg-card border border-border rounded-2xl flex flex-col flex-1 overflow-hidden shadow-sm relative">
                 <div className="flex-1 overflow-auto">
-                    {justificativas.length === 0 ? (
+                    {carregando && justificativas.length === 0 ? (
+                        <div className="h-full flex flex-col items-center justify-center gap-4 animate-in fade-in duration-500">
+                             <Carregando Centralizar={false} tamanho="lg" />
+                             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Sincronizando Justificativas</span>
+                        </div>
+                    ) : erro && justificativas.length === 0 ? (
+                        <div className="h-full flex flex-col items-center justify-center gap-4 p-10 text-center animate-in fade-in">
+                            <div className="w-16 h-16 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mb-2">
+                                <AlertTriangle size={32} />
+                            </div>
+                            <h3 className="text-lg font-bold text-slate-900">Erro ao carregar justificativas</h3>
+                            <p className="text-sm text-slate-500 max-w-xs">{erro}</p>
+                            <button 
+                                onClick={() => window.location.reload()}
+                                className="mt-4 px-6 py-2 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest"
+                            >
+                                Tentar Novamente
+                            </button>
+                        </div>
+                    ) : justificativas.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
                             <Bot className="w-12 h-12 mb-4 opacity-20" />
                             <p className="font-medium text-foreground">Caixa de Entrada Vazia</p>
@@ -159,27 +164,29 @@ export function PainelJustificativas() {
                                             <div className="flex items-center justify-end gap-2">
                                                 {just.status === 'pendente' ? (
                                                     <>
-                                                        <button
-                                                            onClick={() => handleAprovar(just.id)}
-                                                            disabled={processandoAcao === just.id}
-                                                            className="w-9 h-9 rounded-full flex items-center justify-center bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-colors border border-emerald-500/20 disabled:opacity-50"
-                                                            aria-label="Aprovar"
-                                                            title="Aprovar Justificativa"
-                                                        >
-                                                            {processandoAcao === just.id
-                                                                ? <Loader2 className="w-4 h-4 animate-spin" />
-                                                                : <CheckCircle className="w-4 h-4" />
-                                                            }
-                                                        </button>
-                                                        <button
-                                                            onClick={() => setJustificativaSelecionada(just.id)}
-                                                            disabled={processandoAcao === just.id}
-                                                            className="w-9 h-9 rounded-full flex items-center justify-center bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-colors border border-rose-500/20 disabled:opacity-50"
-                                                            aria-label="Rejeitar"
-                                                            title="Rejeitar Justificativa"
-                                                        >
-                                                            <XCircle className="w-4 h-4" />
-                                                        </button>
+                                                        <Tooltip texto="Aprovar Justificativa">
+                                                            <button
+                                                                onClick={() => handleAprovar(just.id)}
+                                                                disabled={processandoAcao === just.id}
+                                                                className="w-9 h-9 rounded-full flex items-center justify-center bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-colors border border-emerald-500/20 disabled:opacity-50"
+                                                                aria-label="Aprovar"
+                                                            >
+                                                                {processandoAcao === just.id
+                                                                    ? <Loader2 className="w-4 h-4 animate-spin" />
+                                                                    : <CheckCircle className="w-4 h-4" />
+                                                                }
+                                                            </button>
+                                                        </Tooltip>
+                                                        <Tooltip texto="Rejeitar Justificativa">
+                                                            <button
+                                                                onClick={() => setJustificativaSelecionada(just.id)}
+                                                                disabled={processandoAcao === just.id}
+                                                                className="w-9 h-9 rounded-full flex items-center justify-center bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-colors border border-rose-500/20 disabled:opacity-50"
+                                                                aria-label="Rejeitar"
+                                                            >
+                                                                <XCircle className="w-4 h-4" />
+                                                            </button>
+                                                        </Tooltip>
                                                     </>
                                                 ) : (
                                                     <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest px-2 py-1 bg-muted rounded-lg">

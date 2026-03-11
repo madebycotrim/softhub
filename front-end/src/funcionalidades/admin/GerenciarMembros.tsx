@@ -228,7 +228,7 @@ function ModalConvitesEmLote({ aberto, aoFechar, aoCadastrar, recarregar }: Moda
     };
 
     return (
-        <Modal aberto={aberto} aoFechar={aoFechar} titulo="Convites em Lote">
+        <Modal aberto={aberto} aoFechar={aoFechar} titulo="Convites em Lote" largura="sm">
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="bg-primary/5 border border-primary/10 rounded-2xl p-4">
                     <p className="text-xs text-muted-foreground leading-relaxed">
@@ -336,7 +336,7 @@ const LinhaMembro = memo(({
                             : <Square size={20} />}
                     </button>
 
-                    <Avatar nome={membro.nome} fotoPerfil={membro.foto_perfil} tamanho="md" />
+                    <Avatar nome={membro.nome} fotoPerfil={membro.foto_perfil} tamanho="md" coroa={ehOMesmoUsuario} />
 
                     <div className="min-w-0">
                         <p className="font-bold text-foreground text-sm leading-tight">
@@ -347,11 +347,7 @@ const LinhaMembro = memo(({
                         </p>
                     </div>
 
-                    {ehOMesmoUsuario && (
-                        <span className="text-[9px] text-primary/60 font-black uppercase tracking-widest italic select-none shrink-0">
-                            Você
-                        </span>
-                    )}
+                    {/* Coroa integrada no Avatar via prop coroa={ehOMesmoUsuario} */}
                 </div>
             </td>
 
@@ -610,7 +606,7 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, rolesDisponiveis }
     };
 
     return (
-        <Modal aberto={aberto} aoFechar={aoFechar} titulo="Cadastrar Novo Membro" largura="md">
+        <Modal aberto={aberto} aoFechar={aoFechar} titulo="Cadastrar Novo Membro" largura="sm">
             <div className="space-y-5 py-2">
                 <div className="space-y-2">
                     <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-1">E-mail Institucional</label>
@@ -845,8 +841,6 @@ export default function GerenciarMembros() {
         }
     };
 
-    if (carregando && membros.length === 0) return <Carregando />;
-
     return (
         <div className="h-full flex flex-col space-y-6">
             <CabecalhoFuncionalidade
@@ -854,7 +848,13 @@ export default function GerenciarMembros() {
                 subtitulo="Controle de acesso, papéis e status dos colaboradores."
                 icone={UserCog}
             >
-                <div className="flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto mt-4 md:mt-0">
+                <div className="flex flex-col sm:flex-row items-center gap-4 w-full xl:w-auto mt-4 md:mt-0">
+                    {carregando && membros.length > 0 && (
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/5 rounded-full border border-primary/10 animate-pulse whitespace-nowrap">
+                            <Carregando Centralizar={false} tamanho="sm" />
+                            <span className="text-[9px] font-black uppercase tracking-widest text-primary">Sincronizando...</span>
+                        </div>
+                    )}
                     {/* Barra de Busca Dinâmica */}
                     <div className="relative w-full sm:w-64 xl:w-80">
                         <BarraBusca 
@@ -915,8 +915,13 @@ export default function GerenciarMembros() {
             <div className="bg-card border border-border rounded-3xl overflow-hidden shadow-sm flex-1 flex flex-col">
 
                 {/* Tabela semântica de membros */}
-                <div className="overflow-x-auto flex-1 h-0">
-                    {erro ? (
+                <div className="overflow-x-auto flex-1 h-0 relative">
+                    {carregando && membros.length === 0 ? (
+                        <div className="h-full flex flex-col items-center justify-center gap-4 animate-in fade-in duration-500">
+                             <Carregando Centralizar={false} tamanho="lg" />
+                             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Buscando Membros</span>
+                        </div>
+                    ) : erro ? (
                         <div className="flex flex-col items-center justify-center py-20 text-center px-4">
                             <div className="w-16 h-16 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center mb-4">
                                 <AlertCircle size={32} />
@@ -963,7 +968,7 @@ export default function GerenciarMembros() {
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody className={`divide-y divide-border/40 transition-opacity duration-300 ${carregando ? 'opacity-50' : 'opacity-100'}`}>
                                 {listaPaginada.map(membro => (
                                     <LinhaMembro
                                         key={membro.id}

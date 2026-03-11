@@ -1,6 +1,6 @@
 import { useState, useRef, useLayoutEffect, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { LayoutGrid, Users, Plus, Pencil, Trash2, UserCheck, Search, ChevronDown, Check, ArrowRightLeft, X } from 'lucide-react';
+import { LayoutGrid, Users, Plus, Pencil, Trash2, UserCheck, Search, ChevronDown, Check, ArrowRightLeft, X, AlertTriangle } from 'lucide-react';
 import { Tooltip } from '../../compartilhado/componentes/Tooltip';
 import { usarEquipes, type Grupo, type Equipe } from './usarEquipes';
 
@@ -642,18 +642,16 @@ function DetalheEquipe({
                                             {salvandoInline ? <Carregando Centralizar={false} tamanho="sm" className="border-t-emerald-500 border-emerald-500/30" /> : <Check size={16} strokeWidth={2.5} />}
                                         </button>
                                     </Tooltip>
-                                    <Tooltip texto="Cancelar">
-                                        <button
-                                            onClick={() => {
-                                                setNomeTemp(equipe.nome);
-                                                setEditandoEquipe(false);
-                                            }}
-                                            disabled={salvandoInline}
-                                            className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all disabled:opacity-30"
-                                        >
-                                            <X size={16} strokeWidth={2.5} />
-                                        </button>
-                                    </Tooltip>
+                                    <button
+                                        onClick={() => {
+                                            setNomeTemp(equipe.nome);
+                                            setEditandoEquipe(false);
+                                        }}
+                                        disabled={salvandoInline}
+                                        className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all disabled:opacity-30"
+                                    >
+                                        <X size={16} strokeWidth={2.5} />
+                                    </button>
                                 </div>
                             </div>
                         ) : (
@@ -808,15 +806,13 @@ function DetalheEquipe({
                                                         {salvandoInline ? <Carregando Centralizar={false} tamanho="sm" className="border-t-emerald-500 border-emerald-500/30" /> : <Check size={18} strokeWidth={2.5} />}
                                                     </button>
                                                 </Tooltip>
-                                                <Tooltip texto="Cancelar">
-                                                    <button
-                                                        onClick={() => setEditandoId(null)}
-                                                        disabled={salvandoInline}
-                                                        className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all disabled:opacity-30"
-                                                    >
-                                                        <X size={18} strokeWidth={2.5} />
-                                                    </button>
-                                                </Tooltip>
+                                                <button
+                                                    onClick={() => setEditandoId(null)}
+                                                    disabled={salvandoInline}
+                                                    className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all disabled:opacity-30"
+                                                >
+                                                    <X size={18} strokeWidth={2.5} />
+                                                </button>
                                             </div>
                                         ) : (
                                             <Tooltip texto="Excluir grupo">
@@ -995,9 +991,6 @@ export function GerenciarEquipes() {
         }
     }, [modalLider, idEquipeAtiva, equipeAtiva, editarEquipe]);
 
-    if (carregando && equipesAtivas.length === 0) return <div className="h-screen flex items-center justify-center"><Carregando /></div>;
-    if (erro && equipesAtivas.length === 0) return <div className="p-20 text-center text-red-500 font-bold">{erro}</div>;
-
     return (
         <div className="h-[calc(100vh-80px)] lg:h-[calc(100vh-48px)] flex flex-col overflow-hidden px-0">
             <CabecalhoFuncionalidade
@@ -1015,9 +1008,30 @@ export function GerenciarEquipes() {
                 </button>
             </CabecalhoFuncionalidade>
 
-            <div className="flex-1 flex overflow-hidden pt-6 gap-6">
-                {/* Sidebar: Lista de Equipes */}
-                <aside className="w-72 hidden lg:flex flex-col shrink-0">
+            <div className="flex-1 flex overflow-hidden pt-6 gap-6 relative">
+                {carregando && equipesAtivas.length === 0 ? (
+                    <div className="flex-1 flex flex-col items-center justify-center gap-4 bg-white border border-slate-100 rounded-3xl animate-in fade-in duration-500">
+                        <Carregando Centralizar={false} tamanho="lg" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Sincronizando Estrutura</span>
+                    </div>
+                ) : erro && equipesAtivas.length === 0 ? (
+                    <div className="flex-1 flex flex-col items-center justify-center gap-4 bg-white border border-rose-100 rounded-3xl p-10 text-center">
+                        <div className="w-16 h-16 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mb-2">
+                             <AlertTriangle size={32} />
+                        </div>
+                        <h3 className="text-lg font-bold text-slate-900">Erro ao carregar estrutura</h3>
+                        <p className="text-sm text-slate-500 max-w-xs">{erro}</p>
+                        <button 
+                            onClick={() => window.location.reload()}
+                            className="mt-4 px-6 py-2 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest"
+                        >
+                            Tentar Novamente
+                        </button>
+                    </div>
+                ) : (
+                    <>
+                        {/* Sidebar: Lista de Equipes */}
+                        <aside className="w-72 hidden lg:flex flex-col shrink-0">
                     <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm overflow-hidden flex flex-col flex-1">
                         <div className="flex items-center justify-between mb-3 px-1">
                             <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400">EQUIPES ({equipesFiltradas.length})</h3>
@@ -1187,7 +1201,9 @@ export function GerenciarEquipes() {
                         </div>
                     )}
                 </main>
-            </div>
+            </>
+        )}
+    </div>
 
             {/* Modais */}
             {modalOrg && (

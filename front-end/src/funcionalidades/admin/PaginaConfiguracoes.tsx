@@ -133,6 +133,7 @@ export function PaginaConfiguracoes() {
     const [editandoRole, setEditandoRole] = useState<string | null>(null);
     const [nomeRoleTemp, setNomeRoleTemp] = useState('');
     const [salvandoRole, setSalvandoRole] = useState(false);
+    const [erroLocal, setErroLocal] = useState<string | null>(null);
 
     /** Lista de roles/cargos — ADMIN e TODOS sempre presentes */
     const roles = useMemo(() => {
@@ -155,7 +156,6 @@ export function PaginaConfiguracoes() {
         })).filter(modulo => modulo.permissoes.length > 0);
     }, [buscaPermissao]);
 
-    if (carregando) return <Carregando />;
     if (erro) return <div className="p-10 text-center text-red-500 font-bold uppercase tracking-widest">{erro}</div>;
 
     /** Alterna uma permissão entre ativo/inativo para um cargo */
@@ -163,10 +163,19 @@ export function PaginaConfiguracoes() {
         if (!configuracoes) return;
         const chave = `permissoes_roles.${role}.${permissao}`;
         setSalvando(chave);
+        setErroLocal(null);
         try {
             const novasPermissoes = { ...configuracoes.permissoes_roles };
             novasPermissoes[role] = { ...novasPermissoes[role], [permissao]: !novasPermissoes[role]?.[permissao] };
-            await atualizarConfiguracao('permissoes_roles', novasPermissoes);
+            const res = await atualizarConfiguracao('permissoes_roles', novasPermissoes);
+            
+            if (!res?.sucesso) {
+                setErroLocal(res?.erro || 'Erro ao atualizar permissão.');
+                setTimeout(() => setErroLocal(null), 5000);
+            }
+        } catch (err) {
+            setErroLocal('Falha na comunicação com o servidor.');
+            setTimeout(() => setErroLocal(null), 5000);
         } finally {
             setSalvando(null);
         }
@@ -215,7 +224,7 @@ export function PaginaConfiguracoes() {
     };
 
     return (
-        <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700 pb-10">
+        <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700 pb-10 relative">
             <CabecalhoFuncionalidade
                 titulo="Configurações"
                 subtitulo="Governança, Permissões e Hierarquia do SoftHub"
@@ -373,6 +382,13 @@ export function PaginaConfiguracoes() {
                                     </p>
                                 </div>
                             </div>
+
+                            {erroLocal && (
+                                <div className="flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-[10px] font-black uppercase tracking-widest animate-in slide-in-from-right-4">
+                                    <X size={14} strokeWidth={3} />
+                                    {erroLocal}
+                                </div>
+                            )}
 
                             <div className="relative group/search max-w-xs w-full">
                                 <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within/search:text-primary transition-colors">

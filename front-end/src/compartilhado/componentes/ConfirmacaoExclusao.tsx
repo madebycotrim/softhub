@@ -28,7 +28,7 @@ export function ConfirmacaoExclusao({
     children
 }: ConfirmacaoExclusaoProps) {
     return (
-        <Modal aberto={aberto} aoFechar={aoFechar} titulo={titulo} largura="md">
+        <Modal aberto={aberto} aoFechar={aoFechar} titulo={titulo} largura="sm">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 mb-10">
                 <div className="flex shrink-0 items-center justify-center w-14 h-14 rounded-2xl bg-rose-50 border border-rose-100 shadow-sm">
                     <AlertTriangle className="h-6 w-6 text-rose-600 shrink-0" aria-hidden="true" />

@@ -119,6 +119,7 @@ rotasEquipes.patch('/grupos/:id', autenticacaoRequerida(), verificarPermissao('e
             ip: c.req.header('CF-Connecting-IP') ?? '',
             entidadeTipo: 'grupos',
             entidadeId: id,
+            dadosAnteriores: { nome: atual.nome, descricao: atual.descricao, equipe_id: atual.equipe_id },
             dadosNovos: { nome, descricao, equipe_id },
         });
 
@@ -292,6 +293,7 @@ rotasEquipes.patch('/equipes/:id', autenticacaoRequerida(), verificarPermissao('
             ip: c.req.header('CF-Connecting-IP') ?? '',
             entidadeTipo: 'equipes',
             entidadeId: id,
+            dadosAnteriores: { nome: atual.nome, descricao: atual.descricao, lider_id: atual.lider_id, sub_lider_id: atual.sub_lider_id },
             dadosNovos: { nome, descricao, lider_id, sub_lider_id },
         });
 
@@ -395,6 +397,9 @@ rotasEquipes.patch('/membros/:id/alocar', autenticacaoRequerida(), verificarPerm
             desc = `Membro removido da equipe ${equipe_id}`;
         }
 
+        // Buscar estado atual da alocação
+        const atual = await DB.prepare('SELECT equipe_id, grupo_id FROM usuarios WHERE id = ?').bind(membroId).first() as any;
+
         await registrarLog(DB, {
             usuarioId: usuarioLogado.id,
             usuarioNome: usuarioLogado.nome,
@@ -406,6 +411,7 @@ rotasEquipes.patch('/membros/:id/alocar', autenticacaoRequerida(), verificarPerm
             ip: c.req.header('CF-Connecting-IP') ?? '',
             entidadeTipo: 'usuarios',
             entidadeId: membroId,
+            dadosAnteriores: { equipe_id: atual?.equipe_id, grupo_id: atual?.grupo_id },
             dadosNovos: { equipe_id, grupo_id },
         });
 
@@ -459,6 +465,9 @@ rotasEquipes.patch('/membros/:id/mover', autenticacaoRequerida(), verificarPermi
             link: '/app/membros'
         });
 
+        // Buscar estado atual antes de mover
+        const atual = await DB.prepare('SELECT equipe_id, grupo_id FROM usuarios WHERE id = ?').bind(membroId).first() as any;
+
         await registrarLog(DB, {
             usuarioId: usuarioLogado.id,
             usuarioNome: usuarioLogado.nome,
@@ -470,6 +479,7 @@ rotasEquipes.patch('/membros/:id/mover', autenticacaoRequerida(), verificarPermi
             ip: c.req.header('CF-Connecting-IP') ?? '',
             entidadeTipo: 'usuarios',
             entidadeId: membroId,
+            dadosAnteriores: { equipe_id: atual?.equipe_id, grupo_id: atual?.grupo_id },
             dadosNovos: { equipe_id, grupo_id, origem_grupo_id },
         });
 

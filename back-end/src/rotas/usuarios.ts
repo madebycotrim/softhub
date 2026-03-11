@@ -80,6 +80,9 @@ rotasUsuarios.patch('/perfil', autenticacaoRequerida(), async (c) => {
     }
 
     try {
+        // Buscar estado atual para o log "Antes/Depois"
+        const atual = await DB.prepare('SELECT bio, foto_perfil FROM usuarios WHERE id = ?').bind(usuario.id).first() as any;
+
         await DB.prepare('UPDATE usuarios SET bio = ?, foto_perfil = ? WHERE id = ?')
             .bind(bio, foto_perfil, usuario.id)
             .run();
@@ -95,6 +98,7 @@ rotasUsuarios.patch('/perfil', autenticacaoRequerida(), async (c) => {
             ip: c.req.header('CF-Connecting-IP') ?? '',
             entidadeTipo: 'usuarios',
             entidadeId: usuario.id,
+            dadosAnteriores: { bio: atual?.bio, foto_perfil: atual?.foto_perfil },
             dadosNovos: { bio, foto_perfil },
         });
 
@@ -123,6 +127,10 @@ rotasUsuarios.patch('/:id/role', autenticacaoRequerida(), verificarPermissao('me
     }
 
     try {
+        // Buscar estado atual para o log "Antes/Depois"
+        const atual = await DB.prepare('SELECT role FROM usuarios WHERE id = ?').bind(id).first() as any;
+        if (!atual) return c.json({ erro: 'Usuário não encontrado.' }, 404);
+
         await DB.prepare('UPDATE usuarios SET role = ? WHERE id = ?').bind(role, id).run();
 
         await criarNotificacoes(DB, {
@@ -140,10 +148,11 @@ rotasUsuarios.patch('/:id/role', autenticacaoRequerida(), verificarPermissao('me
             usuarioRole: usuarioLogado.role,
             acao: 'MEMBRO_ROLE_ALTERADA',
             modulo: 'admin',
-            descricao: `Role do membro ${id} alterada para ${role}`,
+            descricao: `Role do membro ${id} alterada de ${atual.role} para ${role}`,
             ip: c.req.header('CF-Connecting-IP') ?? '',
             entidadeTipo: 'usuarios',
             entidadeId: id,
+            dadosAnteriores: { role: atual.role },
             dadosNovos: { role },
         });
 
@@ -176,6 +185,10 @@ rotasUsuarios.patch('/:id/status', autenticacaoRequerida(), verificarPermissao('
     }
 
     try {
+        // Buscar estado atual para o log "Antes/Depois"
+        const atual = await DB.prepare('SELECT ativo FROM usuarios WHERE id = ?').bind(id).first() as any;
+        if (!atual) return c.json({ erro: 'Usuário não encontrado.' }, 404);
+
         await DB.prepare('UPDATE usuarios SET ativo = ? WHERE id = ?').bind(ativo ? 1 : 0, id).run();
 
         if (ativo) {
@@ -195,10 +208,11 @@ rotasUsuarios.patch('/:id/status', autenticacaoRequerida(), verificarPermissao('
             usuarioRole: usuarioLogado.role,
             acao: ativo ? 'MEMBRO_ATIVADO' : 'MEMBRO_DESATIVADO',
             modulo: 'admin',
-            descricao: `Membro ${id} marcado como ${ativo ? 'ATIVO' : 'INATIVO'}`,
+            descricao: `Membro ${id} marcado como ${ativo ? 'ATIVO' : 'INATIVO'} (era ${atual.ativo ? 'ATIVO' : 'INATIVO'})`,
             ip: c.req.header('CF-Connecting-IP') ?? '',
             entidadeTipo: 'usuarios',
             entidadeId: id,
+            dadosAnteriores: { ativo: atual.ativo === 1 },
             dadosNovos: { ativo },
         });
 
@@ -395,6 +409,11 @@ rotasUsuarios.patch('/:id/funcoes', autenticacaoRequerida(), verificarPermissao(
     }
 
     try {
+        // Buscar estado atual para o log "Antes/Depois"
+        const atual = await DB.prepare('SELECT funcoes FROM usuarios WHERE id = ?').bind(id).first() as any;
+        if (!atual) return c.json({ erro: 'Usuário não encontrado.' }, 404);
+        const funcoesAtuais = JSON.parse(atual.funcoes || '[]');
+
         const funcoesJson = JSON.stringify(funcoes);
         await DB.prepare('UPDATE usuarios SET funcoes = ? WHERE id = ?').bind(funcoesJson, id).run();
 
@@ -409,6 +428,7 @@ rotasUsuarios.patch('/:id/funcoes', autenticacaoRequerida(), verificarPermissao(
             ip: c.req.header('CF-Connecting-IP') ?? '',
             entidadeTipo: 'usuarios',
             entidadeId: id,
+            dadosAnteriores: { funcoes: funcoesAtuais },
             dadosNovos: { funcoes },
         });
 

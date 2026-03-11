@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { BarraLateral } from './BarraLateral';
 import { Menu, X, QrCode, Sun, Moon } from 'lucide-react';
+import { Tooltip } from './Tooltip';
 import { usarTema } from '../../contexto/ContextoTema';
 import { Modal } from './Modal';
 import ScannerQR from '../../funcionalidades/autenticacao/ScannerQR';
@@ -42,12 +43,14 @@ export function LayoutPrincipal({ children }: LayoutPrincipalProps) {
                     >
                         <div className="flex flex-col h-full relative">
                             {/* Botão fechar móvel */}
-                            <button 
-                                onClick={() => setSidebarAberta(false)}
-                                className="absolute top-4 right-4 z-50 p-2 text-sidebar-foreground/40 hover:text-primary transition-colors bg-sidebar-accent/30 rounded-2xl"
-                            >
-                                <X size={20} />
-                            </button>
+                                <Tooltip texto="Fechar" posicao="right">
+                                    <button 
+                                        onClick={() => setSidebarAberta(false)}
+                                        className="absolute top-4 right-4 z-50 p-2 text-sidebar-foreground/40 hover:text-primary transition-colors bg-sidebar-accent/30 rounded-2xl"
+                                    >
+                                        <X size={20} />
+                                    </button>
+                                </Tooltip>
                             <BarraLateral 
                                 aoNavegar={() => setSidebarAberta(false)} 
                                 aoAbrirScanner={() => setScannerAberto(true)}
@@ -60,12 +63,14 @@ export function LayoutPrincipal({ children }: LayoutPrincipalProps) {
             <div className="flex flex-col flex-1 overflow-hidden relative">
                 {/* Mobile Header: Só aparece em telas pequenas */}
                 <header className="lg:hidden h-16 shrink-0 flex items-center justify-between px-4 border-b border-border bg-card/80 backdrop-blur-xl sticky top-0 z-40">
-                    <button 
-                        onClick={() => setSidebarAberta(true)}
-                        className="p-2.5 -ml-1 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-2xl transition-all active:scale-90"
-                    >
-                        <Menu size={22} strokeWidth={2.5} />
-                    </button>
+                    <Tooltip texto="Abrir Menu" posicao="right">
+                        <button 
+                            onClick={() => setSidebarAberta(true)}
+                            className="p-2.5 -ml-1 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-2xl transition-all active:scale-90"
+                        >
+                            <Menu size={22} strokeWidth={2.5} />
+                        </button>
+                    </Tooltip>
                     
                     <div className="flex flex-col  leading-none">
                         <span className="text-[13px] font-black text-foreground uppercase tracking-widest text-center">Fábrica de Software</span>
@@ -73,19 +78,22 @@ export function LayoutPrincipal({ children }: LayoutPrincipalProps) {
                     </div>
 
                     <div className="flex items-center gap-2 -mr-1">
-                        <button
-                            onClick={() => setScannerAberto(true)}
-                            className="p-2 text-muted-foreground hover:text-primary transition-colors bg-sidebar-accent/5 rounded-2xl border border-border/40"
-                            title="Conectar via QR Code"
-                        >
-                            <QrCode size={18} />
-                        </button>
-                        <button
-                            onClick={() => setTema(tema === 'dark' ? 'light' : 'dark')}
-                            className="p-2 text-muted-foreground hover:text-primary transition-colors bg-sidebar-accent/5 rounded-2xl border border-border/40"
-                        >
-                            {tema === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-                        </button>
+                        <Tooltip texto="Conectar via QR Code">
+                            <button
+                                onClick={() => setScannerAberto(true)}
+                                className="p-2 text-muted-foreground hover:text-primary transition-colors bg-sidebar-accent/5 rounded-2xl border border-border/40"
+                            >
+                                <QrCode size={18} />
+                            </button>
+                        </Tooltip>
+                        <Tooltip texto={tema === 'dark' ? "Modo Claro" : "Modo Escuro"}>
+                            <button
+                                onClick={() => setTema(tema === 'dark' ? 'light' : 'dark')}
+                                className="p-2 text-muted-foreground hover:text-primary transition-colors bg-sidebar-accent/5 rounded-2xl border border-border/40"
+                            >
+                                {tema === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                            </button>
+                        </Tooltip>
                     </div>
                 </header>
 

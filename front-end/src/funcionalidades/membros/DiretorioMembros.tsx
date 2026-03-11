@@ -99,10 +99,6 @@ export function DiretorioMembros() {
             }));
     }, [membros, busca]);
 
-    if (carregando) return <Carregando />;
-    if (erro) return <p className="text-destructive text-center py-8">{erro}</p>;
-    if (membros.length === 0) return <EstadoVazio titulo="Nenhum membro registrado" descricao="O sistema ainda não possui membros ativos ou inativos." iconeCustom={<Users className="w-10 h-10 text-slate-300" />} />;
-
     return (
         <div className="w-full space-y-10 pb-20 animate-in fade-in duration-500">
             <CabecalhoFuncionalidade
@@ -119,7 +115,18 @@ export function DiretorioMembros() {
                 </div>
             </CabecalhoFuncionalidade>
 
-            {gruposHierarquia.length === 0 ? (
+            {carregando ? (
+                <div className="py-20 flex flex-col items-center justify-center gap-4">
+                    <Carregando Centralizar={false} tamanho="lg" />
+                    <span className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Sincronizando Diretório</span>
+                </div>
+            ) : erro ? (
+                <div className="py-20 text-center">
+                    <p className="text-destructive font-bold uppercase tracking-widest text-xs">{erro}</p>
+                </div>
+            ) : membros.length === 0 ? (
+                <EstadoVazio titulo="Nenhum membro registrado" descricao="O sistema ainda não possui membros ativos ou inativos." iconeCustom={<Users className="w-10 h-10 text-slate-300" />} />
+            ) : gruposHierarquia.length === 0 ? (
                 <EstadoVazio
                     tipo="pesquisa"
                     titulo="Membro não encontrado"

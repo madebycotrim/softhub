@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { usarChecklist } from './usarChecklist';
 import { usarPermissaoAcesso } from '../../compartilhado/hooks/usarPermissao';
 import { Plus, Trash2, CheckSquare, Square } from 'lucide-react';
+import { Tooltip } from '../../compartilhado/componentes/Tooltip';
 import { Carregando } from '../../compartilhado/componentes/Carregando';
 
 interface SecaoChecklistProps {
@@ -62,13 +63,14 @@ export function SecaoChecklist({ tarefaId }: SecaoChecklistProps) {
                         </span>
 
                         {podeGerenciar && (
-                            <button
-                                onClick={() => removerItem(item.id)}
-                                className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-destructive transition-all"
-                                title="Remover item"
-                            >
-                                <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                            <Tooltip texto="Remover item">
+                                <button
+                                    onClick={() => removerItem(item.id)}
+                                    className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-destructive transition-all"
+                                >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                            </Tooltip>
                         )}
                     </div>
                 ))}

@@ -3,6 +3,7 @@ import { Download, Loader2 } from 'lucide-react';
 import { api } from '../../compartilhado/servicos/api';
 import { usarPermissao } from '../../compartilhado/hooks/usarPermissao';
 import { Modal } from '../../compartilhado/componentes/Modal';
+import { Tooltip } from '../../compartilhado/componentes/Tooltip';
 
 export function BotaoExportarPonto() {
     const podeExportar = usarPermissao('LIDER_EQUIPE');
@@ -48,6 +49,7 @@ export function BotaoExportarPonto() {
 
     return (
         <>
+        <Tooltip texto="Gerar Relatório CSV" posicao="left">
             <button
                 onClick={() => setAberto(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent/80 text-accent-foreground rounded-lg border border-border transition-colors text-sm font-medium"
@@ -55,8 +57,9 @@ export function BotaoExportarPonto() {
                 <Download className="w-4 h-4" />
                 Exportar CSV
             </button>
+        </Tooltip>
 
-            <Modal aberto={aberto} aoFechar={() => setAberto(false)} titulo="Exportar Relatório de Ponto">
+            <Modal aberto={aberto} aoFechar={() => setAberto(false)} titulo="Exportar Relatório de Ponto" largura="sm">
                 <div className="space-y-6 pt-2">
                     <p className="text-sm text-muted-foreground">
                         Selecione o período para gerar o relatório consolidado de todos os membros.

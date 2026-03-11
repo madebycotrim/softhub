@@ -71,6 +71,13 @@ rotasConfiguracoes.patch('/:chave', autenticacaoRequerida(), verificarPermissao(
     try {
         const valorString = JSON.stringify(valor);
 
+        // Buscar estado atual para o log "Antes/Depois"
+        const atual = await DB.prepare('SELECT valor FROM configuracoes_sistema WHERE chave = ?').bind(chave).first() as any;
+        let valorAnterior: any = null;
+        if (atual) {
+            try { valorAnterior = JSON.parse(atual.valor); } catch { valorAnterior = atual.valor; }
+        }
+
         // O schema não possui atualizado_em, então removemos
         const res = await DB.prepare(`
             UPDATE configuracoes_sistema 
@@ -95,7 +102,9 @@ rotasConfiguracoes.patch('/:chave', autenticacaoRequerida(), verificarPermissao(
             acao: 'ATUALIZAR_CONFIG',
             modulo: 'ADMIN',
             descricao: `Configuração "${chave}" atualizada.`,
-            ip: c.req.header('CF-Connecting-IP') ?? ''
+            ip: c.req.header('CF-Connecting-IP') ?? '',
+            dadosAnteriores: { [chave]: valorAnterior },
+            dadosNovos: { [chave]: valor }
         });
 
         return c.json({ sucesso: true });
@@ -133,24 +142,25 @@ rotasConfiguracoes.patch('/roles/:antigo/renomear', autenticacaoRequerida(), ver
             return c.json({ erro: 'Matriz de permissões não encontrada.' }, 404);
         }
 
-        const permissoesRoles = JSON.parse(config.valor);
+        const permissoesRolesOriginais = JSON.parse(config.valor);
 
-        if (!permissoesRoles[antigo]) {
+        if (!permissoesRolesOriginais[antigo]) {
             return c.json({ erro: 'Cargo original não encontrado na matriz.' }, 404);
         }
 
-        if (permissoesRoles[novoFormatado]) {
+        if (permissoesRolesOriginais[novoFormatado]) {
             return c.json({ erro: 'Já existe um cargo com este nome.' }, 409);
         }
 
-        // 2. Transfere permissões e deleta antiga
-        permissoesRoles[novoFormatado] = permissoesRoles[antigo];
-        delete permissoesRoles[antigo];
+        // 2. Transfere permissões e deleta antiga (Clone para o log)
+        const permissoesRolesNovas = JSON.parse(JSON.stringify(permissoesRolesOriginais));
+        permissoesRolesNovas[novoFormatado] = permissoesRolesNovas[antigo];
+        delete permissoesRolesNovas[antigo];
 
         // 3. Execução em Batch para atomicidade (Atualizar Config + Atualizar Usuários)
         await DB.batch([
             DB.prepare('UPDATE configuracoes_sistema SET valor = ? WHERE chave = ?')
-                .bind(JSON.stringify(permissoesRoles), 'permissoes_roles'),
+                .bind(JSON.stringify(permissoesRolesNovas), 'permissoes_roles'),
             DB.prepare('UPDATE usuarios SET role = ? WHERE role = ?')
                 .bind(novoFormatado, antigo)
         ]);
@@ -158,10 +168,15 @@ rotasConfiguracoes.patch('/roles/:antigo/renomear', autenticacaoRequerida(), ver
         const usuario = c.get('usuario');
         await registrarLog(DB, {
             usuarioId: usuario.id,
+            usuarioNome: usuario.nome,
+            usuarioEmail: usuario.email,
+            usuarioRole: usuario.role,
             acao: 'CARGO_RENOMEADO',
             modulo: 'ADMIN',
             descricao: `Cargo "${antigo}" renomeado para "${novoFormatado}".`,
-            ip: c.req.header('CF-Connecting-IP') ?? ''
+            ip: c.req.header('CF-Connecting-IP') ?? '',
+            dadosAnteriores: { role: antigo, permissoes: permissoesRolesOriginais[antigo] },
+            dadosNovos: { role: novoFormatado, permissoes: permissoesRolesNovas[novoFormatado] }
         });
 
         return c.json({ sucesso: true });

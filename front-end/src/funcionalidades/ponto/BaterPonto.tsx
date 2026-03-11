@@ -12,6 +12,9 @@ import { BarraBusca } from '../../compartilhado/componentes/BarraBusca';
 import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
 import { Carregando } from '../../compartilhado/componentes/Carregando';
 import { EstadoVazio } from '../../compartilhado/componentes/EstadoVazio';
+import { Tooltip } from '../../compartilhado/componentes/Tooltip';
+import { ConfirmacaoExclusao } from '../../compartilhado/componentes/ConfirmacaoExclusao';
+import type { JustificativaPonto } from './usarJustificativa';
 
 /**
  * Interface de registro e visualização diária do ponto.
@@ -19,11 +22,13 @@ import { EstadoVazio } from '../../compartilhado/componentes/EstadoVazio';
  */
 export function BaterPonto() {
     const { registrosHoje, historico, carregando, erro, baterPonto } = usarPonto();
-    const { justificativas, enviarJustificativa } = usarJustificativas();
+    const { justificativas, enviarJustificativa, editarJustificativa, excluirJustificativa } = usarJustificativas();
 
     const [salvando, setSalvando] = useState(false);
     const [erroPonto, setErroPonto] = useState<string | null>(null);
     const [modalJustificativaAberto, setModalJustificativaAberto] = useState(false);
+    const [justificativaEditando, setJustificativaEditando] = useState<JustificativaPonto | null>(null);
+    const [idExcluindo, setIdExcluindo] = useState<string | null>(null);
     const [abaAtiva, setAbaAtiva] = useState<'registro' | 'justificativas'>('registro');
     const [busca, setBusca] = useState('');
 
@@ -92,6 +97,14 @@ export function BaterPonto() {
         }
     };
 
+    // Otimização: Filtragem memorizada para evitar cálculos no re-render do relógio
+    const registrosFiltrados = useMemo(() => {
+        return historico.filter(r => 
+            r.tipo.toLowerCase().includes(busca.toLowerCase()) || 
+            formatarDataHora(r.registrado_em).includes(busca)
+        );
+    }, [historico, busca]);
+
     return (
         <div className="w-full font-sans text-slate-900 animate-in fade-in duration-700">
             <div className="w-full space-y-4">
@@ -103,25 +116,39 @@ export function BaterPonto() {
                     icone={Fingerprint}
                     variante="padrao"
                 >
-                    <div className="flex items-center gap-2 sm:gap-3">
-                        <button 
-                            onClick={() => setAbaAtiva(abaAtiva === 'registro' ? 'justificativas' : 'registro')}
-                            className={`flex items-center justify-center w-11 h-11 rounded-2xl border transition-all ${
-                                abaAtiva === 'justificativas' 
-                                ? 'bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20' 
-                                : 'bg-background border-border text-muted-foreground hover:border-primary/20 hover:text-primary hover:bg-primary/5'
-                            }`}
-                            title={abaAtiva === 'registro' ? "Ver Justificativas" : "Ver Registros"}
-                        >
-                            <History size={18} strokeWidth={2.5} />
-                        </button>
+                    <div className="flex items-center gap-3 sm:gap-4">
+                        {carregando && historico.length > 0 && (
+                            <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/5 rounded-full border border-primary/10 animate-pulse transition-all">
+                                <Carregando Centralizar={false} tamanho="sm" />
+                                <span className="text-[9px] font-black uppercase tracking-widest text-primary">Sincronizando...</span>
+                            </div>
+                        )}
+                        <Tooltip texto={abaAtiva === 'registro' ? "Ver Justificativas" : "Ver Registros"} posicao="bottom">
+                            <button 
+                                onClick={() => setAbaAtiva(abaAtiva === 'registro' ? 'justificativas' : 'registro')}
+                                className={`flex items-center justify-center w-11 h-11 rounded-2xl border transition-all ${
+                                    abaAtiva === 'justificativas' 
+                                    ? 'bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20' 
+                                    : 'bg-background border-border text-muted-foreground hover:border-primary/20 hover:text-primary hover:bg-primary/5'
+                                }`}
+                            >
+                                {abaAtiva === 'justificativas' ? (
+                                    <ScrollText size={18} strokeWidth={2.5} />
+                                ) : (
+                                    <History size={18} strokeWidth={2.5} />
+                                )}
+                            </button>
+                        </Tooltip>
                         
                         <div className="flex items-center gap-2">
                             {podeExportarCsv && <BotaoExportarPonto />}
 
                             {podeJustificar && (
                                 <button 
-                                    onClick={() => setModalJustificativaAberto(true)}
+                                    onClick={() => {
+                                        setJustificativaEditando(null);
+                                        setModalJustificativaAberto(true);
+                                    }}
                                     className="h-11 px-5 bg-foreground text-background rounded-2xl text-xs font-bold flex items-center gap-2 transition-all active:scale-95"
                                 >
                                     <Plus className="w-4 h-4" />
@@ -132,14 +159,15 @@ export function BaterPonto() {
                     </div>
                 </CabecalhoFuncionalidade>
 
-                {/* Bento Grid Layout — Sem auto-rows no mobile para evitar esticamento */}
-                <div className="grid grid-cols-2 md:grid-cols-4 md:auto-rows-fr gap-3 sm:gap-4">
+                {/* Layout Moderno de Duas Colunas (Evita esticamentos indesejados) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                     
-                    {/* TILE 1: AÇÃO PRINCIPAL (2x2) — Mais Compacto */}
-                    <div className="col-span-2 md:col-span-2 md:row-span-2 bg-card border border-border/60 rounded-2xl p-6 flex flex-col items-center justify-center text-center relative overflow-hidden group transition-all">
-
-                        
-                        <div className="relative z-10 space-y-4 sm:space-y-6 w-full">
+                    {/* COLUNA ESQUERDA: RELÓGIO E AÇÃO */}
+                    <div className="flex flex-col">
+                        {/* TILE 1: AÇÃO PRINCIPAL */}
+                        <div className="bg-card border border-border/60 rounded-2xl p-8 sm:py-16 flex flex-col items-center justify-center text-center relative overflow-hidden group transition-all">
+                            
+                            <div className="relative z-10 space-y-6 sm:space-y-8 w-full">
                             <div className="space-y-2">
                                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/5 rounded-full border border-primary/10 mb-2">
                                     <div className="w-1 h-1 bg-primary rounded-full" />
@@ -175,44 +203,53 @@ export function BaterPonto() {
                             )}
                         </div>
                     </div>
-
-                    {/* TILE 2: STATUS — Ultra Compacto no Mobile */}
-                    <div className="col-span-1 bg-card border border-border/60 rounded-2xl p-4 flex flex-col justify-start sm:justify-between gap-4 sm:gap-0 group hover:border-primary/40 transition-all sm:min-h-[160px]">
-                        <div className="flex items-start justify-between">
-                            <div className="p-3 bg-muted/40 text-muted-foreground rounded-2xl border border-border/50 group-hover:bg-primary/5 group-hover:text-primary transition-colors">
-                                <LayoutDashboard className="w-5 h-5" />
-                            </div>
-                            <div className={`w-2 h-2 rounded-full mt-1 ${ultimoRegistro?.tipo === 'entrada' ? 'bg-emerald-500' : 'bg-muted'}`} />
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Status</p>
-                            <p className="text-xl font-black text-slate-900 leading-tight">
-                                {ultimoRegistro?.tipo === 'entrada' ? 'Ocupado' : 'Livre'}
-                            </p>
-                        </div>
                     </div>
 
-                    {/* TILE 3: JORNADA — Ultra Compacto no Mobile */}
-                    <div className="col-span-1 bg-card border border-border/60 rounded-2xl p-4 flex flex-col justify-start sm:justify-between gap-4 sm:gap-0 group hover:border-amber-400/40 transition-all sm:min-h-[160px]">
-                        <div className="flex items-start justify-between">
-                            <div className="p-3 bg-amber-500/5 text-amber-600 rounded-2xl border border-amber-500/10">
-                                <ScrollText className="w-5 h-5" />
+                    {/* COLUNA DIREITA: STATUS, JORNADA E HISTÓRICO */}
+                    <div className="flex flex-col gap-3 sm:gap-4 w-full">
+                        
+                        {/* PAINEL SUPERIOR: STATUS E JORNADA */}
+                        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                            {/* TILE 2: STATUS */}
+                            <div className="bg-card border border-border/60 rounded-2xl p-4 flex flex-col justify-between gap-3 group hover:border-primary/40 transition-all">
+                                <div className="flex items-start justify-between">
+                                    <div className="p-2 sm:p-2.5 bg-muted/40 text-muted-foreground rounded-2xl border border-border/50 group-hover:bg-primary/5 group-hover:text-primary transition-colors">
+                                        <LayoutDashboard className="w-4 h-4 sm:w-5 sm:h-5" />
+                                    </div>
+                                    <div className={`w-2 h-2 rounded-full mt-1 ${ultimoRegistro?.tipo === 'entrada' ? 'bg-emerald-500' : 'bg-muted'}`} />
+                                </div>
+                                <div className="space-y-0.5">
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Status</p>
+                                    <p className="text-lg sm:text-xl font-black text-slate-900 leading-tight">
+                                        {ultimoRegistro?.tipo === 'entrada' ? 'Ocupado' : 'Livre'}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* TILE 3: JORNADA */}
+                            <div className="bg-card border border-border/60 rounded-2xl p-4 flex flex-col justify-between gap-3 group hover:border-amber-400/40 transition-all">
+                                <div className="flex items-start justify-between">
+                                    <div className="p-2 sm:p-2.5 bg-amber-500/5 text-amber-600 rounded-2xl border border-amber-500/10">
+                                        <ScrollText className="w-4 h-4 sm:w-5 sm:h-5" />
+                                    </div>
+                                </div>
+                                <div className="space-y-0.5">
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Jornada</p>
+                                    <p className="text-lg sm:text-xl font-black text-slate-900 leading-tight tabular-nums">
+                                        {cronometroJornada?.texto || '00:00:00'}
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                        <div className="space-y-1">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Jornada</p>
-                            <p className="text-xl font-black text-slate-900 leading-tight tabular-nums">
-                                {cronometroJornada?.texto || '00:00:00'}
-                            </p>
-                        </div>
-                    </div>
 
-                    {/* TILE 4: HISTÓRICO RECENTE (2x2) — Mais Compacto */}
-                    <div className="col-span-2 md:col-span-2 md:row-span-2 bg-card border border-border/60 rounded-2xl p-6 flex flex-col h-[380px] md:h-auto">
+                        {/* TILE 4: HISTÓRICO RECENTE */}
+                        <div className="bg-card border border-border/60 rounded-2xl p-6 flex flex-col h-[400px]">
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
                             <div className="space-y-0.5">
                                 <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Linha do Tempo</h3>
-                                <p className="text-base font-black text-slate-900 truncate">Atividade Diária</p>
+                                <p className="text-base font-black text-slate-900 truncate">
+                                    {abaAtiva === 'registro' ? 'Atividade Diária' : 'Justificativas'}
+                                </p>
                             </div>
                             
                             <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -223,39 +260,36 @@ export function BaterPonto() {
                                         placeholder="Filtrar..."
                                     />
                                 </div>
-                                <button 
-                                    onClick={() => setAbaAtiva(abaAtiva === 'registro' ? 'justificativas' : 'registro')}
-                                    className={`p-2.5 rounded-2xl transition-all active:scale-95 border ${
-                                        abaAtiva === 'justificativas' 
-                                        ? 'bg-primary border-primary text-primary-foreground' 
-                                        : 'bg-muted/40 border-border/50 text-muted-foreground hover:bg-muted'
-                                    }`}
-                                >
-                                    <ScrollText className="w-4 h-4 sm:w-5 sm:h-5" />
-                                </button>
+                                <Tooltip texto={abaAtiva === 'registro' ? "Mostrar Justificativas" : "Mostrar Registros"} posicao="left">
+                                    <button 
+                                        onClick={() => setAbaAtiva(abaAtiva === 'registro' ? 'justificativas' : 'registro')}
+                                        className={`p-2.5 rounded-2xl transition-all active:scale-95 border ${
+                                            abaAtiva === 'justificativas' 
+                                            ? 'bg-primary border-primary text-primary-foreground' 
+                                            : 'bg-muted/40 border-border/50 text-muted-foreground hover:bg-muted'
+                                        }`}
+                                    >
+                                        {abaAtiva === 'justificativas' ? (
+                                            <ScrollText className="w-4 h-4 sm:w-5 sm:h-5" />
+                                        ) : (
+                                            <History className="w-4 h-4 sm:w-5 sm:h-5" />
+                                        )}
+                                    </button>
+                                </Tooltip>
                             </div>
                         </div>
 
                         <div className="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-none">
                             {abaAtiva === 'registro' ? (
                                 (() => {
-                                    const registrosFiltrados = historico.filter(r => 
-                                        r.tipo.toLowerCase().includes(busca.toLowerCase()) || 
-                                        formatarDataHora(r.registrado_em).includes(busca)
-                                    );
-
                                     if (registrosFiltrados.length === 0) {
                                         return (
                                             <div className="py-8">
                                                 <EstadoVazio 
                                                     tipo={busca ? 'pesquisa' : 'vazio'}
-                                                    titulo={busca ? "Nenhum registro encontrado" : "Nenhum registro hoje"}
-                                                    descricao={busca ? `Não encontramos batidas com o termo "${busca}".` : "Seus movimentos de entrada e saída aparecerão aqui."}
+                                                    titulo={busca ? "Nenhum resultado" : "Sem batidas"}
+                                                    descricao={busca ? `Não encontramos "${busca}".` : "Inicie o dia registrando sua entrada."}
                                                     compacto={true}
-                                                    acao={busca ? {
-                                                        rotulo: "Limpar busca",
-                                                        aoClicar: () => setBusca('')
-                                                    } : undefined}
                                                 />
                                             </div>
                                         );
@@ -279,12 +313,19 @@ export function BaterPonto() {
                                     ));
                                 })()
                             ) : (
-                                <ListaJustificativas justificativas={justificativas.filter(j => j.motivo.toLowerCase().includes(busca.toLowerCase()) || j.tipo.toLowerCase().includes(busca.toLowerCase()))} />
+                                <ListaJustificativas 
+                                    justificativas={justificativas.filter(j => j.motivo.toLowerCase().includes(busca.toLowerCase()) || j.tipo.toLowerCase().includes(busca.toLowerCase()))}
+                                    aoEditar={(just) => {
+                                        setJustificativaEditando(just);
+                                        setModalJustificativaAberto(true);
+                                    }}
+                                    aoExcluir={(id) => setIdExcluindo(id)}
+                                />
                             )}
                         </div>
                     </div>
-
-
+                    
+                    </div>
                 </div>
 
                 {/* Banner de Erro Flutuante se houver erro */}
@@ -300,7 +341,27 @@ export function BaterPonto() {
                 <FormularioJustificativa 
                     aberto={modalJustificativaAberto} 
                     aoFechar={setModalJustificativaAberto} 
-                    aoSalvar={enviarJustificativa} 
+                    justificativaAtual={justificativaEditando}
+                    aoSalvar={async (dados) => {
+                        if (justificativaEditando) {
+                            await editarJustificativa(justificativaEditando.id, dados);
+                        } else {
+                            await enviarJustificativa(dados);
+                        }
+                    }} 
+                />
+
+                <ConfirmacaoExclusao 
+                    aberto={!!idExcluindo}
+                    aoFechar={() => setIdExcluindo(null)}
+                    aoConfirmar={async () => {
+                        if (idExcluindo) {
+                            await excluirJustificativa(idExcluindo);
+                            setIdExcluindo(null);
+                        }
+                    }}
+                    titulo="Excluir justificativa?"
+                    descricao="Apenas justificativas pendentes podem ser excluídas. Esta ação não poderá ser desfeita."
                 />
 
 

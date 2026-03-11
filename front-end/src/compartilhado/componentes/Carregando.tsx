@@ -18,9 +18,11 @@ export function Carregando({ tamanho = 'md', Centralizar = true, className = '' 
 
     if (Centralizar) {
         return (
-            <div className="flex items-center justify-center p-8 w-full h-full min-h-[50vh]">
-                <div className={spinnerCSS} role="status" aria-label="Carregando">
-                    <span className="sr-only">Carregando...</span>
+            <div className="flex items-center justify-center p-4 w-full h-full">
+                <div className="flex flex-col items-center gap-3">
+                    <div className={spinnerCSS} role="status" aria-label="Carregando">
+                        <span className="sr-only">Carregando...</span>
+                    </div>
                 </div>
             </div>
         );

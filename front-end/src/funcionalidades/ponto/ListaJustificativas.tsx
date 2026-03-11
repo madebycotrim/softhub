@@ -2,9 +2,13 @@ import { formatarDataHora } from '../../utilitarios/formatadores';
 import { Emblema } from '../../compartilhado/componentes/Emblema';
 import type { JustificativaPonto } from './usarJustificativa';
 import { EstadoVazio } from '../../compartilhado/componentes/EstadoVazio';
+import { Pencil, Trash2 } from 'lucide-react';
+import { Tooltip } from '../../compartilhado/componentes/Tooltip';
 
 interface ListaJustificativasProps {
     justificativas: JustificativaPonto[];
+    aoEditar: (just: JustificativaPonto) => void;
+    aoExcluir: (id: string) => void;
 }
 
 /** Mapeia o tipo técnico para rótulo amigável. */
@@ -21,7 +25,7 @@ const formatarTipo = (tipo: string): string => {
  * Lista de justificativas do próprio usuário em formato de tabela padronizada.
  * Exibida no painel de ponto eletrônico.
  */
-export function ListaJustificativas({ justificativas }: ListaJustificativasProps) {
+export function ListaJustificativas({ justificativas, aoEditar, aoExcluir }: ListaJustificativasProps) {
     if (justificativas.length === 0) {
         return (
             <div className="py-8">
@@ -51,6 +55,9 @@ export function ListaJustificativas({ justificativas }: ListaJustificativasProps
                         <th className="px-3 py-2.5 text-center text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">
                             Status
                         </th>
+                        <th className="px-3 py-2.5 text-center text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 w-24">
+                            Ações
+                        </th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-border/40">
@@ -58,8 +65,7 @@ export function ListaJustificativas({ justificativas }: ListaJustificativasProps
                         <tr key={just.id} className="hover:bg-muted/20 transition-colors">
                             {/* Data */}
                             <td className="px-3 py-3 align-top">
-                                <p className="text-xs font-bold text-foreground">{just.data}</p>
-                                <p className="text-[10px] text-muted-foreground/60 font-mono mt-0.5">
+                                <p className="text-xs font-bold text-foreground">
                                     {formatarDataHora(just.criado_em)}
                                 </p>
                             </td>
@@ -84,10 +90,36 @@ export function ListaJustificativas({ justificativas }: ListaJustificativasProps
                             </td>
 
                             {/* Status */}
-                            <td className="px-3 py-3 align-top text-center">
+                            <td className="px-3 py-3 align-top text-center w-28">
                                 {just.status === 'aprovada' && <Emblema texto="Aprovada" variante="verde" />}
                                 {just.status === 'rejeitada' && <Emblema texto="Rejeitada" variante="vermelho" />}
                                 {just.status === 'pendente' && <Emblema texto="Pendente" variante="amarelo" />}
+                            </td>
+                            
+                            {/* Ações */}
+                            <td className="px-3 py-3 align-top text-center w-24">
+                                {just.status === 'pendente' ? (
+                                    <div className="flex items-center justify-center gap-2">
+                                        <Tooltip texto="Editar" posicao="top">
+                                            <button 
+                                                onClick={() => aoEditar(just)}
+                                                className="p-1.5 rounded-xl text-slate-400 hover:text-primary hover:bg-primary/5 transition-colors"
+                                            >
+                                                <Pencil className="w-4 h-4" />
+                                            </button>
+                                        </Tooltip>
+                                        <Tooltip texto="Excluir" posicao="top">
+                                            <button 
+                                                onClick={() => aoExcluir(just.id)}
+                                                className="p-1.5 rounded-xl text-slate-400 hover:text-destructive hover:bg-destructive/5 transition-colors"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </Tooltip>
+                                    </div>
+                                ) : (
+                                    <span className="text-[10px] text-muted-foreground/40 font-black tracking-widest uppercase truncate">-</span>
+                                )}
                             </td>
                         </tr>
                     ))}

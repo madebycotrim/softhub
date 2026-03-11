@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -7,7 +7,7 @@ import { Fingerprint, Calendar, Info, AlertCircle } from 'lucide-react';
 import { Carregando } from '../../compartilhado/componentes/Carregando';
 
 const esquemaJustificativa = z.object({
-    data: z.string().min(1, 'A data é obrigatória.'),
+    data: z.string().optional().or(z.literal('')),
     tipo: z.enum(['ausencia', 'esquecimento', 'problema_sistema']),
     motivo: z.string().min(10, 'O motivo precisa ter pelo menos 10 caracteres.')
 });
@@ -16,11 +16,12 @@ type DadosJustificativa = z.infer<typeof esquemaJustificativa>;
 
 interface FormularioJustificativaProps {
     aberto: boolean;
-    aoFechar: (Aberto: boolean) => void;
-    aoSalvar: (dados: DadosJustificativa) => Promise<void>;
+    aoFechar: (aberto: boolean) => void;
+    aoSalvar: (dados: { data: string; tipo: string; motivo: string }) => Promise<void>;
+    justificativaAtual?: { id: string; data: string; tipo: string; motivo: string } | null;
 }
 
-export function FormularioJustificativa({ aberto, aoFechar, aoSalvar }: FormularioJustificativaProps) {
+export function FormularioJustificativa({ aberto, aoFechar, aoSalvar, justificativaAtual }: FormularioJustificativaProps) {
     const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<DadosJustificativa>({
         resolver: zodResolver(esquemaJustificativa),
         defaultValues: { data: '', tipo: 'esquecimento', motivo: '' }
@@ -28,11 +29,47 @@ export function FormularioJustificativa({ aberto, aoFechar, aoSalvar }: Formular
 
     const [erroGlobal, setErroGlobal] = useState<string | null>(null);
 
+    // Preenche para edição
+    useEffect(() => {
+        if (aberto) {
+            if (justificativaAtual) {
+                reset({
+                    data: justificativaAtual.data,
+                    tipo: justificativaAtual.tipo as any,
+                    motivo: justificativaAtual.motivo
+                });
+            } else {
+                reset({ data: '', tipo: 'esquecimento', motivo: '' });
+            }
+            setErroGlobal(null);
+        }
+    }, [aberto, justificativaAtual, reset]);
+
     const onSubmit = async (dados: DadosJustificativa) => {
         try {
             setErroGlobal(null);
-            await aoSalvar(dados);
-            reset();
+
+            let dataEnvio = dados.data;
+            if (!dataEnvio) {
+                const hoje = new Date();
+                const opcoes: Intl.DateTimeFormatOptions = { 
+                    timeZone: 'America/Sao_Paulo', 
+                    year: 'numeric', 
+                    month: '2-digit', 
+                    day: '2-digit' 
+                };
+                const dataFormatada = new Intl.DateTimeFormat('pt-BR', opcoes).format(hoje);
+                const [dia, mes, ano] = dataFormatada.split('/');
+                dataEnvio = `${ano}-${mes}-${dia}`;
+            }
+
+            await aoSalvar({
+                data: dataEnvio,
+                tipo: dados.tipo,
+                motivo: dados.motivo
+            });
+
+            reset({ data: '', tipo: 'esquecimento', motivo: '' });
             aoFechar(false);
         } catch (e: any) {
             setErroGlobal(e.message || 'Falha ao salvar a justificativa.');
@@ -40,7 +77,12 @@ export function FormularioJustificativa({ aberto, aoFechar, aoSalvar }: Formular
     };
 
     return (
-        <Modal aberto={aberto} aoFechar={() => aoFechar(false)} titulo="Justificar Ponto" largura="md">
+        <Modal 
+            aberto={aberto} 
+            aoFechar={() => aoFechar(false)} 
+            titulo={justificativaAtual ? "Editar Justificativa" : "Justificar Ponto"} 
+            largura="sm"
+        >
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 {erroGlobal && (
                     <div className="p-4 bg-rose-50 text-rose-600 rounded-2xl text-xs font-bold uppercase tracking-widest border border-rose-100 flex items-center gap-3">

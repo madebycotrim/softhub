@@ -36,10 +36,8 @@ export default function PaginaRelatorios() {
         m.email.toLowerCase().includes(busca.toLowerCase())
     );
 
-    if (carregando) return <Carregando />;
-
     return (
-        <div className="w-full space-y-6 animate-in fade-in duration-700">
+        <div className="w-full space-y-6 animate-in fade-in duration-700 pb-20">
                 <CabecalhoFuncionalidade 
                     titulo="Relatórios Completos"
                     subtitulo="Análise estratégica de estrutura, frequência e engajamento."
@@ -52,6 +50,14 @@ export default function PaginaRelatorios() {
                         <Download className="w-4 h-4" /> Exportar / Imprimir
                     </button>
                 </CabecalhoFuncionalidade>
+
+                {carregando && frequenciaMembros.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-32 gap-4 bg-card border border-border rounded-3xl">
+                        <Carregando Centralizar={false} tamanho="lg" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Processando Dados Estratégicos</span>
+                    </div>
+                ) : (
+                    <>
 
                 {/* Tabs / Navegação Interna */}
                 <div className="flex p-1 bg-muted/20 border border-border/10 rounded-3xl w-fit">
@@ -260,6 +266,8 @@ export default function PaginaRelatorios() {
                         </div>
                     </div>
                 )}
-            </div>
+                </>
+            )}
+        </div>
     );
 }

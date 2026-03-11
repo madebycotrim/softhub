@@ -91,7 +91,8 @@ rotasLogs.get('/', autenticacaoRequerida(), async (c: Context) => {
 
         const querySelect = `
             SELECT id, usuario_id, usuario_nome as nome, usuario_email as email, usuario_role as role, 
-                   acao, modulo, descricao, ip, entidade_tipo, entidade_id, criado_em
+                   acao, modulo, descricao, ip, entidade_tipo, entidade_id, 
+                   dados_anteriores, dados_novos, criado_em
             FROM logs 
             ${whereClause}
             ORDER BY criado_em DESC 

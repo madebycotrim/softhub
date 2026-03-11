@@ -85,40 +85,6 @@ export function QuadroKanban({ projetoId = 'p1' }: { projetoId?: string }) {
 
     const temFiltroAtivo = !!(filtros.busca || filtros.prioridades?.length || filtros.responsavelId);
 
-    if (carregando) return <Carregando />;
-    if (erro) return <p className="text-destructive text-center py-8">{erro}</p>;
-    
-    if (tarefas.length === 0) {
-        return (
-            <div className="flex flex-col h-full space-y-6">
-                <CabecalhoFuncionalidade
-                    titulo="Quadro Kanban"
-                    subtitulo="Gerencie e acompanhe o fluxo de tarefas do projeto."
-                    icone={FolderKanban}
-                />
-                <div className="flex-1 bg-card border border-border rounded-2xl flex items-center justify-center">
-                    {temFiltroAtivo ? (
-                        <EstadoVazio 
-                            tipo="pesquisa"
-                            titulo="Nenhuma tarefa encontrada"
-                            descricao="Não há tarefas que correspondam aos filtros ou termo de busca aplicados."
-                            compacto={true}
-                            acao={{
-                                rotulo: "Limpar todos os filtros",
-                                aoClicar: () => setFiltros({})
-                            }}
-                        />
-                    ) : (
-                        <EstadoVazio 
-                            titulo="Quadro Vazio"
-                            descricao="Ainda não há tarefas cadastradas para este projeto. Comece adicionando novas demandas no Backlog."
-                        />
-                    )}
-                </div>
-            </div>
-        );
-    }
-
     const handleDragStart = (event: DragStartEvent) => {
         if (!podeMover) return;
         const { active } = event;
@@ -131,27 +97,31 @@ export function QuadroKanban({ projetoId = 'p1' }: { projetoId?: string }) {
         const { active, over } = event;
         setActiveTarefa(null);
 
-        // Se n dropar numa area valida, cancela
         if (!over) return;
 
         const tarefaId = active.id as string;
         const colunaDestino = over.id as ColunaKanban;
         const tarefa = tarefas.find(t => t.id === tarefaId);
 
-        // So movemos se ele dropar em uma coluna diferente
         if (tarefa && tarefa.status !== colunaDestino) {
             moverCard(tarefaId, colunaDestino);
         }
     };
 
     return (
-        <div className="flex flex-col h-full space-y-6 pb-0 animate-in fade-in duration-500">
+        <div className="flex flex-col h-full space-y-6">
             <CabecalhoFuncionalidade
                 titulo="Quadro Kanban"
                 subtitulo="Gerencie e acompanhe o fluxo de tarefas do projeto."
                 icone={FolderKanban}
             >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-4">
+                    {carregando && tarefas.length > 0 && (
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/5 rounded-full border border-primary/10 animate-pulse transition-all">
+                            <Carregando Centralizar={false} tamanho="sm" />
+                            <span className="text-[9px] font-black uppercase tracking-widest text-primary">Sincronizando...</span>
+                        </div>
+                    )}
                     <div className="relative w-full sm:w-64 xl:w-80">
                         <BarraBusca 
                             valor={filtros.busca || ''}
@@ -164,34 +134,69 @@ export function QuadroKanban({ projetoId = 'p1' }: { projetoId?: string }) {
 
             <PainelFiltrosKanban filtros={filtros} aoFiltrar={setFiltros} />
 
-            <DndContext
-                sensors={sensors}
-                collisionDetection={closestCorners}
-                onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
-            >
-                <div className="flex gap-4 h-full xl:justify-start overflow-x-auto pb-4 custom-scrollbar items-start">
-                    {COLUNAS_KANBAN.map(coluna => (
-                        <ColunaDropZone
-                            key={coluna}
-                            id={coluna}
-                            titulo={LABELS_COLUNAS[coluna]}
-                            tarefas={tarefas.filter(t => t.status === coluna)}
-                            aoApertarTarefa={setTarefaDetalhes}
+            <div className={`flex-1 min-h-0 transition-opacity duration-300 ${carregando && tarefas.length > 0 ? 'opacity-70' : 'opacity-100'}`}>
+                {carregando && tarefas.length === 0 ? (
+                    <div className="h-full bg-card/10 border border-border/30 rounded-3xl flex items-center justify-center animate-in fade-in duration-500">
+                        <div className="flex flex-col items-center gap-4">
+                            <Carregando Centralizar={false} tamanho="lg" />
+                            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Buscando Tarefas</span>
+                        </div>
+                    </div>
+                ) : erro ? (
+                    <div className="h-full bg-card/10 border border-red-500/10 rounded-3xl flex items-center justify-center p-12">
+                         <p className="text-destructive font-black uppercase tracking-widest text-[10px]">{erro}</p>
+                    </div>
+                ) : tarefas.length === 0 ? (
+                    <div className="h-full bg-card/20 border border-border/50 rounded-3xl flex items-center justify-center">
+                        {temFiltroAtivo ? (
+                            <EstadoVazio 
+                                tipo="pesquisa"
+                                titulo="Nenhuma tarefa encontrada"
+                                descricao="Não há tarefas que correspondam aos filtros ou termo de busca aplicados."
+                                compacto={true}
+                                acao={{
+                                    rotulo: "Limpar todos os filtros",
+                                    aoClicar: () => setFiltros({})
+                                }}
+                            />
+                        ) : (
+                            <EstadoVazio 
+                                titulo="Quadro Vazio"
+                                descricao="Ainda não há tarefas cadastradas para este projeto. Comece adicionando novas demandas no Backlog."
+                            />
+                        )}
+                    </div>
+                ) : (
+                    <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCorners}
+                        onDragStart={handleDragStart}
+                        onDragEnd={handleDragEnd}
+                    >
+                        <div className="flex gap-4 h-full xl:justify-start overflow-x-auto pb-4 custom-scrollbar items-start">
+                            {COLUNAS_KANBAN.map(coluna => (
+                                <ColunaDropZone
+                                    key={coluna}
+                                    id={coluna}
+                                    titulo={LABELS_COLUNAS[coluna]}
+                                    tarefas={tarefas.filter(t => t.status === coluna)}
+                                    aoApertarTarefa={setTarefaDetalhes}
+                                />
+                            ))}
+
+                            <DragOverlay>
+                                {activeTarefa ? <CartaoTarefa tarefa={activeTarefa} /> : null}
+                            </DragOverlay>
+                        </div>
+
+                        <ModalDetalhesTarefa
+                            tarefa={tarefaDetalhes}
+                            aberto={!!tarefaDetalhes}
+                            aoFechar={() => setTarefaDetalhes(null)}
                         />
-                    ))}
-
-                    <DragOverlay>
-                        {activeTarefa ? <CartaoTarefa tarefa={activeTarefa} /> : null}
-                    </DragOverlay>
-                </div>
-
-                <ModalDetalhesTarefa
-                    tarefa={tarefaDetalhes}
-                    aberto={!!tarefaDetalhes}
-                    aoFechar={() => setTarefaDetalhes(null)}
-                />
-            </DndContext>
+                    </DndContext>
+                )}
+            </div>
         </div>
     );
 }

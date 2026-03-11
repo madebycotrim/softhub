@@ -1,24 +1,26 @@
-import { User } from 'lucide-react';
+import { User, Crown } from 'lucide-react';
 
 interface AvatarProps {
     nome: string;
     fotoPerfil?: string | null;
     tamanho?: 'sm' | 'md' | 'lg';
     className?: string;
+    coroa?: boolean;
 }
 
 /**
  * Avatar do usuário. Exibe a foto externa ou as iniciais baseadas no nome.
  */
-export function Avatar({ nome, fotoPerfil, tamanho = 'md', className = '' }: AvatarProps) {
+export function Avatar({ nome, fotoPerfil, tamanho = 'md', className = '', coroa = false }: AvatarProps) {
     // Tamanhos mapeados por pixels
     const medidas = {
-        sm: 'w-6 h-6 text-xs',
-        md: 'w-8 h-8 text-sm',
-        lg: 'w-10 h-10 text-base'
+        sm: { box: 'w-6 h-6 text-xs', corona: 'w-2.5 h-2.5 -top-1 -left-1' },
+        md: { box: 'w-8 h-8 text-sm', corona: 'w-3.5 h-3.5 -top-1.5 -left-1.5' },
+        lg: { box: 'w-10 h-10 text-base', corona: 'w-4 h-4 -top-2 -left-2' }
     };
 
-    const tamanhoAtual = medidas[tamanho];
+    const tamanhoAtual = medidas[tamanho].box;
+    const tamanhoCorona = medidas[tamanho].corona;
 
     // Extrair iniciais (ex: "Mateus Silva" -> "MS")
     const getIniciais = (nomeCompleto: string) => {
@@ -57,6 +59,12 @@ export function Avatar({ nome, fotoPerfil, tamanho = 'md', className = '' }: Ava
                     alt={`Foto de ${nome}`}
                     className="w-full h-full object-cover"
                 />
+                
+                {coroa && (
+                    <div className={`absolute ${tamanhoCorona} bg-amber-500 rounded-full flex items-center justify-center border-2 border-background shadow-lg rotate-[-15deg] animate-in zoom-in duration-500 z-10`}>
+                        <Crown className="w-[70%] h-[70%] text-white fill-white" />
+                    </div>
+                )}
             </div>
         );
     }
@@ -68,6 +76,12 @@ export function Avatar({ nome, fotoPerfil, tamanho = 'md', className = '' }: Ava
             title={nome}
         >
             <span className="opacity-90 leading-none">{getIniciais(nome)}</span>
+            
+            {coroa && (
+                <div className={`absolute ${tamanhoCorona} bg-amber-500 rounded-full flex items-center justify-center border-2 border-background shadow-lg rotate-[-15deg] animate-in zoom-in duration-500 z-10`}>
+                    <Crown className="w-[70%] h-[70%] text-white fill-white" />
+                </div>
+            )}
         </div>
     );
 }

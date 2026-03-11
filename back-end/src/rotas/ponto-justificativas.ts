@@ -76,6 +76,78 @@ rotasPontoJustificativas.post('/justificativas', autenticacaoRequerida(), verifi
     }
 });
 
+// 1.1. Membro editando justificativa pendente
+rotasPontoJustificativas.patch('/justificativas/:id', autenticacaoRequerida(), verificarPermissao('ponto:justificar'), async (c: Context) => {
+    const { DB } = c.env;
+    const { data, tipo, motivo } = await c.req.json();
+    const usuario = c.get('usuario') as any;
+    const id = c.req.param('id');
+
+    const atualRes = await DB.prepare(`SELECT * FROM justificativas_ponto WHERE id = ? AND usuario_id = ? AND ativo = 1`).bind(id, usuario.id).first();
+    if (!atualRes) return c.json({ erro: 'Justificativa não encontrada.' }, 404);
+    
+    const atual = atualRes as any;
+    if (atual.status !== 'pendente') return c.json({ erro: 'Apenas justificativas pendentes podem ser editadas.' }, 400);
+
+    // Validação de duplicata se a data mudou
+    if (data !== atual.data) {
+        const ext = await DB.prepare(`SELECT id FROM justificativas_ponto WHERE usuario_id = ? AND data = ? AND ativo = 1`).bind(usuario.id, data).first();
+        if (ext) return c.json({ erro: 'Já existe uma justificativa pendente para esta data.' }, 400);
+    }
+
+    try {
+        await DB.prepare(`
+            UPDATE justificativas_ponto
+            SET data = ?, tipo = ?, motivo = ?
+            WHERE id = ?
+        `).bind(data, tipo, motivo, id).run();
+
+        await registrarLog(DB, {
+            usuarioId: usuario.id,
+            acao: 'PONTO_JUSTIFICATIVA_EDITADA',
+            modulo: 'ponto',
+            descricao: `Editou a justificativa original da data ${atual.data}`,
+            ip: c.req.header('CF-Connecting-IP') ?? '',
+            entidadeTipo: 'justificativas_ponto',
+            entidadeId: id
+        });
+        return c.json({ sucesso: true });
+    } catch (e) {
+        return c.json({ erro: 'Falha ao editar justificativa' }, 500);
+    }
+});
+
+// 1.2. Membro apagando justificativa pendente (soft delete)
+rotasPontoJustificativas.delete('/justificativas/:id', autenticacaoRequerida(), verificarPermissao('ponto:justificar'), async (c: Context) => {
+    const { DB } = c.env;
+    const usuario = c.get('usuario') as any;
+    const id = c.req.param('id');
+
+    const atualRes = await DB.prepare(`SELECT * FROM justificativas_ponto WHERE id = ? AND usuario_id = ? AND ativo = 1`).bind(id, usuario.id).first();
+    if (!atualRes) return c.json({ erro: 'Justificativa não encontrada.' }, 404);
+    
+    const atual = atualRes as any;
+    if (atual.status !== 'pendente') return c.json({ erro: 'Apenas justificativas pendentes podem ser apagadas.' }, 400);
+
+    try {
+        await DB.prepare(`UPDATE justificativas_ponto SET ativo = 0 WHERE id = ?`).bind(id).run();
+
+        await registrarLog(DB, {
+            usuarioId: usuario.id,
+            acao: 'PONTO_JUSTIFICATIVA_EXCLUIDA',
+            modulo: 'ponto',
+            descricao: `Excluiu a justificativa do dia ${atual.data}`,
+            ip: c.req.header('CF-Connecting-IP') ?? '',
+            entidadeTipo: 'justificativas_ponto',
+            entidadeId: id
+        });
+        return c.json({ sucesso: true });
+    } catch (e) {
+        return c.json({ erro: 'Falha ao excluir justificativa' }, 500);
+    }
+});
+
+
 // 2. Membro buscando suas próprias justificativas
 rotasPontoJustificativas.get('/justificativas', autenticacaoRequerida(), verificarPermissao('ponto:visualizar'), async (c: Context) => {
     const { DB } = c.env;
@@ -86,13 +158,13 @@ rotasPontoJustificativas.get('/justificativas', autenticacaoRequerida(), verific
     const offset = (pagina - 1) * limite;
 
     try {
-        const resContagem = await DB.prepare(`SELECT COUNT(*) as total FROM justificativas_ponto WHERE usuario_id = ?`)
+        const resContagem = await DB.prepare(`SELECT COUNT(*) as total FROM justificativas_ponto WHERE usuario_id = ? AND ativo = 1`)
             .bind(usuario.id).first();
         const total = (resContagem as any)?.total || 0;
 
         const { results } = await DB.prepare(`
             SELECT * FROM justificativas_ponto 
-            WHERE usuario_id = ?
+            WHERE usuario_id = ? AND ativo = 1
             ORDER BY criado_em DESC LIMIT ? OFFSET ?
         `).bind(usuario.id, limite, offset).all();
 
@@ -112,6 +184,7 @@ rotasPontoJustificativas.get('/admin/justificativas', autenticacaoRequerida(), v
         SELECT j.*, u.nome as usuario_nome, u.email as usuario_email, u.foto_perfil as usuario_foto 
         FROM justificativas_ponto j
         JOIN usuarios u ON j.usuario_id = u.id
+        WHERE j.ativo = 1
         ORDER BY j.status DESC, j.criado_em DESC
         LIMIT 100
     `).all();
@@ -147,12 +220,17 @@ rotasPontoJustificativas.patch('/admin/justificativas/:id/aprovar', autenticacao
 
         await registrarLog(DB, {
             usuarioId: usuario.id,
+            usuarioNome: usuario.nome,
+            usuarioEmail: usuario.email,
+            usuarioRole: usuario.role,
             acao: 'PONTO_JUSTIFICATIVA_APROVADA',
             modulo: 'ponto',
             descricao: `Aprovada justificativa ID: ${justificativaId} do usuário ${alvar.usuario_id}`,
             ip: c.req.header('CF-Connecting-IP') ?? '',
             entidadeTipo: 'justificativas_ponto',
-            entidadeId: justificativaId
+            entidadeId: justificativaId,
+            dadosAnteriores: { status: alvar.status, avaliado_por: alvar.avaliado_por, avaliado_em: alvar.avaliado_em },
+            dadosNovos: { status: 'aprovada', avaliado_por: usuario.id, avaliado_em: new Date().toISOString() }
         });
 
         return c.json({ sucesso: true });
@@ -190,12 +268,17 @@ rotasPontoJustificativas.patch('/admin/justificativas/:id/rejeitar', autenticaca
 
         await registrarLog(DB, {
             usuarioId: usuario.id,
+            usuarioNome: usuario.nome,
+            usuarioEmail: usuario.email,
+            usuarioRole: usuario.role,
             acao: 'PONTO_JUSTIFICATIVA_REJEITADA',
             modulo: 'ponto',
             descricao: `Rejeitada justificativa ID: ${justificativaId} do usuário ${alvar.usuario_id}`,
             ip: c.req.header('CF-Connecting-IP') ?? '',
             entidadeTipo: 'justificativas_ponto',
-            entidadeId: justificativaId
+            entidadeId: justificativaId,
+            dadosAnteriores: { status: alvar.status, motivo_rejeicao: alvar.motivo_rejeicao, avaliado_por: alvar.avaliado_por },
+            dadosNovos: { status: 'rejeitada', motivo_rejeicao: motivoRejeicao, avaliado_por: usuario.id }
         });
 
         return c.json({ sucesso: true });
@@ -307,12 +390,19 @@ rotasPontoJustificativas.get('/exportar', autenticacaoRequerida(), verificarPerm
                 const diff = new Date(v.saida).getTime() - new Date(v.entrada).getTime();
                 const totalMin = Math.floor(diff / (1000 * 60));
                 const h = Math.floor(totalMin / 60);
-                const m = totalMin % 60;
+                const m = Math.floor(totalMin % 60);
                 horas = `${h}h ${m}min`;
             }
 
-            const entradaFmt = v.entrada ? new Date(v.entrada).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }) : '';
-            const saidaFmt = v.saida ? new Date(v.saida).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }) : '';
+            // Exibir no fuso da Fábrica (Brasília)
+            const opcoes: Intl.DateTimeFormatOptions = { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                timeZone: 'America/Sao_Paulo' 
+            };
+
+            const entradaFmt = v.entrada ? new Date(v.entrada).toLocaleTimeString('pt-BR', opcoes) : '';
+            const saidaFmt = v.saida ? new Date(v.saida).toLocaleTimeString('pt-BR', opcoes) : '';
             const dataFmt = v.data.split('-').reverse().join('/');
 
             linhas.push(`"${v.nome}","${v.email}","${dataFmt}","${entradaFmt}","${saidaFmt}","${horas}","${v.obs}"`);

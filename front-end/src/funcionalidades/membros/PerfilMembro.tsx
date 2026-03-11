@@ -1,4 +1,5 @@
 import { Camera, KeyRound, UserCircle } from 'lucide-react';
+import { Tooltip } from '../../compartilhado/componentes/Tooltip';
 import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
 import { usarMembros } from './usarMembros';
 import { Avatar } from '../../compartilhado/componentes/Avatar';
@@ -89,27 +90,6 @@ export function PerfilMembro({ membroId }: { membroId: string }) {
         }
     }
 
-    if (carregandoMembros) return <Carregando />;
-
-    if (erroMembros) {
-        return (
-            <div className="p-12 text-center text-red-400 border border-red-900/20 bg-red-900/10 rounded-2xl shadow-sm">
-                {erroMembros}
-                <Button variant="link" onClick={() => recarregar()} className="block mx-auto mt-2">
-                    Tentar novamente
-                </Button>
-            </div>
-        );
-    }
-
-    if (!membro) {
-        return (
-            <div className="p-12 text-center text-muted-foreground border border-border bg-muted/50 rounded-2xl shadow-sm">
-                Membro não encontrado.
-            </div>
-        );
-    }
-
     return (
         <div className="w-full space-y-10 pb-20 animate-in fade-in duration-500">
             <CabecalhoFuncionalidade 
@@ -118,17 +98,46 @@ export function PerfilMembro({ membroId }: { membroId: string }) {
                 icone={UserCircle}
             />
 
+            {carregandoMembros ? (
+                <div className="flex flex-col items-center justify-center py-32 gap-4 bg-card border border-border rounded-3xl">
+                    <Carregando Centralizar={false} tamanho="lg" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Sincronizando Perfil</span>
+                </div>
+            ) : erroMembros ? (
+                <div className="flex flex-col items-center justify-center py-20 gap-4 bg-card border border-rose-100 rounded-3xl text-center px-4">
+                    <div className="w-16 h-16 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mb-2">
+                        <UserCircle size={32} className="opacity-50" />
+                    </div>
+                    <h3 className="text-lg font-bold text-slate-900">Erro ao carregar perfil</h3>
+                    <p className="text-sm text-slate-500 max-w-xs">{erroMembros}</p>
+                    <Button variant="outline" onClick={() => recarregar()} className="mt-4 rounded-xl font-bold uppercase text-[10px] tracking-widest">
+                        Tentar novamente
+                    </Button>
+                </div>
+            ) : !membro ? (
+                <div className="flex flex-col items-center justify-center py-20 gap-4 bg-card border border-border rounded-3xl text-center px-4">
+                    <div className="w-16 h-16 rounded-full bg-muted text-muted-foreground flex items-center justify-center mb-2 opacity-50">
+                        <UserCircle size={32} />
+                    </div>
+                    <h3 className="text-lg font-bold text-slate-900">Membro não encontrado</h3>
+                    <p className="text-sm text-muted-foreground max-w-xs">Não foi possível localizar as informações para este identificador.</p>
+                </div>
+            ) : (
+                <>
+
             {/* Header do Perfil (Capa e Avatar) */}
             <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm relative">
                 <div className="h-32 sm:h-48 bg-gradient-to-r from-blue-900 via-indigo-900 to-[#020817] w-full relative">
                     {/* Botão de alterar capa — visível para o dono do perfil */}
                     {ehODono && (
-                        <button
-                            aria-label="Alterar capa do perfil"
-                            className="absolute top-4 right-4 p-2 bg-background/50 hover:bg-background/80 rounded-2xl text-foreground backdrop-blur-sm transition-colors"
-                        >
-                            <Camera className="w-5 h-5" />
-                        </button>
+                        <Tooltip texto="Alterar capa">
+                            <button
+                                aria-label="Alterar capa do perfil"
+                                className="absolute top-4 right-4 p-2 bg-background/50 hover:bg-background/80 rounded-2xl text-foreground backdrop-blur-sm transition-colors"
+                            >
+                                <Camera className="w-5 h-5" />
+                            </button>
+                        </Tooltip>
                     )}
                 </div>
 
@@ -139,13 +148,15 @@ export function PerfilMembro({ membroId }: { membroId: string }) {
                                 <Avatar nome={membro.nome} fotoPerfil={membro.foto_perfil} tamanho="lg" />
                             </div>
                             {ehODono && (
-                                <button
-                                    onClick={() => setEditando(true)}
-                                    aria-label="Alterar foto de perfil"
-                                    className="absolute bottom-2 right-0 p-1.5 bg-primary hover:bg-primary/90 rounded-2xl text-primary-foreground transition-colors border-2 border-background"
-                                >
-                                    <Camera className="w-4 h-4" />
-                                </button>
+                                <Tooltip texto="Alterar foto">
+                                    <button
+                                        onClick={() => setEditando(true)}
+                                        aria-label="Alterar foto de perfil"
+                                        className="absolute bottom-2 right-0 p-1.5 bg-primary hover:bg-primary/90 rounded-2xl text-primary-foreground transition-colors border-2 border-background"
+                                    >
+                                        <Camera className="w-4 h-4" />
+                                    </button>
+                                </Tooltip>
                             )}
                         </div>
 
@@ -210,6 +221,8 @@ export function PerfilMembro({ membroId }: { membroId: string }) {
                 aoSubmeterPerfil={aoSubmeterPerfil}
                 salvando={salvando}
             />
+                </>
+            )}
         </div>
     );
 }

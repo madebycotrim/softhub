@@ -1,4 +1,5 @@
 import { Avatar } from '../../compartilhado/componentes/Avatar';
+import { Tooltip } from '../../compartilhado/componentes/Tooltip';
 import { Emblema } from '../../compartilhado/componentes/Emblema';
 import { CORES_PRIORIDADE, LABELS_PRIORIDADE } from '../../utilitarios/constantes';
 import type { Tarefa } from './usarKanban';
@@ -79,11 +80,13 @@ export function CartaoTarefa({ tarefa, aoClicar }: CartaoTarefaProps) {
                 <div className="flex gap-2">
                     {tarefa.responsaveis.map((resp) => (
                         <div key={resp.id} className="flex flex-col items-center bg-muted/40 rounded-2xl p-1 border border-border/10">
-                            <Avatar
-                                nome={resp.nome}
-                                fotoPerfil={resp.foto}
-                                tamanho="sm"
-                            />
+                            <Tooltip texto={resp.nome}>
+                                <Avatar
+                                    nome={resp.nome}
+                                    fotoPerfil={resp.foto}
+                                    tamanho="sm"
+                                />
+                            </Tooltip>
                         </div>
                     ))}
                     {tarefa.responsaveis.length === 0 && (
