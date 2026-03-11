@@ -4,48 +4,16 @@ import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 
+// Configuração com PWA reativado.
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), '');
 
     return {
-        build: {
-            rollupOptions: {
-                output: {
-                    manualChunks(id) {
-                        // Estratégia de chunking granular para bibliotecas pesadas.
-                        // A ordem importa: do mais específico para o mais genérico.
-                        if (id.includes('node_modules')) {
-                            // `recharts` é uma biblioteca pesada de gráficos e deve ser separada.
-                            if (id.includes('recharts')) {
-                                return 'vendor-recharts';
-                            }
-                            if (id.includes('@fluentui')) {
-                                return 'vendor-fluentui';
-                            }
-                            if (id.includes('lucide-react') || id.includes('@radix-ui')) {
-                                return 'vendor-ui-core';
-                            }
-                            if (id.includes('@tanstack/react-query')) {
-                                return 'vendor-tanstack';
-                            }
-                            if (id.includes('@azure/msal')) {
-                                return 'vendor-msal';
-                            }
-                            // O núcleo do React. Esta condição deve vir APÓS
-                            // outras bibliotecas que contenham "react" no nome.
-                            if (id.includes('react-router-dom') || id.includes('react-dom') || id.includes('react')) {
-                                return 'vendor-react';
-                            }
-                            // Agrupar outras bibliotecas menores.
-                            return 'vendor-others';
-                        }
-                    },
-                },
-            },
-        },
+        // Nenhuma otimização de build manual para garantir estabilidade.
         plugins: [
             react(),
             tailwindcss(),
+            // Plugin PWA reativado conforme solicitado.
             VitePWA({
                 registerType: 'autoUpdate',
                 includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
