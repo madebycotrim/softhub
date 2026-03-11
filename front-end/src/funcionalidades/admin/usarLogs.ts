@@ -42,20 +42,40 @@ export function usarLogs() {
     const [dataFim, setDataFim] = useState('');
     const [filtroMeusLogs, setFiltroMeusLogs] = useState(false);
 
-    const carregar = async () => {
+    const [buscaDebounced, setBuscaDebounced] = useState(busca);
+    const [contadorPolling, setContadorPolling] = useState(0);
+
+    // Efeito para Debounce da busca (evita spam de requisições)
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setBuscaDebounced(busca);
+            setPagina(1);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [busca]);
+
+    // Polling de 30s (Regra 14)
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setContadorPolling(prev => prev + 1);
+        }, 30000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const carregar = async (exibirLoading = true) => {
         try {
-            setCarregando(true);
+            if (exibirLoading) setCarregando(true);
             const params: any = { pagina, itensPorPagina };
             if (filtroModulo) params.modulo = filtroModulo;
             if (filtroAcao) params.acao = filtroAcao;
-            if (busca) params.busca = busca;
+            if (buscaDebounced) params.busca = buscaDebounced;
             if (dataInicio) params.dataInicio = dataInicio;
             if (dataFim) params.dataFim = dataFim;
             if (filtroMeusLogs) params.meus = true;
 
             const [resLogs, resStats] = await Promise.all([
-                api.get('/api/logs', { params }).catch(() => ({ data: { dados: [], paginacao: { totalPaginas: 1, total: 0 } } })),
-                api.get('/api/logs/estatisticas').catch(() => ({ data: { modulos: [] } }))
+                api.get('/api/logs', { params }),
+                api.get('/api/logs/estatisticas')
             ]);
 
             setLogs(resLogs.data.dados || []);
@@ -64,15 +84,16 @@ export function usarLogs() {
             setTotalRegistros(resLogs.data.paginacao?.total || 0);
             setErro(null);
         } catch (e: any) {
-            setErro(e.response?.data?.erro || 'Erro ao carregar os logs do sistema.');
+            console.error('[ERRO LOGS]', e);
+            setErro(e.response?.data?.erro || 'Sua sessão pode ter expirado ou o servidor está temporariamente indisponível.');
         } finally {
             setCarregando(false);
         }
     };
 
     useEffect(() => {
-        carregar();
-    }, [pagina, itensPorPagina, filtroModulo, filtroAcao, busca, dataInicio, dataFim, filtroMeusLogs]);
+        carregar(contadorPolling === 0); // Só mostra loading na primeira carga ou troca de filtro
+    }, [pagina, itensPorPagina, filtroModulo, filtroAcao, buscaDebounced, dataInicio, dataFim, filtroMeusLogs, contadorPolling]);
 
     return {
         logs,

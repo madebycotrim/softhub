@@ -83,9 +83,41 @@ export function QuadroKanban({ projetoId = 'p1' }: { projetoId?: string }) {
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
 
+    const temFiltroAtivo = !!(filtros.busca || filtros.prioridades?.length || filtros.responsavelId);
+
     if (carregando) return <Carregando />;
     if (erro) return <p className="text-destructive text-center py-8">{erro}</p>;
-    if (tarefas.length === 0) return <EstadoVazio titulo="Nenhuma tarefa encontrada." descricao="Crie tarefas para começar seu fluxo de trabalho no projeto." />;
+    
+    if (tarefas.length === 0) {
+        return (
+            <div className="flex flex-col h-full space-y-6">
+                <CabecalhoFuncionalidade
+                    titulo="Quadro Kanban"
+                    subtitulo="Gerencie e acompanhe o fluxo de tarefas do projeto."
+                    icone={FolderKanban}
+                />
+                <div className="flex-1 bg-card border border-border rounded-2xl flex items-center justify-center">
+                    {temFiltroAtivo ? (
+                        <EstadoVazio 
+                            tipo="pesquisa"
+                            titulo="Nenhuma tarefa encontrada"
+                            descricao="Não há tarefas que correspondam aos filtros ou termo de busca aplicados."
+                            compacto={true}
+                            acao={{
+                                rotulo: "Limpar todos os filtros",
+                                aoClicar: () => setFiltros({})
+                            }}
+                        />
+                    ) : (
+                        <EstadoVazio 
+                            titulo="Quadro Vazio"
+                            descricao="Ainda não há tarefas cadastradas para este projeto. Comece adicionando novas demandas no Backlog."
+                        />
+                    )}
+                </div>
+            </div>
+        );
+    }
 
     const handleDragStart = (event: DragStartEvent) => {
         if (!podeMover) return;

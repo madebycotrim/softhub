@@ -137,9 +137,36 @@
     @apply antialiased selection:bg-primary/20 transition-colors duration-300;
   }
 
-  /* Custom scrollbar para evitar layout shift horizontal */
-  .custom-scrollbar {
+  /* Custom scrollbar para evitar layout shift horizontal e design premium */
+  * {
     scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.2);
+    border-radius: 100px;
+    transition: background 0.3s ease;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary) / 0.5);
+  }
+
+  ::-webkit-scrollbar-button {
+    display: none;
+  }
+
+  .custom-scrollbar {
     overflow-x: hidden !important;
   }
 }

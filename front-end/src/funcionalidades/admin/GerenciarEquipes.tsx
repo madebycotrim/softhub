@@ -1,6 +1,7 @@
 import { useState, useRef, useLayoutEffect, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { LayoutGrid, Users, Plus, Pencil, Trash2, UserCheck, Search, ChevronDown, Check, ArrowRightLeft } from 'lucide-react';
+import { LayoutGrid, Users, Plus, Pencil, Trash2, UserCheck, Search, ChevronDown, Check, ArrowRightLeft, X } from 'lucide-react';
+import { Tooltip } from '../../compartilhado/componentes/Tooltip';
 import { usarEquipes, type Grupo, type Equipe } from './usarEquipes';
 
 type MembroSimples = {
@@ -19,6 +20,7 @@ import { Modal } from '../../compartilhado/componentes/Modal';
 import { ConfirmacaoExclusao } from '../../compartilhado/componentes/ConfirmacaoExclusao';
 import { Avatar } from '../../compartilhado/componentes/Avatar';
 import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
+import { EstadoVazio } from '../../compartilhado/componentes/EstadoVazio';
 
 // ─── Componentes Auxiliares ───────────────────────────────────────────────────
 
@@ -284,10 +286,11 @@ function ModalAlocacao({ aberto, aoFechar, grupos, membros, aoAlocar, grupoIdPad
                         })}
 
                         {membrosFiltrados.length === 0 && (
-                            <div className="flex flex-col items-center justify-center py-20 text-center opacity-40">
-                                <Search size={32} className="mb-4 text-slate-300" />
-                                <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Nenhum membro encontrado</p>
-                            </div>
+                            <EstadoVazio 
+                                tipo="pesquisa"
+                                titulo="Membro não encontrado"
+                                descricao={`Nenhum membro ativo corresponde a "${busca}".`}
+                            />
                         )}
                     </div>
                 </div>
@@ -306,7 +309,7 @@ function ModalAlocacao({ aberto, aoFechar, grupos, membros, aoAlocar, grupoIdPad
                         disabled={salvando || selecionados.length === 0}
                         className="w-full sm:flex-1 h-12 bg-blue-600 text-white rounded-xl text-[10px] font-black shadow-sm hover:bg-blue-700 hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-30 disabled:translate-y-0 disabled:shadow-none flex items-center justify-center gap-2 group px-4 uppercase tracking-widest"
                     >
-                        {salvando ? <Carregando /> : (
+                        {salvando ? <Carregando Centralizar={false} tamanho="sm" className="border-t-white border-white/30" /> : (
                             <>
                                 <span>VINCULAR {selecionados.length > 1 ? `${selecionados.length} MEMBROS` : 'MEMBRO'}</span>
                                 <UserCheck size={18} className="group-hover:rotate-12 transition-transform" />
@@ -382,7 +385,7 @@ function ModalMovimentacao({ aberto, aoFechar, membro, grupos, equipeId, aoMover
                         disabled={salvando || !grupoDestinoId}
                         className="w-full sm:flex-[2] h-12 bg-blue-600 text-white rounded-2xl text-[10px] font-black shadow-md hover:bg-blue-700 transition-all disabled:opacity-30 flex items-center justify-center gap-2 uppercase tracking-widest"
                     >
-                        {salvando ? <Carregando /> : (
+                        {salvando ? <Carregando Centralizar={false} tamanho="sm" className="border-t-white border-white/30" /> : (
                             <>
                                 <span>Mover Agora</span>
                                 <ArrowRightLeft size={16} />
@@ -486,10 +489,11 @@ function ModalSelecaoLider({
                         );
                     })}
                     {filtrados.length === 0 && (
-                        <div className="flex flex-col items-center justify-center py-20 text-center opacity-40">
-                            <Search size={32} className="mb-4 text-slate-300" />
-                            <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Nenhum membro encontrado</p>
-                        </div>
+                        <EstadoVazio 
+                            tipo="pesquisa"
+                            titulo="Candidato não encontrado"
+                            descricao={`Não encontramos membros com o termo "${busca}".`}
+                        />
                     )}
                 </div>
             </div>
@@ -511,20 +515,22 @@ function CardMembroFino({ membro, aoRemover, aoMover }: { membro: MembroSimples,
                 </div>
             </div>
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                <button
-                    onClick={aoMover}
-                    className="p-1.5 text-slate-300 hover:text-blue-500 transition-all"
-                    title="Mover para outro grupo"
-                >
-                    <ArrowRightLeft size={14} />
-                </button>
-                <button
-                    onClick={aoRemover}
-                    className="p-1.5 text-slate-300 hover:text-red-500 transition-all"
-                    title="Remover deste grupo"
-                >
-                    <Plus size={14} className="rotate-45" />
-                </button>
+                <Tooltip texto="Mover para outro grupo">
+                    <button
+                        onClick={aoMover}
+                        className="p-1.5 text-slate-300 hover:text-blue-500 transition-all"
+                    >
+                        <ArrowRightLeft size={14} />
+                    </button>
+                </Tooltip>
+                <Tooltip texto="Remover deste grupo">
+                    <button
+                        onClick={aoRemover}
+                        className="p-1.5 text-slate-300 hover:text-red-500 transition-all"
+                    >
+                        <Plus size={14} className="rotate-45" />
+                    </button>
+                </Tooltip>
             </div>
         </div>
     );
@@ -607,40 +613,63 @@ function DetalheEquipe({
                     <div>
                         {editandoEquipe ? (
                             <div className="flex items-center gap-2">
-                                <input
-                                    autoFocus
-                                    value={nomeTemp}
-                                    onChange={e => setNomeTemp(e.target.value)}
-                                    onKeyDown={e => {
-                                        if (e.key === 'Enter') handleSalvarEquipeInline();
-                                        if (e.key === 'Escape') setEditandoEquipe(false);
-                                    }}
-                                    onBlur={() => handleSalvarEquipeInline()}
-                                    className="bg-transparent border-b-2 border-slate-900 outline-none text-2xl font-bold text-slate-900 p-0 tracking-tight"
-                                />
+                                    <input
+                                        autoFocus
+                                        value={nomeTemp}
+                                        onChange={e => setNomeTemp(e.target.value)}
+                                        onKeyDown={e => {
+                                            if (e.key === 'Enter') handleSalvarEquipeInline();
+                                            if (e.key === 'Escape') {
+                                                setNomeTemp(equipe.nome);
+                                                setEditandoEquipe(false);
+                                            }
+                                        }}
+                                        onBlur={(e) => {
+                                            if (!e.currentTarget.parentElement?.contains(e.relatedTarget as Node)) {
+                                                setNomeTemp(equipe.nome);
+                                                setEditandoEquipe(false);
+                                            }
+                                        }}
+                                        className="flex-1 max-w-md bg-transparent border-b border-slate-200 outline-none text-2xl font-bold text-slate-900 p-0 tracking-tight focus:border-slate-900 transition-colors"
+                                    />
                                 <div className="flex items-center gap-1">
-                                    <button 
-                                        onClick={handleSalvarEquipeInline} 
-                                        disabled={salvandoInline}
-                                        className="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all disabled:opacity-30" 
-                                        title="Salvar"
-                                    >
-                                        {salvandoInline ? <Carregando /> : <Check size={16} strokeWidth={2.5} />}
-                                    </button>
+                                    <Tooltip texto="Salvar">
+                                        <button 
+                                            onClick={handleSalvarEquipeInline} 
+                                            disabled={salvandoInline}
+                                            className="p-1.5 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all disabled:opacity-30" 
+                                        >
+                                            {salvandoInline ? <Carregando Centralizar={false} tamanho="sm" className="border-t-emerald-500 border-emerald-500/30" /> : <Check size={16} strokeWidth={2.5} />}
+                                        </button>
+                                    </Tooltip>
+                                    <Tooltip texto="Cancelar">
+                                        <button
+                                            onClick={() => {
+                                                setNomeTemp(equipe.nome);
+                                                setEditandoEquipe(false);
+                                            }}
+                                            disabled={salvandoInline}
+                                            className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all disabled:opacity-30"
+                                        >
+                                            <X size={16} strokeWidth={2.5} />
+                                        </button>
+                                    </Tooltip>
                                 </div>
                             </div>
                         ) : (
                             <div className="flex items-center gap-2 group/title">
                                 <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{equipe.nome}</h2>
-                                <button 
-                                    onClick={() => {
-                                        setEditandoEquipe(true);
-                                        setNomeTemp(equipe.nome);
-                                    }}
-                                    className="opacity-0 group-hover/title:opacity-100 p-1 text-slate-300 hover:text-slate-600 transition-all"
-                                >
-                                    <Pencil size={14} />
-                                </button>
+                                <Tooltip texto="Renomear equipe">
+                                    <button 
+                                        onClick={() => {
+                                            setEditandoEquipe(true);
+                                            setNomeTemp(equipe.nome);
+                                        }}
+                                        className="opacity-0 group-hover/title:opacity-100 p-1 text-slate-300 hover:text-slate-600 transition-all"
+                                    >
+                                        <Pencil size={14} />
+                                    </button>
+                                </Tooltip>
                             </div>
                         )}
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
@@ -708,9 +737,15 @@ function DetalheEquipe({
             <div className="flex-1 overflow-y-auto min-h-0 pr-2 -mr-2 custom-scrollbar">
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 {grupos.length === 0 ? (
-                    <div className="col-span-full border-2 border-dashed border-slate-100 rounded-2xl p-16 text-center">
-                        <p className="text-slate-400 font-medium mb-4">Nenhum grupo configurado para esta equipe.</p>
-                        <button onClick={aoAdicionarGrupo} className="bg-blue-600 text-white px-6 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-blue-700 transition-all shadow-md">Criar Primeiro Grupo</button>
+                    <div className="col-span-full py-12 bg-white/50 border-2 border-dashed border-slate-100 rounded-3xl">
+                        <EstadoVazio 
+                            titulo="Equipe sem Grupos"
+                            descricao="Esta equipe ainda não possui grupos de trabalho definidos."
+                            acao={{
+                                rotulo: "Criar Primeiro Grupo",
+                                aoClicar: aoAdicionarGrupo
+                            }}
+                        />
                     </div>
                 ) : (
                     grupos.map(g => {
@@ -735,44 +770,64 @@ function DetalheEquipe({
                                                         if (e.key === 'Enter') handleSalvarInline(g.id);
                                                         if (e.key === 'Escape') setEditandoId(null);
                                                     }}
-                                                    onBlur={() => handleSalvarInline(g.id)}
-                                                    className="w-full bg-transparent border-b-2 border-slate-900 outline-none text-lg font-bold text-slate-900 p-0 tracking-tight"
+                                                    onBlur={(e) => {
+                                                        if (!e.currentTarget.parentElement?.parentElement?.parentElement?.contains(e.relatedTarget as Node)) {
+                                                            setEditandoId(null);
+                                                        }
+                                                    }}
+                                                    className="flex-1 max-w-[200px] bg-transparent border-b border-slate-200 outline-none text-lg font-bold text-slate-900 p-0 tracking-tight focus:border-slate-400 transition-colors"
                                                     disabled={salvandoInline}
                                                 />
                                             ) : (
                                                 <div className="flex items-center gap-2 group/title">
                                                     <h5 className="text-lg font-bold text-slate-900 tracking-tight">{g.nome}</h5>
-                                                    <button 
-                                                        onClick={() => {
-                                                            setEditandoId(g.id);
-                                                            setNomeTemp(g.nome);
-                                                        }}
-                                                        className="opacity-0 group-hover/title:opacity-100 p-1 text-slate-300 hover:text-slate-600 transition-all"
-                                                    >
-                                                        <Pencil size={14} />
-                                                    </button>
+                                                    <Tooltip texto="Renomear grupo">
+                                                        <button 
+                                                            onClick={() => {
+                                                                setEditandoId(g.id);
+                                                                setNomeTemp(g.nome);
+                                                            }}
+                                                            className="opacity-0 group-hover/title:opacity-100 p-1 text-slate-300 hover:text-slate-600 transition-all"
+                                                        >
+                                                            <Pencil size={14} />
+                                                        </button>
+                                                    </Tooltip>
                                                 </div>
                                             )}
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-1">
                                         {editandoId === g.id ? (
-                                            <button 
-                                                onClick={() => handleSalvarInline(g.id)} 
-                                                disabled={salvandoInline}
-                                                className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-xl transition-all disabled:opacity-30" 
-                                                title="Confirmar"
-                                            >
-                                                {salvandoInline ? <Carregando /> : <Check size={18} strokeWidth={2.5} />}
-                                            </button>
+                                            <div className="flex items-center">
+                                                <Tooltip texto="Confirmar">
+                                                    <button 
+                                                        onClick={() => handleSalvarInline(g.id)} 
+                                                        disabled={salvandoInline}
+                                                        className="p-2 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-xl transition-all disabled:opacity-30" 
+                                                    >
+                                                        {salvandoInline ? <Carregando Centralizar={false} tamanho="sm" className="border-t-emerald-500 border-emerald-500/30" /> : <Check size={18} strokeWidth={2.5} />}
+                                                    </button>
+                                                </Tooltip>
+                                                <Tooltip texto="Cancelar">
+                                                    <button
+                                                        onClick={() => setEditandoId(null)}
+                                                        disabled={salvandoInline}
+                                                        className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all disabled:opacity-30"
+                                                    >
+                                                        <X size={18} strokeWidth={2.5} />
+                                                    </button>
+                                                </Tooltip>
+                                            </div>
                                         ) : (
-                                            <button 
-                                                onClick={() => aoExcluirGrupo(g)} 
-                                                disabled={salvandoInline}
-                                                className="p-2 text-slate-300 hover:text-red-500 transition-colors disabled:opacity-30"
-                                            >
-                                                <Trash2 size={18} />
-                                            </button>
+                                            <Tooltip texto="Excluir grupo">
+                                                <button 
+                                                    onClick={() => aoExcluirGrupo(g)} 
+                                                    disabled={salvandoInline}
+                                                    className="p-2 text-slate-300 hover:text-red-500 transition-colors disabled:opacity-30"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </Tooltip>
                                         )}
                                     </div>
                                 </div>
@@ -789,9 +844,11 @@ function DetalheEquipe({
                                                     <h6 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
                                                         Pessoas ({membrosDoGrupo.length})
                                                     </h6>
-                                                    <button onClick={() => aoAlocar(g.id, equipe.id)} className="w-8 h-8 rounded-xl bg-white border border-slate-100 text-slate-400 flex items-center justify-center hover:bg-slate-50 hover:text-blue-600 transition-all shadow-sm">
-                                                        <Plus size={16} />
-                                                    </button>
+                                                    <Tooltip texto="Alocar membro">
+                                                        <button onClick={() => aoAlocar(g.id, equipe.id)} className="w-8 h-8 rounded-xl bg-white border border-slate-100 text-slate-400 flex items-center justify-center hover:bg-slate-50 hover:text-blue-600 transition-all shadow-sm">
+                                                            <Plus size={16} />
+                                                        </button>
+                                                    </Tooltip>
                                                 </div>
                                                 <div className="flex-1 overflow-y-auto min-h-0 space-y-2.5 pr-2 custom-scrollbar">
                                                     {membrosDoGrupo.map(membro => (
@@ -840,6 +897,11 @@ export function GerenciarEquipes() {
     const [modalMover, setModalMover] = useState<{ membroId: string; grupoOrigemId: string; equipeId: string } | null>(null);
     const [modalLider, setModalLider] = useState<{ aberto: boolean; tipo: 'lider' | 'sub_lider' } | null>(null);
     const [desativando, setDesativando] = useState(false);
+
+    // Estados para edição rápida (sidebar) — Estilo "Editor de Cargos"
+    const [editandoSidebarId, setEditandoSidebarId] = useState<string | null>(null);
+    const [nomeSidebarTemp, setNomeSidebarTemp] = useState('');
+    const [salvandoSidebarInline, setSalvandoSidebarInline] = useState(false);
 
     const equipesAtivas = useMemo(() => 
         equipes.filter(e => e.ativo),
@@ -953,7 +1015,7 @@ export function GerenciarEquipes() {
                 </button>
             </CabecalhoFuncionalidade>
 
-            <div className="flex-1 flex overflow-hidden py-6 gap-6">
+            <div className="flex-1 flex overflow-hidden pt-6 gap-6">
                 {/* Sidebar: Lista de Equipes */}
                 <aside className="w-72 hidden lg:flex flex-col shrink-0">
                     <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm overflow-hidden flex flex-col flex-1">
@@ -971,30 +1033,122 @@ export function GerenciarEquipes() {
                             />
                         </div>
 
-                        <div className="flex-1 overflow-y-auto space-y-1.5 pr-2 custom-scrollbar">
+                        <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
                             {equipesFiltradas.map((e: Equipe) => (
                                 <div key={e.id} className="relative group/card">
-                                    <button
+                                    <div
                                         onClick={() => setIdEquipeAtiva(e.id)}
-                                        className={`w-full text-left p-4 rounded-2xl transition-all duration-300 border ${idEquipeAtiva === e.id ? 'bg-blue-50 border-blue-100 shadow-sm' : 'bg-transparent border-transparent hover:bg-slate-50'}`}
+                                        className={`w-full text-left p-4 rounded-2xl transition-all duration-300 border group/btn relative cursor-pointer ${
+                                            idEquipeAtiva === e.id 
+                                            ? 'bg-white border-slate-200/80 shadow-sm' 
+                                            : 'bg-white/40 border-slate-100/60 hover:bg-white hover:border-slate-200 hover:shadow-sm'
+                                        }`}
                                     >
-                                        <p className={`font-bold text-base tracking-tight transition-colors ${idEquipeAtiva === e.id ? 'text-blue-700' : 'text-slate-900 group-hover:text-blue-600'}`}>{e.nome}</p>
-                                        <div className="flex items-center gap-2 mt-0.5">
-                                            <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest truncate">
-                                                {e.total_membros || 0} Membros
-                                            </p>
+                                        <div className="flex items-center flex-1 min-w-0">
+                                            {/* Indicador de interação discreto */}
+                                            <div className={`w-1 h-1 rounded-full transition-all shadow-sm mr-3 ${
+                                                idEquipeAtiva === e.id 
+                                                ? 'bg-blue-500 scale-125' 
+                                                : 'bg-slate-200 group-hover/card:bg-blue-500 group-hover/card:scale-125'
+                                            }`} />
+
+                                            <div className="flex flex-col flex-1 min-w-0">
+                                                {editandoSidebarId === e.id ? (
+                                                    <div className="flex items-center gap-2 w-full">
+                                                        <input
+                                                            autoFocus
+                                                            value={nomeSidebarTemp}
+                                                            onChange={ev => setNomeSidebarTemp(ev.target.value)}
+                                                            onKeyDown={async (ev) => {
+                                                                if (ev.key === 'Enter') {
+                                                                    if (nomeSidebarTemp.trim() && !salvandoSidebarInline) {
+                                                                        setSalvandoSidebarInline(true);
+                                                                        await editarEquipe(e.id, { nome: nomeSidebarTemp });
+                                                                        setSalvandoSidebarInline(false);
+                                                                        setEditandoSidebarId(null);
+                                                                    }
+                                                                }
+                                                                if (ev.key === 'Escape') setEditandoSidebarId(null);
+                                                            }}
+                                                            onBlur={(ev) => {
+                                                                if (!ev.currentTarget.parentElement?.contains(ev.relatedTarget as Node)) {
+                                                                    setEditandoSidebarId(null);
+                                                                }
+                                                            }}
+                                                            onClick={ev => ev.stopPropagation()}
+                                                            className="flex-1 min-w-0 bg-transparent border-b border-slate-200 outline-none text-sm font-bold text-foreground py-0.5 focus:border-slate-400 transition-all"
+                                                        />
+                                                        <div className="flex items-center">
+                                                            <Tooltip texto="Confirmar">
+                                                                <button 
+                                                                    onClick={async (ev) => {
+                                                                        ev.stopPropagation();
+                                                                        if (nomeSidebarTemp.trim() && !salvandoSidebarInline) {
+                                                                            setSalvandoSidebarInline(true);
+                                                                            await editarEquipe(e.id, { nome: nomeSidebarTemp });
+                                                                            setSalvandoSidebarInline(false);
+                                                                            setEditandoSidebarId(null);
+                                                                        }
+                                                                    }}
+                                                                    className="p-1 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"
+                                                                >
+                                                                    {salvandoSidebarInline ? <Carregando Centralizar={false} tamanho="sm" className="w-3.5 h-3.5" /> : <Check size={14} strokeWidth={3} />}
+                                                                </button>
+                                                            </Tooltip>
+                                                            <Tooltip texto="Cancelar">
+                                                                <button 
+                                                                    onClick={(ev) => {
+                                                                        ev.stopPropagation();
+                                                                        setEditandoSidebarId(null);
+                                                                    }}
+                                                                    className="p-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                                                                >
+                                                                    <X size={14} strokeWidth={3} />
+                                                                </button>
+                                                            </Tooltip>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <div className="flex items-center gap-2 group/title w-fit max-w-full">
+                                                            <p className={`font-black text-sm tracking-tight transition-colors ${idEquipeAtiva === e.id ? 'text-slate-900' : 'text-slate-500 group-hover/btn:text-slate-900'}`}>{e.nome}</p>
+                                                            <Tooltip texto="Renomear equipe">
+                                                                <button
+                                                                    onClick={(ev) => {
+                                                                        ev.stopPropagation();
+                                                                        setEditandoSidebarId(e.id);
+                                                                        setNomeSidebarTemp(e.nome);
+                                                                    }}
+                                                                    className="opacity-0 group-hover/title:opacity-100 p-1 text-slate-300 hover:text-blue-500 transition-all"
+                                                                >
+                                                                    <Pencil size={11} />
+                                                                </button>
+                                                            </Tooltip>
+                                                        </div>
+                                                        <div className="flex items-center gap-2 mt-0.5">
+                                                            <p className="text-[9px] font-black text-slate-400/60 uppercase tracking-[0.15em] truncate">
+                                                                {e.total_membros || 0} Membros
+                                                            </p>
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
                                         </div>
-                                    </button>
-                                    <button
-                                        onClick={(ev) => {
-                                            ev.stopPropagation();
-                                            setConfirmacaoExclusao({ id: e.id, nome: e.nome, tipo: 'equipe' });
-                                        }}
-                                        className="absolute top-4 right-4 p-1.5 text-slate-300 hover:text-red-500 opacity-0 group-hover/card:opacity-100 transition-all"
-                                        title="Excluir equipe"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
+                                    </div>
+                                    
+                                    {!editandoSidebarId && (
+                                        <Tooltip texto="Excluir equipe">
+                                            <button
+                                                onClick={(ev) => {
+                                                    ev.stopPropagation();
+                                                    setConfirmacaoExclusao({ id: e.id, nome: e.nome, tipo: 'equipe' });
+                                                }}
+                                                className="absolute top-4 right-3 p-1.5 text-slate-300/40 hover:text-rose-500 opacity-0 group-hover/card:opacity-100 transition-all active:scale-90"
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </Tooltip>
+                                    )}
                                 </div>
                             ))}
                             {equipesAtivas.length === 0 && (
@@ -1024,19 +1178,12 @@ export function GerenciarEquipes() {
                             aoSalvarNomeEquipe={(id, nome) => editarEquipe(id, { nome })}
                         />
                     ) : (
-                        <div className="flex-1 flex flex-col items-center justify-center bg-white border border-slate-200 rounded-3xl p-12 text-center shadow-sm">
-                            <div className="w-20 h-20 rounded-3xl bg-blue-50 text-blue-500 flex items-center justify-center mb-6 animate-pulse">
-                                <LayoutGrid size={40} />
-                            </div>
-                            <h3 className="text-xl font-bold text-slate-900 mb-2">Selecione uma Equipe</h3>
-                            <p className="text-sm text-slate-500 max-w-xs mx-auto leading-relaxed">
-                                Escolha uma equipe na barra lateral para gerenciar seus grupos, líderes e membros alocados.
-                            </p>
-                            <div className="mt-8 flex items-center gap-2 text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">
-                                <div className="w-12 h-px bg-slate-100" />
-                                <span>Aguardando seleção</span>
-                                <div className="w-12 h-px bg-slate-100" />
-                            </div>
+                        <div className="flex-1 flex items-center justify-center bg-white border border-slate-100 rounded-3xl">
+                            <EstadoVazio 
+                                titulo="Selecione uma Equipe"
+                                descricao="Escolha uma equipe na lateral para gerenciar lideranças, grupos e membros alocados."
+                                iconeCustom={<LayoutGrid size={48} className="text-blue-500/30" />}
+                            />
                         </div>
                     )}
                 </main>

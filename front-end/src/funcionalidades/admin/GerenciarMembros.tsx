@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, useEffect, memo } from 'react';
 import { UserCog, X, Shield, Mail, Trash2, Loader2, UserCheck, Archive, ListPlus, CheckSquare, Square, Download, AlertCircle, ChevronDown, RotateCcw, Eraser, User, Users as UsersIcon, Plus } from 'lucide-react';
+import { Tooltip } from '../../compartilhado/componentes/Tooltip';
 import { Link } from 'react-router';
 import { api } from '../../compartilhado/servicos/api';
 import { usarMembros } from '../membros/usarMembros';
@@ -11,6 +12,7 @@ import { usarPermissaoAcesso } from '../../compartilhado/hooks/usarPermissao';
 import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
 import { Modal } from '../../compartilhado/componentes/Modal';
 import { ConfirmacaoExclusao } from '../../compartilhado/componentes/ConfirmacaoExclusao';
+import { EstadoVazio } from '../../compartilhado/componentes/EstadoVazio';
 import { ambiente } from '../../configuracoes/ambiente';
 import { usarConfiguracoes } from './usarConfiguracoes';
 import { usarDebounce } from '../../compartilhado/hooks/usarDebounce';
@@ -412,46 +414,49 @@ const LinhaMembro = memo(({
             {/* Ações */}
             <td className="px-3 py-3">
                 <div className="flex items-center justify-end gap-1">
-                    <Link
-                        to={`/app/membro/${membro.id}`}
-                        title="Ver perfil"
-                        className="p-2 rounded-xl transition-all text-primary hover:bg-primary/5"
-                    >
-                        <User size={20} />
-                    </Link>
+                    <Tooltip texto="Ver perfil">
+                        <Link
+                            to={`/app/membro/${membro.id}`}
+                            className="p-2 rounded-xl transition-all text-primary hover:bg-primary/5"
+                        >
+                            <User size={20} />
+                        </Link>
+                    </Tooltip>
 
                     {!ehOMesmoUsuario && podeDesativar && (
                         <>
-                            <button
-                                onClick={
-                                    membro.ativo
-                                        ? () => onRemover(membro)
-                                        : () => onAlternarStatus(membro)
-                                }
-                                title={membro.ativo ? 'Arquivar membro' : 'Restaurar membro'}
-                                className={`p-2 rounded-xl transition-all ${
-                                    membro.ativo
-                                        ? 'text-muted-foreground/50 hover:text-red-500 hover:bg-red-500/5'
-                                        : 'text-emerald-500 hover:bg-emerald-500/5'
-                                }`}
-                            >
-                                {salvando ? (
-                                    <Carregando />
-                                ) : membro.ativo ? (
-                                    <Trash2 size={20} />
-                                ) : (
-                                    <RotateCcw size={20} />
-                                )}
-                            </button>
+                            <Tooltip texto={membro.ativo ? 'Arquivar membro' : 'Restaurar membro'}>
+                                <button
+                                    onClick={
+                                        membro.ativo
+                                            ? () => onRemover(membro)
+                                            : () => onAlternarStatus(membro)
+                                    }
+                                    className={`p-2 rounded-xl transition-all ${
+                                        membro.ativo
+                                            ? 'text-muted-foreground/50 hover:text-red-500 hover:bg-red-500/5'
+                                            : 'text-emerald-500 hover:bg-emerald-500/5'
+                                    }`}
+                                >
+                                    {salvando ? (
+                                        <Carregando Centralizar={false} tamanho="sm" />
+                                    ) : membro.ativo ? (
+                                        <Trash2 size={20} />
+                                    ) : (
+                                        <RotateCcw size={20} />
+                                    )}
+                                </button>
+                            </Tooltip>
 
                             {!membro.ativo && (
-                                <button
-                                    onClick={() => onLimpeza(membro)}
-                                    title="Excluir definitivamente"
-                                    className="p-2 rounded-xl text-muted-foreground/30 hover:text-red-500 hover:bg-red-500/5 transition-all"
-                                >
-                                    <Eraser size={20} />
-                                </button>
+                                <Tooltip texto="Excluir definitivamente">
+                                    <button
+                                        onClick={() => onLimpeza(membro)}
+                                        className="p-2 rounded-xl text-muted-foreground/30 hover:text-red-500 hover:bg-red-500/5 transition-all"
+                                    >
+                                        <Eraser size={20} />
+                                    </button>
+                                </Tooltip>
                             )}
                         </>
                     )}
@@ -667,7 +672,7 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, rolesDisponiveis }
                         onClick={() => handleSubmit()}
                         className="w-full sm:w-auto h-11 bg-primary text-primary-foreground px-8 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-primary/90 transition-all shadow-sm disabled:opacity-50 flex items-center justify-center gap-2"
                     >
-                        {salvando ? <Carregando /> : 'Finalizar Cadastro'}
+                        {salvando ? <Carregando Centralizar={false} tamanho="sm" className="border-t-white border-white/30" /> : 'Finalizar Cadastro'}
                     </button>
                 </div>
             </div>
@@ -861,22 +866,23 @@ export default function GerenciarMembros() {
 
                     <div className="flex items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0">
                         {/* Toggle Arquivados (Compacto) */}
-                        <button
-                            onClick={() => setAbaAtiva(abaAtiva === 'ativos' ? 'arquivados' : 'ativos')}
-                            className={`shrink-0 w-11 h-11 rounded-xl border transition-all flex items-center justify-center relative ${
-                                abaAtiva === 'arquivados' 
-                                ? 'bg-red-500/10 border-red-500/20 text-red-500 shadow-lg shadow-red-500/10' 
-                                : 'bg-muted/30 border-border/50 text-muted-foreground hover:border-primary/30 hover:text-primary'
-                            }`}
-                            title={abaAtiva === 'ativos' ? "Ver Arquivados" : "Ver Ativos"}
-                        >
-                            <Archive size={20} />
-                            {membros.filter(m => !m.ativo).length > 0 && abaAtiva === 'ativos' && (
-                                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-[10px] font-black text-white flex items-center justify-center border-2 border-background">
-                                    {membros.filter(m => !m.ativo).length}
-                                </span>
-                            )}
-                        </button>
+                        <Tooltip texto={abaAtiva === 'ativos' ? "Ver Arquivados" : "Ver Ativos"}>
+                            <button
+                                onClick={() => setAbaAtiva(abaAtiva === 'ativos' ? 'arquivados' : 'ativos')}
+                                className={`shrink-0 w-11 h-11 rounded-xl border transition-all flex items-center justify-center relative ${
+                                    abaAtiva === 'arquivados' 
+                                    ? 'bg-red-500/10 border-red-500/20 text-red-500 shadow-lg shadow-red-500/10' 
+                                    : 'bg-muted/30 border-border/50 text-muted-foreground hover:border-primary/30 hover:text-primary'
+                                }`}
+                            >
+                                <Archive size={20} />
+                                {membros.filter(m => !m.ativo).length > 0 && abaAtiva === 'ativos' && (
+                                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-[10px] font-black text-white flex items-center justify-center border-2 border-background">
+                                        {membros.filter(m => !m.ativo).length}
+                                    </span>
+                                )}
+                            </button>
+                        </Tooltip>
 
                         <div className="h-6 w-px bg-border/40 mx-1 hidden sm:block" />
 
@@ -890,13 +896,14 @@ export default function GerenciarMembros() {
                                     <span>Adicionar</span>
                                 </button>
                                 
-                                <button
-                                    onClick={() => setModalLoteAberto(true)}
-                                    className="w-11 h-11 bg-white border border-border/50 text-muted-foreground hover:text-primary hover:border-primary/20 rounded-xl transition-all flex items-center justify-center"
-                                    title="Importar em Lote"
-                                >
-                                    <ListPlus size={20} />
-                                </button>
+                                <Tooltip texto="Importar em Lote">
+                                    <button
+                                        onClick={() => setModalLoteAberto(true)}
+                                        className="w-11 h-11 bg-white border border-border/50 text-muted-foreground hover:text-primary hover:border-primary/20 rounded-xl transition-all flex items-center justify-center"
+                                    >
+                                        <ListPlus size={20} />
+                                    </button>
+                                </Tooltip>
                             </div>
                         )}
                     </div>
@@ -924,10 +931,16 @@ export default function GerenciarMembros() {
                             </button>
                         </div>
                     ) : listaFiltrada.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-24 text-center opacity-40">
-                            <UsersIcon size={48} className="mb-4" />
-                            <p className="text-sm font-bold uppercase tracking-widest">Nenhum membro encontrado</p>
-                            <p className="text-xs mt-1">Tente ajustar sua busca ou filtros.</p>
+                        <div className="py-12">
+                            <EstadoVazio 
+                                tipo="pesquisa"
+                                titulo="Membro não encontrado"
+                                descricao={buscaDebounced ? `Nenhum membro corresponde a "${buscaDebounced}" nesta aba.` : "Nenhum membro encontrado com os filtros atuais."}
+                                acao={buscaDebounced ? {
+                                    rotulo: "Limpar busca",
+                                    aoClicar: () => setBusca('')
+                                } : undefined}
+                            />
                         </div>
                     ) : (
                         <table className="w-full border-collapse">

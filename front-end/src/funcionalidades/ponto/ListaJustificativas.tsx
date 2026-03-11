@@ -1,6 +1,7 @@
 import { formatarDataHora } from '../../utilitarios/formatadores';
 import { Emblema } from '../../compartilhado/componentes/Emblema';
 import type { JustificativaPonto } from './usarJustificativa';
+import { EstadoVazio } from '../../compartilhado/componentes/EstadoVazio';
 
 interface ListaJustificativasProps {
     justificativas: JustificativaPonto[];
@@ -23,9 +24,12 @@ const formatarTipo = (tipo: string): string => {
 export function ListaJustificativas({ justificativas }: ListaJustificativasProps) {
     if (justificativas.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-10 text-center opacity-40">
-                <p className="text-sm font-bold uppercase tracking-widest">Sem justificativas</p>
-                <p className="text-xs mt-1">Você ainda não enviou nenhuma.</p>
+            <div className="py-8">
+                <EstadoVazio 
+                    titulo="Sem justificativas" 
+                    descricao="Você ainda não enviou nenhuma justificativa de ponto." 
+                    compacto={true}
+                />
             </div>
         );
     }

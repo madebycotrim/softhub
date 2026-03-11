@@ -12,16 +12,16 @@ interface EmblemaProps {
 export function Emblema({ texto, variante = 'cinza', className = '' }: EmblemaProps) {
 
     const estilos: Record<VarianteEmblema, string> = {
-        azul: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-        verde: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
-        vermelho: 'bg-rose-500/10 text-rose-500 border-rose-500/20',
-        amarelo: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
-        roxo: 'bg-violet-500/10 text-violet-500 border-violet-500/20',
-        cinza: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
-        alerta: 'bg-orange-500/10 text-orange-500 border-orange-500/20',
+        azul: 'bg-blue-100 text-blue-700 border-blue-300 shadow-[0_0_10px_rgba(59,130,246,0.15)]',
+        verde: 'bg-emerald-100 text-emerald-700 border-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.15)]',
+        vermelho: 'bg-rose-100 text-rose-700 border-rose-300 shadow-[0_0_10px_rgba(244,63,94,0.15)] font-bold',
+        amarelo: 'bg-amber-100 text-amber-900 border-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.15)]',
+        roxo: 'bg-violet-100 text-violet-700 border-violet-300 shadow-[0_0_10px_rgba(139,92,246,0.15)] font-black italic',
+        cinza: 'bg-white text-slate-500 border-slate-200',
+        alerta: 'bg-orange-100 text-orange-700 border-orange-300 shadow-[0_0_10px_rgba(249,115,22,0.15)]',
     };
 
-    const padroes = 'inline-flex items-center whitespace-nowrap px-2.5 py-0.5 rounded-2xl text-xs font-medium border';
+    const padroes = 'inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-0.5 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all';
     const estiloAtivo = estilos[variante];
 
     return (

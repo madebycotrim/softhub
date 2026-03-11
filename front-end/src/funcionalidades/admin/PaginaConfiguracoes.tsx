@@ -3,8 +3,8 @@ import { usarConfiguracoes } from './usarConfiguracoes';
 import { Carregando } from '../../compartilhado/componentes/Carregando';
 import { usarPermissaoAcesso } from '../../compartilhado/hooks/usarPermissao';
 import { 
-    Plus, Lock, ShieldCheck, Crown,
-    UserCircle, MessageSquare,
+    Plus, Lock, ShieldCheck, UserCircle,
+    MessageSquare,
     Settings2, Info, Trash2,
     FolderKanban, Clock, LayoutDashboard,
     LayoutGrid, FileText, Database, Globe,
@@ -98,8 +98,8 @@ const PERMISSOES_SISTEMA = [
         label: 'Painel de Logs',
         icone: Database,
         permissoes: [
-            { chave: 'logs:visualizar', label: 'Ver histórico de auditoria global (Todos os usuários)' },
-            { chave: 'logs:visualizar_proprios', label: 'Ver apenas meu próprio histórico de atividades' },
+            { chave: 'logs:visualizar', label: 'Ver histórico global (Todos os usuários)' },
+            { chave: 'logs:visualizar_proprios', label: 'Ver histórico próprio (Apenas seu)' },
         ],
     },
     {
@@ -215,14 +215,14 @@ export function PaginaConfiguracoes() {
     };
 
     return (
-        <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-10">
+        <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700 pb-10">
             <CabecalhoFuncionalidade
                 titulo="Configurações"
                 subtitulo="Governança, Permissões e Hierarquia do SoftHub"
                 icone={Settings2}
             />
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-6  items-start">
                 {/* Coluna Lateral: Gestão de Cargos */}
                 <div className="lg:col-span-3 space-y-6">
                     <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-6">
@@ -256,26 +256,18 @@ export function PaginaConfiguracoes() {
                         )}
 
                         {/* Lista de cargos existentes */}
-                        <div className="space-y-4 pt-2">
+                        <div className="space-y-4 ">
                             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400/60 px-2 block">Cargos</label>
-                            <div className="space-y-2 max-h-[440px] overflow-y-auto pr-1 custom-scrollbar">
+                            <div className="space-y-3 max-h-[440px] overflow-y-auto pr-1 custom-scrollbar">
                                 {roles.filter(r => r !== 'TODOS' && r !== 'ADMIN').map(role => (
                                     <div
                                         key={role}
-                                        className={`group relative flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 ${
-                                            role === 'ADMIN' 
-                                            ? 'bg-amber-500/[0.03] border-amber-200/50 hover:bg-amber-500/[0.06]' 
-                                            : 'bg-background border-border/50 hover:border-border hover:shadow-sm'
-                                        }`}
+                                        className={`group/card relative flex items-center justify-between p-4 rounded-2xl border transition-all duration-500 bg-white/40 border-slate-100/60 hover:bg-white hover:border-slate-200 hover:shadow-sm`}
                                     >
-                                        <div className="flex items-center gap-3.5">
-                                            <div className={`p-2 rounded-2xl flex items-center justify-center transition-colors ${
-                                                role === 'ADMIN' ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/10'
-                                                : 'bg-muted text-muted-foreground group-hover:bg-accent group-hover:text-foreground'
-                                            }`}>
-                                                {role === 'ADMIN' ? <Crown size={14} />
-                                                : <UserCircle size={14} />}
-                                            </div>
+                                        <div className="flex items-center flex-1 min-w-0">
+                                            {/* Indicador de interação discreto */}
+                                            <div className="w-1 h-1 rounded-full bg-slate-200 mr-3 group-hover/card:bg-blue-500 group-hover/card:scale-125 transition-all shadow-sm" />
+                                            
                                             <div className="flex flex-col flex-1 min-w-0">
                                                 {editandoRole === role ? (
                                                     <div className="flex items-center gap-1.5 w-full">
@@ -287,32 +279,34 @@ export function PaginaConfiguracoes() {
                                                                 if (e.key === 'Enter') handleRenomearRoleAction(role);
                                                                 if (e.key === 'Escape') setEditandoRole(null);
                                                             }}
+                                                            onBlur={(e) => {
+                                                                if (!e.currentTarget.parentElement?.contains(e.relatedTarget as Node)) {
+                                                                    setEditandoRole(null);
+                                                                }
+                                                            }}
                                                             disabled={salvandoRole}
-                                                            className="flex-1 min-w-0 bg-transparent border-b border-primary/40 outline-none text-[12px] font-black tracking-widest uppercase text-foreground py-0.5"
+                                                            className="flex-1 min-w-0 bg-transparent border-b border-slate-200 outline-none text-[11px] font-black tracking-[0.1em] uppercase text-foreground py-0.5 focus:border-slate-400 transition-all"
                                                         />
                                                         <div className="flex items-center">
                                                             <button 
                                                                 onClick={() => handleRenomearRoleAction(role)}
                                                                 disabled={salvandoRole}
-                                                                className="p-1 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all disabled:opacity-30"
+                                                                className="p-1 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"
                                                             >
-                                                                {salvandoRole ? <div className="w-3 h-3 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" /> : <Check size={14} strokeWidth={3} />}
+                                                                {salvandoRole ? <Carregando Centralizar={false} tamanho="sm" className="w-3 h-3" /> : <Check size={12} strokeWidth={3} />}
                                                             </button>
                                                             <button 
                                                                 onClick={() => setEditandoRole(null)}
                                                                 disabled={salvandoRole}
-                                                                className="p-1 text-rose-500 hover:bg-rose-50 rounded-lg transition-all disabled:opacity-30"
+                                                                className="p-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
                                                             >
-                                                                <X size={14} strokeWidth={3} />
+                                                                <X size={12} strokeWidth={3} />
                                                             </button>
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <div className="flex items-center gap-2 group/title w-full">
-                                                        <span className={`text-[12px] font-black tracking-widest uppercase truncate ${
-                                                            role === 'ADMIN' ? 'text-amber-600'
-                                                            : 'text-foreground'
-                                                        }`}>
+                                                    <div className="flex items-center gap-2 group/title w-fit max-w-full">
+                                                        <span className="text-[11px] font-black tracking-[0.15em] uppercase truncate text-slate-500 group-hover/card:text-slate-900 transition-colors">
                                                             {role}
                                                         </span>
                                                         {podeEditar && !CARGOS_FIXOS.includes(role) && (
@@ -321,9 +315,9 @@ export function PaginaConfiguracoes() {
                                                                     setEditandoRole(role);
                                                                     setNomeRoleTemp(role);
                                                                 }}
-                                                                className="opacity-0 group-hover/title:opacity-100 p-1 text-muted-foreground/40 hover:text-primary transition-all"
+                                                                className="opacity-0 group-hover/title:opacity-100 p-1 text-slate-300 hover:text-blue-500 transition-all"
                                                             >
-                                                                <Pencil size={12} />
+                                                                <Pencil size={10} />
                                                             </button>
                                                         )}
                                                     </div>
@@ -333,10 +327,10 @@ export function PaginaConfiguracoes() {
                                         {!CARGOS_FIXOS.includes(role) && podeEditar && editandoRole !== role && (
                                             <button
                                                 onClick={() => handleRemoverCargo(role)}
-                                                className="p-2 text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 rounded-2xl transition-all opacity-0 group-hover:opacity-100"
+                                                className="p-1.5 text-slate-300/40 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all opacity-0 group-hover/card:opacity-100"
                                                 title="Remover cargo"
                                             >
-                                                <Trash2 size={14} />
+                                                <Trash2 size={13} />
                                             </button>
                                         )}
                                     </div>

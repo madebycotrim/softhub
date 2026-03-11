@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { Modal } from '../../compartilhado/componentes/Modal';
 import { FormularioAviso } from './FormularioAviso';
 import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
+import { EstadoVazio } from '../../compartilhado/componentes/EstadoVazio';
 // import { usarAutenticacao } from '../autenticacao/usarAutenticacao';
 
 export function MuralAvisos() {
@@ -50,10 +51,11 @@ export function MuralAvisos() {
 
             <div className="grid grid-cols-1 gap-4">
                 {avisosOrdenados.length === 0 ? (
-                    <div className="p-12 text-center text-muted-foreground border border-border bg-muted/50 rounded-2xl flex flex-col items-center justify-center min-h-[300px]">
-                        <Megaphone className="w-12 h-12 mb-4 opacity-50" />
-                        <p className="text-lg text-foreground font-medium">Nenhum aviso no momento.</p>
-                    </div>
+                    <EstadoVazio 
+                        titulo="Mural Silencioso"
+                        descricao="Nenhum comunicado importante foi publicado recentemente. Aproveite o foco!"
+                        compacto={true}
+                    />
                 ) : (
                     avisosOrdenados.map(aviso => {
                         // Lideres podem apagar os próprios

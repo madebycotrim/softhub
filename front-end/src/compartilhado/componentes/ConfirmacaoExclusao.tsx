@@ -60,7 +60,7 @@ export function ConfirmacaoExclusao({
                     className="w-full sm:flex-[2] h-12 bg-rose-600 text-white hover:bg-black rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-rose-100 disabled:opacity-50 active:scale-95 flex items-center justify-center gap-2"
                 >
                     {carregando ? (
-                        <Carregando />
+                        <Carregando Centralizar={false} tamanho="sm" className="border-t-white border-white/30" />
                     ) : (
                         textoBotao.toUpperCase()
                     )}

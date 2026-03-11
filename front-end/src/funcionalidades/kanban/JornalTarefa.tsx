@@ -4,6 +4,7 @@ import { usarComentarios } from './usarComentarios';
 import { formatarTempoAtras, formatarEventoHistorico } from '../../utilitarios/formatadores';
 import { usarPermissaoAcesso } from '../../compartilhado/hooks/usarPermissao';
 import { History, Send, Layout, UserPlus, Tag, CheckCircle2 } from 'lucide-react';
+import { Tooltip } from '../../compartilhado/componentes/Tooltip';
 import { Avatar } from '../../compartilhado/componentes/Avatar';
 import { Carregando } from '../../compartilhado/componentes/Carregando';
 import { useContext } from 'react';
@@ -67,13 +68,15 @@ export function JornalTarefa({ tarefaId }: JornalTarefaProps) {
                                 }
                             }}
                         />
-                        <button
-                            type="submit"
-                            disabled={!novoComentario.trim() || enviando}
-                            className="absolute right-2 bottom-2 p-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition-colors disabled:opacity-30 flex items-center justify-center shadow-lg"
-                        >
-                            {enviando ? <Carregando tamanho="sm" /> : <Send className="w-4 h-4" />}
-                        </button>
+                        <Tooltip texto="Enviar comentário">
+                            <button
+                                type="submit"
+                                disabled={!novoComentario.trim() || enviando}
+                                className="absolute right-2 bottom-2 p-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition-colors disabled:opacity-30 flex items-center justify-center shadow-lg"
+                            >
+                                {enviando ? <Carregando tamanho="sm" /> : <Send className="w-4 h-4" />}
+                            </button>
+                        </Tooltip>
                     </form>
                 </div>
             )}

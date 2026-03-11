@@ -17,7 +17,12 @@ export function PaginaDashboard() {
 
     if (carregando) return <Carregando />;
     if (erro) return <p className="text-red-400 text-center py-8">{erro}</p>;
-    if (!metricas) return <EstadoVazio titulo="Nenhum dado disponível" descricao="Adicione tarefas ao projeto para visualizar as métricas." />;
+    if (!metricas) return (
+        <EstadoVazio 
+            titulo="Operação Silenciosa" 
+            descricao="Ainda não temos dados suficientes para gerar as métricas de performance. Comece a movimentar tarefas no Kanban!"
+        />
+    );
 
     return (
         <div className="w-full space-y-10 pb-20 animate-in fade-in duration-500">

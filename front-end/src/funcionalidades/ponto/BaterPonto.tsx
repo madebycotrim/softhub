@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, AlertTriangle, LayoutDashboard, Database, ScrollText, History, Fingerprint } from 'lucide-react';
+import { Plus, AlertTriangle, LayoutDashboard, ScrollText, History, Fingerprint } from 'lucide-react';
 import { usarPonto } from './usarPonto';
 import { formatarDataHora } from '../../utilitarios/formatadores';
 import { usarJustificativas } from './usarJustificativa';
@@ -11,6 +11,7 @@ import { useEffect as useReactEffect } from 'react';
 import { BarraBusca } from '../../compartilhado/componentes/BarraBusca';
 import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
 import { Carregando } from '../../compartilhado/componentes/Carregando';
+import { EstadoVazio } from '../../compartilhado/componentes/EstadoVazio';
 
 /**
  * Interface de registro e visualização diária do ponto.
@@ -105,14 +106,14 @@ export function BaterPonto() {
                     <div className="flex items-center gap-2 sm:gap-3">
                         <button 
                             onClick={() => setAbaAtiva(abaAtiva === 'registro' ? 'justificativas' : 'registro')}
-                            className={`flex items-center gap-2 h-11 px-4 rounded-xl border transition-all font-bold text-xs ${
+                            className={`flex items-center justify-center w-11 h-11 rounded-2xl border transition-all ${
                                 abaAtiva === 'justificativas' 
-                                ? 'bg-primary border-primary text-primary-foreground' 
-                                : 'bg-background border-border text-muted-foreground hover:border-primary/20 hover:text-primary'
+                                ? 'bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20' 
+                                : 'bg-background border-border text-muted-foreground hover:border-primary/20 hover:text-primary hover:bg-primary/5'
                             }`}
+                            title={abaAtiva === 'registro' ? "Ver Justificativas" : "Ver Registros"}
                         >
-                            <History className="w-4 h-4" />
-                            <span className="hidden sm:inline">Histórico</span>
+                            <History size={18} strokeWidth={2.5} />
                         </button>
                         
                         <div className="flex items-center gap-2">
@@ -162,7 +163,7 @@ export function BaterPonto() {
                                         : 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
                                     }`}
                                 >
-                                    {salvando ? <Carregando /> : `EFETUAR REGISTRO: ${proximoTipo}`}
+                                {salvando ? <Carregando Centralizar={false} tamanho="sm" className="border-t-white border-white/30" /> : `EFETUAR REGISTRO: ${proximoTipo}`}
                                 </button>
                             </div>
 
@@ -237,18 +238,30 @@ export function BaterPonto() {
 
                         <div className="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-none">
                             {abaAtiva === 'registro' ? (
-                                historico.filter(r => r.tipo.toLowerCase().includes(busca.toLowerCase()) || formatarDataHora(r.registrado_em).includes(busca)).length === 0 ? (
-                                    <div className="h-full flex flex-col items-center justify-center text-center space-y-4">
-                                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center border border-dashed border-slate-200">
-                                            <Database className="w-6 h-6 text-slate-300" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-bold text-slate-400">Nenhum registro hoje</p>
-                                            <p className="text-[10px] text-slate-300 font-medium max-w-[180px] mx-auto mt-1">Seus movimentos de entrada e saída aparecerão aqui.</p>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    historico.filter(r => r.tipo.toLowerCase().includes(busca.toLowerCase()) || formatarDataHora(r.registrado_em).includes(busca)).slice(0, 5).map((reg) => (
+                                (() => {
+                                    const registrosFiltrados = historico.filter(r => 
+                                        r.tipo.toLowerCase().includes(busca.toLowerCase()) || 
+                                        formatarDataHora(r.registrado_em).includes(busca)
+                                    );
+
+                                    if (registrosFiltrados.length === 0) {
+                                        return (
+                                            <div className="py-8">
+                                                <EstadoVazio 
+                                                    tipo={busca ? 'pesquisa' : 'vazio'}
+                                                    titulo={busca ? "Nenhum registro encontrado" : "Nenhum registro hoje"}
+                                                    descricao={busca ? `Não encontramos batidas com o termo "${busca}".` : "Seus movimentos de entrada e saída aparecerão aqui."}
+                                                    compacto={true}
+                                                    acao={busca ? {
+                                                        rotulo: "Limpar busca",
+                                                        aoClicar: () => setBusca('')
+                                                    } : undefined}
+                                                />
+                                            </div>
+                                        );
+                                    }
+
+                                    return registrosFiltrados.slice(0, 5).map((reg) => (
                                         <div key={reg.id} className="flex items-center justify-between p-4 sm:p-5 bg-muted/10 border border-hidden rounded-2xl group hover:bg-card hover:border-border/50 transition-all">
                                             <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                                                 <div className={`p-2 sm:p-3 rounded-2xl shrink-0 ${reg.tipo === 'entrada' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
@@ -263,8 +276,8 @@ export function BaterPonto() {
                                                 <span className="text-[8px] sm:text-[9px] font-black text-muted-foreground/30 uppercase tracking-widest leading-none">Rede</span>
                                             </div>
                                         </div>
-                                    ))
-                                )
+                                    ));
+                                })()
                             ) : (
                                 <ListaJustificativas justificativas={justificativas.filter(j => j.motivo.toLowerCase().includes(busca.toLowerCase()) || j.tipo.toLowerCase().includes(busca.toLowerCase()))} />
                             )}

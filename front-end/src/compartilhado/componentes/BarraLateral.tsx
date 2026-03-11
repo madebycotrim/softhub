@@ -1,5 +1,6 @@
 import { FolderKanban, Clock, Users, Megaphone, LayoutDashboard, Database, Settings, LogOut, Sun, Moon, QrCode, FileText, ClipboardCheck, LayoutGrid, Bell, Trash2, CheckCircle2 } from 'lucide-react';
 import { useLocation, Link } from 'react-router';
+import { Tooltip } from './Tooltip';
 import { usarAutenticacao } from '../../funcionalidades/autenticacao/usarAutenticacao';
 import { usarTema } from '../../contexto/ContextoTema';
 import { usarPermissaoAcesso } from '../hooks/usarPermissao';
@@ -46,31 +47,25 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
             label: 'Visão Geral',
             links: [
                 { label: 'Dashboard', path: '/app/dashboard', icon: LayoutDashboard, visivel: podeVerDashboard },
-            ],
-        },
-        {
-            label: 'Projetos',
-            links: [
-                { label: 'Kanban', path: '/app/kanban', icon: FolderKanban, visivel: podeVerKanban },
+                { label: 'Avisos', path: '/app/avisos', icon: Megaphone, visivel: podeVerAvisos },
             ],
         },
         {
             label: 'Equipe',
             links: [
-                { label: 'Ponto Eletrônico', path: '/app/ponto', icon: Clock, visivel: podeVerPonto },
+                { label: 'Kanban', path: '/app/kanban', icon: FolderKanban, visivel: podeVerKanban },
                 { label: 'Diretório', path: '/app/membros', icon: Users, visivel: podeVerDiretorio },
-                { label: 'Avisos', path: '/app/avisos', icon: Megaphone, visivel: podeVerAvisos },
+                { label: 'Ponto Eletrônico', path: '/app/ponto', icon: Clock, visivel: podeVerPonto || podeVerJustificativas },
             ],
         },
         {
-            label: 'Gestão',
+            label: 'Administração',
             links: [
                 { label: 'Membros', path: '/app/admin/membros', icon: Users, visivel: podeVerMembrosAdmin },
-                { label: 'Justificativas', path: '/app/admin/justificativas', icon: ClipboardCheck, visivel: podeVerJustificativas },
                 { label: 'Equipes', path: '/app/admin/equipes', icon: LayoutGrid, visivel: podeVerEquipes },
                 { label: 'Relatórios', path: '/app/admin/relatorios', icon: FileText, visivel: podeVerRelatorios },
+                { label: 'Logs', path: '/app/admin/logs', icon: Database, visivel: podeVerLogs || podeVerMeusLogs },
                 { label: 'Configurações', path: '/app/admin/configuracoes', icon: Settings, visivel: podeVerConfiguracoes },
-                { label: podeVerLogs ? 'Painel de Logs' : 'Meus Logs', path: '/app/admin/logs', icon: Database, visivel: podeVerLogs || podeVerMeusLogs },
             ],
         },
     ];
@@ -190,16 +185,17 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
                     <span className="text-[10px] font-black text-sidebar-foreground/20 uppercase tracking-[0.22em]">
                         Login via QR
                     </span>
-                    <button
-                        onClick={() => {
-                            aoAbrirScanner?.();
-                            aoNavegar?.();
-                        }}
-                        className="p-1.5 rounded-2xl text-sidebar-foreground/30 hover:text-primary hover:bg-primary/10 transition-all duration-300"
-                        title="Conectar via QR Code"
-                    >
-                        <QrCode size={14} />
-                    </button>
+                    <Tooltip texto="Conectar via QR Code">
+                        <button
+                            onClick={() => {
+                                aoAbrirScanner?.();
+                                aoNavegar?.();
+                            }}
+                            className="p-1.5 rounded-2xl text-sidebar-foreground/30 hover:text-primary hover:bg-primary/10 transition-all duration-300"
+                        >
+                            <QrCode size={14} />
+                        </button>
+                    </Tooltip>
                 </div>
 
                 {/* Notificações */}
@@ -207,18 +203,19 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
                     <span className="text-[10px] font-black text-sidebar-foreground/20 uppercase tracking-[0.22em]">
                         Notificações
                     </span>
-                    <button
-                        onClick={() => setModalNotificacoes(true)}
-                        className="relative p-1.5 rounded-2xl text-sidebar-foreground/30 hover:text-primary hover:bg-primary/10 transition-all duration-300 group/notif"
-                        title="Ver notificações"
-                    >
-                        <Bell size={14} className={totalNaoLidas > 0 ? "animate-pulse text-primary" : ""} />
-                        {totalNaoLidas > 0 && (
-                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-[9px] font-black text-white rounded-full flex items-center justify-center ring-2 ring-sidebar shadow-lg shadow-primary/20">
-                                {totalNaoLidas > 9 ? '9+' : totalNaoLidas}
-                            </span>
-                        )}
-                    </button>
+                    <Tooltip texto="Ver notificações">
+                        <button
+                            onClick={() => setModalNotificacoes(true)}
+                            className="relative p-1.5 rounded-2xl text-sidebar-foreground/30 hover:text-primary hover:bg-primary/10 transition-all duration-300 group/notif"
+                        >
+                            <Bell size={14} className={totalNaoLidas > 0 ? "animate-pulse text-primary" : ""} />
+                            {totalNaoLidas > 0 && (
+                                <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-[9px] font-black text-white rounded-full flex items-center justify-center ring-2 ring-sidebar shadow-lg shadow-primary/20">
+                                    {totalNaoLidas > 9 ? '9+' : totalNaoLidas}
+                                </span>
+                            )}
+                        </button>
+                    </Tooltip>
                 </div>
 
                 {/* Alternar Tema */}
@@ -226,20 +223,21 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
                     <span className="text-[10px] font-black text-sidebar-foreground/20 uppercase tracking-[0.22em]">
                         Tema
                     </span>
-                    <button
-                        onClick={() => {
-                            setTema(tema === 'dark' ? 'light' : 'dark');
-                            aoNavegar?.();
-                        }}
-                        className="p-1.5 rounded-2xl text-sidebar-foreground/30 hover:text-primary hover:bg-primary/10 transition-all duration-300 group/theme"
-                        title={tema === 'dark' ? "Mudar para modo claro" : "Mudar para modo escuro"}
-                    >
-                        {tema === 'dark' ? (
-                            <Sun size={14} className="group-hover/theme:rotate-90 transition-transform duration-500" />
-                        ) : (
-                            <Moon size={14} className="group-hover/theme:-rotate-12 transition-transform duration-500" />
-                        )}
-                    </button>
+                    <Tooltip texto={tema === 'dark' ? "Modo Claro" : "Modo Escuro"}>
+                        <button
+                            onClick={() => {
+                                setTema(tema === 'dark' ? 'light' : 'dark');
+                                aoNavegar?.();
+                            }}
+                            className="p-1.5 rounded-2xl text-sidebar-foreground/30 hover:text-primary hover:bg-primary/10 transition-all duration-300 group/theme"
+                        >
+                            {tema === 'dark' ? (
+                                <Sun size={14} className="group-hover/theme:rotate-90 transition-transform duration-500" />
+                            ) : (
+                                <Moon size={14} className="group-hover/theme:-rotate-12 transition-transform duration-500" />
+                            )}
+                        </button>
+                    </Tooltip>
                 </div>
 
                 {usuario && (
@@ -267,16 +265,17 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
                             </div>
 
                             {/* Sair */}
-                            <button
-                                onClick={() => {
-                                    sair();
-                                    aoNavegar?.();
-                                }}
-                                title="Sair"
-                                className="shrink-0 p-1.5 rounded-2xl text-sidebar-foreground/20 hover:text-red-400 hover:bg-red-400/10 transition-all duration-200 group/logout"
-                            >
-                                <LogOut size={14} className="transition-transform duration-200 group-hover/logout:translate-x-0.5" />
-                            </button>
+                            <Tooltip texto="Sair">
+                                <button
+                                    onClick={() => {
+                                        sair();
+                                        aoNavegar?.();
+                                    }}
+                                    className="shrink-0 p-1.5 rounded-2xl text-sidebar-foreground/20 hover:text-red-400 hover:bg-red-400/10 transition-all duration-200 group/logout"
+                                >
+                                    <LogOut size={14} className="transition-transform duration-200 group-hover/logout:translate-x-0.5" />
+                                </button>
+                            </Tooltip>
 
                         </div>
                     </>
@@ -296,7 +295,7 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
                             {totalNaoLidas} Pendentes
                         </p>
                         {totalNaoLidas > 0 && (
-                            <button 
+                            <button
                                 onClick={limparTodas}
                                 className="flex items-center gap-1.5 text-[10px] font-bold text-primary hover:text-primary/80 transition-colors uppercase tracking-widest"
                             >
@@ -308,16 +307,16 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
 
                     <div className="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar space-y-2">
                         {notificacoes.map((n) => (
-                            <div 
-                                key={n.id} 
+                            <div
+                                key={n.id}
                                 className="group relative bg-card border border-border/50 p-4 rounded-2xl hover:border-primary/30 transition-all hover:shadow-sm"
                             >
                                 <div className="flex items-start justify-between gap-4">
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 mb-1">
-                                            <Emblema 
-                                                texto={n.tipo} 
-                                                variante={n.tipo === 'ponto' ? 'amarelo' : n.tipo === 'tarefa' ? 'azul' : 'roxo'} 
+                                            <Emblema
+                                                texto={n.tipo}
+                                                variante={n.tipo === 'ponto' ? 'amarelo' : n.tipo === 'tarefa' ? 'azul' : 'roxo'}
                                             />
                                             <span className="text-[10px] text-muted-foreground/40 font-medium">
                                                 {formatarTempoAtras(n.criado_em)}
@@ -326,7 +325,7 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
                                         <h4 className="text-[13px] font-bold text-foreground leading-tight mb-1">{n.titulo}</h4>
                                         <p className="text-[12px] text-muted-foreground/70 leading-relaxed">{n.mensagem}</p>
                                     </div>
-                                    <button 
+                                    <button
                                         onClick={() => marcarComoLida(n.id)}
                                         className="shrink-0 p-1.5 rounded-2xl text-muted-foreground/20 hover:text-primary hover:bg-primary/5 transition-all opacity-0 group-hover:opacity-100"
                                         title="Marcar como lida"
@@ -335,8 +334,8 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
                                     </button>
                                 </div>
                                 {n.link_acao && (
-                                    <Link 
-                                        to={n.link_acao} 
+                                    <Link
+                                        to={n.link_acao}
                                         onClick={() => { marcarComoLida(n.id); setModalNotificacoes(false); }}
                                         className="inline-flex mt-3 text-[10px] font-black text-primary uppercase tracking-[0.1em] hover:underline"
                                     >

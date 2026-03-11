@@ -101,7 +101,7 @@ export function DiretorioMembros() {
 
     if (carregando) return <Carregando />;
     if (erro) return <p className="text-destructive text-center py-8">{erro}</p>;
-    if (membros.length === 0) return <EstadoVazio titulo="Nenhum membro encontrado." />;
+    if (membros.length === 0) return <EstadoVazio titulo="Nenhum membro registrado" descricao="O sistema ainda não possui membros ativos ou inativos." iconeCustom={<Users className="w-10 h-10 text-slate-300" />} />;
 
     return (
         <div className="w-full space-y-10 pb-20 animate-in fade-in duration-500">
@@ -121,8 +121,13 @@ export function DiretorioMembros() {
 
             {gruposHierarquia.length === 0 ? (
                 <EstadoVazio
-                    titulo="Nenhum resultado"
-                    descricao={membros.filter(m => m.ativo).length === 0 ? "Nenhum membro ativo no sistema." : `Nenhum membro encontrado com o termo "${busca}".`}
+                    tipo="pesquisa"
+                    titulo="Membro não encontrado"
+                    descricao={`Não encontramos nenhum membro ativo com o termo "${busca}".`}
+                    acao={{
+                        rotulo: "Limpar busca",
+                        aoClicar: () => setBusca('')
+                    }}
                 />
             ) : (
                 <div className="space-y-12">
