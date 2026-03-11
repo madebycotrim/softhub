@@ -21,7 +21,7 @@ rotasAuthQr.post('/qr/gerar', async (c) => {
     const { SESSOES_QR } = c.env;
     const sessaoId = crypto.randomUUID();
     const agora = new Date();
-    const expiraEm = new Date(agora.getTime() + 1000 * 30).toISOString(); // 30 segundos informativo
+    const expiraEm = new Date(agora.getTime() + 1000 * 60).toISOString(); // 60 segundos (mínimo KV)
 
     const dados: SessaoQrKV = {
         status: 'pendente',
@@ -31,8 +31,8 @@ rotasAuthQr.post('/qr/gerar', async (c) => {
     };
 
     try {
-        // Salva no KV com TTL de 30 segundos
-        await SESSOES_QR.put(sessaoId, JSON.stringify(dados), { expirationTtl: 30 });
+        // Salva no KV com TTL de 60 segundos (mínimo exigido pelo Cloudflare KV)
+        await SESSOES_QR.put(sessaoId, JSON.stringify(dados), { expirationTtl: 60 });
         return c.json({ sessaoId, expiraEm });
     } catch (err: any) {
         console.error('[QR-KV] Erro ao gerar sessão:', err);
@@ -75,7 +75,7 @@ rotasAuthQr.get('/qr/verificar/:id', async (c) => {
 
             // Consome a sessão no KV para não permitir reuso
             sessao.status = 'consumido';
-            await SESSOES_QR.put(id, JSON.stringify(sessao), { expirationTtl: 30 });
+            await SESSOES_QR.put(id, JSON.stringify(sessao), { expirationTtl: 60 });
 
             return c.json({
                 status: 'autorizado',
@@ -110,7 +110,7 @@ rotasAuthQr.post('/qr/identificar', autenticacaoRequerida(), async (c) => {
         sessao.status = 'identificado';
         sessao.usuario_id = usuario.id;
         
-        await SESSOES_QR.put(sessaoId, JSON.stringify(sessao), { expirationTtl: 30 });
+        await SESSOES_QR.put(sessaoId, JSON.stringify(sessao), { expirationTtl: 60 });
 
         return c.json({ sucesso: true });
     } catch (err: any) {
@@ -160,7 +160,7 @@ rotasAuthQr.post('/qr/autorizar', autenticacaoRequerida(), async (c) => {
         sessao.usuario_id = usuario.id;
         sessao.token_acesso = tokenDesktop;
 
-        await SESSOES_QR.put(sessaoId, JSON.stringify(sessao), { expirationTtl: 30 });
+        await SESSOES_QR.put(sessaoId, JSON.stringify(sessao), { expirationTtl: 60 });
 
         await registrarLog(DB, {
             usuarioId: usuario.id,

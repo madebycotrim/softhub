@@ -34,15 +34,23 @@ export type Env = {
 const app = new Hono<{ Bindings: Env }>();
 
 // Limite Global Tolerante: 60 acessos a cada 1 minuto por IP.
-const limiteGlobal = rateLimiter({
-    windowMs: 60 * 1000, 
-    limit: 60, 
-    standardHeaders: "draft-6",
-    keyGenerator: (c) => c.req.header("cf-connecting-ip") ?? "",
-    message: { erro: "Muitas requisições. O sistema identificou spam." }
-});
+// Inicialização lazy para evitar operações assíncronas no escopo global
+// (Cloudflare Workers proíbe setTimeout/crypto fora de handlers)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _limiteGlobal: any = null;
 
-app.use("*", limiteGlobal); 
+app.use("*", (c, next) => {
+    if (!_limiteGlobal) {
+        _limiteGlobal = rateLimiter({
+            windowMs: 60 * 1000, 
+            limit: 60, 
+            standardHeaders: "draft-6",
+            keyGenerator: (c) => c.req.header("cf-connecting-ip") ?? "",
+            message: { erro: "Muitas requisições. O sistema identificou spam." }
+        });
+    }
+    return _limiteGlobal(c, next);
+});
 
 // ─── Modo de Manutenção (WF 21) ────────────────────────────────────────────────
 app.use('*', async (c, next) => {
