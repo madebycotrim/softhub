@@ -74,9 +74,6 @@ rotasTarefasDetalhes.post('/:id/comentarios', autenticacaoRequerida(), verificar
         // Comentário em Tarefa registrada com sucesso
         await registrarLog(DB, {
             usuarioId: usuario.id,
-            usuarioNome: usuario.nome,
-            usuarioEmail: usuario.email,
-            usuarioRole: usuario.role,
             acao: 'TAREFA_COMENTADA',
             modulo: 'kanban',
             descricao: `Novo comentário na tarefa "${tarefaData.titulo}"`,

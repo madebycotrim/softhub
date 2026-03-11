@@ -6,57 +6,52 @@ import { autenticacaoRequerida } from '../middleware/auth';
 
 const rotasAuthQr = new Hono<{ Bindings: Env }>();
 
-// ── QR Code: Gerar Sessão ─────────────────────────────────────────────────────
+// Interface para os dados no KV
+interface SessaoQrKV {
+    status: 'pendente' | 'identificado' | 'autorizado' | 'consumido' | 'expirado';
+    usuario_id?: string;
+    token_acesso?: string;
+    ip_origem: string;
+    user_agent: string;
+    criado_em: string;
+}
+
+// ── QR Code: Gerar Sessão (KV) ─────────────────────────────────────────────────────
 rotasAuthQr.post('/qr/gerar', async (c) => {
-    const { DB } = c.env;
+    const { SESSOES_QR } = c.env;
     const sessaoId = crypto.randomUUID();
-    const expiraEm = new Date(Date.now() + 1000 * 30).toISOString(); // 30 segundos
+    const agora = new Date();
+    const expiraEm = new Date(agora.getTime() + 1000 * 30).toISOString(); // 30 segundos informativo
+
+    const dados: SessaoQrKV = {
+        status: 'pendente',
+        ip_origem: c.req.header('CF-Connecting-IP') ?? 'desconhecido',
+        user_agent: c.req.header('User-Agent') ?? 'desconhecido',
+        criado_em: agora.toISOString()
+    };
 
     try {
-        await DB.prepare(
-            'INSERT INTO sessoes_qr (id, status, expira_em, ip_origem, user_agent) VALUES (?, ?, ?, ?, ?)'
-        )
-            .bind(
-                sessaoId,
-                'pendente',
-                expiraEm,
-                c.req.header('CF-Connecting-IP') ?? 'desconhecido',
-                c.req.header('User-Agent') ?? 'desconhecido'
-            )
-            .run();
-
+        // Salva no KV com TTL de 30 segundos
+        await SESSOES_QR.put(sessaoId, JSON.stringify(dados), { expirationTtl: 30 });
         return c.json({ sessaoId, expiraEm });
     } catch (err: any) {
-        console.error('[QR] Erro ao gerar sessão:', err);
+        console.error('[QR-KV] Erro ao gerar sessão:', err);
         return c.json({ erro: 'Erro ao gerar sessão de login.' }, 500);
     }
 });
 
-// ── QR Code: Verificar Status ─────────────────────────────────────────────────
+// ── QR Code: Verificar Status (KV + D1 para dados do usuário) ─────────────────────────────────────────────────
 rotasAuthQr.get('/qr/verificar/:id', async (c) => {
-    const { DB } = c.env;
+    const { SESSOES_QR, DB } = c.env;
     const id = c.req.param('id');
 
     try {
-        const resSessao = await DB.prepare(
-            'SELECT * FROM sessoes_qr WHERE id = ?'
-        )
-            .bind(id)
-            .first();
-        const sessao = resSessao as any;
-
-        if (!sessao) {
-            return c.json({ erro: 'Sessão não encontrada.' }, 404);
-        }
-
-        // Verifica expiração
-        const agora = new Date().toISOString();
-        if (sessao.status === 'pendente' && sessao.expira_em < agora) {
-            await DB.prepare('UPDATE sessoes_qr SET status = ? WHERE id = ?')
-                .bind('expirado', id)
-                .run();
+        const resSessao = await SESSOES_QR.get(id);
+        if (!resSessao) {
             return c.json({ status: 'expirado' });
         }
+
+        const sessao = JSON.parse(resSessao) as SessaoQrKV;
 
         if (sessao.status === 'identificado' && sessao.usuario_id) {
             const usuario = await DB.prepare(
@@ -78,10 +73,9 @@ rotasAuthQr.get('/qr/verificar/:id', async (c) => {
                 .bind(sessao.usuario_id)
                 .first();
 
-            // Consome a sessão para não permitir reuso do mesmo token via poll
-            await DB.prepare('UPDATE sessoes_qr SET status = ? WHERE id = ?')
-                .bind('consumido', id)
-                .run();
+            // Consome a sessão no KV para não permitir reuso
+            sessao.status = 'consumido';
+            await SESSOES_QR.put(id, JSON.stringify(sessao), { expirationTtl: 30 });
 
             return c.json({
                 status: 'autorizado',
@@ -92,34 +86,31 @@ rotasAuthQr.get('/qr/verificar/:id', async (c) => {
 
         return c.json({ status: sessao.status });
     } catch (err: any) {
-        console.error('[QR] Erro ao verificar status:', err);
+        console.error('[QR-KV] Erro ao verificar status:', err);
         return c.json({ erro: 'Erro ao verificar status da sessão.' }, 500);
     }
 });
 
-// ── QR Code: Identificar (Chamado ao ESCANEAR) ───────────────────────────────
+// ── QR Code: Identificar (KV) ───────────────────────────────
 rotasAuthQr.post('/qr/identificar', autenticacaoRequerida(), async (c) => {
-    const { DB } = c.env;
+    const { SESSOES_QR } = c.env;
     const usuario = c.get('usuario' as any) as any;
 
     try {
         const { sessaoId } = await c.req.json();
         if (!sessaoId) return c.json({ erro: 'ID da sessão ausente.' }, 400);
 
-        const resSessao = await DB.prepare('SELECT status FROM sessoes_qr WHERE id = ?')
-            .bind(sessaoId)
-            .first();
-        const sessao = resSessao as any;
+        const resSessao = await SESSOES_QR.get(sessaoId);
+        if (!resSessao) return c.json({ erro: 'Sessão expirada ou não encontrada.' }, 404);
 
-        if (!sessao) return c.json({ erro: 'Sessão não encontrada.' }, 404);
+        const sessao = JSON.parse(resSessao) as SessaoQrKV;
         if (sessao.status !== 'pendente') return c.json({ erro: 'Sessão não está mais disponível.' }, 400);
 
-        // Apenas marca como identificado e vincula o usuário para o polling mostrar no desktop
-        await DB.prepare(
-            'UPDATE sessoes_qr SET status = ?, usuario_id = ? WHERE id = ?'
-        )
-            .bind('identificado', usuario.id, sessaoId)
-            .run();
+        // Atualiza para identificado
+        sessao.status = 'identificado';
+        sessao.usuario_id = usuario.id;
+        
+        await SESSOES_QR.put(sessaoId, JSON.stringify(sessao), { expirationTtl: 30 });
 
         return c.json({ sucesso: true });
     } catch (err: any) {
@@ -127,42 +118,32 @@ rotasAuthQr.post('/qr/identificar', autenticacaoRequerida(), async (c) => {
     }
 });
 
-// ── QR Code: Autorizar (Chamado ao CONFIRMAR) ────────────────────────────────
+// ── QR Code: Autorizar (KV + D1 para versão do token) ────────────────────────────────
 rotasAuthQr.post('/qr/autorizar', autenticacaoRequerida(), async (c) => {
-    const { DB, JWT_SECRET } = c.env;
+    const { SESSOES_QR, DB, JWT_SECRET } = c.env;
     const usuario = c.get('usuario' as any) as any;
 
     try {
         const { sessaoId } = await c.req.json();
         if (!sessaoId) return c.json({ erro: 'ID da sessão ausente.' }, 400);
 
-        const resSessao = await DB.prepare('SELECT status, expira_em FROM sessoes_qr WHERE id = ?')
-            .bind(sessaoId)
-            .first();
-        const sessao = resSessao as any;
+        const resSessao = await SESSOES_QR.get(sessaoId);
+        if (!resSessao) return c.json({ erro: 'Sessão expirada ou não encontrada.' }, 404);
 
-        if (!sessao) return c.json({ erro: 'Sessão não encontrada.' }, 404);
+        const sessao = JSON.parse(resSessao) as SessaoQrKV;
         
-        // Pode autorizar se estiver pendente OU já identificado
         if (sessao.status !== 'pendente' && sessao.status !== 'identificado') {
             return c.json({ erro: 'Sessão inválida.' }, 400);
         }
 
-        const agora = new Date().toISOString();
-        if (sessao.expira_em < agora) {
-            await DB.prepare('UPDATE sessoes_qr SET status = ? WHERE id = ?').bind('expirado', sessaoId).run();
-            return c.json({ erro: 'Sessão expirada.' }, 400);
-        }
-
-        // Incrementa a versão do token para desconectar outras sessões (Regra: Nova conexão desconecta anterior)
+        // Incrementa a versão do token no D1
         const resVersaoRaw = await DB.prepare(
             'UPDATE usuarios SET versao_token = versao_token + 1 WHERE id = ? RETURNING versao_token'
         ).bind(usuario.id).first();
         const resVersao = resVersaoRaw as any;
-        
         const novaVersao = resVersao?.versao_token || 1;
 
-        // Gera novo token para o desktop com a NOVA versão
+        // Gera novo token
         const tokenDesktop = await sign(
             {
                 id: usuario.id,
@@ -174,16 +155,15 @@ rotasAuthQr.post('/qr/autorizar', autenticacaoRequerida(), async (c) => {
             JWT_SECRET,
         );
 
-        await DB.prepare(
-            'UPDATE sessoes_qr SET status = ?, usuario_id = ?, token_acesso = ? WHERE id = ?'
-        )
-            .bind('autorizado', usuario.id, tokenDesktop, sessaoId)
-            .run();
+        // Atualiza KV para autorizado
+        sessao.status = 'autorizado';
+        sessao.usuario_id = usuario.id;
+        sessao.token_acesso = tokenDesktop;
+
+        await SESSOES_QR.put(sessaoId, JSON.stringify(sessao), { expirationTtl: 30 });
 
         await registrarLog(DB, {
             usuarioId: usuario.id,
-            usuarioNome: usuario.nome,
-            usuarioEmail: usuario.email,
             acao: 'LOGIN_QR_AUTORIZADO',
             modulo: 'auth',
             descricao: `Login via QR Code autorizado pelo celular para o ID: ${sessaoId}`,
@@ -192,7 +172,7 @@ rotasAuthQr.post('/qr/autorizar', autenticacaoRequerida(), async (c) => {
 
         return c.json({ sucesso: true });
     } catch (err: any) {
-        console.error('[QR] Erro ao autenticar:', err);
+        console.error('[QR-KV] Erro ao autenticar:', err);
         return c.json({ erro: 'Erro ao processar autenticação QR.' }, 500);
     }
 });

@@ -6,9 +6,6 @@ import { D1Database } from '@cloudflare/workers-types';
  */
 export interface LogAuditoria {
     usuarioId?: string;
-    usuarioNome?: string;
-    usuarioEmail?: string;
-    usuarioRole?: string;
     acao: string;
     modulo: string;
     descricao: string;
@@ -32,16 +29,13 @@ export async function registrarLog(db: D1Database, dados: LogAuditoria) {
     try {
         await db.prepare(`
             INSERT INTO logs (
-                id, usuario_id, usuario_nome, usuario_email, usuario_role,
+                id, usuario_id,
                 acao, modulo, descricao, ip, entidade_tipo, entidade_id,
                 dados_anteriores, dados_novos, criado_em
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `).bind(
             crypto.randomUUID(),
             dados.usuarioId || null,
-            dados.usuarioNome || null,
-            dados.usuarioEmail || null,
-            dados.usuarioRole || null,
             dados.acao,
             dados.modulo,
             dados.descricao,

@@ -96,9 +96,6 @@ rotasConfiguracoes.patch('/:chave', autenticacaoRequerida(), verificarPermissao(
         const usuario = c.get('usuario');
         await registrarLog(DB, {
             usuarioId: usuario.id,
-            usuarioNome: usuario.nome,
-            usuarioEmail: usuario.email,
-            usuarioRole: usuario.role,
             acao: 'ATUALIZAR_CONFIG',
             modulo: 'ADMIN',
             descricao: `Configuração "${chave}" atualizada.`,
@@ -168,9 +165,6 @@ rotasConfiguracoes.patch('/roles/:antigo/renomear', autenticacaoRequerida(), ver
         const usuario = c.get('usuario');
         await registrarLog(DB, {
             usuarioId: usuario.id,
-            usuarioNome: usuario.nome,
-            usuarioEmail: usuario.email,
-            usuarioRole: usuario.role,
             acao: 'CARGO_RENOMEADO',
             modulo: 'ADMIN',
             descricao: `Cargo "${antigo}" renomeado para "${novoFormatado}".`,

@@ -21,9 +21,6 @@ export const validarRedeLocal = async (c: Context, next: Next) => {
         if (db) {
             await registrarLog(db, {
                 usuarioId: usuario?.id,
-                usuarioNome: usuario?.nome,
-                usuarioEmail: usuario?.email,
-                usuarioRole: usuario?.role,
                 acao: 'PONTO_FORA_DA_REDE',
                 modulo: 'ponto',
                 descricao: `Tentativa de ponto bloqueada via ${ipClient}`,

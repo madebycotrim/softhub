@@ -9,8 +9,12 @@ DOMINIO_INSTITUCIONAL = "unieuro.com.br"
 BOOTSTRAP_ADMIN_EMAIL = "mateus099803@unieuro.com.br"
 JWT_SECRET = "softhub-secret-padrao-trocar-em-producao"
 
-# Database binding para Cloudflare D1
+
 [[d1_databases]]
 binding = 'DB'
 database_name = 'softhub_db'
 database_id = 'e61486a2-7323-49d8-9e4a-a0543892b1da'
+
+[[kv_namespaces]]
+binding = "SESSOES_QR"
+id = "4e8bff2b06d644b79749e9127e35f963"

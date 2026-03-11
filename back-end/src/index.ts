@@ -25,6 +25,7 @@ export type Env = {
     MSAL_CLIENT_ID: string;
     DOMINIO_INSTITUCIONAL: string;
     BOOTSTRAP_ADMIN_EMAIL: string;
+    SESSOES_QR: KVNamespace;
 };
 
 const app = new Hono<{ Bindings: Env }>();

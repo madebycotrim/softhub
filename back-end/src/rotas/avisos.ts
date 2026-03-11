@@ -88,9 +88,6 @@ rotasAvisos.post('/', autenticacaoRequerida(), verificarPermissao('avisos:criar'
 
         await registrarLog(DB, {
             usuarioId: usuario.id,
-            usuarioNome: usuario.nome,
-            usuarioEmail: usuario.email,
-            usuarioRole: usuario.role,
             acao: 'AVISO_CRIADO',
             modulo: 'avisos',
             descricao: `Aviso "${titulo}" criado para todos os membros`,

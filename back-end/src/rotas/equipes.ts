@@ -61,9 +61,6 @@ rotasEquipes.post('/grupos', autenticacaoRequerida(), verificarPermissao('equipe
 
         await registrarLog(DB, {
             usuarioId: usuarioLogado.id,
-            usuarioNome: usuarioLogado.nome,
-            usuarioEmail: usuarioLogado.email,
-            usuarioRole: usuarioLogado.role,
             acao: 'GRUPO_CRIADO',
             modulo: 'equipes',
             descricao: `Grupo "${nome}" criado`,
@@ -110,9 +107,6 @@ rotasEquipes.patch('/grupos/:id', autenticacaoRequerida(), verificarPermissao('e
 
         await registrarLog(DB, {
             usuarioId: usuarioLogado.id,
-            usuarioNome: usuarioLogado.nome,
-            usuarioEmail: usuarioLogado.email,
-            usuarioRole: usuarioLogado.role,
             acao: 'GRUPO_EDITADO',
             modulo: 'equipes',
             descricao: `Grupo "${nome}" atualizado`,
@@ -143,9 +137,6 @@ rotasEquipes.delete('/grupos/:id', autenticacaoRequerida(), verificarPermissao('
 
         await registrarLog(DB, {
             usuarioId: usuarioLogado.id,
-            usuarioNome: usuarioLogado.nome,
-            usuarioEmail: usuarioLogado.email,
-            usuarioRole: usuarioLogado.role,
             acao: 'GRUPO_DESATIVADO',
             modulo: 'equipes',
             descricao: `Grupo ${id} desativado (soft delete)`,
@@ -214,9 +205,6 @@ rotasEquipes.post('/equipes', autenticacaoRequerida(), verificarPermissao('equip
 
         await registrarLog(DB, {
             usuarioId: usuarioLogado.id,
-            usuarioNome: usuarioLogado.nome,
-            usuarioEmail: usuarioLogado.email,
-            usuarioRole: usuarioLogado.role,
             acao: 'EQUIPE_CRIADA',
             modulo: 'equipes',
             descricao: `Equipe "${nome}" criada`,
@@ -284,9 +272,6 @@ rotasEquipes.patch('/equipes/:id', autenticacaoRequerida(), verificarPermissao('
 
         await registrarLog(DB, {
             usuarioId: usuarioLogado.id,
-            usuarioNome: usuarioLogado.nome,
-            usuarioEmail: usuarioLogado.email,
-            usuarioRole: usuarioLogado.role,
             acao: 'EQUIPE_EDITADA',
             modulo: 'equipes',
             descricao: `Equipe "${nome}" atualizada`,
@@ -320,9 +305,6 @@ rotasEquipes.delete('/equipes/:id', autenticacaoRequerida(), verificarPermissao(
 
         await registrarLog(DB, {
             usuarioId: usuarioLogado.id,
-            usuarioNome: usuarioLogado.nome,
-            usuarioEmail: usuarioLogado.email,
-            usuarioRole: usuarioLogado.role,
             acao: 'EQUIPE_DESATIVADA',
             modulo: 'equipes',
             descricao: `Equipe ${id} desativada (soft delete)`,
@@ -366,10 +348,6 @@ rotasEquipes.patch('/membros/:id/alocar', autenticacaoRequerida(), verificarPerm
                 VALUES (?, ?, ?, ?)
             `).bind(crypto.randomUUID(), membroId, equipe_id, grupo_id).run();
 
-            // 3. Sincroniza tabela usuarios (Regra 13)
-            await DB.prepare('UPDATE usuarios SET equipe_id = ?, grupo_id = ? WHERE id = ?')
-                .bind(equipe_id, grupo_id, membroId).run();
-
             const info = await DB.prepare('SELECT e.nome as e_nome, g.nome as g_nome FROM equipes e, grupos g WHERE e.id = ? AND g.id = ?')
                 .bind(equipe_id, grupo_id).first() as any;
             
@@ -390,21 +368,14 @@ rotasEquipes.patch('/membros/:id/alocar', autenticacaoRequerida(), verificarPerm
                 .bind(membroId, equipe_id)
                 .run();
             
-            // Limpa se era a equipe atual
-            await DB.prepare('UPDATE usuarios SET equipe_id = NULL, grupo_id = NULL WHERE id = ? AND equipe_id = ?')
-                .bind(membroId, equipe_id).run();
-            
             desc = `Membro removido da equipe ${equipe_id}`;
         }
 
         // Buscar estado atual da alocação
-        const atual = await DB.prepare('SELECT equipe_id, grupo_id FROM usuarios WHERE id = ?').bind(membroId).first() as any;
+        const atual = await DB.prepare('SELECT (SELECT GROUP_CONCAT(equipe_id) FROM usuarios_organizacao WHERE usuario_id = u.id) as equipe_id, (SELECT GROUP_CONCAT(grupo_id) FROM usuarios_organizacao WHERE usuario_id = u.id) as grupo_id FROM usuarios u WHERE u.id = ?').bind(membroId).first() as any;
 
         await registrarLog(DB, {
             usuarioId: usuarioLogado.id,
-            usuarioNome: usuarioLogado.nome,
-            usuarioEmail: usuarioLogado.email,
-            usuarioRole: usuarioLogado.role,
             acao,
             modulo: 'equipes',
             descricao: desc || `Alteração organizacional para ${membroId}`,
@@ -451,10 +422,6 @@ rotasEquipes.patch('/membros/:id/mover', autenticacaoRequerida(), verificarPermi
             VALUES (?, ?, ?, ?)
         `).bind(crypto.randomUUID(), membroId, equipe_id, grupo_id).run();
 
-        // 3. Sincroniza usuarios (Blindagem)
-        await DB.prepare('UPDATE usuarios SET grupo_id = ? WHERE id = ? AND equipe_id = ?')
-            .bind(grupo_id, membroId, equipe_id).run();
-
         // 4. Notifica
         const info = await DB.prepare('SELECT nome FROM grupos WHERE id = ?').bind(grupo_id).first() as any;
         await criarNotificacoes(DB, {
@@ -466,13 +433,10 @@ rotasEquipes.patch('/membros/:id/mover', autenticacaoRequerida(), verificarPermi
         });
 
         // Buscar estado atual antes de mover
-        const atual = await DB.prepare('SELECT equipe_id, grupo_id FROM usuarios WHERE id = ?').bind(membroId).first() as any;
+        const atual = await DB.prepare('SELECT (SELECT GROUP_CONCAT(equipe_id) FROM usuarios_organizacao WHERE usuario_id = u.id) as equipe_id, (SELECT GROUP_CONCAT(grupo_id) FROM usuarios_organizacao WHERE usuario_id = u.id) as grupo_id FROM usuarios u WHERE u.id = ?').bind(membroId).first() as any;
 
         await registrarLog(DB, {
             usuarioId: usuarioLogado.id,
-            usuarioNome: usuarioLogado.nome,
-            usuarioEmail: usuarioLogado.email,
-            usuarioRole: usuarioLogado.role,
             acao: 'MEMBRO_MOVIMENTADO',
             modulo: 'equipes',
             descricao: `Membro ${membroId} movido do grupo ${origem_grupo_id} para ${grupo_id}`,

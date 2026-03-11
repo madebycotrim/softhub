@@ -51,9 +51,6 @@ rotasPonto.post('/', autenticacaoRequerida(), verificarPermissao('ponto:registra
 
         await registrarLog(DB, {
             usuarioId: usuario.id,
-            usuarioNome: usuario.nome,
-            usuarioEmail: usuario.email,
-            usuarioRole: usuario.role,
             acao: tipo === 'entrada' ? 'PONTO_ENTRADA' : 'PONTO_SAIDA',
             modulo: 'ponto',
             descricao: `Batida de ${tipo} registrada IP: ${ipOrigem}`,

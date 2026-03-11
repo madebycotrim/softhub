@@ -149,8 +149,6 @@ rotasAuth.post('/msal', async (c) => {
 
         await registrarLog(DB, {
             usuarioId: usuario.id,
-            usuarioNome: usuario.nome,
-            usuarioEmail: usuario.email,
             acao: isNew ? 'CADASTRO_MSAL' : 'LOGIN_MSAL',
             modulo: 'auth',
             descricao: `Login realizado via Microsoft: ${email}`,

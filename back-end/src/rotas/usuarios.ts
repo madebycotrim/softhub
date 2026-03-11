@@ -88,9 +88,6 @@ rotasUsuarios.patch('/perfil', autenticacaoRequerida(), zValidator('json', Perfi
 
         await registrarLog(DB, {
             usuarioId: usuario.id,
-            usuarioNome: usuario.nome,
-            usuarioEmail: usuario.email,
-            usuarioRole: usuario.role,
             acao: 'PERFIL_ATUALIZADO',
             modulo: 'membros',
             descricao: 'Usuário atualizou o próprio perfil (bio/foto)',
@@ -137,9 +134,6 @@ rotasUsuarios.patch('/:id/role', autenticacaoRequerida(), verificarPermissao('me
 
         await registrarLog(DB, {
             usuarioId: usuarioLogado.id,
-            usuarioNome: usuarioLogado.nome,
-            usuarioEmail: usuarioLogado.email,
-            usuarioRole: usuarioLogado.role,
             acao: 'MEMBRO_ROLE_ALTERADA',
             modulo: 'admin',
             descricao: `Role do membro ${id} alterada de ${atual.role} para ${role}`,
@@ -192,9 +186,6 @@ rotasUsuarios.patch('/:id/status', autenticacaoRequerida(), verificarPermissao('
 
         await registrarLog(DB, {
             usuarioId: usuarioLogado.id,
-            usuarioNome: usuarioLogado.nome,
-            usuarioEmail: usuarioLogado.email,
-            usuarioRole: usuarioLogado.role,
             acao: ativo ? 'MEMBRO_ATIVADO' : 'MEMBRO_DESATIVADO',
             modulo: 'admin',
             descricao: `Membro ${id} marcado como ${ativo ? 'ATIVO' : 'INATIVO'} (era ${atual.ativo ? 'ATIVO' : 'INATIVO'})`,
@@ -227,9 +218,6 @@ rotasUsuarios.patch('/:id/limpar', autenticacaoRequerida(), verificarPermissao('
 
         await registrarLog(DB, {
             usuarioId: usuarioLogado.id,
-            usuarioNome: usuarioLogado.nome,
-            usuarioEmail: usuarioLogado.email,
-            usuarioRole: usuarioLogado.role,
             acao: 'MEMBRO_OCULTADO_DEFINITIVO',
             modulo: 'admin',
             descricao: `Membro ${id} foi removido permanentemente da interface (limpeza)`,
@@ -258,9 +246,6 @@ rotasUsuarios.post('/limpeza-geral', autenticacaoRequerida(), verificarPermissao
 
         await registrarLog(DB, {
             usuarioId: usuarioLogado.id,
-            usuarioNome: usuarioLogado.nome,
-            usuarioEmail: usuarioLogado.email,
-            usuarioRole: usuarioLogado.role,
             acao: 'LIMPEZA_GERAL_MEMBROS',
             modulo: 'admin',
             descricao: `Realizada limpeza geral. ${meta.changes} membros movidos para o limbo.`,
@@ -339,9 +324,6 @@ rotasUsuarios.post('/', autenticacaoRequerida(), verificarPermissao('membros:ger
         try {
             await registrarLog(DB, {
                 usuarioId: usuarioLogado.id,
-                usuarioNome: usuarioLogado.nome,
-                usuarioEmail: usuarioLogado.email,
-                usuarioRole: usuarioLogado.role,
                 acao: 'MEMBRO_PRE_CADASTRADO',
                 modulo: 'admin',
                 descricao: `Admin pré-cadastrou ${emailLimpo} com a role ${roleFinal}${isBootstrapAdmin ? ' (Elevado via Bootstrap)' : ''}`,
@@ -396,9 +378,6 @@ rotasUsuarios.patch('/:id/funcoes', autenticacaoRequerida(), verificarPermissao(
 
         await registrarLog(DB, {
             usuarioId: usuarioLogado.id,
-            usuarioNome: usuarioLogado.nome,
-            usuarioEmail: usuarioLogado.email,
-            usuarioRole: usuarioLogado.role,
             acao: 'MEMBRO_FUNCOES_ALTERADAS',
             modulo: 'admin',
             descricao: `Funções do membro ${id} atualizadas: ${funcoes.join(', ')}`,

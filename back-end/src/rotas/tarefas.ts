@@ -174,9 +174,6 @@ rotasTarefas.patch('/:id/mover',
 
             await registrarLog(DB, {
                 usuarioId: usuario.id,
-                usuarioNome: usuario.nome,
-                usuarioEmail: usuario.email,
-                usuarioRole: usuario.role,
                 acao: 'TAREFA_MOVIDA',
                 modulo: 'kanban',
                 descricao: `Tarefa "${tarefa.titulo}" movida para ${colunaDestino}`,
@@ -262,9 +259,6 @@ rotasTarefas.post('/:id/responsaveis', autenticacaoRequerida(), verificarPermiss
 
         await registrarLog(DB, {
             usuarioId: usuario.id,
-            usuarioNome: usuario.nome,
-            usuarioEmail: usuario.email,
-            usuarioRole: usuario.role,
             acao: 'TAREFA_RESPONSAVEL_ADICIONADO',
             modulo: 'kanban',
             descricao: `Responsável ${usuario_id} adicionado à tarefa "${tarefa.titulo}"`,

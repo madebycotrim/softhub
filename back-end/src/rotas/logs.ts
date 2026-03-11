@@ -69,33 +69,34 @@ rotasLogs.get('/', autenticacaoRequerida(), async (c: Context) => {
         bParams.push(`%${filtroAcao}%`);
     }
     if (busca) {
-        whereClause += ' AND (descricao LIKE ? OR usuario_nome LIKE ? OR usuario_email LIKE ?)';
+        whereClause += ' AND (l.descricao LIKE ? OR u.nome LIKE ? OR u.email LIKE ?)';
         const searchPattern = `%${busca}%`;
         bParams.push(searchPattern, searchPattern, searchPattern);
     }
     if (dataInicio) {
-        whereClause += ' AND criado_em >= ?';
+        whereClause += ' AND l.criado_em >= ?';
         bParams.push(dataInicio);
     }
     if (dataFim) {
-        whereClause += ' AND criado_em <= ?';
+        whereClause += ' AND l.criado_em <= ?';
         bParams.push(dataFim);
     }
 
     try {
-        const queryCount = `SELECT COUNT(*) as total FROM logs ${whereClause}`;
+        const queryCount = `SELECT COUNT(*) as total FROM logs l LEFT JOIN usuarios u ON l.usuario_id = u.id ${whereClause.replace(/usuario_id/g, 'l.usuario_id').replace(/modulo/g, 'l.modulo').replace(/acao/g, 'l.acao').replace(/criado_em/g, 'l.criado_em')}`;
         const stmtCount = DB.prepare(queryCount);
         const resCount = await (bParams.length > 0 ? stmtCount.bind(...bParams) : stmtCount).all();
         const resultsCount = resCount.results as any;
         const total = resultsCount && resultsCount[0] ? resultsCount[0].total : 0;
 
         const querySelect = `
-            SELECT id, usuario_id, usuario_nome as nome, usuario_email as email, usuario_role as role, 
-                   acao, modulo, descricao, ip, entidade_tipo, entidade_id, 
-                   dados_anteriores, dados_novos, criado_em
-            FROM logs 
-            ${whereClause}
-            ORDER BY criado_em DESC 
+            SELECT l.id, l.usuario_id, u.nome, u.email, u.role, 
+                   l.acao, l.modulo, l.descricao, l.ip, l.entidade_tipo, l.entidade_id, 
+                   l.dados_anteriores, l.dados_novos, l.criado_em
+            FROM logs l
+            LEFT JOIN usuarios u ON l.usuario_id = u.id
+            ${whereClause.replace(/usuario_id/g, 'l.usuario_id').replace(/modulo/g, 'l.modulo').replace(/acao/g, 'l.acao').replace(/criado_em/g, 'l.criado_em')}
+            ORDER BY l.criado_em DESC 
             LIMIT ? OFFSET ?
         `;
         const stmtSelect = DB.prepare(querySelect);

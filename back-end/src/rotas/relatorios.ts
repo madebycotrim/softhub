@@ -18,9 +18,8 @@ rotasRelatorios.get('/equipes', autenticacaoRequerida(), verificarPermissao('rel
                 g.id,
                 g.nome,
                 g.ativo,
-                (SELECT nome FROM usuarios WHERE id = g.lider_id) as lider_nome,
-                (SELECT COUNT(*) FROM equipes WHERE id IN (SELECT id FROM equipes WHERE id IN (SELECT equipe_id FROM usuarios WHERE grupo_id = g.id))) as total_equipes,
-                (SELECT COUNT(*) FROM usuarios WHERE grupo_id = g.id AND ativo = 1) as total_membros
+                (SELECT nome FROM equipes WHERE id = g.equipe_id) as equipe_nome,
+                (SELECT COUNT(*) FROM usuarios_organizacao WHERE grupo_id = g.id) as total_membros
             FROM grupos g
             WHERE g.ativo = 1
         `).all();
@@ -32,8 +31,7 @@ rotasRelatorios.get('/equipes', autenticacaoRequerida(), verificarPermissao('rel
                 e.nome,
                 e.ativo,
                 (SELECT nome FROM usuarios WHERE id = e.lider_id) as lider_nome,
-                (SELECT g.nome FROM grupos g WHERE g.id IN (SELECT grupo_id FROM usuarios WHERE equipe_id = e.id LIMIT 1)) as grupo_nome,
-                (SELECT COUNT(*) FROM usuarios WHERE equipe_id = e.id AND ativo = 1) as total_membros
+                (SELECT COUNT(*) FROM usuarios_organizacao WHERE equipe_id = e.id) as total_membros
             FROM equipes e
             WHERE e.ativo = 1
         `).all();
@@ -83,7 +81,7 @@ rotasRelatorios.get('/frequencia/geral', autenticacaoRequerida(), verificarPermi
                 status,
                 COUNT(*) as total
             FROM justificativas_ponto
-            WHERE ativo = 1
+            WHERE 1=1
             ${filtroDataJustificativa}
             GROUP BY status
         `).all();
@@ -94,7 +92,7 @@ rotasRelatorios.get('/frequencia/geral', autenticacaoRequerida(), verificarPermi
                 tipo,
                 COUNT(*) as total
             FROM justificativas_ponto
-            WHERE ativo = 1 AND status = 'aprovada'
+            WHERE status = 'aprovada'
             ${filtroDataJustificativa}
             GROUP BY tipo
         `).all();
@@ -132,14 +130,12 @@ rotasRelatorios.get('/frequencia/membros', autenticacaoRequerida(), verificarPer
                 u.id, 
                 u.nome,
                 u.email,
-                e.nome as equipe_nome,
-                g.nome as grupo_nome,
+                (SELECT GROUP_CONCAT(e.nome) FROM usuarios_organizacao uo JOIN equipes e ON e.id = uo.equipe_id WHERE uo.usuario_id = u.id) as equipe_nome,
+                (SELECT GROUP_CONCAT(g.nome) FROM usuarios_organizacao uo JOIN grupos g ON g.id = uo.grupo_id WHERE uo.usuario_id = u.id) as grupo_nome,
                 (SELECT COUNT(DISTINCT date(registrado_em)) FROM ponto_registros WHERE usuario_id = u.id AND tipo = 'ENTRADA' ${subFiltroPonto}) as dias_presentes,
                 (SELECT COUNT(*) FROM justificativas_ponto WHERE usuario_id = u.id AND status = 'aprovada' ${subFiltroJustificativa}) as justificativas_aprovadas,
                 (SELECT MAX(registrado_em) FROM ponto_registros WHERE usuario_id = u.id) as ultima_batida
             FROM usuarios u
-            LEFT JOIN equipes e ON u.equipe_id = e.id
-            LEFT JOIN grupos g ON u.grupo_id = g.id
             WHERE u.ativo = 1
             ORDER BY u.nome ASC
         `).all();

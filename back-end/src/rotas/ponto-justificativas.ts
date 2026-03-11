@@ -96,7 +96,7 @@ rotasPontoJustificativas.patch('/justificativas/:id', autenticacaoRequerida(), v
     const usuario = c.get('usuario') as any;
     const id = c.req.param('id');
 
-    const atualRes = await DB.prepare(`SELECT * FROM justificativas_ponto WHERE id = ? AND usuario_id = ? AND ativo = 1`).bind(id, usuario.id).first();
+    const atualRes = await DB.prepare(`SELECT * FROM justificativas_ponto WHERE id = ? AND usuario_id = ?`).bind(id, usuario.id).first();
     if (!atualRes) return c.json({ erro: 'Justificativa não encontrada.' }, 404);
     
     const atual = atualRes as any;
@@ -113,7 +113,7 @@ rotasPontoJustificativas.patch('/justificativas/:id', autenticacaoRequerida(), v
 
     // Validação de duplicata se a data mudou
     if (data !== atual.data) {
-        const ext = await DB.prepare(`SELECT id FROM justificativas_ponto WHERE usuario_id = ? AND data = ? AND ativo = 1`).bind(usuario.id, data).first();
+        const ext = await DB.prepare(`SELECT id FROM justificativas_ponto WHERE usuario_id = ? AND data = ?`).bind(usuario.id, data).first();
         if (ext) return c.json({ erro: 'Já existe uma justificativa pendente para esta data.' }, 400);
     }
 
@@ -145,14 +145,14 @@ rotasPontoJustificativas.delete('/justificativas/:id', autenticacaoRequerida(), 
     const usuario = c.get('usuario') as any;
     const id = c.req.param('id');
 
-    const atualRes = await DB.prepare(`SELECT * FROM justificativas_ponto WHERE id = ? AND usuario_id = ? AND ativo = 1`).bind(id, usuario.id).first();
+    const atualRes = await DB.prepare(`SELECT * FROM justificativas_ponto WHERE id = ? AND usuario_id = ?`).bind(id, usuario.id).first();
     if (!atualRes) return c.json({ erro: 'Justificativa não encontrada.' }, 404);
     
     const atual = atualRes as any;
     if (atual.status !== 'pendente') return c.json({ erro: 'Apenas justificativas pendentes podem ser apagadas.' }, 400);
 
     try {
-        await DB.prepare(`UPDATE justificativas_ponto SET ativo = 0 WHERE id = ?`).bind(id).run();
+        await DB.prepare(`DELETE FROM justificativas_ponto WHERE id = ?`).bind(id).run();
 
         await registrarLog(DB, {
             usuarioId: usuario.id,
@@ -180,13 +180,13 @@ rotasPontoJustificativas.get('/justificativas', autenticacaoRequerida(), verific
     const offset = (pagina - 1) * limite;
 
     try {
-        const resContagem = await DB.prepare(`SELECT COUNT(*) as total FROM justificativas_ponto WHERE usuario_id = ? AND ativo = 1`)
+        const resContagem = await DB.prepare(`SELECT COUNT(*) as total FROM justificativas_ponto WHERE usuario_id = ?`)
             .bind(usuario.id).first();
         const total = (resContagem as any)?.total || 0;
 
         const { results } = await DB.prepare(`
             SELECT * FROM justificativas_ponto 
-            WHERE usuario_id = ? AND ativo = 1
+            WHERE usuario_id = ?
             ORDER BY criado_em DESC LIMIT ? OFFSET ?
         `).bind(usuario.id, limite, offset).all();
 
@@ -206,7 +206,6 @@ rotasPontoJustificativas.get('/admin/justificativas', autenticacaoRequerida(), v
         SELECT j.*, u.nome as usuario_nome, u.email as usuario_email, u.foto_perfil as usuario_foto 
         FROM justificativas_ponto j
         JOIN usuarios u ON j.usuario_id = u.id
-        WHERE j.ativo = 1
         ORDER BY j.status DESC, j.criado_em DESC
         LIMIT 100
     `).all();
@@ -242,9 +241,6 @@ rotasPontoJustificativas.patch('/admin/justificativas/:id/aprovar', autenticacao
 
         await registrarLog(DB, {
             usuarioId: usuario.id,
-            usuarioNome: usuario.nome,
-            usuarioEmail: usuario.email,
-            usuarioRole: usuario.role,
             acao: 'PONTO_JUSTIFICATIVA_APROVADA',
             modulo: 'ponto',
             descricao: `Aprovada justificativa ID: ${justificativaId} do usuário ${alvar.usuario_id}`,
@@ -294,9 +290,6 @@ rotasPontoJustificativas.patch('/admin/justificativas/:id/rejeitar', autenticaca
 
         await registrarLog(DB, {
             usuarioId: usuario.id,
-            usuarioNome: usuario.nome,
-            usuarioEmail: usuario.email,
-            usuarioRole: usuario.role,
             acao: 'PONTO_JUSTIFICATIVA_REJEITADA',
             modulo: 'ponto',
             descricao: `Rejeitada justificativa ID: ${justificativaId} do usuário ${alvar.usuario_id}`,
@@ -347,7 +340,7 @@ rotasPontoJustificativas.get('/exportar', autenticacaoRequerida(), verificarPerm
             queryRegistros += ` AND p.usuario_id = ?`;
             params.push(usuarioId);
         } else if (equipeId) {
-            queryRegistros += ` AND u.equipe_id = ?`;
+            queryRegistros += ` AND p.usuario_id IN (SELECT usuario_id FROM usuarios_organizacao WHERE equipe_id = ?)`;
             params.push(equipeId);
         }
 
@@ -368,7 +361,7 @@ rotasPontoJustificativas.get('/exportar', autenticacaoRequerida(), verificarPerm
             queryJust += ` AND j.usuario_id = ?`;
             paramsJust.push(usuarioId);
         } else if (equipeId) {
-            queryJust += ` AND u.equipe_id = ?`;
+            queryJust += ` AND j.usuario_id IN (SELECT usuario_id FROM usuarios_organizacao WHERE equipe_id = ?)`;
             paramsJust.push(equipeId);
         }
 
