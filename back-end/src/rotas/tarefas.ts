@@ -119,9 +119,9 @@ rotasTarefas.post('/',
         });
 
         return c.json({ id, sucesso: true }, 201);
-    } catch (erro) {
+    } catch (erro: any) {
         console.error('[ERRO DB] POST /tarefas', erro);
-        return c.json({ erro: 'Falha ao criar tarefa' }, 500);
+        return c.json({ erro: 'Falha ao criar tarefa', detalhe: erro.message }, 500);
     }
 });
 

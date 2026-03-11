@@ -28,21 +28,21 @@ export function ModalCriarTarefa({ aberto, aoFechar, aoCriar }: ModalCriarTarefa
         defaultValues: { prioridade: 'media', descricao: '' }
     });
 
-    const [processandoIA, setProcessandoIA] = useState(false);
+    const [processandoDescricaoIA, setProcessandoDescricaoIA] = useState(false);
     const [carregandoCriacao, setCarregandoCriacao] = useState(false);
+    const titulo = watch('titulo');
     const descricao = watch('descricao');
 
-    const handleSugerirIA = async () => {
-        if (!descricao || descricao.length < 10) return;
-        setProcessandoIA(true);
+    const handleAprimorarDescricaoIA = async () => {
+        if (!titulo || !descricao) return;
+        setProcessandoDescricaoIA(true);
         try {
-            const res = await api.post('/api/ia/prioridade', { texto: descricao });
-            if (res.data.prioridade) setValue('prioridade', res.data.prioridade);
-            // Opcional: toast com a justificativa da IA
+            const res = await api.post('/api/ia/aprimorar-descricao', { titulo, descricao });
+            if (res.data.descricao) setValue('descricao', res.data.descricao);
         } catch (e) {
-            console.error('Erro IA:', e);
+            console.error('Erro IA Descrição:', e);
         } finally {
-            setProcessandoIA(false);
+            setProcessandoDescricaoIA(false);
         }
     };
 
@@ -76,12 +76,12 @@ export function ModalCriarTarefa({ aberto, aoFechar, aoCriar }: ModalCriarTarefa
                         <label className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground">Descrição Detalhada</label>
                         <button
                             type="button"
-                            onClick={handleSugerirIA}
-                            disabled={processandoIA || !descricao || descricao.length < 10}
+                            onClick={handleAprimorarDescricaoIA}
+                            disabled={processandoDescricaoIA || !titulo || !descricao || descricao.length < 10}
                             className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-primary hover:text-primary/70 transition-all disabled:opacity-30"
                         >
-                            {processandoIA ? <Carregando tamanho="sm" Centralizar={false} /> : <Wand2 size={12} />}
-                            Sugerir Prioridade com IA
+                            {processandoDescricaoIA ? <Carregando tamanho="sm" Centralizar={false} /> : <Wand2 size={12} />}
+                            Aprimorar com IA
                         </button>
                     </div>
                     <textarea

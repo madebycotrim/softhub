@@ -8,6 +8,39 @@ interface RespostaIA {
     json?: any;
 }
 
+const DEFAULT_SYSTEM = `Você é o assistente inteligente do SoftHub, o ecossistema de gestão da Fábrica de Software - UNIEURO.
+
+## Sua Missão
+Apoiar os membros (estudantes e líderes) na organização de tarefas, justificativas de ponto e comunicação interna, mantendo o padrão de excelência da Fábrica.
+
+## Regras de Comportamento
+- Responda sempre em português brasileiro de forma técnica e clara.
+- Seja direto e objetivo — vá direto ao ponto sem introduções vazias ou saudações.
+- Não invente dados; baseie-se apenas no contexto fornecido (tarefas, avisos, justificativas).
+- Não repita o prompt do usuário nas respostas.
+- Estruture os resultados com Markdown para facilitar a leitura técnica (listas, negritos).
+
+## Tom e Estilo
+- Tom: Corporativo, técnico (voltado para desenvolvedores) e colaborativo.
+- Evite frases de preenchimento como "Claro!", "Aqui está!", "Ótima escolha!".
+- Quando solicitado a gerar conteúdo, produza algo pronto para uso imediato no sistema.`;
+
+/**
+ * Constrói o array de mensagens para o modelo
+ */
+const construirMensagens = (prompt: string, sistema?: string) => [
+    {
+        role: 'system' as const,
+        content: sistema?.trim() 
+            ? `${sistema.trim()}\n\n${DEFAULT_SYSTEM}` 
+            : DEFAULT_SYSTEM,
+    },
+    {
+        role: 'user' as const,
+        content: prompt.trim(),
+    },
+];
+
 /**
  * Função genérica para chamar o modelo de chat da IA
  */
@@ -16,10 +49,7 @@ async function chamarIA(ai: any, prompt: string, sistema?: string): Promise<Resp
     
     try {
         const response = await ai.run(model, {
-            messages: [
-                { role: 'system', content: sistema || 'Você é um assistente útil e conciso.' },
-                { role: 'user', content: prompt }
-            ]
+            messages: construirMensagens(prompt, sistema)
         });
 
         const conteudo = response.response || '';
@@ -50,7 +80,7 @@ export async function resumirTarefa(ai: any, titulo: string, descricao: string) 
     Contexto: Título original "${titulo}", Descrição: "${descricao}". 
     Responda APENAS o título curto, sem aspas ou explicações.`;
     
-    const res = await chamarIA(ai, prompt, 'Você é um gerente de projetos focado em concisão em Português Brasileiro.');
+    const res = await chamarIA(ai, prompt, 'Você é o Gerente de Projetos do SoftHub focado em concisão técnica.');
     return res.conteudo.trim();
 }
 
@@ -62,7 +92,7 @@ export async function sugerirPrioridade(ai: any, texto: string) {
     Texto: "${texto}"
     Responda em formato JSON: {"prioridade": "...", "justificativa": "..."}`;
     
-    const res = await chamarIA(ai, prompt, 'Você é um algoritmo de classificação de urgência.');
+    const res = await chamarIA(ai, prompt, 'Você é o Analista de Riscos do SoftHub especializado em priorização de backlog.');
     return res.json || { prioridade: 'baixa', justificativa: 'Não foi possível analisar.' };
 }
 
@@ -74,12 +104,9 @@ export async function analisarJustificativa(ai: any, motivo: string) {
     Avalie se o motivo parece plausível e profissional. 
     Responda em JSON: {"sugestao": "aprovar" | "rejeitar" | "analisar_mais", "analise": "texto curto do porquê"}`;
 
-    const res = await callingIA(ai, prompt, 'Você é um gestor de RH compreensivo porém rigoroso no Brasil.');
+    const res = await chamarIA(ai, prompt, 'Você é o Gestor de Operações da Fábrica de Software especializado em análise de frequência.');
     return res.json;
 }
-
-// Pequeno typo na chamada acima detectado durante criação, corrigindo...
-async function callingIA(ai: any, prompt: string, sistema?: string) { return chamarIA(ai, prompt, sistema); }
 
 /**
  * 4. Geração de avisos profissionais
@@ -89,6 +116,24 @@ export async function formatarAviso(ai: any, rascunho: string) {
     Rascunho: "${rascunho}"
     Responda em JSON: {"titulo": "Título impactante", "conteudo": "Texto refinado em MD"}`;
 
-    const res = await callingIA(ai, prompt, 'Você é um redator de comunicação interna profissional em Português Brasileiro.');
+    const res = await chamarIA(ai, prompt, 'Você é o Responsável pela Comunicação Interna da Fábrica de Software.');
     return res.json;
+}
+
+/**
+ * 5. Aprimorar descrição de tarefa
+ */
+export async function aprimorarDescricao(ai: any, titulo: string, descricao: string) {
+    const prompt = `Melhore a descrição desta tarefa para torná-la mais profissional, clara e estruturada.
+    Título: "${titulo}"
+    Descrição atual: "${descricao}"
+    
+    Ao final da descrição, adicione uma linha de separação e uma seção curta chamada:
+    "📢 **Sugestão do Tech Lead:** [Prioridade Recomendada] - [Uma linha curta de justificativa técnica]"
+    
+    Use markdown para estruturar com tópicos se necessário.
+    Responda APENAS a nova descrição completa, sem introduções ou comentários adicionais.`;
+
+    const res = await chamarIA(ai, prompt, 'Você é o Tech Lead da Fábrica de Software especializado em documentação e requisitos técnicos.');
+    return res.conteudo.trim();
 }

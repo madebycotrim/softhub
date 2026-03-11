@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { Env } from '../index';
 import { autenticacaoRequerida } from '../middleware/auth';
-import { sugerirPrioridade, resumirTarefa, analisarJustificativa, formatarAviso } from '../servicos/servico-ai';
+import { sugerirPrioridade, resumirTarefa, analisarJustificativa, formatarAviso, aprimorarDescricao } from '../servicos/servico-ai';
 
 const rotasIA = new Hono<{ Bindings: Env }>();
 
@@ -57,6 +57,24 @@ rotasIA.post('/refinar-aviso', async (c) => {
     try {
         const aviso = await formatarAviso(AI, rascunho);
         return c.json(aviso);
+    } catch (e: any) {
+        return c.json({ erro: 'IA temporariamente indisponível.' }, 500);
+    }
+});
+
+/**
+ * POST /api/ia/aprimorar-descricao
+ * Melhora a descrição atual da tarefa
+ */
+rotasIA.post('/aprimorar-descricao', async (c) => {
+    const { AI } = c.env;
+    const { titulo, descricao } = await c.req.json();
+
+    if (!titulo || !descricao) return c.json({ erro: 'Título e descrição são necessários.' }, 400);
+
+    try {
+        const descricaoMelhorada = await aprimorarDescricao(AI, titulo, descricao);
+        return c.json({ descricao: descricaoMelhorada });
     } catch (e: any) {
         return c.json({ erro: 'IA temporariamente indisponível.' }, 500);
     }
