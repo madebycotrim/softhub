@@ -1,26 +1,20 @@
 import { useMemo } from 'react';
-// 🔴 CORRIGIDO: importava de '../../contexto/ContextoAutenticacao' diretamente (path frágil).
-// Agora importa do hook centralizado no próprio contexto, garantindo caminho único.
 import { usarAutenticacaoContexto } from '@/contexto/ContextoAutenticacao';
+import { usarConfiguracoes } from '@/contexto/ContextoConfiguracoes';
 
 /**
  * Hook utilitário APENAS para UX (mostrar/esconder botões e seções).
  *
  * ⚠️  SEGURANÇA REAL É SEMPRE FEITA NO BACKEND — este hook é somente para UI.
  *
- * Hierarquia de roles (REGRA 12):
- * VISITANTE < MEMBRO < LIDER_EQUIPE < LIDER_GRUPO < ADMIN
+ * Compara a role do usuário com uma role mínima requerida, baseado na hierarquia
+ * de roles definida no banco de dados (configuracoes_sistema).
  *
- * Uso: const podeEditar = usarPermissao('LIDER_EQUIPE');
+ * Uso: const podeEditar = usarPermissao('LIDER');
  */
-
-import { useState, useEffect } from 'react';
-import { api } from '@/compartilhado/servicos/api';
-
-const HIERARQUIA_ROLES = ['MEMBRO', 'SUBLIDER', 'LIDER', 'GESTOR', 'COORDENADOR', 'ADMIN'] as const;
-
 export function usarPermissao(roleMinimoRequerido: string | null): boolean {
     const { usuario } = usarAutenticacaoContexto();
+    const { hierarquia_roles } = usarConfiguracoes(); // <-- Get hierarchy from context
 
     return useMemo(() => {
         // Sem role mínimo requerido — qualquer autenticado tem acesso
@@ -29,100 +23,45 @@ export function usarPermissao(roleMinimoRequerido: string | null): boolean {
         // Sem usuário ou sem role — nega
         if (!usuario?.role) return false;
 
-        const indiceUsuario  = HIERARQUIA_ROLES.indexOf(usuario.role as typeof HIERARQUIA_ROLES[number]);
-        const indiceRequerido = HIERARQUIA_ROLES.indexOf(roleMinimoRequerido as typeof HIERARQUIA_ROLES[number]);
+        const indiceUsuario = hierarquia_roles.indexOf(usuario.role);
+        const indiceRequerido = hierarquia_roles.indexOf(roleMinimoRequerido);
 
         // Role inválido (não existe na hierarquia) — nega por segurança
         if (indiceUsuario === -1 || indiceRequerido === -1) return false;
 
         return indiceUsuario >= indiceRequerido;
-    }, [usuario, roleMinimoRequerido]);
+    }, [usuario, roleMinimoRequerido, hierarquia_roles]);
 }
 
-/**
- * Interface simplificada das configurações de permissões
- */
-interface PermissoesAPI {
-    permissoes_roles: Record<string, Record<string, boolean>>;
-}
-
-/** Cache global síncrono para as configurações, evitando re-renders desnecessários */
-let configuracoesCache: PermissoesAPI | null = null;
-let fetchPromise: Promise<PermissoesAPI> | null = null;
-let ultimaBusca = 0;
 
 /**
  * Hook utilitário para checar uma permissão específica ativada na Matriz de Controle de Acesso.
+ * As permissões são carregadas do contexto `ContextoConfiguracoes`.
  * @example const podeCriarTarefa = usarPermissaoAcesso('tarefas:criar');
  */
 export function usarPermissaoAcesso(chavePermissao: string): boolean {
     const { usuario } = usarAutenticacaoContexto();
-    const role = (usuario?.role || 'MEMBRO').toUpperCase();
-    
-    // Estado pessimista: inicia oculto (exceto para ADMIN)
-    const [permissoesAtivas, setPermissoesAtivas] = useState<boolean>(() => {
-        if (usuario?.role === 'ADMIN') return true;
-        
-        // Se já tiver cache, usa imediatamente para evitar flicker
-        if (configuracoesCache) {
-            const universal = configuracoesCache.permissoes_roles?.['TODOS']?.[chavePermissao] === true;
-            return universal || (configuracoesCache.permissoes_roles?.[role]?.[chavePermissao] === true);
+    const { permissoes_roles } = usarConfiguracoes(); // <-- Get permissions from context
+    const role = usuario?.role || 'MEMBRO';
+
+    // ADMIN sempre tem acesso total, independente da matriz.
+    if (role === 'ADMIN') {
+        return true;
+    }
+
+    // useMemo para evitar recálculos a cada renderização
+    return useMemo(() => {
+        if (!permissoes_roles) {
+            return false; // Retorna false se as permissões ainda não foram carregadas
         }
-        return false;
-    });
 
-    useEffect(() => {
-        if (usuario?.role === 'ADMIN') return;
+        // Verifica se a permissão está habilitada para a role específica do usuário
+        const temPermissaoRole = permissoes_roles[role]?.[chavePermissao] === true;
 
-        const atualizarEstado = () => {
-            if (configuracoesCache) {
-                const universal = configuracoesCache.permissoes_roles?.['TODOS']?.[chavePermissao] === true;
-                const temRole = configuracoesCache.permissoes_roles?.[role]?.[chavePermissao] === true;
-                setPermissoesAtivas(universal || temRole);
-            }
-        };
+        // Verifica se a permissão é universal (habilitada para 'TODOS')
+        const temPermissaoUniversal = permissoes_roles['TODOS']?.[chavePermissao] === true;
 
-        const carregar = async () => {
-            const agora = Date.now();
-            
-            // 1. Cache válido (1 min)
-            if (configuracoesCache && (agora - ultimaBusca < 60000)) {
-                atualizarEstado();
-                return;
-            }
+        return temPermissaoRole || temPermissaoUniversal;
 
-            // 2. Já existe uma busca em andamento? Espera ela.
-            if (fetchPromise) {
-                await fetchPromise;
-                atualizarEstado();
-                return;
-            }
-
-            // 3. Inicia a busca (Singleton Promise)
-            try {
-                fetchPromise = api.get('/api/configuracoes/publico/permissoes').then(res => res.data);
-                const data = await fetchPromise;
-                
-                configuracoesCache = data;
-                ultimaBusca = Date.now();
-                
-                // Notifica outros hooks que o cache chegou
-                window.dispatchEvent(new CustomEvent('permissoes_carregadas'));
-                atualizarEstado();
-            } catch (e) {
-                console.warn('[usarPermissaoAcesso] Erro:', e);
-                setPermissoesAtivas(false);
-            } finally {
-                fetchPromise = null;
-            }
-        };
-
-        carregar();
-
-        // Escuta atualizações do cache (para quando outro hook terminar a busca)
-        window.addEventListener('permissoes_carregadas', atualizarEstado);
-        return () => window.removeEventListener('permissoes_carregadas', atualizarEstado);
-    }, [usuario, role, chavePermissao]);
-
-    return usuario?.role === 'ADMIN' ? true : permissoesAtivas;
+    }, [role, chavePermissao, permissoes_roles]);
 }

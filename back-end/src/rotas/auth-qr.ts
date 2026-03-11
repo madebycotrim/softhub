@@ -16,9 +16,11 @@ interface SessaoQrKV {
     criado_em: string;
 }
 
+const chaveQr = (id: string) => `qr_sessao:${id}`;
+
 // ── QR Code: Gerar Sessão (KV) ─────────────────────────────────────────────────────
 rotasAuthQr.post('/qr/gerar', async (c) => {
-    const { SESSOES_QR } = c.env;
+    const { SISTEMA_KV } = c.env;
     const sessaoId = crypto.randomUUID();
     const agora = new Date();
     const expiraEm = new Date(agora.getTime() + 1000 * 60).toISOString(); // 60 segundos (mínimo KV)
@@ -32,7 +34,7 @@ rotasAuthQr.post('/qr/gerar', async (c) => {
 
     try {
         // Salva no KV com TTL de 60 segundos (mínimo exigido pelo Cloudflare KV)
-        await SESSOES_QR.put(sessaoId, JSON.stringify(dados), { expirationTtl: 60 });
+        await SISTEMA_KV.put(chaveQr(sessaoId), JSON.stringify(dados), { expirationTtl: 60 });
         return c.json({ sessaoId, expiraEm });
     } catch (err: any) {
         console.error('[QR-KV] Erro ao gerar sessão:', err);
@@ -42,11 +44,11 @@ rotasAuthQr.post('/qr/gerar', async (c) => {
 
 // ── QR Code: Verificar Status (KV + D1 para dados do usuário) ─────────────────────────────────────────────────
 rotasAuthQr.get('/qr/verificar/:id', async (c) => {
-    const { SESSOES_QR, DB } = c.env;
+    const { SISTEMA_KV, DB } = c.env;
     const id = c.req.param('id');
 
     try {
-        const resSessao = await SESSOES_QR.get(id);
+        const resSessao = await SISTEMA_KV.get(chaveQr(id));
         if (!resSessao) {
             return c.json({ status: 'expirado' });
         }
@@ -75,7 +77,7 @@ rotasAuthQr.get('/qr/verificar/:id', async (c) => {
 
             // Consome a sessão no KV para não permitir reuso
             sessao.status = 'consumido';
-            await SESSOES_QR.put(id, JSON.stringify(sessao), { expirationTtl: 60 });
+            await SISTEMA_KV.put(chaveQr(id), JSON.stringify(sessao), { expirationTtl: 60 });
 
             return c.json({
                 status: 'autorizado',
@@ -93,14 +95,14 @@ rotasAuthQr.get('/qr/verificar/:id', async (c) => {
 
 // ── QR Code: Identificar (KV) ───────────────────────────────
 rotasAuthQr.post('/qr/identificar', autenticacaoRequerida(), async (c) => {
-    const { SESSOES_QR } = c.env;
+    const { SISTEMA_KV } = c.env;
     const usuario = c.get('usuario' as any) as any;
 
     try {
         const { sessaoId } = await c.req.json();
         if (!sessaoId) return c.json({ erro: 'ID da sessão ausente.' }, 400);
 
-        const resSessao = await SESSOES_QR.get(sessaoId);
+        const resSessao = await SISTEMA_KV.get(chaveQr(sessaoId));
         if (!resSessao) return c.json({ erro: 'Sessão expirada ou não encontrada.' }, 404);
 
         const sessao = JSON.parse(resSessao) as SessaoQrKV;
@@ -110,7 +112,7 @@ rotasAuthQr.post('/qr/identificar', autenticacaoRequerida(), async (c) => {
         sessao.status = 'identificado';
         sessao.usuario_id = usuario.id;
         
-        await SESSOES_QR.put(sessaoId, JSON.stringify(sessao), { expirationTtl: 60 });
+        await SISTEMA_KV.put(chaveQr(sessaoId), JSON.stringify(sessao), { expirationTtl: 60 });
 
         return c.json({ sucesso: true });
     } catch (err: any) {
@@ -120,14 +122,14 @@ rotasAuthQr.post('/qr/identificar', autenticacaoRequerida(), async (c) => {
 
 // ── QR Code: Autorizar (KV + D1 para versão do token) ────────────────────────────────
 rotasAuthQr.post('/qr/autorizar', autenticacaoRequerida(), async (c) => {
-    const { SESSOES_QR, DB, JWT_SECRET } = c.env;
+    const { SISTEMA_KV, DB, JWT_SECRET } = c.env;
     const usuario = c.get('usuario' as any) as any;
 
     try {
         const { sessaoId } = await c.req.json();
         if (!sessaoId) return c.json({ erro: 'ID da sessão ausente.' }, 400);
 
-        const resSessao = await SESSOES_QR.get(sessaoId);
+        const resSessao = await SISTEMA_KV.get(chaveQr(sessaoId));
         if (!resSessao) return c.json({ erro: 'Sessão expirada ou não encontrada.' }, 404);
 
         const sessao = JSON.parse(resSessao) as SessaoQrKV;
@@ -160,7 +162,7 @@ rotasAuthQr.post('/qr/autorizar', autenticacaoRequerida(), async (c) => {
         sessao.usuario_id = usuario.id;
         sessao.token_acesso = tokenDesktop;
 
-        await SESSOES_QR.put(sessaoId, JSON.stringify(sessao), { expirationTtl: 60 });
+        await SISTEMA_KV.put(chaveQr(sessaoId), JSON.stringify(sessao), { expirationTtl: 60 });
 
         await registrarLog(DB, {
             usuarioId: usuario.id,

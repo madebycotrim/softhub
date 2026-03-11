@@ -1,37 +1,35 @@
 import { z } from 'zod';
 
-const esquemaAmbiente = z
-    .object({
-        VITE_MSAL_CLIENT_ID: z.string().min(1, 'VITE_MSAL_CLIENT_ID é obrigatório'),
-        VITE_MSAL_TENANT_ID: z.string().min(1, 'VITE_MSAL_TENANT_ID é obrigatório'),
-        VITE_API_URL: z
-            .string()
-            .url('VITE_API_URL deve ser uma URL válida')
-            .default('https://softhub.madebycotrim-67c.workers.dev'),
-        VITE_DOMINIO_INSTITUCIONAL: z
-            .string()
-            .min(1, 'VITE_DOMINIO_INSTITUCIONAL é obrigatório')
-            .default('unieuro.edu.br'),
-    })
-    .readonly();
+/**
+ * 1. Definimos o esquema com os nomes originais (VITE_...)
+ * 2. Usamos .transform() para mapear para camelCase automaticamente
+ */
+const esquemaAmbiente = z.object({
+    VITE_MSAL_CLIENT_ID: z.string().min(1, 'ID do Cliente MSAL é obrigatório'),
+    VITE_MSAL_TENANT_ID: z.string().min(1, 'ID do Tenant MSAL é obrigatório'),
+    VITE_API_URL: z.string().url('URL da API inválida').default('https://api.softhub.workers.dev/'),
+}).transform((dados) => ({
+    msalClientId: dados.VITE_MSAL_CLIENT_ID,
+    msalTenantId: dados.VITE_MSAL_TENANT_ID,
+    apiUrl: dados.VITE_API_URL,
+}));
 
-const resultadoAmbiente = esquemaAmbiente.safeParse(import.meta.env);
+// Validamos o import.meta.env
+const resultado = esquemaAmbiente.safeParse(import.meta.env);
 
-if (!resultadoAmbiente.success) {
-    const erros = resultadoAmbiente.error.flatten().fieldErrors;
-    console.error('❌ Variáveis de ambiente inválidas:', erros);
-    throw new Error(
-        `Variáveis de ambiente inválidas:\n${JSON.stringify(erros, null, 2)}`
-    );
+if (!resultado.success) {
+    // Melhoramos a legibilidade do erro no console
+    const mensagensDeErro = resultado.error.issues
+        .map((issue) => `   - ${issue.path.join('.')}: ${issue.message}`)
+        .join('\n');
+
+    console.error(`❌ Erro de configuração (Environment Variables):\n${mensagensDeErro}`);
+
+    // Em desenvolvimento, é bom lançar erro para parar a aplicação
+    throw new Error('Variáveis de ambiente inválidas. Verifique o arquivo .env');
 }
 
-/**
- * Variáveis de ambiente validadas e tipadas.
- * Nunca acessar import.meta.env diretamente fora deste arquivo.
- */
-export const ambiente = {
-    msalClientId: resultadoAmbiente.data.VITE_MSAL_CLIENT_ID,
-    msalTenantId: resultadoAmbiente.data.VITE_MSAL_TENANT_ID,
-    apiUrl: resultadoAmbiente.data.VITE_API_URL,
-    dominioInstitucional: resultadoAmbiente.data.VITE_DOMINIO_INSTITUCIONAL,
-} as const;
+export const ambiente = resultado.data;
+
+// Exportamos o tipo para usar em outras partes do projeto se necessário
+export type Ambiente = z.infer<typeof esquemaAmbiente>;

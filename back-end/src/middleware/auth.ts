@@ -11,168 +11,126 @@ export interface UsuarioAutenticado {
 
 type HonoEnv = { Bindings: Env; Variables: { usuario: UsuarioAutenticado } };
 
-/**
- * Middleware que valida o JWT INTERNO gerado pela rota /api/auth/msal.
- *
- * Fluxo completo:
- * 1. Frontend → loginPopup MSAL → idToken da Microsoft
- * 2. Frontend → POST /api/auth/msal com idToken
- * 3. Backend valida idToken com JWKS da Microsoft → gera JWT interno (HS256)
- * 4. Frontend salva JWT interno no localStorage
- * 5. Em toda requisição protegida → Authorization: Bearer <jwt-interno>
- * 6. ESTE MIDDLEWARE valida o JWT interno com JWT_SECRET
- * 7. Busca usuário no banco (garante que role alterado pelo ADMIN vale imediatamente)
- * 8. Expõe { id, role, email, nome } em c.get('usuario') para os handlers
- */
-const HIERARQUIA_ROLES = ['MEMBRO', 'SUBLIDER', 'LIDER', 'GESTOR', 'COORDENADOR', 'ADMIN'] as const;
+// ─── Funções Auxiliares (com cache) ──────────────────────────────────────────
+
+async function getHierarquiaRoles(c: Context<HonoEnv>): Promise<string[] | null> {
+    const { DB, SISTEMA_KV } = c.env;
+    let hierarquiaJson = await SISTEMA_KV.get('hierarquia_roles');
+    if (!hierarquiaJson) {
+        const resConfig = await DB.prepare('SELECT valor FROM configuracoes_sistema WHERE chave = ?').bind('hierarquia_roles').first<{ valor: string }>();
+        if (resConfig) {
+            hierarquiaJson = resConfig.valor;
+            await SISTEMA_KV.put('hierarquia_roles', hierarquiaJson, { expirationTtl: 3600 });
+        } else {
+            console.error('[AUTH] CRÍTICO: hierarquia_roles não encontrada no banco de dados.');
+            return null;
+        }
+    }
+    try {
+        const hierarquia = JSON.parse(hierarquiaJson);
+        if (!Array.isArray(hierarquia)) throw new Error('O valor não é um array.');
+        return hierarquia;
+    } catch (e) {
+        console.error('[AUTH] CRÍTICO: Falha ao parsear hierarquia_roles do banco.', e);
+        return null;
+    }
+}
+
+async function getPermissoesRoles(c: Context<HonoEnv>): Promise<Record<string, any> | null> {
+    const { DB, SISTEMA_KV } = c.env;
+    let permissoesJson = await SISTEMA_KV.get('permissoes_roles');
+    if (!permissoesJson) {
+        const resConfig = await DB.prepare('SELECT valor FROM configuracoes_sistema WHERE chave = ?').bind('permissoes_roles').first<{ valor: string }>();
+        if (resConfig) {
+            permissoesJson = resConfig.valor;
+            await SISTEMA_KV.put('permissoes_roles', permissoesJson, { expirationTtl: 3600 });
+        } else {
+            console.error('[AUTH] CRÍTICO: permissoes_roles não encontradas no banco de dados.');
+            return null;
+        }
+    }
+    try {
+        return JSON.parse(permissoesJson);
+    } catch (e) {
+        console.error('[AUTH] CRÍTICO: Falha ao parsear permissoes_roles do banco.', e);
+        return null;
+    }
+}
+
+// ─── Middleware Principal de Autenticação ───────────────────────────────────
 
 export function autenticacaoRequerida(roleMinimoRequerido?: string) {
     return async (c: Context<HonoEnv>, next: Next) => {
-
-        // ── Passo 1: Extrai o token do header ─────────────────────────────────
         const authHeader = c.req.header('Authorization');
         if (!authHeader?.startsWith('Bearer ')) {
             return c.json({ erro: 'Token de autenticação ausente.' }, 401);
         }
         const token = authHeader.slice(7);
-
-        // ── Passo 2: Verifica JWT_SECRET ──────────────────────────────────────
         const segredo = c.env.JWT_SECRET;
         if (!segredo) {
             console.error('[Auth Middleware] JWT_SECRET não definido.');
             return c.json({ erro: 'Erro interno de configuração.' }, 500);
         }
 
-        // ── Passo 3: Verifica assinatura do JWT interno ───────────────────────
-        let payload: { id: string; role: string; email: string; exp: number; versao_token?: number };
+        let payload: any;
         try {
-            payload = await verify(token, segredo, 'HS256') as typeof payload;
+            payload = await verify(token, segredo, 'HS256');
         } catch {
             return c.json({ erro: 'Token inválido ou expirado.' }, 401);
         }
 
-        // ── Passo 4: Valida payload mínimo ────────────────────────────────────
-        if (!payload.id || !payload.role) {
-            return c.json({ erro: 'Token com payload inválido.' }, 401);
-        }
-
-        // ── Passo 5: Busca usuário no banco ───────────────────────────────────
-        const resUsuario = await c.env.DB
-            .prepare('SELECT id, nome, email, role, versao_token FROM usuarios WHERE id = ?')
-            .bind(payload.id)
-            .first();
-        const usuario = resUsuario as any;
-
-        if (!usuario) {
+        const resUsuario = await c.env.DB.prepare('SELECT id, nome, email, role, versao_token FROM usuarios WHERE id = ?').bind(payload.id).first<any>();
+        if (!resUsuario) {
             return c.json({ erro: 'Usuário não encontrado.' }, 401);
         }
-
-        // Validação de Versão do Token (Desconectar sessões anteriores)
-        if (payload.versao_token !== undefined && usuario.versao_token !== payload.versao_token) {
-            console.warn(`[AUTH] Sessão invalidada: Versão do token (${payload.versao_token}) não coincide com o banco (${usuario.versao_token})`);
+        if (payload.versao_token !== undefined && resUsuario.versao_token !== payload.versao_token) {
             return c.json({ erro: 'Sua sessão foi encerrada porque você entrou em outro dispositivo.' }, 401);
         }
 
-
-
-        // ── Passo 6: Verifica Role Mínimo (SE PROVIDO) ────────────────────────
         if (roleMinimoRequerido) {
-            const indiceUsuario = HIERARQUIA_ROLES.indexOf(usuario.role as any);
-            const indiceRequerido = HIERARQUIA_ROLES.indexOf(roleMinimoRequerido as any);
-
+            const hierarquiaRoles = await getHierarquiaRoles(c);
+            if (!hierarquiaRoles) {
+                return c.json({ erro: 'Erro crítico de configuração do sistema.' }, 500);
+            }
+            const indiceUsuario = hierarquiaRoles.indexOf(resUsuario.role as any);
+            const indiceRequerido = hierarquiaRoles.indexOf(roleMinimoRequerido as any);
             if (indiceUsuario === -1 || indiceRequerido === -1 || indiceUsuario < indiceRequerido) {
-                console.warn(`[AUTH] Acesso negado: Usuário ${usuario.nome} tentou acessar recurso que exige ${roleMinimoRequerido}`);
+                console.warn(`[AUTH] Acesso negado: Usuário ${resUsuario.nome} tentou acessar recurso que exige ${roleMinimoRequerido}`);
                 return c.json({ erro: 'Permissão insuficiente.' }, 403);
             }
         }
 
-        console.log(`[AUTH] Usuário autenticado: ${usuario.nome} (${usuario.role})`);
-
-        // ── Passo 7: Expõe dados reais do banco para os handlers ──────────────
-        c.set('usuario', {
-            id: usuario.id,
-            role: usuario.role,
-            email: usuario.email,
-            nome: usuario.nome,
-        });
+        c.set('usuario', { id: resUsuario.id, role: resUsuario.role, email: resUsuario.email, nome: resUsuario.nome });
         await next();
     };
 }
 
-/**
- * Middleware para verificar se o usuário logado possui um dos papéis permitidos.
- */
-export function verificarRole(rolesPermitidos: string[]) {
+// ─── Middleware de Verificação de Permissão Específica ──────────────────────
+
+export function verificarPermissao(permissaoRequerida: string) {
     return async (c: Context<HonoEnv>, next: Next) => {
         const usuario = c.get('usuario');
-
-        if (!usuario || !rolesPermitidos.includes(usuario.role)) {
-            console.warn(`[AUTH] Acesso negado: Papel ${usuario?.role} não consta em ${rolesPermitidos.join(', ')}`);
-            return c.json({ erro: 'Papel administrativo requerido para esta operação.' }, 403);
+        if (!usuario || !usuario.role) {
+            return c.json({ erro: 'Usuário não autenticado ou sem role definida.' }, 401);
         }
 
-        await next();
-    };
-}
-
-/**
- * Middleware granular que verifica se o role do usuário possui uma permissão específica
- * na tabela configuracoes_sistema (matriz de permissões).
- * 
- * @param permissao Chave da permissão (ex: 'tarefas:criar')
- */
-export function verificarPermissao(permissao: string) {
-    return async (c: Context<HonoEnv>, next: Next) => {
-        const usuario = c.get('usuario');
-        const { DB, SISTEMA_KV } = c.env;
-
-        if (!usuario) {
-            return c.json({ erro: 'Usuário não autenticado.' }, 401);
+        const permissoes_roles = await getPermissoesRoles(c);
+        if (!permissoes_roles) {
+            return c.json({ erro: 'Erro crítico na configuração de permissões do sistema.' }, 500);
         }
 
-        // ADMIN ignora qualquer trava de permissão
-        if (usuario.role === 'ADMIN') {
+        const [modulo, acao] = permissaoRequerida.split(':');
+        if (!modulo || !acao) {
+             return c.json({ erro: 'Formato de permissão inválido no código.' }, 500);
+        }
+
+        const temPermissao = permissoes_roles[usuario.role]?.[modulo]?.[acao] === true;
+
+        if (temPermissao) {
             await next();
-            return;
-        }
-
-        try {
-            // 1. Tenta buscar da "borda" (KV) - Muito mais rápido
-            let configValor = await SISTEMA_KV.get('permissoes_roles');
-
-            // 2. Fallback para o D1 se não estiver no cache
-            if (!configValor) {
-                console.log(`[PERMISSAO] Cache miss para ${permissao}. Buscando no D1...`);
-                const resConfig = await DB.prepare('SELECT valor FROM configuracoes_sistema WHERE chave = ?')
-                    .bind('permissoes_roles')
-                    .first();
-                
-                if (resConfig) {
-                    configValor = (resConfig as any).valor;
-                    // Salva no KV por 1 hora (60 min)
-                    await SISTEMA_KV.put('permissoes_roles', configValor as string, { expirationTtl: 3600 });
-                }
-            }
-
-            if (!configValor) {
-                console.warn(`[PERMISSAO] Matriz de permissões não encontrada.`);
-                return c.json({ erro: 'Acesso negado: Matriz de permissões não configurada.' }, 403);
-            }
-
-            const permissoesRoles = JSON.parse(configValor);
-            
-            const universal = permissoesRoles['TODOS']?.[permissao] === true;
-            const temPermissao = universal || (permissoesRoles[usuario.role]?.[permissao] === true);
-
-            if (!temPermissao) {
-                console.warn(`[PERMISSAO] Acesso negado: Usuário ${usuario.nome} (${usuario.role}) não possui permissão ${permissao}`);
-                return c.json({ erro: `Você não tem permissão para realizar esta ação (${permissao}).` }, 403);
-            }
-
-            await next();
-        } catch (e: any) {
-            console.error('[PERMISSAO] Erro ao validar permissão:', e.message);
-            return c.json({ erro: 'Erro interno ao validar permissões.' }, 500);
+        } else {
+            console.warn(`[AUTH] Acesso negado: Usuário ${usuario.nome} (Role: ${usuario.role}) tentou realizar a ação '${permissaoRequerida}' sem permissão.`);
+            return c.json({ erro: 'Você não tem permissão para realizar esta ação.' }, 403);
         }
     };
 }

@@ -24,23 +24,19 @@ export type Env = {
     JWT_SECRET: string;
     MSAL_TENANT_ID: string;
     MSAL_CLIENT_ID: string;
-    DOMINIO_INSTITUCIONAL: string;
     BOOTSTRAP_ADMIN_EMAIL: string;
-    SESSOES_QR: KVNamespace;
     SISTEMA_KV: KVNamespace;
     AI: any;
 };
 
 const app = new Hono<{ Bindings: Env }>();
 
-// ─── CORS (DEVE ser o primeiro middleware) ────────────────────────────────────
-// CORS precisa rodar ANTES de tudo para que respostas de erro (429, 503)
-// também incluam os headers Access-Control-Allow-Origin, senão o navegador bloqueia.
+// ─── Middlewares Globais ───────────────────────────────────────────────────
 
+// 1. CORS (DEVE ser o primeiro)
 app.use('*', cors({
     origin: (origin) => {
-        // Permite localhost e qualquer subdomínio do projeto no Cloudflare
-        if (!origin || /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin) || origin.includes('madebycotrim') || origin.includes('pages.dev')) {
+        if (!origin || /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin) || origin.includes('softhub') || origin.includes('pages.dev')) {
             return origin;
         }
         return null; // Bloqueia outros
@@ -50,13 +46,8 @@ app.use('*', cors({
     credentials: true,
 }));
 
-// ─── Rate Limiter Global ──────────────────────────────────────────────────────
-// 120 req/min por IP (acomoda polling do QR Code a cada 800ms ≈ 75 req/min)
-// Inicialização lazy para evitar operações assíncronas no escopo global
-// (Cloudflare Workers proíbe setTimeout/crypto fora de handlers)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// 2. Rate Limiter Global
 let _limiteGlobal: any = null;
-
 app.use("*", (c, next) => {
     if (!_limiteGlobal) {
         _limiteGlobal = rateLimiter({
@@ -70,12 +61,11 @@ app.use("*", (c, next) => {
     return _limiteGlobal(c, next);
 });
 
-// ─── Modo de Manutenção (WF 21) ────────────────────────────────────────────────
+// 3. Modo de Manutenção
 app.use('*', async (c, next) => {
     const { SISTEMA_KV } = c.env;
     const emManutencao = await SISTEMA_KV.get('MODO_MANUTENCAO');
     
-    // Ignora bloqueio para a própria rota de manutenção (se houver) ou para o path de login para admins
     if (emManutencao === 'true' && !c.req.path.includes('/auth') && !c.req.path.includes('/configuracoes')) {
         return c.json({ 
             erro: 'Sistema em manutenção programada.',
@@ -85,12 +75,10 @@ app.use('*', async (c, next) => {
     await next();
 });
 
-// ─── Erro global ──────────────────────────────────────────────────────────────
-
+// Erro global
 app.onError(lidarExcecao);
 
 // ─── Rotas ────────────────────────────────────────────────────────────────────
-
 app.route('/api/auth', rotasAuth);
 app.route('/api/auth', rotasAuthQr);
 app.route('/api/usuarios', rotasUsuarios);
@@ -101,15 +89,13 @@ app.route('/api/ponto', rotasPontoJustificativas);
 app.route('/api/avisos', rotasAvisos);
 app.route('/api/dashboard', rotasDashboard);
 app.route('/api/logs', rotasLogs);
-
 app.route('/api/configuracoes', rotasConfiguracoes);
 app.route('/api/relatorios', rotasRelatorios);
 app.route('/api/equipes', rotasEquipes);
 app.route('/api/notificacoes', rotasNotificacoes);
 app.route('/api/ia', rotasIA);
 
-// ─── Health check ─────────────────────────────────────────────────────────────
-
+// ─── Health check (Rota pública) ──────────────────────────────────────────────
 app.get('/', (c) => c.json({
     status: 'ok',
     servico: 'Fábrica de Software',

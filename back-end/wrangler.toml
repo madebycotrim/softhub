@@ -5,17 +5,12 @@ compatibility_date = '2024-03-05'
 [[d1_databases]]
 binding = 'DB'
 database_name = 'softhub_db'
-database_id = 'e61486a2-7323-49d8-9e4a-a0543892b1da'
+database_id = '631a8b23-4a75-4e59-8b73-61af4b07d5f7'
 
 [[kv_namespaces]]
-name = "SISTEMA_KV"
-binding = "SISTEMA_KV"
-id = "4e8bff2b06d644b79749e9127e35f963"
-
-[[kv_namespaces]]
-name = "SESSOES_QR"
-binding = "SESSOES_QR"
-id = "564b9bf8d29642a0a3eb630e3571c406"
+name = "KV"
+binding = "sistema_kv"
+id = "148fcf4fa8464a24b5f8f038ee1657f3"
 
 [ai]
 name = "AI"

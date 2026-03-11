@@ -6,7 +6,7 @@ import { rotas } from './configuracoes/rotas';
 import { aplicarTemaSalvo } from './utilitarios/tema';
 import { registerSW } from 'virtual:pwa-register';
 import './index.css';
-
+import { ProvedorConfiguracoes } from './contexto/ContextoConfiguracoes';
 
 
 function getRootElement(): HTMLElement {
@@ -22,7 +22,9 @@ function renderizarApp(): void {
     // para que useNavigate (usado internamente pelo MsalProvider v5) funcione.
     ReactDOM.createRoot(getRootElement()).render(
         <React.StrictMode>
-            <RouterProvider router={rotas} />
+            <ProvedorConfiguracoes>
+                 <RouterProvider router={rotas} />
+            </ProvedorConfiguracoes>
         </React.StrictMode>
     );
 }

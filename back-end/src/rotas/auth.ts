@@ -11,7 +11,7 @@ import { AzureAdClaims, getJwksUri, validarClaims } from '../servicos/servico-ms
 const rotasAuth = new Hono<{ Bindings: Env }>();
 
 rotasAuth.post('/msal', async (c) => {
-    const { DB, JWT_SECRET, MSAL_TENANT_ID, MSAL_CLIENT_ID, DOMINIO_INSTITUCIONAL, BOOTSTRAP_ADMIN_EMAIL } = c.env;
+    const { DB, JWT_SECRET, MSAL_TENANT_ID, MSAL_CLIENT_ID, BOOTSTRAP_ADMIN_EMAIL } = c.env;
     const ip = c.req.header('CF-Connecting-IP') ?? 'desconhecido';
 
     try {
@@ -52,7 +52,7 @@ rotasAuth.post('/msal', async (c) => {
         }
 
         // 2. Validar claims de negócio
-        const erroValidacao = validarClaims(payload, MSAL_TENANT_ID, MSAL_CLIENT_ID, DOMINIO_INSTITUCIONAL);
+        const erroValidacao = validarClaims(payload, MSAL_TENANT_ID, MSAL_CLIENT_ID);
         if (erroValidacao) {
             console.warn('[Auth] Claims inválidas:', erroValidacao);
             return c.json({

@@ -20,11 +20,10 @@ export function validarClaims(
     payload: AzureAdClaims,
     tenantId: string,
     clientId: string,
-    dominioInstitucional: string,
 ): string | null {
     // 1. Domínio (Critério Principal)
     const email = (payload.upn || payload.preferred_username || '').toLowerCase();
-    const dominiosValidos = [dominioInstitucional, 'unieuro.com.br', 'unieuro.edu.br'];
+    const dominiosValidos = ['unieuro.com.br', 'unieuro.edu.br'];
     const possuiDominioValido = dominiosValidos.some(d => email.endsWith(`@${d}`));
 
     if (!possuiDominioValido) {

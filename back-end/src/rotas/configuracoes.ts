@@ -1,35 +1,26 @@
 import { Hono, Context } from 'hono';
+import { autenticacaoRequerida } from '../middleware/auth';
 import { Env } from '../index';
-import { autenticacaoRequerida, verificarPermissao } from '../middleware/auth';
-import { registrarLog } from '../servicos/servico-logs';
 
-const rotasConfiguracoes = new Hono<{ Bindings: Env; Variables: { usuario: any } }>();
+const rotasConfiguracoes = new Hono<{ Bindings: Env }>();
 
-// ─── GET / — Buscar todas as configurações ─────────────────────────────────────
-
-rotasConfiguracoes.get('/', autenticacaoRequerida(), verificarPermissao('configuracoes:visualizar'), async (c: Context) => {
+// ─── GET / (Admin) ──────────────────────────────────────────────────────────
+rotasConfiguracoes.get('/', autenticacaoRequerida('ADMIN'), async (c) => {
     const { DB } = c.env;
 
     try {
-        const { results } = await DB.prepare('SELECT chave, valor FROM configuracoes_sistema').all();
-
-        // Mapeia para um objeto chave-valor para facilitar o uso no front
+        const { results } = await DB.prepare('SELECT * FROM configuracoes_sistema').all();
         const config: Record<string, any> = {};
-        results.forEach((row: any) => {
-            try {
-                config[row.chave] = JSON.parse(row.valor);
-            } catch {
-                config[row.chave] = row.valor;
-            }
 
-            // Robustez: garante que chaves que DEVEM ser arrays ou objetos o sejam
-            if (row.chave === 'funcoes_tecnicas' && !Array.isArray(config[row.chave])) {
-                config[row.chave] = [];
-            }
-            if (row.chave === 'permissoes_roles' && (typeof config[row.chave] !== 'object' || config[row.chave] === null)) {
-                config[row.chave] = {};
-            }
-        });
+        if (results) {
+            results.forEach((row: any) => {
+                try {
+                    config[row.chave] = JSON.parse(row.valor);
+                } catch {
+                    config[row.chave] = row.valor;
+                }
+            });
+        }
 
         return c.json({ configuracoes: config, bruta: results });
     } catch (e: any) {
@@ -37,171 +28,55 @@ rotasConfiguracoes.get('/', autenticacaoRequerida(), verificarPermissao('configu
     }
 });
 
-// ─── GET /permissoes — Endpoint acessível para TODOS autenticados (UX) ─────────
-rotasConfiguracoes.get('/publico/permissoes', autenticacaoRequerida(), async (c: Context) => {
+// ─── GET /publico — Endpoint acessível para TODOS autenticados (UX) ─────────
+rotasConfiguracoes.get('/publico', autenticacaoRequerida(), async (c: Context) => {
     const { DB } = c.env;
 
     try {
-        const res = await DB.prepare('SELECT valor FROM configuracoes_sistema WHERE chave = ?')
-            .bind('permissoes_roles')
-            .first();
-        const config = res as any;
+        const { results } = await DB.prepare('SELECT chave, valor FROM configuracoes_sistema WHERE chave IN (?, ?)')
+            .bind('permissoes_roles', 'hierarquia_roles')
+            .all();
 
-        if (!config) {
-            return c.json({ permissoes_roles: {} });
+        const config: Record<string, any> = {
+            permissoes_roles: {},
+            hierarquia_roles: [] // Garante que a resposta seja sempre um array, mesmo que vazio.
+        };
+
+        if (results) {
+            results.forEach((row: any) => {
+                try {
+                    config[row.chave] = JSON.parse(row.valor);
+                } catch {
+                    // Mantém o valor padrão (array vazio ou objeto vazio)
+                }
+            });
         }
 
-        return c.json({ permissoes_roles: JSON.parse(config.valor) });
+        return c.json(config);
     } catch (e: any) {
-        return c.json({ erro: 'Falha ao buscar matriz de permissões', detalhe: e.message }, 500);
+        return c.json({ erro: 'Falha ao buscar configurações públicas', detalhe: e.message }, 500);
     }
 });
 
-// ─── PATCH /:chave — Atualizar uma configuração ────────────────────────────────
-
-rotasConfiguracoes.patch('/:chave', autenticacaoRequerida(), verificarPermissao('configuracoes:editar'), async (c: Context) => {
+// ─── POST / (Admin) ─────────────────────────────────────────────────────────
+rotasConfiguracoes.post('/', autenticacaoRequerida('ADMIN'), async (c) => {
     const { DB } = c.env;
-    const { chave } = c.req.param();
-    const { valor } = await c.req.json();
+    const body = await c.req.json();
 
-    if (valor === undefined) {
-        return c.json({ erro: 'Valor é obrigatório' }, 400);
+    if (!body || typeof body !== 'object') {
+        return c.json({ erro: 'Corpo da requisição inválido' }, 400);
     }
+
+    const transacoes = Object.entries(body).map(([chave, valor]) => {
+        return DB.prepare('INSERT OR REPLACE INTO configuracoes_sistema (chave, valor) VALUES (?, ?)')
+            .bind(chave, JSON.stringify(valor));
+    });
 
     try {
-        const valorString = JSON.stringify(valor);
-
-        // Buscar estado atual para o log "Antes/Depois"
-        const atual = await DB.prepare('SELECT valor FROM configuracoes_sistema WHERE chave = ?').bind(chave).first() as any;
-        let valorAnterior: any = null;
-        if (atual) {
-            try { valorAnterior = JSON.parse(atual.valor); } catch { valorAnterior = atual.valor; }
-        }
-
-        // O schema não possui atualizado_em, então removemos
-        const res = await DB.prepare(`
-            UPDATE configuracoes_sistema 
-            SET valor = ?
-            WHERE chave = ?
-        `).bind(valorString, chave).run();
-
-        if (res.meta.changes === 0) {
-            // Se não existe, tenta inserir (Upsert básico com UUID)
-            await DB.prepare(`
-                INSERT INTO configuracoes_sistema (id, chave, valor)
-                VALUES (?, ?, ?)
-            `).bind(crypto.randomUUID(), chave, valorString).run();
-        }
-
-        if (chave === 'permissoes_roles') {
-            await c.env.SISTEMA_KV.delete('permissoes_roles');
-        }
-
-        const usuario = c.get('usuario');
-        await registrarLog(DB, {
-            usuarioId: usuario.id,
-            acao: 'ATUALIZAR_CONFIG',
-            modulo: 'ADMIN',
-            descricao: `Configuração "${chave}" atualizada.`,
-            ip: c.req.header('CF-Connecting-IP') ?? '',
-            dadosAnteriores: { [chave]: valorAnterior },
-            dadosNovos: { [chave]: valor }
-        });
-
-        return c.json({ sucesso: true });
+        await DB.batch(transacoes);
+        return c.json({ sucesso: true, mensagem: 'Configurações salvas com sucesso.' });
     } catch (e: any) {
-        return c.json({ erro: 'Falha ao atualizar configuração', detalhe: e.message }, 500);
-    }
-});
-
-// ─── PATCH /roles/:antigo/renomear — Renomear cargo e atualizar usuários ────────
-rotasConfiguracoes.patch('/roles/:antigo/renomear', autenticacaoRequerida(), verificarPermissao('configuracoes:editar'), async (c: Context) => {
-    const { DB } = c.env;
-    const { antigo } = c.req.param();
-    const { novo } = await c.req.json();
-
-    if (!novo || !novo.trim()) {
-        return c.json({ erro: 'Novo nome do cargo é obrigatório.' }, 400);
-    }
-
-    const novoFormatado = novo.toUpperCase().trim();
-    if (antigo === novoFormatado) return c.json({ sucesso: true });
-
-    // Bloqueia renomear cargos protegidos
-    if (['ADMIN', 'TODOS'].includes(antigo)) {
-        return c.json({ erro: 'Cargos do sistema não podem ser renomeados.' }, 403);
-    }
-
-    try {
-        // 1. Busca a matriz de permissões
-        const resConfig = await DB.prepare('SELECT valor FROM configuracoes_sistema WHERE chave = ?')
-            .bind('permissoes_roles')
-            .first();
-        const config = resConfig as any;
-
-        if (!config) {
-            return c.json({ erro: 'Matriz de permissões não encontrada.' }, 404);
-        }
-
-        const permissoesRolesOriginais = JSON.parse(config.valor);
-
-        if (!permissoesRolesOriginais[antigo]) {
-            return c.json({ erro: 'Cargo original não encontrado na matriz.' }, 404);
-        }
-
-        if (permissoesRolesOriginais[novoFormatado]) {
-            return c.json({ erro: 'Já existe um cargo com este nome.' }, 409);
-        }
-
-        // 2. Transfere permissões e deleta antiga (Clone para o log)
-        const permissoesRolesNovas = JSON.parse(JSON.stringify(permissoesRolesOriginais));
-        permissoesRolesNovas[novoFormatado] = permissoesRolesNovas[antigo];
-        delete permissoesRolesNovas[antigo];
-
-        // 3. Execução em Batch para atomicidade (Atualizar Config + Atualizar Usuários)
-        await DB.batch([
-            DB.prepare('UPDATE configuracoes_sistema SET valor = ? WHERE chave = ?')
-                .bind(JSON.stringify(permissoesRolesNovas), 'permissoes_roles'),
-            DB.prepare('UPDATE usuarios SET role = ? WHERE role = ?')
-                .bind(novoFormatado, antigo)
-        ]);
-
-        const usuario = c.get('usuario');
-        await registrarLog(DB, {
-            usuarioId: usuario.id,
-            acao: 'CARGO_RENOMEADO',
-            modulo: 'ADMIN',
-            descricao: `Cargo "${antigo}" renomeado para "${novoFormatado}".`,
-            ip: c.req.header('CF-Connecting-IP') ?? '',
-            dadosAnteriores: { role: antigo, permissoes: permissoesRolesOriginais[antigo] },
-            dadosNovos: { role: novoFormatado, permissoes: permissoesRolesNovas[novoFormatado] }
-        });
-
-        // Invalida cache de permissões no KV
-        await c.env.SISTEMA_KV.delete('permissoes_roles');
-
-        return c.json({ sucesso: true });
-    } catch (e: any) {
-        console.error('[CONFIGS] Erro ao renomear cargo:', e);
-        return c.json({ erro: 'Falha ao renomear cargo.', detalhe: e.message }, 500);
-    }
-});
-
-// ─── POST /manutencao — Ativar/Desativar modo de manutenção ───────────────────
-rotasConfiguracoes.post('/manutencao', autenticacaoRequerida(), verificarPermissao('configuracoes:editar'), async (c: Context) => {
-    const { SISTEMA_KV } = c.env;
-    const { ativo } = await c.req.json();
-
-    try {
-        if (ativo) {
-            await SISTEMA_KV.put('MODO_MANUTENCAO', 'true');
-        } else {
-            await SISTEMA_KV.delete('MODO_MANUTENCAO');
-        }
-
-        return c.json({ sucesso: true, em_manutencao: !!ativo });
-    } catch (e: any) {
-        return c.json({ erro: 'Falha ao alterar modo de manutenção.', detalhe: e.message }, 500);
+        return c.json({ erro: 'Falha ao salvar configurações', detalhe: e.message }, 500);
     }
 });
 
