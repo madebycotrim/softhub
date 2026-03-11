@@ -16,7 +16,7 @@ import { Alerta } from '@/compartilhado/componentes/Alerta';
  * Tela de login com estética Discord-Style (Minimalista e Funcional).
  */
 export default function TelaLogin() {
-    const { instance, accounts, inProgress } = useMsal();
+    const { instance } = useMsal();
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const { entrar } = usarAutenticacaoContexto();
@@ -53,42 +53,53 @@ export default function TelaLogin() {
     const erro = erroLocal ?? (erroRedirect ? mensagemErroRedirect[erroRedirect] : null);
 
     useEffect(() => {
-        const processarRedirect = async () => {
-            if (inProgress === 'none') {
-                try {
-                    const response = await instance.handleRedirectPromise();
-                    if (response && response.account) {
-                        const emailUsuario = response.account.username ?? '';
-                        const emailMinusculo = emailUsuario.toLowerCase();
-                        const ehValido = emailMinusculo.endsWith(`@${ambiente.dominioInstitucional}`);
+        const callbackId = instance.addEventCallback(async (event: any) => {
+            // Evento disparado quando o redirect de login é processado com sucesso
+            if (event.eventType === 'msal:loginSuccess' && event.payload?.account) {
+                const conta = event.payload.account;
+                const emailUsuario = conta.username ?? '';
+                const emailMinusculo = emailUsuario.toLowerCase();
+                const ehValido = emailMinusculo.endsWith(`@${ambiente.dominioInstitucional}`);
 
-                        if (!ehValido) {
-                            await instance.logoutRedirect({ account: response.account });
-                            setErroLocal(`Use seu email @${ambiente.dominioInstitucional}.`);
-                            return;
-                        }
-                        setCarregando(true);
-                        const respostaMsal = await instance.acquireTokenSilent({
-                            ...loginRequest,
-                            account: response.account
-                        });
-                        const res = await api.post('/api/auth/msal', {
-                            accessToken: respostaMsal.accessToken,
-                            idToken: respostaMsal.idToken,
-                        });
-                        entrar(res.data.usuario, res.data.token);
-                        navigate('/app/dashboard', { replace: true });
-                    }
+                if (!ehValido) {
+                    await instance.logoutRedirect({ account: conta });
+                    setErroLocal(`Use seu email @${ambiente.dominioInstitucional}.`);
+                    return;
+                }
+
+                try {
+                    setCarregando(true);
+                    const respostaMsal = await instance.acquireTokenSilent({
+                        ...loginRequest,
+                        account: conta,
+                    });
+                    const res = await api.post('/api/auth/msal', {
+                        accessToken: respostaMsal.accessToken,
+                        idToken: respostaMsal.idToken,
+                    });
+                    entrar(res.data.usuario, res.data.token);
+                    navigate('/app/dashboard', { replace: true });
                 } catch (e: any) {
-                    console.error('[Login] Erro no redirect/auth:', e);
+                    console.error('[Login] Erro no auth backend:', e);
                     const mensagem = e.response?.data?.erro || e.response?.data?.detalhe || 'Falha ao autenticar no servidor.';
                     setErroLocal(mensagem);
                     setCarregando(false);
                 }
             }
+
+            if (event.eventType === 'msal:loginFailure') {
+                console.error('[Login] Falha no redirect MSAL:', event.error);
+                setErroLocal('Falha ao autenticar com a Microsoft. Tente novamente.');
+                setCarregando(false);
+            }
+        });
+
+        return () => {
+            if (callbackId) {
+                instance.removeEventCallback(callbackId);
+            }
         };
-        processarRedirect();
-    }, [instance, accounts, inProgress, navigate, entrar]);
+    }, [instance, navigate, entrar]);
 
     const handleLogin = async () => {
         setCarregando(true);
@@ -189,7 +200,7 @@ export default function TelaLogin() {
                                     ───────────────────────────────────────────────────────────────── */}
                                 <button
                                     onClick={handleLogin}
-                                    disabled={carregando || inProgress !== 'none'}
+                                    disabled={carregando}
                                     className="w-full flex items-center h-[41px] bg-[#2F2F2F] disabled:opacity-50 px-[12px] gap-[12px] border border-[#2F2F2F]"
                                     style={{ 
                                         fontFamily: "'Segoe UI', 'Segoe UI Web (West European)', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif",

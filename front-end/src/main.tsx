@@ -7,14 +7,7 @@ import { aplicarTemaSalvo } from './utilitarios/tema';
 import { registerSW } from 'virtual:pwa-register';
 import './index.css';
 
-const ERROS_MSAL_ESPERADOS = new Set([
-    'no_token_request_cache_error',
-    'hash_empty_error',
-    'no_cached_authority_error',
-    'state_not_found',
-    'state_mismatch',
-    'interaction_in_progress',
-]);
+
 
 function getRootElement(): HTMLElement {
     const el = document.getElementById('root');
@@ -68,13 +61,10 @@ function renderizarErro(erro: Error): void {
 async function inicializar(): Promise<void> {
     await msalInstance.initialize();
 
-    try {
-        await msalInstance.handleRedirectPromise();
-    } catch (e: any) {
-        if (!ERROS_MSAL_ESPERADOS.has(e?.errorCode)) {
-            console.error('[Main] Erro ao processar promessa de redirect:', e);
-        }
-    }
+    // NÃO chamar handleRedirectPromise() aqui!
+    // O TelaLogin.tsx é responsável por processar o redirect e autenticar.
+    // Chamar aqui consumiria a resposta antes do React renderizar,
+    // fazendo o TelaLogin receber null e nunca completar o login.
 
     renderizarApp();
 
