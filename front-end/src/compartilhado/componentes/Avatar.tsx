@@ -3,7 +3,7 @@ import { User, Crown } from 'lucide-react';
 interface AvatarProps {
     nome: string;
     fotoPerfil?: string | null;
-    tamanho?: 'sm' | 'md' | 'lg';
+    tamanho?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
     className?: string;
     coroa?: boolean;
 }
@@ -14,9 +14,11 @@ interface AvatarProps {
 export function Avatar({ nome, fotoPerfil, tamanho = 'md', className = '', coroa = false }: AvatarProps) {
     // Tamanhos mapeados por pixels
     const medidas = {
-        sm: { box: 'w-6 h-6 text-xs', corona: 'w-2.5 h-2.5 -top-1 -left-1' },
-        md: { box: 'w-8 h-8 text-sm', corona: 'w-3.5 h-3.5 -top-1.5 -left-1.5' },
-        lg: { box: 'w-10 h-10 text-base', corona: 'w-4 h-4 -top-2 -left-2' }
+        sm: { box: 'w-6 h-6 text-[10px]', corona: 'w-2.5 h-2.5 -top-1 -left-1' },
+        md: { box: 'w-8 h-8 text-xs', corona: 'w-3.5 h-3.5 -top-1.5 -left-1.5' },
+        lg: { box: 'w-10 h-10 text-sm', corona: 'w-4 h-4 -top-2 -left-2' },
+        xl: { box: 'w-16 h-16 text-xl', corona: 'w-6 h-6 -top-3 -left-3' },
+        '2xl': { box: 'w-24 h-24 text-3xl', corona: 'w-8 h-8 -top-4 -left-4' }
     };
 
     const tamanhoAtual = medidas[tamanho].box;

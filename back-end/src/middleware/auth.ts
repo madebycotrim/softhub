@@ -58,7 +58,7 @@ export function autenticacaoRequerida(roleMinimoRequerido?: string) {
 
         // ── Passo 5: Busca usuário no banco ───────────────────────────────────
         const resUsuario = await c.env.DB
-            .prepare('SELECT id, nome, email, role, ativo, versao_token FROM usuarios WHERE id = ?')
+            .prepare('SELECT id, nome, email, role, versao_token FROM usuarios WHERE id = ?')
             .bind(payload.id)
             .first();
         const usuario = resUsuario as any;
@@ -73,10 +73,7 @@ export function autenticacaoRequerida(roleMinimoRequerido?: string) {
             return c.json({ erro: 'Sua sessão foi encerrada porque você entrou em outro dispositivo.' }, 401);
         }
 
-        if (usuario.ativo === 0) {
-            console.warn(`[AUTH] Acesso negado: Conta desativada para usuário ${usuario.id}`);
-            return c.json({ erro: 'Conta desativada. Contate o suporte.' }, 403);
-        }
+
 
         // ── Passo 6: Verifica Role Mínimo (SE PROVIDO) ────────────────────────
         if (roleMinimoRequerido) {

@@ -14,7 +14,7 @@ rotasEquipes.get('/grupos', autenticacaoRequerida(), verificarPermissao('equipes
     try {
         const grupos = await DB.prepare(`
             SELECT
-                g.id, g.nome, g.descricao, g.ativo, g.criado_em,
+                g.id, g.nome, g.descricao, g.criado_em,
                 g.equipe_id,
                 e.nome AS equipe_nome,
                 ul.nome AS lider_nome,
@@ -25,7 +25,6 @@ rotasEquipes.get('/grupos', autenticacaoRequerida(), verificarPermissao('equipes
             LEFT JOIN usuarios ul ON e.lider_id = ul.id
             LEFT JOIN usuarios us ON e.sub_lider_id = us.id
             LEFT JOIN usuarios_organizacao uo ON uo.grupo_id = g.id
-            LEFT JOIN usuarios u ON uo.usuario_id = u.id AND u.ativo = 1
             GROUP BY g.id
             ORDER BY e.nome ASC, g.nome ASC
         `).all();
@@ -124,7 +123,7 @@ rotasEquipes.patch('/grupos/:id', autenticacaoRequerida(), verificarPermissao('e
     }
 });
 
-// ─── DELETE /grupos/:id — Soft delete grupo ───────────────────────────────────
+// ─── DELETE /grupos/:id — Remoção Permanente (Hard Delete) ───────────────────
 
 rotasEquipes.delete('/grupos/:id', autenticacaoRequerida(), verificarPermissao('equipes:editar_grupo'), async (c: Context) => {
     const { DB } = c.env;
@@ -132,14 +131,14 @@ rotasEquipes.delete('/grupos/:id', autenticacaoRequerida(), verificarPermissao('
     const id = c.req.param('id');
 
     try {
-        // Soft delete no grupo e em todas as equipes vinculadas aos membros do grupo
-        await DB.prepare('UPDATE grupos SET ativo = 0 WHERE id = ?').bind(id).run();
+        // Hard Delete no grupo (Cascata no schema lidará com vínculos se configurado)
+        await DB.prepare('DELETE FROM grupos WHERE id = ?').bind(id).run();
 
         await registrarLog(DB, {
             usuarioId: usuarioLogado.id,
-            acao: 'GRUPO_DESATIVADO',
+            acao: 'GRUPO_REMOVIDO_HARD',
             modulo: 'equipes',
-            descricao: `Grupo ${id} desativado (soft delete)`,
+            descricao: `Grupo ${id} removido permanentemente (Hard Delete)`,
             ip: c.req.header('CF-Connecting-IP') ?? '',
             entidadeTipo: 'grupos',
             entidadeId: id,
@@ -148,7 +147,7 @@ rotasEquipes.delete('/grupos/:id', autenticacaoRequerida(), verificarPermissao('
         return c.json({ sucesso: true });
     } catch (erro: any) {
         console.error('[ERRO] DELETE /api/equipes/grupos/:id', erro);
-        return c.json({ erro: 'Falha ao desativar grupo.' }, 500);
+        return c.json({ erro: 'Falha ao remover grupo.' }, 500);
     }
 });
 
@@ -160,17 +159,16 @@ rotasEquipes.get('/equipes', autenticacaoRequerida(), verificarPermissao('equipe
     try {
         const equipes = await DB.prepare(`
             SELECT
-                e.id, e.nome, e.descricao, e.ativo, e.criado_em,
+                e.id, e.nome, e.descricao, e.criado_em,
                 e.lider_id, e.sub_lider_id,
                 ul.nome AS lider_nome,
                 us.nome AS sub_lider_nome,
                 COUNT(DISTINCT uo.usuario_id) AS total_membros,
-                (SELECT GROUP_CONCAT(nome, ', ') FROM grupos WHERE equipe_id = e.id AND ativo = 1) AS grupos_nomes
+                (SELECT GROUP_CONCAT(nome, ', ') FROM grupos WHERE equipe_id = e.id) AS grupos_nomes
             FROM equipes e
             LEFT JOIN usuarios ul ON e.lider_id = ul.id
             LEFT JOIN usuarios us ON e.sub_lider_id = us.id
             LEFT JOIN usuarios_organizacao uo ON uo.equipe_id = e.id
-            LEFT JOIN usuarios u ON uo.usuario_id = u.id AND u.ativo = 1
             GROUP BY e.id
             ORDER BY e.nome ASC
         `).all();
@@ -289,7 +287,7 @@ rotasEquipes.patch('/equipes/:id', autenticacaoRequerida(), verificarPermissao('
     }
 });
 
-// ─── DELETE /equipes/:id — Soft delete equipe ─────────────────────────────────
+// ─── DELETE /equipes/:id — Remoção Permanente (Hard Delete) ───────────────────
 
 rotasEquipes.delete('/equipes/:id', autenticacaoRequerida(), verificarPermissao('equipes:editar_equipe'), async (c: Context) => {
     const { DB } = c.env;
@@ -297,17 +295,14 @@ rotasEquipes.delete('/equipes/:id', autenticacaoRequerida(), verificarPermissao(
     const id = c.req.param('id');
 
     try {
-        // Soft delete na equipe e em todos os grupos vinculados
-        await DB.batch([
-            DB.prepare('UPDATE equipes SET ativo = 0 WHERE id = ?').bind(id),
-            DB.prepare('UPDATE grupos SET ativo = 0 WHERE equipe_id = ?').bind(id)
-        ]);
+        // Hard delete na equipe (Cascata lidará com grupos e vínculos)
+        await DB.prepare('DELETE FROM equipes WHERE id = ?').bind(id).run();
 
         await registrarLog(DB, {
             usuarioId: usuarioLogado.id,
-            acao: 'EQUIPE_DESATIVADA',
+            acao: 'EQUIPE_REMOVIDA_HARD',
             modulo: 'equipes',
-            descricao: `Equipe ${id} desativada (soft delete)`,
+            descricao: `Equipe ${id} removida permanentemente (Hard Delete)`,
             ip: c.req.header('CF-Connecting-IP') ?? '',
             entidadeTipo: 'equipes',
             entidadeId: id,
@@ -316,7 +311,7 @@ rotasEquipes.delete('/equipes/:id', autenticacaoRequerida(), verificarPermissao(
         return c.json({ sucesso: true });
     } catch (erro: any) {
         console.error('[ERRO] DELETE /api/equipes/equipes/:id', erro);
-        return c.json({ erro: 'Falha ao desativar equipe.' }, 500);
+        return c.json({ erro: 'Falha ao remover equipe.' }, 500);
     }
 });
 

@@ -57,7 +57,7 @@ rotasPontoJustificativas.post('/justificativas', autenticacaoRequerida(), verifi
         if (!rolesComAcesso.includes('ADMIN')) rolesComAcesso.push('ADMIN');
 
         const lideresRes = await DB.prepare(`
-            SELECT id FROM usuarios WHERE role IN (${rolesComAcesso.map(() => '?').join(',')}) AND ativo = 1
+            SELECT id FROM usuarios WHERE role IN (${rolesComAcesso.map(() => '?').join(',')})
         `).bind(...rolesComAcesso).all();
         
         const resultadosLideres = lideresRes.results as any[];
@@ -188,14 +188,15 @@ rotasPontoJustificativas.get('/justificativas', autenticacaoRequerida(), verific
             SELECT * FROM justificativas_ponto 
             WHERE usuario_id = ?
             ORDER BY criado_em DESC LIMIT ? OFFSET ?
-        `).bind(usuario.id, limite, offset).all();
+        `).bind(usuario.id, Math.floor(limite), Math.floor(offset)).all();
 
         return c.json({
             dados: results,
             paginacao: { total, pagina, totalPaginas: Math.ceil(total / limite) }
         });
-    } catch (e) {
-        return c.json({ erro: 'Falha ao buscar justificativas' }, 500);
+    } catch (e: any) {
+        console.error('[ERRO] GET /api/ponto/justificativas:', e);
+        return c.json({ erro: 'Falha ao buscar justificativas', detalhe: e.message }, 500);
     }
 });
 

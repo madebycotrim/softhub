@@ -20,7 +20,7 @@ const queryClient = new QueryClient({
 
 import { QuadroKanban } from '@/funcionalidades/kanban/componentes/QuadroKanban';
 import { BaterPonto } from '@/funcionalidades/ponto/componentes/BaterPonto';
-import { DiretorioMembros } from '@/funcionalidades/membros/componentes/DiretorioMembros';
+
 import { PerfilMembro } from '@/funcionalidades/membros/componentes/PerfilMembro';
 import { MuralAvisos } from '@/funcionalidades/avisos/componentes/MuralAvisos';
 import { PaginaDashboard } from '@/funcionalidades/dashboard/componentes/PaginaDashboard';
@@ -73,7 +73,7 @@ export const rotas = createBrowserRouter([
             { path: '/app/kanban', element: <RotaProtegida><LayoutPrincipal><QuadroKanban /></LayoutPrincipal></RotaProtegida> },
 
             { path: '/app/ponto', element: <RotaProtegida><LayoutPrincipal><BaterPonto /></LayoutPrincipal></RotaProtegida> },
-            { path: '/app/membros', element: <RotaProtegida><LayoutPrincipal><DiretorioMembros /></LayoutPrincipal></RotaProtegida> },
+
             { path: '/app/membro/:id', element: <RotaProtegida><LayoutPrincipal><PerfilDinamico /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/avisos', element: <RotaProtegida><LayoutPrincipal><MuralAvisos /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/admin/logs', element: <RotaProtegida><LayoutPrincipal><PainelLogs /></LayoutPrincipal></RotaProtegida> },

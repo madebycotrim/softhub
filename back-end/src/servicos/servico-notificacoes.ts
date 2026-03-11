@@ -29,7 +29,7 @@ export async function criarNotificacoes(db: any, params: ParamsNotificacao): Pro
     }
 
     if (params.todosOsUsuarios) {
-        const { results } = await db.prepare('SELECT id FROM usuarios WHERE ativo = 1').all();
+        const { results } = await db.prepare('SELECT id FROM usuarios').all();
         results?.forEach((u: any) => idsToNotify.add(u.id));
     }
 

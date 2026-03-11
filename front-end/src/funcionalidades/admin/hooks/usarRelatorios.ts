@@ -5,7 +5,6 @@ export interface RelatorioEquipes {
     grupos: {
         id: string;
         nome: string;
-        ativo: number;
         lider_nome: string | null;
         total_equipes: number;
         total_membros: number;
@@ -13,7 +12,6 @@ export interface RelatorioEquipes {
     equipes: {
         id: string;
         nome: string;
-        ativo: number;
         lider_nome: string | null;
         grupo_nome: string | null;
         total_membros: number;
@@ -105,4 +103,3 @@ export function usarRelatorios(dataInicio?: string, dataFim?: string) {
         }
     };
 }
-

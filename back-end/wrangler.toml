@@ -16,8 +16,12 @@ database_name = 'softhub_db'
 database_id = 'e61486a2-7323-49d8-9e4a-a0543892b1da'
 
 [[kv_namespaces]]
-binding = "SESSOES_QR"
+binding = "SISTEMA_KV"
 id = "4e8bff2b06d644b79749e9127e35f963"
+
+[[kv_namespaces]]
+binding = "SESSOES_QR"
+id = "564b9bf8d29642a0a3eb630e3571c406"
 
 [ai]
 binding = "AI"

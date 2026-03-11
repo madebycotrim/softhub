@@ -14,14 +14,11 @@ rotasRelatorios.get('/equipes', autenticacaoRequerida(), verificarPermissao('rel
     try {
         // 1. Resumo de Grupos
         const gruposResumo = await DB.prepare(`
-            SELECT 
                 g.id,
                 g.nome,
-                g.ativo,
                 (SELECT nome FROM equipes WHERE id = g.equipe_id) as equipe_nome,
                 (SELECT COUNT(*) FROM usuarios_organizacao WHERE grupo_id = g.id) as total_membros
             FROM grupos g
-            WHERE g.ativo = 1
         `).all();
 
         // 2. Resumo de Equipes
@@ -29,11 +26,9 @@ rotasRelatorios.get('/equipes', autenticacaoRequerida(), verificarPermissao('rel
             SELECT 
                 e.id,
                 e.nome,
-                e.ativo,
                 (SELECT nome FROM usuarios WHERE id = e.lider_id) as lider_nome,
                 (SELECT COUNT(*) FROM usuarios_organizacao WHERE equipe_id = e.id) as total_membros
             FROM equipes e
-            WHERE e.ativo = 1
         `).all();
 
         return c.json({
@@ -136,7 +131,6 @@ rotasRelatorios.get('/frequencia/membros', autenticacaoRequerida(), verificarPer
                 (SELECT COUNT(*) FROM justificativas_ponto WHERE usuario_id = u.id AND status = 'aprovada' ${subFiltroJustificativa}) as justificativas_aprovadas,
                 (SELECT MAX(registrado_em) FROM ponto_registros WHERE usuario_id = u.id) as ultima_batida
             FROM usuarios u
-            WHERE u.ativo = 1
             ORDER BY u.nome ASC
         `).all();
 

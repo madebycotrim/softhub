@@ -23,8 +23,7 @@ rotasAvisos.get('/', autenticacaoRequerida(), verificarPermissao('avisos:visuali
              u.id as criador_id, u.nome as criador_nome, u.foto_perfil as criador_foto
       FROM avisos a
       JOIN usuarios u ON a.criado_por = u.id
-      WHERE a.ativo = 1 
-        AND (a.expira_em IS NULL OR datetime(a.expira_em) >= datetime('now'))
+      WHERE (a.expira_em IS NULL OR datetime(a.expira_em) >= datetime('now'))
       ORDER BY a.criado_em DESC
     `).all();
 
@@ -103,14 +102,14 @@ rotasAvisos.post('/', autenticacaoRequerida(), verificarPermissao('avisos:criar'
     }
 });
 
-// Remover aviso (Soft delete)
+// Remover aviso (Hard delete)
 rotasAvisos.delete('/:id', autenticacaoRequerida(), verificarPermissao('avisos:remover'), async (c: Context) => {
     const { DB } = c.env;
     const id = c.req.param('id');
     const usuario = c.get('usuario') as any;
 
     try {
-        await DB.prepare('UPDATE avisos SET ativo = 0 WHERE id = ?').bind(id).run();
+        await DB.prepare('DELETE FROM avisos WHERE id = ?').bind(id).run();
         await registrarLog(DB, {
             usuarioId: usuario.id,
             acao: 'AVISO_REMOVIDO',

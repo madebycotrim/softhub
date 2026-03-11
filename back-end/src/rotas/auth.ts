@@ -64,7 +64,7 @@ rotasAuth.post('/msal', async (c) => {
         let usuario;
         try {
             const resUsuario = await DB
-                .prepare('SELECT id, nome, email, role, ativo, versao_token FROM usuarios WHERE email = ?')
+                .prepare('SELECT id, nome, email, role, versao_token FROM usuarios WHERE email = ?')
                 .bind(email)
                 .first();
             usuario = resUsuario as any;
@@ -87,14 +87,14 @@ rotasAuth.post('/msal', async (c) => {
                 // Novo usuário via bootstrap é ADMIN
                 const novoId = crypto.randomUUID();
                 try {
-                    await DB.prepare('INSERT INTO usuarios (id, nome, email, role, ativo, versao_token) VALUES (?, ?, ?, "ADMIN", 1, 1)')
+                    await DB.prepare('INSERT INTO usuarios (id, nome, email, role, versao_token) VALUES (?, ?, ?, "ADMIN", 1)')
                         .bind(novoId, nome, email)
                         .run();
                 } catch (e: any) {
                     return c.json({ erro: 'Falha ao criar usuário de bootstrap.', detalhe: e.message }, 500);
                 }
 
-                usuario = { id: novoId, nome, email, role: 'ADMIN', ativo: 1, versao_token: 1 };
+                usuario = { id: novoId, nome, email, role: 'ADMIN', versao_token: 1 };
                 isNew = true;
             } else {
                 // Acesso negado se não estiver pré-cadastrado
@@ -126,9 +126,7 @@ rotasAuth.post('/msal', async (c) => {
             }
         }
 
-        if (usuario.ativo === 0) {
-            return c.json({ erro: 'Conta desativada. Contate o suporte.' }, 403);
-        }
+
 
         // 5. Gerar JWT Interno
         if (!JWT_SECRET) {

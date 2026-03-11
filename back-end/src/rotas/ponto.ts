@@ -9,7 +9,36 @@ import { criarNotificacoes } from '../servicos/servico-notificacoes';
 
 const rotasPonto = new Hono<{ Bindings: Env, Variables: { usuario: any } }>();
 
-// ... (GET / omitido para clareza no diff, mas mantido no arquivo)
+// Listar registros do usuário (Hoje e Histórico)
+rotasPonto.get('/', autenticacaoRequerida(), verificarPermissao('ponto:visualizar'), async (c: Context) => {
+    const { DB } = c.env;
+    const usuario = c.get('usuario') as any;
+
+    try {
+        // 1. Registros de hoje (BRT)
+        const { results: hoje } = await DB.prepare(`
+            SELECT id, tipo, registrado_em, ip_origem
+            FROM ponto_registros
+            WHERE usuario_id = ? 
+              AND DATE(registrado_em, '-3 hours') = DATE('now', '-3 hours')
+            ORDER BY registrado_em DESC
+        `).bind(usuario.id).all();
+
+        // 2. Histórico geral (últimos 50)
+        const { results: historico } = await DB.prepare(`
+            SELECT id, tipo, registrado_em, ip_origem
+            FROM ponto_registros
+            WHERE usuario_id = ?
+            ORDER BY registrado_em DESC
+            LIMIT 50
+        `).bind(usuario.id).all();
+
+        return c.json({ hoje, historico });
+    } catch (erro: any) {
+        console.error('[ERRO] GET /api/ponto:', erro);
+        return c.json({ erro: 'Falha ao buscar registros de ponto', detalhe: erro.message }, 500);
+    }
+});
 
 // Bater ponto - Requer Rede Local (Workflow 9)
 const BaterPontoSchema = z.object({
@@ -35,7 +64,7 @@ rotasPonto.post('/', autenticacaoRequerida(), verificarPermissao('ponto:registra
         // Workflow 9 - Verificar sequência (Blindado)
         const ultimo = await DB.prepare(`
             SELECT tipo FROM ponto_registros
-            WHERE usuario_id = ? AND DATE(registrado_em) = DATE('now', '-3 hours') AND ativo = 1
+            WHERE usuario_id = ? AND DATE(registrado_em) = DATE('now', '-3 hours')
             ORDER BY registrado_em DESC LIMIT 1
         `).bind(usuario.id).first() as any;
 

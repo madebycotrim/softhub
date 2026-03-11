@@ -19,7 +19,7 @@ rotasTarefasDetalhes.get('/:id/comentarios', autenticacaoRequerida(), verificarP
                    u.id AS autor_id, u.nome AS autor_nome, u.foto_perfil AS autor_foto
             FROM comentarios_tarefa c
             JOIN usuarios u ON u.id = c.autor_id
-            WHERE c.tarefa_id = ? AND c.ativo = 1
+            WHERE c.tarefa_id = ?
             ORDER BY c.criado_em ASC
         `;
         const { results } = await DB.prepare(query).bind(tarefaId).all();
@@ -53,7 +53,7 @@ rotasTarefasDetalhes.post('/:id/comentarios', autenticacaoRequerida(), verificar
 
         // Evitando Flood: Notificando o responsável + atuais comentaristas, isentando o próprio autor
         const responsaveisReq = await DB.prepare('SELECT usuario_id FROM tarefas_responsaveis WHERE tarefa_id = ?').bind(tarefaId).all();
-        const comentaristasReq = await DB.prepare('SELECT DISTINCT autor_id FROM comentarios_tarefa WHERE tarefa_id = ? AND ativo = 1').bind(tarefaId).all();
+        const comentaristasReq = await DB.prepare('SELECT DISTINCT autor_id FROM comentarios_tarefa WHERE tarefa_id = ?').bind(tarefaId).all();
 
         const usuariosParaNotificar = new Set<string>();
         responsaveisReq.results.forEach((r: any) => usuariosParaNotificar.add(r.usuario_id as string));
@@ -98,7 +98,7 @@ rotasTarefasDetalhes.patch('/comentarios/:id', autenticacaoRequerida(), verifica
     try {
         if (!conteudo || !conteudo.trim()) return c.json({ erro: 'Conteúdo vazio' }, 400);
 
-        const resComentario = await DB.prepare('SELECT autor_id, tarefa_id FROM comentarios_tarefa WHERE id = ? AND ativo = 1').bind(comentarioId).first();
+        const resComentario = await DB.prepare('SELECT autor_id, tarefa_id FROM comentarios_tarefa WHERE id = ?').bind(comentarioId).first();
         const comentarioRow = resComentario as any;
         if (!comentarioRow) return c.json({ erro: 'Comentário não encontrado' }, 404);
 
@@ -132,20 +132,11 @@ rotasTarefasDetalhes.delete('/comentarios/:id', autenticacaoRequerida(), verific
     const usuario = c.get('usuario') as any;
 
     try {
-        const resComRow = await DB.prepare('SELECT autor_id, tarefa_id FROM comentarios_tarefa WHERE id = ? AND ativo = 1').bind(comentarioId).first();
+        const resComRow = await DB.prepare('SELECT autor_id, tarefa_id FROM comentarios_tarefa WHERE id = ?').bind(comentarioId).first();
         const comentarioRow = resComRow as any;
         if (!comentarioRow) return c.json({ erro: 'Comentário não encontrado' }, 404);
 
-        const resPerms = await DB.prepare("SELECT valor FROM configuracoes_sistema WHERE chave = 'permissoes_roles'").first();
-        const permissoesRoles = JSON.parse((resPerms as any)?.valor || '{}');
-        const ehModerador = permissoesRoles[usuario.role]?.['tarefas:checklist'] === true;
-
-        if (comentarioRow.autor_id !== usuario.id && !ehModerador) {
-            return c.json({ erro: 'Você não tem permissão para excluir este comentário.' }, 403);
-        }
-
-        await DB.prepare('UPDATE comentarios_tarefa SET ativo = 0, atualizado_em = ? WHERE id = ?')
-            .bind(new Date().toISOString(), comentarioId).run();
+        await DB.prepare('DELETE FROM comentarios_tarefa WHERE id = ?').bind(comentarioId).run();
 
         await registrarLog(DB, {
             usuarioId: usuario.id,

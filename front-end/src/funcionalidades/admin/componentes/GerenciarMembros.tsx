@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, memo } from 'react';
-import { UserCog, X, Shield, Mail, Trash2, Loader2, UserCheck, Archive, ListPlus, CheckSquare, Square, Download, AlertCircle, ChevronDown, RotateCcw, Eraser, User, Users as UsersIcon, Plus } from 'lucide-react';
+import { UserCog, X, Shield, Mail, Trash2, Loader2, ListPlus, Download, AlertCircle, ChevronDown, User, Users as UsersIcon, Plus, CheckSquare, Square, History } from 'lucide-react';
 import { Tooltip } from '@/compartilhado/componentes/Tooltip';
 import { Link } from 'react-router';
 import { api } from '@/compartilhado/servicos/api';
@@ -79,24 +79,7 @@ function useGerenciarMembros() {
         } finally {
             desmarcarSalvando(membro.id);
         }
-    }, [atualizarMembro, exibirToast, marcarSalvando, desmarcarSalvando]);
-
-    const alternarStatus = useCallback(async (membro: Membro) => {
-        const novoStatus = !membro.ativo;
-
-        atualizarMembro({ ...membro, ativo: novoStatus });
-        marcarSalvando(membro.id);
-
-        try {
-            await api.patch(`/api/usuarios/${membro.id}/status`, { ativo: novoStatus });
-            exibirToast(`${membro.nome} ${novoStatus ? 'ativado' : 'pausado'} com sucesso.`);
-        } catch (e: any) {
-            atualizarMembro(membro);
-            exibirToast(e.response?.data?.erro ?? 'Erro ao alterar status do membro.', 'erro');
-        } finally {
-            desmarcarSalvando(membro.id);
-        }
-    }, [atualizarMembro, exibirToast, marcarSalvando, desmarcarSalvando]);
+    }, [atualizarMembro, exibirToast, marcarSalvando, desmarcarSalvando, usuarioAutenticado, atualizarUsuarioLocalmente]);
 
     const cadastrarMembro = useCallback(async (
         email: string,
@@ -132,29 +115,6 @@ function useGerenciarMembros() {
         return res;
     }, [deletarMembro, recarregar, exibirToast, marcarSalvando, desmarcarSalvando]);
 
-    const limpezaDefinitiva = useCallback(async (membroId: string) => {
-        marcarSalvando(membroId);
-        try {
-            await api.patch(`/api/usuarios/${membroId}/limpar`);
-            exibirToast('Membro removido definitivamente.');
-            await recarregar();
-        } catch (e: any) {
-            exibirToast(e.response?.data?.erro ?? 'Erro na limpeza definitiva.', 'erro');
-        } finally {
-            desmarcarSalvando(membroId);
-        }
-    }, [recarregar, exibirToast, marcarSalvando, desmarcarSalvando]);
-
-    const esvaziarLixeira = useCallback(async () => {
-        try {
-            const res = await api.post('/api/usuarios/limpeza-geral');
-            exibirToast(`${res.data.removidos} membros removidos definitivamente.`);
-            await recarregar();
-        } catch (e: any) {
-            exibirToast(e.response?.data?.erro ?? 'Erro ao esvaziar lixeira.', 'erro');
-        }
-    }, [recarregar, exibirToast]);
-
     return useMemo(() => ({
         membros,
         carregando,
@@ -163,11 +123,8 @@ function useGerenciarMembros() {
         salvandoIds,
         toasts,
         alterarRole,
-        alternarStatus,
         cadastrarMembro,
         removerMembro,
-        limpezaDefinitiva,
-        esvaziarLixeira
     }), [
         membros,
         carregando,
@@ -176,11 +133,8 @@ function useGerenciarMembros() {
         salvandoIds,
         toasts,
         alterarRole,
-        alternarStatus,
         cadastrarMembro,
         removerMembro,
-        limpezaDefinitiva,
-        esvaziarLixeira
     ]);
 }
 
@@ -279,31 +233,29 @@ function ModalConvitesEmLote({ aberto, aoFechar, aoCadastrar, recarregar }: Moda
 
 // ─── Componente: LinhaMembro ──────────────────────────────────────────────────
 
+
+
+/**
+ * Representa uma linha individual na tabela de membros com ações contextuais.
+ * memo: Evita re-renderizar a linha inteira quando outros estados da página mudam.
+ */
 interface LinhaMembroProps {
     membro: Membro;
     salvando: boolean;
     selecionado: boolean;
     onToggleSelect: (id: string, isShift?: boolean) => void;
     onAlterarRole: (membro: Membro, role: string) => void;
-    onAlternarStatus: (membro: Membro) => void;
     onRemover: (membro: Membro) => void;
-    onLimpeza: (membro: Membro) => void;
     rolesDisponiveis: string[];
 }
 
-/**
- * Representa uma linha individual na tabela de membros com ações contextuais.
- * memo: Evita re-renderizar a linha inteira quando outros estados da página mudam.
- */
 const LinhaMembro = memo(({
     membro,
     salvando,
     selecionado,
     onToggleSelect,
     onAlterarRole,
-    onAlternarStatus,
     onRemover,
-    onLimpeza,
     rolesDisponiveis
 }: LinhaMembroProps) => {
     const { usuario } = usarAutenticacao();
@@ -346,8 +298,6 @@ const LinhaMembro = memo(({
                             {membro.email}
                         </p>
                     </div>
-
-                    {/* Coroa integrada no Avatar via prop coroa={ehOMesmoUsuario} */}
                 </div>
             </td>
 
@@ -360,7 +310,7 @@ const LinhaMembro = memo(({
                             !podeAlterarRole ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
                         }`}
                         value={membro.role}
-                        onChange={e => onAlterarRole(membro, e.target.value)}
+                        onChange={e => onAlterarRole(membro, e.target.value as string)}
                         disabled={!podeAlterarRole}
                     >
                         {rolesDisponiveis.map(role => (
@@ -391,22 +341,6 @@ const LinhaMembro = memo(({
                 </div>
             </td>
 
-            {/* Status */}
-            <td className="px-3 py-3 text-center">
-                <div className="flex items-center justify-center gap-1.5">
-                    <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                        membro.ativo
-                            ? 'bg-emerald-500'
-                            : 'bg-muted-foreground/20'
-                    }`} />
-                    <span className={`text-[9px] font-black uppercase tracking-wider hidden sm:block ${
-                        membro.ativo ? 'text-emerald-500' : 'text-muted-foreground/40'
-                    }`}>
-                        {membro.ativo ? 'ATIVO' : 'INATIVO'}
-                    </span>
-                </div>
-            </td>
-
             {/* Ações */}
             <td className="px-3 py-3">
                 <div className="flex items-center justify-end gap-1">
@@ -420,41 +354,18 @@ const LinhaMembro = memo(({
                     </Tooltip>
 
                     {!ehOMesmoUsuario && podeDesativar && (
-                        <>
-                            <Tooltip texto={membro.ativo ? 'Arquivar membro' : 'Restaurar membro'}>
-                                <button
-                                    onClick={
-                                        membro.ativo
-                                            ? () => onRemover(membro)
-                                            : () => onAlternarStatus(membro)
-                                    }
-                                    className={`p-2 rounded-xl transition-all ${
-                                        membro.ativo
-                                            ? 'text-muted-foreground/50 hover:text-red-500 hover:bg-red-500/5'
-                                            : 'text-emerald-500 hover:bg-emerald-500/5'
-                                    }`}
-                                >
-                                    {salvando ? (
-                                        <Carregando Centralizar={false} tamanho="sm" />
-                                    ) : membro.ativo ? (
-                                        <Trash2 size={20} />
-                                    ) : (
-                                        <RotateCcw size={20} />
-                                    )}
-                                </button>
-                            </Tooltip>
-
-                            {!membro.ativo && (
-                                <Tooltip texto="Excluir definitivamente">
-                                    <button
-                                        onClick={() => onLimpeza(membro)}
-                                        className="p-2 rounded-xl text-muted-foreground/30 hover:text-red-500 hover:bg-red-500/5 transition-all"
-                                    >
-                                        <Eraser size={20} />
-                                    </button>
-                                </Tooltip>
-                            )}
-                        </>
+                        <Tooltip texto="Remover acesso">
+                            <button
+                                onClick={() => onRemover(membro)}
+                                className="p-2 rounded-xl transition-all text-muted-foreground/50 hover:text-red-500 hover:bg-red-500/5"
+                            >
+                                {salvando ? (
+                                    <Carregando Centralizar={false} tamanho="sm" />
+                                ) : (
+                                    <Trash2 size={20} />
+                                )}
+                            </button>
+                        </Tooltip>
                     )}
                 </div>
             </td>
@@ -467,7 +378,7 @@ const LinhaMembro = memo(({
 interface BulkActionsProps {
     selecionados: Set<string>;
     onClear: () => void;
-    onBulkUpdate: (tipo: 'arquivar' | 'role', valor?: string) => void;
+    onBulkUpdate: (tipo: 'remover' | 'role', valor?: string) => void;
     onExport: () => void;
     rolesDisponiveis: string[];
 }
@@ -483,7 +394,7 @@ const BulkActions = memo(({ selecionados, onClear, onBulkUpdate, onExport, roles
 
     if (selecionados.size === 0) return null;
 
-    const handleAction = async (tipo: 'arquivar' | 'role', valor?: string) => {
+    const handleAction = async (tipo: 'remover' | 'role', valor?: string) => {
         setProcessando(true);
         await onBulkUpdate(tipo, valor);
         setProcessando(false);
@@ -509,12 +420,12 @@ const BulkActions = memo(({ selecionados, onClear, onBulkUpdate, onExport, roles
             <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
                 {podeDesativar && (
                     <button
-                        onClick={() => handleAction('arquivar')}
+                        onClick={() => handleAction('remover')}
                         disabled={processando}
-                        className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition-all border border-amber-500/20 disabled:opacity-50"
+                        className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all border border-red-500/20 disabled:opacity-50"
                     >
-                        {processando ? <Loader2 size={18} className="animate-spin" /> : <Archive size={20} />} 
-                        Arquivar
+                        {processando ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={20} />} 
+                        Remover
                     </button>
                 )}
 
@@ -679,7 +590,7 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, rolesDisponiveis }
 // ─── Componente: StatsCards ───────────────────────────────────────────────────
 
 /**
- * Cartões de estatísticas rápidas sobre o diretório de membros.
+ * Cartões de estatísticas rápidas sobre os membros do sistema.
  * memo: Evita recalculação se a lista de membros for idêntica.
  */
 const StatsCards = memo(({ membros }: { membros: Membro[] }) => {
@@ -688,16 +599,16 @@ const StatsCards = memo(({ membros }: { membros: Membro[] }) => {
         const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1);
 
         const novosEsteMes = membros.filter(m => new Date(m.criado_em) >= inicioMes).length;
-        const totalAtivos = membros.filter(m => m.ativo).length;
         const totalLideres = membros.filter(m => ['SUBLIDER', 'LIDER', 'GESTOR', 'COORDENADOR', 'ADMIN'].includes(m.role)).length;
         const totalVisitantes = membros.filter(m => !m.role || m.role === 'MEMBRO' && !m.nome).length;
+        const semEquipe = membros.filter(m => !m.equipe_nome).length;
 
         return {
             total: membros.length,
             novos: novosEsteMes,
-            ativos: totalAtivos,
             lideres: totalLideres,
-            visitantes: totalVisitantes
+            visitantes: totalVisitantes,
+            semEquipe: semEquipe
         };
     }, [membros]);
 
@@ -705,9 +616,9 @@ const StatsCards = memo(({ membros }: { membros: Membro[] }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {[
                 { label: 'Total', valor: stats.total, icone: UsersIcon, cor: 'text-slate-600', bg: 'bg-slate-100', detalhe: stats.novos > 0 ? `+${stats.novos}` : null },
-                { label: 'Ativos', valor: stats.ativos, icone: UserCheck, cor: 'text-emerald-600', bg: 'bg-emerald-50', detalhe: stats.total > 0 ? `${Math.round((stats.ativos / stats.total) * 100)}%` : null },
                 { label: 'Lideranças', valor: stats.lideres, icone: Shield, cor: 'text-indigo-600', bg: 'bg-indigo-50', detalhe: null },
                 { label: 'Pendentes', valor: stats.visitantes, icone: Mail, cor: 'text-amber-600', bg: 'bg-amber-50', detalhe: null },
+                { label: 'Sem Equipe', valor: stats.semEquipe, icone: History, cor: 'text-rose-600', bg: 'bg-rose-50', detalhe: null },
             ].map((card) => (
                 <div key={card.label} className="bg-white/50 backdrop-blur-sm border border-slate-200/60 rounded-2xl p-4 flex items-center justify-between shadow-sm transition-all hover:bg-white/80">
                     <div className="flex items-center gap-3 min-w-0">
@@ -747,9 +658,8 @@ export default function GerenciarMembros() {
         salvandoIds,
         toasts,
         alterarRole,
-        alternarStatus,
         cadastrarMembro,
-        limpezaDefinitiva,
+        removerMembro,
     } = useGerenciarMembros();
 
     const { configuracoes } = usarConfiguracoes();
@@ -762,11 +672,9 @@ export default function GerenciarMembros() {
 
     const [busca, setBusca] = useState('');
     const buscaDebounced = usarDebounce(busca, 300);
-    const [abaAtiva, setAbaAtiva] = useState<'ativos' | 'arquivados'>('ativos');
     const [modalAberto, setModalAberto] = useState(false);
     const [modalLoteAberto, setModalLoteAberto] = useState(false);
     const [membroParaExcluir, setMembroParaExcluir] = useState<Membro | null>(null);
-    const [membroParaLimpar, setMembroParaLimpar] = useState<Membro | null>(null);
     const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
     const [ultimoIdSelecionado, setUltimoIdSelecionado] = useState<string | null>(null);
     const [pagina, setPagina] = useState(1);
@@ -776,7 +684,6 @@ export default function GerenciarMembros() {
 
     const listaFiltrada = useMemo(() => {
         let lista = membros;
-        lista = lista.filter(m => abaAtiva === 'ativos' ? m.ativo : !m.ativo);
 
         if (buscaDebounced.trim()) {
             const lower = buscaDebounced.toLowerCase();
@@ -787,7 +694,7 @@ export default function GerenciarMembros() {
         }
 
         return lista;
-    }, [membros, buscaDebounced, abaAtiva]);
+    }, [membros, buscaDebounced]);
 
     const totalRegistros = listaFiltrada.length;
     const totalPaginas = Math.ceil(totalRegistros / itensPorPagina) || 1;
@@ -826,11 +733,11 @@ export default function GerenciarMembros() {
         });
     }, [listaFiltrada, ultimoIdSelecionado]);
 
-    const handleBulkUpdate = async (tipo: 'arquivar' | 'role', valor?: string) => {
+    const handleBulkUpdate = async (tipo: 'remover' | 'role', valor?: string) => {
         const idsArray = Array.from(selecionados);
         try {
-            if (tipo === 'arquivar') {
-                await Promise.all(idsArray.map(id => api.patch(`/api/usuarios/${id}/status`, { ativo: false })));
+            if (tipo === 'remover') {
+                await Promise.all(idsArray.map(id => api.delete(`/api/usuarios/${id}`)));
             } else if (tipo === 'role' && valor) {
                 await Promise.all(idsArray.map(id => api.patch(`/api/usuarios/${id}/role`, { role: valor })));
             }
@@ -865,25 +772,6 @@ export default function GerenciarMembros() {
                     </div>
 
                     <div className="flex items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0">
-                        {/* Toggle Arquivados (Compacto) */}
-                        <Tooltip texto={abaAtiva === 'ativos' ? "Ver Arquivados" : "Ver Ativos"}>
-                            <button
-                                onClick={() => setAbaAtiva(abaAtiva === 'ativos' ? 'arquivados' : 'ativos')}
-                                className={`shrink-0 w-11 h-11 rounded-xl border transition-all flex items-center justify-center relative ${
-                                    abaAtiva === 'arquivados' 
-                                    ? 'bg-red-500/10 border-red-500/20 text-red-500 shadow-lg shadow-red-500/10' 
-                                    : 'bg-muted/30 border-border/50 text-muted-foreground hover:border-primary/30 hover:text-primary'
-                                }`}
-                            >
-                                <Archive size={20} />
-                                {membros.filter(m => !m.ativo).length > 0 && abaAtiva === 'ativos' && (
-                                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-[10px] font-black text-white flex items-center justify-center border-2 border-background">
-                                        {membros.filter(m => !m.ativo).length}
-                                    </span>
-                                )}
-                            </button>
-                        </Tooltip>
-
                         <div className="h-6 w-px bg-border/40 mx-1 hidden sm:block" />
 
                         {podeCadastrar && (
@@ -951,19 +839,16 @@ export default function GerenciarMembros() {
                         <table className="w-full border-collapse">
                             <thead>
                                 <tr className="border-b border-border/60 bg-muted/30">
-                                    <th className="px-4 py-3 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 w-[32%]">
+                                    <th className="px-4 py-3 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">
                                         Membro
                                     </th>
-                                    <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 w-[14%]">
-                                        Acesso
+                                    <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">
+                                        Cargo
                                     </th>
-                                    <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 w-[27%] hidden md:table-cell">
+                                    <th className="px-3 py-3 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 hidden md:table-cell">
                                         Equipe
                                     </th>
-                                    <th className="px-3 py-3 text-center text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 w-[12%]">
-                                        Status
-                                    </th>
-                                    <th className="px-3 py-3 text-right text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 w-[15%]">
+                                    <th className="px-3 py-3 text-right text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">
                                         Ações
                                     </th>
                                 </tr>
@@ -977,9 +862,7 @@ export default function GerenciarMembros() {
                                         selecionado={selecionados.has(membro.id)}
                                         onToggleSelect={toggleSelecionado}
                                         onAlterarRole={alterarRole}
-                                        onAlternarStatus={alternarStatus}
                                         onRemover={setMembroParaExcluir}
-                                        onLimpeza={setMembroParaLimpar}
                                         rolesDisponiveis={rolesDisponiveis}
                                     />
                                 ))}
@@ -1027,26 +910,12 @@ export default function GerenciarMembros() {
                 aoFechar={() => setMembroParaExcluir(null)}
                 aoConfirmar={async () => {
                     if (membroParaExcluir) {
-                        await alternarStatus(membroParaExcluir);
+                        await removerMembro(membroParaExcluir);
                         setMembroParaExcluir(null);
                     }
                 }}
-                titulo="Arquivar Membro?"
-                descricao={`O acesso de ${membroParaExcluir?.nome} será temporariamente suspenso.`}
-                textoBotao="Arquivar"
-            />
-
-            <ConfirmacaoExclusao
-                aberto={!!membroParaLimpar}
-                aoFechar={() => setMembroParaLimpar(null)}
-                aoConfirmar={async () => {
-                    if (membroParaLimpar) {
-                        await limpezaDefinitiva(membroParaLimpar.id);
-                        setMembroParaLimpar(null);
-                    }
-                }}
-                titulo="Remover Definitivamente?"
-                descricao={`Esta ação excluirá todos os dados de ${membroParaLimpar?.nome} permanentemente.`}
+                titulo="Remover Membro?"
+                descricao={`O acesso de ${membroParaExcluir?.nome} será definitivamente excluído.`}
                 textoBotao="Remover Agora"
             />
 

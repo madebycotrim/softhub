@@ -32,7 +32,6 @@ CREATE TABLE IF NOT EXISTS usuarios (
     nome TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
     role TEXT NOT NULL DEFAULT 'MEMBRO',
-    ativo INTEGER NOT NULL DEFAULT 1,
     foto_perfil TEXT,
     bio TEXT,
     funcoes TEXT DEFAULT '[]',
@@ -50,7 +49,6 @@ CREATE TABLE IF NOT EXISTS equipes (
     descricao TEXT,
     lider_id TEXT REFERENCES usuarios(id) ON DELETE SET NULL,
     sub_lider_id TEXT REFERENCES usuarios(id) ON DELETE SET NULL,
-    ativo INTEGER NOT NULL DEFAULT 1,
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 
@@ -59,7 +57,6 @@ CREATE TABLE IF NOT EXISTS grupos (
     nome TEXT NOT NULL,
     descricao TEXT,
     equipe_id TEXT REFERENCES equipes(id) ON DELETE CASCADE,
-    ativo INTEGER NOT NULL DEFAULT 1,
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 
@@ -82,7 +79,6 @@ CREATE TABLE IF NOT EXISTS projetos (
     nome TEXT NOT NULL,
     descricao TEXT,
     publico INTEGER NOT NULL DEFAULT 0,
-    ativo INTEGER NOT NULL DEFAULT 1,
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 
@@ -95,13 +91,12 @@ CREATE TABLE IF NOT EXISTS tarefas (
     prioridade TEXT NOT NULL DEFAULT 'media',
     pontos INTEGER DEFAULT 1,
     modulo TEXT,
-    ativo INTEGER NOT NULL DEFAULT 1,
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
     atualizado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_tarefas_projeto ON tarefas(projeto_id);
-CREATE INDEX IF NOT EXISTS idx_tarefas_status_ativo ON tarefas(projeto_id, status, ativo);
+CREATE INDEX IF NOT EXISTS idx_tarefas_status ON tarefas(projeto_id, status);
 CREATE INDEX IF NOT EXISTS idx_tarefas_modulo ON tarefas(modulo);
 
 CREATE TABLE IF NOT EXISTS tarefas_responsaveis (
@@ -123,8 +118,7 @@ CREATE TABLE IF NOT EXISTS ponto_registros (
     usuario_id TEXT NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
     tipo TEXT NOT NULL,
     registrado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
-    ip_origem TEXT NOT NULL,
-    ativo INTEGER NOT NULL DEFAULT 1
+    ip_origem TEXT NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_ponto_usuario ON ponto_registros(usuario_id, registrado_em DESC);
@@ -150,7 +144,6 @@ CREATE TABLE IF NOT EXISTS comentarios_tarefa (
     tarefa_id TEXT NOT NULL REFERENCES tarefas(id) ON DELETE CASCADE,
     autor_id TEXT NOT NULL REFERENCES usuarios(id),
     conteudo TEXT NOT NULL,
-    ativo INTEGER NOT NULL DEFAULT 1,
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
     atualizado_em TEXT
 );
@@ -172,7 +165,6 @@ CREATE TABLE IF NOT EXISTS avisos (
     prioridade TEXT NOT NULL DEFAULT 'info',
     criado_por TEXT NOT NULL REFERENCES usuarios(id),
     expira_em TEXT,
-    ativo INTEGER NOT NULL DEFAULT 1,
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 

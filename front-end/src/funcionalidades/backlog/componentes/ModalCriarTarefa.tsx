@@ -36,7 +36,7 @@ export function ModalCriarTarefa({ aberto, aoFechar, aoCriar }: ModalCriarTarefa
         if (!descricao || descricao.length < 10) return;
         setProcessandoIA(true);
         try {
-            const res = await api.post('/ia/prioridade', { texto: descricao });
+            const res = await api.post('/api/ia/prioridade', { texto: descricao });
             if (res.data.prioridade) setValue('prioridade', res.data.prioridade);
             // Opcional: toast com a justificativa da IA
         } catch (e) {

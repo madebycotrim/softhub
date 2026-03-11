@@ -36,7 +36,7 @@ export function PainelJustificativas() {
     const handleAnalisarIA = async (id: string, motivo: string) => {
         setCarregandoIA(id);
         try {
-            const res = await api.post('/ia/analisar-justificativa', { motivo });
+            const res = await api.post('/api/ia/analisar-justificativa', { motivo });
             setAnalisesIA(prev => ({ ...prev, [id]: res.data }));
         } catch (e) {
             console.error('Erro ao analisar com IA:', e);

@@ -24,7 +24,7 @@ rotasTarefas.get('/', autenticacaoRequerida(), verificarPermissao('tarefas:visua
         let query = `
       SELECT t.id, t.titulo, t.descricao, t.status, t.prioridade, t.pontos, t.modulo
       FROM tarefas t
-      WHERE t.projeto_id = ? AND t.ativo = 1
+      WHERE t.projeto_id = ?
     `;
         const params: any[] = [projetoId];
 
@@ -185,7 +185,7 @@ rotasTarefas.patch('/:id/mover',
             });
 
             if (colunaDestino === 'em_revisao') {
-                const { results: lideres } = await DB.prepare("SELECT id FROM usuarios WHERE role IN ('SUBLIDER', 'LIDER', 'GESTOR', 'COORDENADOR') AND ativo = 1").all();
+                const { results: lideres } = await DB.prepare("SELECT id FROM usuarios WHERE role IN ('SUBLIDER', 'LIDER', 'GESTOR', 'COORDENADOR')").all();
                 if (lideres && lideres.length > 0) {
                     await criarNotificacoes(DB, {
                         usuariosIds: lideres.map((l: any) => l.id),
@@ -198,7 +198,7 @@ rotasTarefas.patch('/:id/mover',
             }
 
             if (colunaDestino === 'concluida') {
-                const { results: lideres } = await DB.prepare("SELECT id FROM usuarios WHERE role IN ('LIDER', 'GESTOR', 'COORDENADOR', 'ADMIN') AND ativo = 1").all();
+                const { results: lideres } = await DB.prepare("SELECT id FROM usuarios WHERE role IN ('LIDER', 'GESTOR', 'COORDENADOR', 'ADMIN')").all();
                 if (lideres && lideres.length > 0) {
                     await criarNotificacoes(DB, {
                         usuariosIds: lideres.map((l: any) => l.id),
@@ -271,6 +271,36 @@ rotasTarefas.post('/:id/responsaveis', autenticacaoRequerida(), verificarPermiss
     } catch (erro) {
         console.error('[ERRO DB] POST /tarefas/:id/responsaveis', erro);
         return c.json({ erro: 'Falha ao atribuir responsabilidade' }, 500);
+    }
+});
+
+// Arquivar/Deletar Tarefa (Hard Delete - Regra atualizada)
+rotasTarefas.delete('/:id', autenticacaoRequerida(), verificarPermissao('tarefas:editar'), async (c: Context) => {
+    const { DB } = c.env;
+    const id = c.req.param('id');
+    const usuario = c.get('usuario') as any;
+
+    try {
+        const { results } = await DB.prepare('SELECT titulo FROM tarefas WHERE id = ?').bind(id).all();
+        const tarefa = results[0] as { titulo: string };
+        if (!tarefa) return c.json({ erro: 'Tarefa não encontrada' }, 404);
+
+        await DB.prepare('DELETE FROM tarefas WHERE id = ?').bind(id).run();
+
+        await registrarLog(DB, {
+            usuarioId: usuario.id,
+            acao: 'TAREFA_REMOVIDA_HARD',
+            modulo: 'kanban',
+            descricao: `Tarefa "${tarefa.titulo}" removida permanentemente (Hard Delete)`,
+            ip: c.req.header('CF-Connecting-IP') ?? '',
+            entidadeTipo: 'tarefas',
+            entidadeId: id
+        });
+
+        return c.json({ sucesso: true });
+    } catch (erro) {
+        console.error('[ERRO DB] DELETE /tarefas/:id', erro);
+        return c.json({ erro: 'Falha ao remover tarefa' }, 500);
     }
 });
 export default rotasTarefas;

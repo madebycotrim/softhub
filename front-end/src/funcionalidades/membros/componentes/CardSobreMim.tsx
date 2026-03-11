@@ -1,6 +1,5 @@
-import { ShieldCheck, MapPin, Mail, Calendar } from 'lucide-react';
+import { MapPin, Mail, Calendar } from 'lucide-react';
 import { formatarDataHora } from '@/utilitarios/formatadores';
-import { Emblema } from '@/compartilhado/componentes/Emblema';
 
 interface CardSobreMimProps {
     membro: any;
@@ -33,16 +32,7 @@ export function CardSobreMim({ membro }: CardSobreMimProps) {
                             : 'data desconhecida'}
                     </span>
                 </div>
-                <div className="flex items-center gap-3 text-sm text-muted-foreground p-3 rounded-2xl bg-muted/50 border border-border">
-                    <ShieldCheck className="w-5 h-5 text-purple-500" />
-                    <div className="flex items-center gap-2">
-                        <span>Status:</span>
-                        {membro.ativo
-                            ? <Emblema texto="Ativo" variante="verde" />
-                            : <Emblema texto="Inativo" variante="vermelho" />
-                        }
-                    </div>
-                </div>
+
                 <div className="flex items-center gap-3 text-sm text-muted-foreground p-3 rounded-2xl bg-muted/50 border border-border">
                     <MapPin className="w-5 h-5 text-rose-500" />
                     <span>Local: UNIEURO</span>

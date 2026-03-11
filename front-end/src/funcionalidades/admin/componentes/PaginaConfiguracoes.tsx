@@ -48,8 +48,8 @@ const PERMISSOES_SISTEMA = [
         label: 'Membros',
         icone: UserCircle,
         permissoes: [
-            { chave: 'membros:visualizar', label: 'Visualizar Diretório' },
-            { chave: 'membros:editar_perfil', label: 'Editar Perfil Próprio' },
+
+
             { chave: 'membros:gerenciar', label: 'Gerenciar Membros' },
             { chave: 'membros:alterar_role', label: 'Alterar Cargo' },
             { chave: 'membros:desativar', label: 'Desativar Membro' },
@@ -205,8 +205,8 @@ export function PaginaConfiguracoes() {
             [novoCargo.toUpperCase()]: {
                 'tarefas:visualizar': true,
                 'ponto:registrar': true,
-                'membros:visualizar': true,
-                'membros:editar_perfil': true,
+
+
                 'avisos:visualizar': true,
                 'dashboard:visualizar': true,
             },

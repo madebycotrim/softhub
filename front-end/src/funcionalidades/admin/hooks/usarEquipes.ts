@@ -10,7 +10,6 @@ export interface Grupo {
     lider_nome: string | null;
     sub_lider_nome: string | null;
     total_membros: number;
-    ativo: number;
     criado_em: string;
 }
 
@@ -24,7 +23,6 @@ export interface Equipe {
     sub_lider_nome: string | null;
     total_membros: number;
     grupos_nomes: string | null;
-    ativo: number;
     criado_em: string;
 }
 

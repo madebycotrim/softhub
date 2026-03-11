@@ -121,7 +121,7 @@ No banco: `id TEXT PRIMARY KEY` — nunca autoincrement.
 - IDs sempre `TEXT` com UUID
 - Datas sempre `TEXT` via `strftime('%Y-%m-%dT%H:%M:%SZ', 'now')` — gera ISO 8601 com sufixo `Z` explícito (UTC)
 - `tarefa_historico` e `logs` são **imutáveis** — nunca `UPDATE` ou `DELETE`
-- Soft delete obrigatório: `ativo = 0` ou `status = 'arquivado'` — nunca `DELETE`
+- DELETE real obrigatório: para economizar espaço no D1 (free tier) — nunca usar soft delete (`ativo = 0`)
 - Sempre **prepared statements** — nunca interpolação de string em SQL
 - Migrations são irreversíveis — nunca editar arquivo já executado, sempre criar novo
 
@@ -182,9 +182,9 @@ ADMIN > COORDENADOR > GESTOR > LIDER > SUBLIDER > MEMBRO
 
 ## REGRA 13 — Regras específicas por módulo
 
-**Kanban:** Todas as tarefas ativas do projeto aparecem no quadro. Nunca deletar tarefas. Todo movimento registra em `tarefa_historico`. Filtros por status, prioridade, responsável e busca por texto. Fluxo contínuo (sem sprints).
+**Kanban:** Todas as tarefas ativas do projeto aparecem no quadro. Todo movimento registra em `tarefa_historico`. Filtros por status, prioridade, responsável e busca por texto. Fluxo contínuo (sem sprints).
 
-**Comentários:** qualquer membro autenticado pode comentar em tarefas. Autor pode editar/remover o próprio. Liderança ou acima pode remover qualquer um. Notificar responsáveis e quem já comentou — excluir o autor da lista. Tabela `comentarios_tarefa` usa soft delete.
+**Comentários:** qualquer membro autenticado pode comentar em tarefas. Autor pode editar/remover o próprio. Liderança ou acima pode remover qualquer um. Notificar responsáveis e quem já comentou — excluir o autor da lista. Tabela `comentarios_tarefa` usa DELETE real.
 
 **Checklist:** itens informativos dentro de tarefas — não bloqueiam movimentação. Qualquer membro pode marcar/desmarcar. Liderança ou acima adiciona/remove itens. Progresso exibido no card do kanban.
 
@@ -192,7 +192,7 @@ ADMIN > COORDENADOR > GESTOR > LIDER > SUBLIDER > MEMBRO
 
 **Portfolio:** rota `/api/projetos/publicos` é pública. Projeto aparece só com `publico = 1`. Apenas `ADMIN` e `GESTOR` publicam/despublicam.
 
-**Membros:** primeiro login cria com `role = 'MEMBRO'`. Só `ADMIN` altera role. Desativados têm `ativo = 0` — nunca deletar. Primeiro ADMIN definido via variável de ambiente `BOOTSTRAP_ADMIN_EMAIL`.
+**Membros:** primeiro login cria com `role = 'MEMBRO'`. Só `ADMIN` altera role. Remoção de membro é DELETE real (Cuidado!). Primeiro ADMIN definido via variável de ambiente `BOOTSTRAP_ADMIN_EMAIL`.
 
 **Equipes e Grupos:** membro pertence a apenas UMA equipe por vez. Ao trocar de equipe, atualizar `usuarios.equipe_id`. Desativar grupo desativa todas as equipes do grupo. Apenas `LIDER` ou acima cria/edita grupos e equipes.
 
@@ -232,8 +232,8 @@ ADMIN > COORDENADOR > GESTOR > LIDER > SUBLIDER > MEMBRO
 [ ] Log registrado para a ação de negócio?
 [ ] Notificação criada se o evento exige?
 [ ] tarefa_historico atualizado se campo de tarefa foi alterado?
-[ ] Soft delete em vez de DELETE no banco?
-[ ] Formulário usa <form onSubmit> com handleSubmit do React Hook Form?
+[ ] DELETE real no banco para economizar espaço? (Regra atualizada)
+[ ] Formulário usa <form onSubmit> with handleSubmit do React Hook Form?
 [ ] Três estados tratados no frontend (carregando, erro, vazio)?
 [ ] Mensagem de erro amigável em PT-BR na UI?
 [ ] Nenhuma notificação criada no frontend?

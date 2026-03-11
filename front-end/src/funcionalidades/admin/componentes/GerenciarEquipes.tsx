@@ -289,7 +289,7 @@ function ModalAlocacao({ aberto, aoFechar, grupos, membros, aoAlocar, grupoIdPad
                             <EstadoVazio 
                                 tipo="pesquisa"
                                 titulo="Membro não encontrado"
-                                descricao={`Nenhum membro ativo corresponde a "${busca}".`}
+                                descricao={`Nenhum membro corresponde a "${busca}".`}
                             />
                         )}
                     </div>
@@ -671,7 +671,7 @@ function DetalheEquipe({
                             </div>
                         )}
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                            {equipe.total_membros} membros ativos na equipe
+                            {equipe.total_membros} membros na equipe
                         </p>
                     </div>
                 </div>
@@ -899,9 +899,7 @@ export function GerenciarEquipes() {
     const [nomeSidebarTemp, setNomeSidebarTemp] = useState('');
     const [salvandoSidebarInline, setSalvandoSidebarInline] = useState(false);
 
-    const equipesAtivas = useMemo(() => 
-        equipes.filter(e => e.ativo),
-    [equipes]);
+    const equipesAtivas = equipes;
 
     const equipesFiltradas = useMemo(() => 
         equipesAtivas.filter(e => 
@@ -915,7 +913,7 @@ export function GerenciarEquipes() {
     [equipesAtivas, idEquipeAtiva]);
 
     const gruposDaEquipe = useMemo(() => 
-        grupos.filter(g => g.equipe_id === idEquipeAtiva && g.ativo),
+        grupos.filter(g => g.equipe_id === idEquipeAtiva),
     [grupos, idEquipeAtiva]);
 
     const handleSalvarOrg = useCallback(async (dados: any) => {
@@ -1228,7 +1226,7 @@ export function GerenciarEquipes() {
                 aoFechar={() => setConfirmacaoExclusao(null)}
                 aoConfirmar={handleConfirmarExclusao}
                 titulo={`Excluir ${confirmacaoExclusao?.tipo === 'grupo' ? 'Grupo' : 'Equipe'}?`}
-                descricao="Esta ação arquiva o registro. Os membros não perdem seus acessos, mas sua alocação fixa será removida."
+                descricao="Esta ação é definitiva. Todos os dados vinculados serão permanentemente removidos."
                 carregando={desativando}
             />
 
@@ -1247,7 +1245,7 @@ export function GerenciarEquipes() {
                 aberto={!!modalMover}
                 aoFechar={() => setModalMover(null)}
                 membro={membros.find(m => m.id === modalMover?.membroId) || null}
-                grupos={grupos.filter(g => g.equipe_id === modalMover?.equipeId && g.id !== modalMover?.grupoOrigemId && g.ativo)}
+                grupos={grupos.filter(g => g.equipe_id === modalMover?.equipeId && g.id !== modalMover?.grupoOrigemId)}
                 aoMover={async (mId: string, eId: string, gDestId: string) => {
                     if (modalMover) {
                         await moverMembro(mId, eId, gDestId, modalMover.grupoOrigemId);

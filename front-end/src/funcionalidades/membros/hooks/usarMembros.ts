@@ -9,7 +9,6 @@ export interface Membro {
     nome: string;
     email: string;
     role: string;
-    ativo: boolean;
     foto_perfil: string | null;
     bio: string | null;
     criado_em: string;
@@ -32,7 +31,6 @@ function normalizarMembro(m: unknown): Membro {
         nome: String(raw.nome ?? ''),
         email: String(raw.email ?? ''),
         role: String(raw.role ?? 'MEMBRO'),
-        ativo: raw.ativo === 1 || raw.ativo === true,
         foto_perfil: (raw.foto_perfil as string | null) ?? null,
         bio: (raw.bio as string | null) ?? null,
         criado_em: String(raw.criado_em ?? ''),
@@ -87,7 +85,7 @@ export function usarMembros() {
 
     const mutationDeletar = useMutation({
         mutationFn: async (id: string) => {
-            await api.patch(`/api/usuarios/${id}/status`, { ativo: false });
+            await api.delete(`/api/usuarios/${id}`);
         },
         // Optimistic Update
         onMutate: async (id) => {

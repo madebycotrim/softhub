@@ -1,10 +1,10 @@
 -- Seed.sql - Dados Iniciais para testes (Ambiente sem Sprints)
 
 -- Usuários
-INSERT INTO usuarios (id, nome, email, role, ativo, foto_perfil, bio) VALUES
-('u1', 'Mateus Oliveira', 'mateus@unieuro.com.br', 'SUBLIDER', 1, NULL, 'Focado no backend e front.'),
-('u2', 'Ana Souza', 'ana.souza@unieuro.com.br', 'ADMIN', 1, NULL, 'Professora orientadora.'),
-('u3', 'Carlos Mendes', 'carlos.m@unieuro.com.br', 'MEMBRO', 1, NULL, NULL);
+INSERT INTO usuarios (id, nome, email, role, foto_perfil, bio) VALUES
+('u1', 'Mateus Oliveira', 'mateus@unieuro.com.br', 'SUBLIDER', NULL, 'Focado no backend e front.'),
+('u2', 'Ana Souza', 'ana.souza@unieuro.com.br', 'ADMIN', NULL, 'Professora orientadora.'),
+('u3', 'Carlos Mendes', 'carlos.m@unieuro.com.br', 'MEMBRO', NULL, NULL);
 
 -- Projetos
 INSERT INTO projetos (id, nome, descricao, publico) VALUES
@@ -25,11 +25,11 @@ INSERT INTO tarefas_responsaveis (tarefa_id, usuario_id) VALUES
 
 -- Avisos
 INSERT INTO avisos (id, titulo, conteudo, prioridade, criado_por) VALUES
-('av1', 'Novo modulo Kanban no ar!', 'Migramos o sistema para DnD Kit.', 'importante', 'u1');
+('av1', 'Novo modulo Kanban no ar!', 'Migramos o sistema para DnD Kit.', 'info', 'u1');
 
 -- Logs
-INSERT INTO logs (id, usuario_id, usuario_nome, usuario_email, usuario_role, acao, modulo, descricao) VALUES
-('log1', 'u1', 'Mateus Oliveira', 'mateus@unieuro.com.br', 'SUBLIDER', 'LOGIN', 'autenticacao', 'Sessão iniciada via MSAL');
+INSERT INTO logs (id, usuario_id, acao, modulo, descricao) VALUES
+('log1', 'u1', 'LOGIN', 'autenticacao', 'Sessão iniciada via MSAL');
 
 -- Configurações Iniciais do Sistema
 INSERT INTO configuracoes_sistema (id, chave, valor) VALUES

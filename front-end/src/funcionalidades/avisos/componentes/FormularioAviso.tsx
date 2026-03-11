@@ -36,7 +36,7 @@ export function FormularioAviso({ aoSalvar }: FormularioAvisoProps) {
         if (!rascunho || rascunho.length < 10) return;
         setRefinando(true);
         try {
-            const res = await api.post('/ia/refinar-aviso', { rascunho });
+            const res = await api.post('/api/ia/refinar-aviso', { rascunho });
             if (res.data.titulo) setValue('titulo', res.data.titulo);
             if (res.data.conteudo) setValue('conteudo', res.data.conteudo);
         } catch (e) {

@@ -31,7 +31,7 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
     const podeVerDashboard = usarPermissaoAcesso('dashboard:visualizar');
     const podeVerKanban = usarPermissaoAcesso('tarefas:visualizar');
     const podeVerPonto = usarPermissaoAcesso('ponto:visualizar');
-    const podeVerDiretorio = usarPermissaoAcesso('membros:visualizar');
+
     const podeVerAvisos = usarPermissaoAcesso('avisos:visualizar');
     const podeVerJustificativas = usarPermissaoAcesso('ponto:aprovar_justificativa');
     const podeVerMembrosAdmin = usarPermissaoAcesso('membros:gerenciar'); // Geralmente quem gerencia pode ver a lista admin
@@ -55,7 +55,7 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
             label: 'Equipe',
             links: [
                 { label: 'Kanban', path: '/app/kanban', icon: FolderKanban, visivel: podeVerKanban },
-                { label: 'Diretório', path: '/app/membros', icon: Users, visivel: podeVerDiretorio },
+
                 { label: 'Ponto Eletrônico', path: '/app/ponto', icon: Clock, visivel: podeVerPonto || podeVerJustificativas },
             ],
         },

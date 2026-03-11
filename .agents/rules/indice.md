@@ -96,7 +96,7 @@ ADMIN > COORDENADOR > GESTOR > LIDER > SUBLIDER > MEMBRO
 ❌ Secrets hardcoded no código
 ❌ Nomes em inglês (exceto exceções técnicas)
 ❌ Notificações criadas no frontend
-❌ DELETE no banco (sempre soft delete — exceto checklist_tarefa que é DELETE real)
+❌ DELETE real no banco (Sem Soft Delete)
 ❌ Exportação CSV gerada no frontend
 ❌ Bootstrap de ADMIN hardcoded no código (sempre via variável de ambiente)
 ```

@@ -24,19 +24,22 @@ rotasDashboard.get('/', autenticacaoRequerida(), verificarPermissao('dashboard:v
                 SUM(CASE WHEN t.status = 'concluido' THEN 1 ELSE 0 END) as concluidas,
                 SUM(CASE WHEN t.status != 'concluido' AND t.prioridade = 'urgente' THEN 1 ELSE 0 END) as atrasadas
             FROM tarefas t
-            WHERE t.projeto_id = ? AND t.ativo = 1
+            WHERE t.projeto_id = ?
         `).bind(projetoId).first() as any;
 
         const horasHoje = await DB.prepare(`
             SELECT COUNT(*) as batidas FROM ponto_registros WHERE date(registrado_em) = date('now')
         `).first() as any;
 
+        const total = Number(countQuery?.total || 0);
+        const concluidas = Number(countQuery?.concluidas || 0);
+
         const metricas = {
-            totalTarefas: countQuery?.total || 0,
-            tarefasConcluidas: countQuery?.concluidas || 0,
-            tarefasAtrasadas: countQuery?.atrasadas || 0,
-            horasRegistradasHoje: (horasHoje?.batidas || 0) * 4,
-            progressoGeral: countQuery?.total > 0 ? Math.round((countQuery.concluidas / countQuery.total) * 100) : 0
+            totalTarefas: total,
+            tarefasConcluidas: concluidas,
+            tarefasAtrasadas: Number(countQuery?.atrasadas || 0),
+            horasRegistradasHoje: (Number(horasHoje?.batidas || 0)) * 4,
+            progressoGeral: total > 0 ? Math.round((concluidas / total) * 100) : 0
         };
 
         const resposta = {
