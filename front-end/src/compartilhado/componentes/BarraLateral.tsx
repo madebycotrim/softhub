@@ -1,4 +1,4 @@
-import { FolderKanban, Clock, Users, Megaphone, LayoutDashboard, Database, Settings, LogOut, Sun, Moon, QrCode, FileText, LayoutGrid, Bell, Trash2, CheckCircle2 } from 'lucide-react';
+import { FolderKanban, Clock, Users, Megaphone, LayoutDashboard, Database, Settings, LogOut, Sun, Moon, QrCode, FileText, LayoutGrid, Bell, Trash2, CheckCircle2, ListTodo } from 'lucide-react';
 import { useLocation, Link } from 'react-router';
 import { Tooltip } from './Tooltip';
 import { usarAutenticacao } from '@/funcionalidades/autenticacao/hooks/usarAutenticacao';
@@ -47,6 +47,7 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
             label: 'Visão Geral',
             links: [
                 { label: 'Dashboard', path: '/app/dashboard', icon: LayoutDashboard, visivel: podeVerDashboard },
+                { label: 'Backlog', path: '/app/backlog', icon: ListTodo, visivel: podeVerKanban },
                 { label: 'Avisos', path: '/app/avisos', icon: Megaphone, visivel: podeVerAvisos },
             ],
         },

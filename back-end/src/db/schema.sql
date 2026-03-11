@@ -1,8 +1,7 @@
--- SCHEMA BLINDADO - SoftHub (Definitivo v1)
--- Este arquivo é a fonte única de verdade para a estrutura do banco de dados (SQLite/D1).
--- Segue as Regras Absolutas: IDs UUID, Datas ISO 8601 UTC, Soft Delete em tudo.
+-- SCHEMA DEFINITIVO: Fábrica de Software
+-- Consolidação de todas as tabelas, índices e configurações iniciais.
 
--- 1. Tabela de Pessoas
+-- 1. Pessoas e Perfis
 CREATE TABLE IF NOT EXISTS usuarios (
     id TEXT NOT NULL PRIMARY KEY,
     nome TEXT NOT NULL,
@@ -12,8 +11,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
     foto_perfil TEXT,
     bio TEXT,
     funcoes TEXT DEFAULT '[]', -- JSON: ['FRONTEND', 'BACKEND', etc]
-    equipe_id TEXT REFERENCES equipes(id), -- FK para equipes lógicas
-    grupo_id TEXT REFERENCES grupos(id), -- FK para grupos de trabalho / turnos (A/B)
+    equipe_id TEXT REFERENCES equipes(id), -- DEPRECATED: usar usuarios_organizacao
+    grupo_id TEXT REFERENCES grupos(id), -- DEPRECATED: usar usuarios_organizacao
     visivel INTEGER NOT NULL DEFAULT 1,
     versao_token INTEGER NOT NULL DEFAULT 1,
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
@@ -22,20 +21,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
 CREATE INDEX IF NOT EXISTS idx_usuarios_email ON usuarios(email);
 CREATE INDEX IF NOT EXISTS idx_usuarios_role ON usuarios(role);
 CREATE INDEX IF NOT EXISTS idx_usuarios_ativo ON usuarios(ativo);
-CREATE INDEX IF NOT EXISTS idx_usuarios_equipe ON usuarios(equipe_id);
-CREATE INDEX IF NOT EXISTS idx_usuarios_grupo ON usuarios(grupo_id);
 
--- 2. Tabela de Estrutura: Grupos
-CREATE TABLE IF NOT EXISTS grupos (
-    id TEXT NOT NULL PRIMARY KEY,
-    nome TEXT NOT NULL,
-    descricao TEXT,
-    equipe_id TEXT REFERENCES equipes(id) ON DELETE CASCADE, -- Vínculo com a equipe pai
-    ativo INTEGER NOT NULL DEFAULT 1,
-    criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
-);
-
--- 3. Tabela de Estrutura: Equipes
+-- 2. Estrutura Organizacional: Equipes e Grupos
 CREATE TABLE IF NOT EXISTS equipes (
     id TEXT NOT NULL PRIMARY KEY,
     nome TEXT NOT NULL,
@@ -46,7 +33,30 @@ CREATE TABLE IF NOT EXISTS equipes (
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 
--- 4. Tabela Projetos
+CREATE TABLE IF NOT EXISTS grupos (
+    id TEXT NOT NULL PRIMARY KEY,
+    nome TEXT NOT NULL,
+    descricao TEXT,
+    equipe_id TEXT REFERENCES equipes(id) ON DELETE CASCADE,
+    ativo INTEGER NOT NULL DEFAULT 1,
+    criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+);
+
+-- Suporte a Múltiplas Equipes (Migração 003)
+CREATE TABLE IF NOT EXISTS usuarios_organizacao (
+    id TEXT NOT NULL PRIMARY KEY,
+    usuario_id TEXT NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    equipe_id TEXT NOT NULL REFERENCES equipes(id) ON DELETE CASCADE,
+    grupo_id TEXT REFERENCES grupos(id) ON DELETE SET NULL,
+    criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+    UNIQUE(usuario_id, equipe_id, grupo_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_usuarios_org_usuario ON usuarios_organizacao(usuario_id);
+CREATE INDEX IF NOT EXISTS idx_usuarios_org_equipe ON usuarios_organizacao(equipe_id);
+CREATE INDEX IF NOT EXISTS idx_usuarios_org_grupo ON usuarios_organizacao(grupo_id);
+
+-- 3. Gestão de Projetos e Tarefas
 CREATE TABLE IF NOT EXISTS projetos (
     id TEXT NOT NULL PRIMARY KEY,
     nome TEXT NOT NULL,
@@ -56,24 +66,24 @@ CREATE TABLE IF NOT EXISTS projetos (
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 
--- 5. Tabela Tarefas
 CREATE TABLE IF NOT EXISTS tarefas (
     id TEXT NOT NULL PRIMARY KEY,
     projeto_id TEXT NOT NULL REFERENCES projetos(id) ON DELETE CASCADE,
     titulo TEXT NOT NULL,
     descricao TEXT,
-    status TEXT NOT NULL DEFAULT 'a_fazer', -- a_fazer, em_andamento, em_revisao, concluido
+    status TEXT NOT NULL DEFAULT 'backlog', -- backlog, todo, in_progress, em_revisao, concluida
     prioridade TEXT NOT NULL DEFAULT 'media', -- baixa, media, alta, urgente
     pontos INTEGER DEFAULT 1,
+    modulo TEXT, -- Migração 005
     ativo INTEGER NOT NULL DEFAULT 1,
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
     atualizado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_tarefas_projeto ON tarefas(projeto_id);
-CREATE INDEX IF NOT EXISTS idx_tarefas_status ON tarefas(status);
+CREATE INDEX IF NOT EXISTS idx_tarefas_status_ativo ON tarefas(projeto_id, status, ativo);
+CREATE INDEX IF NOT EXISTS idx_tarefas_modulo ON tarefas(modulo);
 
--- 6. Junções e Associações
 CREATE TABLE IF NOT EXISTS tarefas_responsaveis (
     tarefa_id TEXT NOT NULL REFERENCES tarefas(id) ON DELETE CASCADE,
     usuario_id TEXT NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
@@ -87,7 +97,7 @@ CREATE TABLE IF NOT EXISTS projetos_membros (
     PRIMARY KEY (projeto_id, usuario_id)
 );
 
--- 7. Ponto Eletrônico
+-- 4. Ponto Eletrônico e Justificativas
 CREATE TABLE IF NOT EXISTS ponto_registros (
     id TEXT NOT NULL PRIMARY KEY,
     usuario_id TEXT NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
@@ -97,7 +107,8 @@ CREATE TABLE IF NOT EXISTS ponto_registros (
     ativo INTEGER NOT NULL DEFAULT 1
 );
 
-CREATE INDEX IF NOT EXISTS idx_ponto_usuario ON ponto_registros(usuario_id, registrado_em);
+-- Otimização do Ponto (Migração 005) com nome correto de tabela
+CREATE INDEX IF NOT EXISTS idx_ponto_usuario ON ponto_registros(usuario_id, registrado_em DESC);
 
 CREATE TABLE IF NOT EXISTS justificativas_ponto (
     id TEXT NOT NULL PRIMARY KEY,
@@ -115,7 +126,7 @@ CREATE TABLE IF NOT EXISTS justificativas_ponto (
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_justificativa_unica ON justificativas_ponto (usuario_id, data);
 
--- 8. Colaboração: Comentários e Checklists
+-- 5. Colaboração: Comentários e Checklists
 CREATE TABLE IF NOT EXISTS comentarios_tarefa (
     id TEXT NOT NULL PRIMARY KEY,
     tarefa_id TEXT NOT NULL REFERENCES tarefas(id) ON DELETE CASCADE,
@@ -135,7 +146,7 @@ CREATE TABLE IF NOT EXISTS checklist_tarefa (
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 
--- 9. Comunicação e Engajamento
+-- 6. Comunicação e Engajamento
 CREATE TABLE IF NOT EXISTS avisos (
     id TEXT NOT NULL PRIMARY KEY,
     titulo TEXT NOT NULL,
@@ -158,7 +169,7 @@ CREATE TABLE IF NOT EXISTS notificacoes (
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 
--- 10. Governança e Audit
+-- 7. Governança, Audit e Histórico
 CREATE TABLE IF NOT EXISTS logs (
     id TEXT NOT NULL PRIMARY KEY,
     usuario_id TEXT REFERENCES usuarios(id) ON DELETE SET NULL,
@@ -176,6 +187,13 @@ CREATE TABLE IF NOT EXISTS logs (
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 
+-- Índices de Otimização de Logs (Migração 004)
+CREATE INDEX IF NOT EXISTS idx_logs_criado_em ON logs(criado_em DESC);
+CREATE INDEX IF NOT EXISTS idx_logs_modulo ON logs(modulo);
+CREATE INDEX IF NOT EXISTS idx_logs_acao ON logs(acao);
+CREATE INDEX IF NOT EXISTS idx_logs_usuario_id ON logs(usuario_id);
+CREATE INDEX IF NOT EXISTS idx_logs_entidade ON logs(entidade_tipo, entidade_id);
+
 CREATE TABLE IF NOT EXISTS tarefa_historico (
     id TEXT NOT NULL PRIMARY KEY,
     tarefa_id TEXT NOT NULL REFERENCES tarefas(id) ON DELETE CASCADE,
@@ -186,14 +204,13 @@ CREATE TABLE IF NOT EXISTS tarefa_historico (
     alterado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 
--- 11. Configurações de Negócio Dinâmicas
+-- 8. Configurações e Auxiliares
 CREATE TABLE IF NOT EXISTS configuracoes_sistema (
     id TEXT NOT NULL PRIMARY KEY,
     chave TEXT NOT NULL UNIQUE,
     valor TEXT NOT NULL -- Geralmente JSON
 );
 
--- 12. Sessões e QR Logic
 CREATE TABLE IF NOT EXISTS sessoes_qr (
     id TEXT NOT NULL PRIMARY KEY,
     status TEXT NOT NULL DEFAULT 'pendente',
@@ -204,3 +221,7 @@ CREATE TABLE IF NOT EXISTS sessoes_qr (
     expira_em TEXT NOT NULL,
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
+
+-- 9. Dados Iniciais (Seed)
+INSERT OR IGNORE INTO configuracoes_sistema (id, chave, valor) VALUES
+('c1', 'permissoes_roles', '{"ADMIN":{"*":true},"COORDENADOR":{"ponto:visualizar":true,"ponto:aprovar_justificativa":true,"tarefas:visualizar":true,"organizacao:visualizar":true},"GESTOR":{"ponto:visualizar":true,"ponto:aprovar_justificativa":true,"tarefas:visualizar":true,"organizacao:visualizar":true},"LIDER":{"ponto:visualizar":true,"ponto:aprovar_justificativa":true,"tarefas:visualizar":true,"tarefas:editar":true,"tarefas:mover":true,"organizacao:visualizar":true,"organizacao:editar_equipe":true},"SUBLIDER":{"ponto:visualizar":true,"ponto:aprovar_justificativa":true,"tarefas:visualizar":true,"tarefas:mover":true,"organizacao:visualizar":true},"MEMBRO":{"ponto:visualizar":true,"ponto:justificar":true,"tarefas:visualizar":true,"tarefas:comentar":true}}');

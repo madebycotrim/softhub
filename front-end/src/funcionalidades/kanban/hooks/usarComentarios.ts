@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/compartilhado/servicos/api';
 
 export interface Comentario {
@@ -12,62 +12,54 @@ export interface Comentario {
 }
 
 export function usarComentarios(tarefaId: string) {
-    const [comentarios, setComentarios] = useState<Comentario[]>([]);
-    const [carregando, setCarregando] = useState(false);
-    const [erro, setErro] = useState<string | null>(null);
+    const queryClient = useQueryClient();
+    const queryKey = ['comentarios', tarefaId];
 
-    const carregarComentarios = useCallback(async () => {
-        if (!tarefaId) return;
-        setCarregando(true);
-        setErro(null);
-        try {
+    const { 
+        data: comentarios = [], 
+        isLoading: carregando, 
+        error 
+    } = useQuery({
+        queryKey,
+        queryFn: async () => {
             const { data } = await api.get(`/tarefas/${tarefaId}/comentarios`);
-            setComentarios(data);
-        } catch (e: any) {
-            setErro(e.response?.data?.erro || 'Erro ao carregar comentários');
-        } finally {
-            setCarregando(false);
-        }
-    }, [tarefaId]);
+            return data || [];
+        },
+        enabled: !!tarefaId,
+    });
 
-    useEffect(() => {
-        carregarComentarios();
-    }, [carregarComentarios]);
+    const erro = error ? (error as any).response?.data?.erro || 'Erro ao carregar comentários' : null;
 
-    const enviarComentario = async (conteudo: string) => {
-        try {
-            await api.post(`/tarefas/${tarefaId}/comentarios`, { conteudo });
-            await carregarComentarios();
-        } catch (e: any) {
-            throw new Error(e.response?.data?.erro || 'Falha ao enviar comentário');
-        }
-    };
+    const mutacaoEnviar = useMutation({
+        mutationFn: (conteudo: string) => api.post(`/tarefas/${tarefaId}/comentarios`, { conteudo }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey });
+        },
+    });
 
-    const excluirComentario = async (id: string) => {
-        try {
-            await api.delete(`/tarefas/comentarios/${id}`);
-            setComentarios(prev => prev.filter(c => c.id !== id));
-        } catch (e: any) {
-            throw new Error(e.response?.data?.erro || 'Falha ao excluir comentário');
-        }
-    };
+    const mutacaoExcluir = useMutation({
+        mutationFn: (id: string) => api.delete(`/tarefas/comentarios/${id}`),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey });
+        },
+    });
 
-    const editarComentario = async (id: string, conteudo: string) => {
-        try {
-            await api.patch(`/tarefas/comentarios/${id}`, { conteudo });
-            await carregarComentarios();
-        } catch (e: any) {
-            throw new Error(e.response?.data?.erro || 'Falha ao editar comentário');
-        }
-    };
+    const mutacaoEditar = useMutation({
+        mutationFn: ({ id, conteudo }: { id: string; conteudo: string }) => 
+            api.patch(`/tarefas/comentarios/${id}`, { conteudo }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey });
+        },
+    });
 
     return {
         comentarios,
         carregando,
         erro,
-        enviarComentario,
-        excluirComentario,
-        editarComentario,
-        recarregar: carregarComentarios
+        enviarComentario: (conteudo: string) => mutacaoEnviar.mutateAsync(conteudo),
+        excluirComentario: (id: string) => mutacaoExcluir.mutateAsync(id),
+        editarComentario: (id: string, conteudo: string) => mutacaoEditar.mutateAsync({ id, conteudo }),
+        recarregar: () => queryClient.invalidateQueries({ queryKey })
     };
 }
+

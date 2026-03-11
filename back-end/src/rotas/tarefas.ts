@@ -18,10 +18,11 @@ rotasTarefas.get('/', autenticacaoRequerida(), verificarPermissao('tarefas:visua
     const busca = c.req.query('busca');
     const prioridade = c.req.query('prioridade'); // Suporta multiplas separadas por vírgula
     const responsavelId = c.req.query('responsavelId');
+    const modulo = c.req.query('modulo');
 
     try {
         let query = `
-      SELECT t.id, t.titulo, t.descricao, t.status, t.prioridade, t.pontos
+      SELECT t.id, t.titulo, t.descricao, t.status, t.prioridade, t.pontos, t.modulo
       FROM tarefas t
       WHERE t.projeto_id = ? AND t.ativo = 1
     `;
@@ -30,6 +31,11 @@ rotasTarefas.get('/', autenticacaoRequerida(), verificarPermissao('tarefas:visua
         if (busca) {
             query += ` AND (t.titulo LIKE ? OR t.descricao LIKE ?)`;
             params.push(`%${busca}%`, `%${busca}%`);
+        }
+
+        if (modulo) {
+            query += ` AND t.modulo = ?`;
+            params.push(modulo);
         }
 
         if (prioridade) {
@@ -62,6 +68,60 @@ rotasTarefas.get('/', autenticacaoRequerida(), verificarPermissao('tarefas:visua
     } catch (erro) {
         console.error('[ERRO DB] GET /tarefas', erro);
         return c.json({ erro: 'Falha ao buscar tarefas' }, 500);
+    }
+});
+
+// Criar Tarefa (WF 5)
+const CriarTarefaSchema = z.object({
+    projeto_id: z.string(),
+    titulo: z.string().min(3).max(100),
+    descricao: z.string().optional(),
+    prioridade: z.enum(['baixa', 'media', 'alta', 'urgente']).default('media'),
+    status: z.enum(['backlog', 'todo', 'in_progress', 'em_revisao', 'concluida']).default('backlog'),
+    modulo: z.string().optional(),
+    pontos: z.number().int().min(0).max(100).optional(),
+});
+
+rotasTarefas.post('/', 
+    autenticacaoRequerida(), 
+    verificarPermissao('tarefas:criar'), 
+    zValidator('json', CriarTarefaSchema), 
+    async (c: Context) => {
+    
+    const { DB } = c.env;
+    const body = (c.req as any).valid('json');
+    const usuario = c.get('usuario') as any;
+
+    try {
+        const id = crypto.randomUUID();
+        await DB.prepare(`
+            INSERT INTO tarefas (id, projeto_id, titulo, descricao, prioridade, status, modulo, pontos)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+            id, 
+            body.projeto_id, 
+            body.titulo, 
+            body.descricao || null, 
+            body.prioridade, 
+            body.status, 
+            body.modulo || null, 
+            body.pontos || 1
+        ).run();
+
+        await registrarLog(DB, {
+            usuarioId: usuario.id,
+            acao: 'TAREFA_CRIADA',
+            modulo: 'kanban',
+            descricao: `Tarefa "${body.titulo}" criada no projeto ${body.projeto_id}`,
+            ip: c.req.header('CF-Connecting-IP') ?? '',
+            entidadeTipo: 'tarefas',
+            entidadeId: id
+        });
+
+        return c.json({ id, sucesso: true }, 201);
+    } catch (erro) {
+        console.error('[ERRO DB] POST /tarefas', erro);
+        return c.json({ erro: 'Falha ao criar tarefa' }, 500);
     }
 });
 
@@ -160,10 +220,14 @@ rotasTarefas.patch('/:id/mover',
 });
 
 // Atribuir Responsável (WF 13)
-rotasTarefas.post('/:id/responsaveis', autenticacaoRequerida(), verificarPermissao('tarefas:editar'), async (c: Context) => {
+const AtribuirResponsavelSchema = z.object({
+    usuario_id: z.string().uuid()
+});
+
+rotasTarefas.post('/:id/responsaveis', autenticacaoRequerida(), verificarPermissao('tarefas:editar'), zValidator('json', AtribuirResponsavelSchema), async (c: Context) => {
     const { DB } = c.env;
     const id = c.req.param('id');
-    const { usuario_id } = await c.req.json();
+    const { usuario_id } = (c.req as any).valid('json');
     const usuario = c.get('usuario') as any;
 
     try {

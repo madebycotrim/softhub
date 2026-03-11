@@ -3,6 +3,8 @@ import { Env } from '../index';
 import { autenticacaoRequerida, verificarPermissao } from '../middleware/auth';
 import { registrarLog } from '../servicos/servico-logs';
 import { criarNotificacoes } from '../servicos/servico-notificacoes';
+import { z } from 'zod';
+import { zValidator } from '@hono/zod-validator';
 
 const rotasTarefasDetalhes = new Hono<{ Bindings: Env, Variables: { usuario: any } }>();
 
@@ -28,10 +30,14 @@ rotasTarefasDetalhes.get('/:id/comentarios', autenticacaoRequerida(), verificarP
     }
 });
 
-rotasTarefasDetalhes.post('/:id/comentarios', autenticacaoRequerida(), verificarPermissao('tarefas:comentar'), async (c: Context) => {
+const ComentarioSchema = z.object({
+    conteudo: z.string().min(1).max(2000)
+});
+
+rotasTarefasDetalhes.post('/:id/comentarios', autenticacaoRequerida(), verificarPermissao('tarefas:comentar'), zValidator('json', ComentarioSchema), async (c: Context) => {
     const { DB } = c.env;
     const tarefaId = c.req.param('id');
-    const { conteudo } = await c.req.json();
+    const { conteudo } = (c.req as any).valid('json');
     const usuario = c.get('usuario') as any;
 
     try {
@@ -86,10 +92,10 @@ rotasTarefasDetalhes.post('/:id/comentarios', autenticacaoRequerida(), verificar
     }
 });
 
-rotasTarefasDetalhes.patch('/comentarios/:id', autenticacaoRequerida(), verificarPermissao('tarefas:comentar'), async (c: Context) => {
+rotasTarefasDetalhes.patch('/comentarios/:id', autenticacaoRequerida(), verificarPermissao('tarefas:comentar'), zValidator('json', ComentarioSchema), async (c: Context) => {
     const { DB } = c.env;
     const comentarioId = c.req.param('id');
-    const { conteudo } = await c.req.json();
+    const { conteudo } = (c.req as any).valid('json');
     const usuario = c.get('usuario') as any;
 
     try {
@@ -197,10 +203,14 @@ rotasTarefasDetalhes.get('/:id/checklist', autenticacaoRequerida(), verificarPer
 });
 
 // Adicionar item ao checklist
-rotasTarefasDetalhes.post('/:id/checklist', autenticacaoRequerida(), verificarPermissao('tarefas:checklist'), async (c: Context) => {
+const ItemChecklistSchema = z.object({
+    texto: z.string().min(1).max(255)
+});
+
+rotasTarefasDetalhes.post('/:id/checklist', autenticacaoRequerida(), verificarPermissao('tarefas:checklist'), zValidator('json', ItemChecklistSchema), async (c: Context) => {
     const { DB } = c.env;
     const tarefaId = c.req.param('id');
-    const { texto } = await c.req.json();
+    const { texto } = (c.req as any).valid('json');
     const usuario = c.get('usuario') as any;
 
     if (!texto || !texto.trim()) return c.json({ erro: 'Texto obrigatório' }, 400);
@@ -217,9 +227,14 @@ rotasTarefasDetalhes.post('/:id/checklist', autenticacaoRequerida(), verificarPe
 });
 
 // Atualizar item (concluir/desconcluir ou editar texto)
-rotasTarefasDetalhes.patch('/:tarefaId/checklist/:itemId', autenticacaoRequerida(), verificarPermissao('tarefas:visualizar'), async (c: Context) => {
+const AtualizarItemChecklistSchema = z.object({
+    concluido: z.boolean().optional(),
+    texto: z.string().min(1).max(255).optional()
+});
+
+rotasTarefasDetalhes.patch('/:tarefaId/checklist/:itemId', autenticacaoRequerida(), verificarPermissao('tarefas:visualizar'), zValidator('json', AtualizarItemChecklistSchema), async (c: Context) => {
     const { DB } = c.env;
-    const { concluido, texto } = await c.req.json();
+    const { concluido, texto } = (c.req as any).valid('json');
     const itemId = c.req.param('itemId');
 
     try {

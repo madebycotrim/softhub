@@ -54,37 +54,48 @@ rotasRelatorios.get('/equipes', autenticacaoRequerida(), verificarPermissao('rel
  */
 rotasRelatorios.get('/frequencia/geral', autenticacaoRequerida(), verificarPermissao('relatorios:visualizar'), async (c: Context) => {
     const { DB } = c.env;
+    const { data_inicio, data_fim } = c.req.query();
+
+    const filtroData = data_inicio && data_fim 
+        ? `AND registrado_em BETWEEN '${data_inicio}' AND '${data_fim}'`
+        : `AND registrado_em >= date('now', '-30 days')`;
+
+    const filtroDataJustificativa = data_inicio && data_fim 
+        ? `AND criado_em BETWEEN '${data_inicio}' AND '${data_fim}'`
+        : '';
 
     try {
-        // Presenças diárias nos últimos 30 dias
+        // Presenças diárias no período
         const presencasDiarias = await DB.prepare(`
             SELECT 
                 date(registrado_em) as data,
                 COUNT(DISTINCT usuario_id) as total_presentes
             FROM ponto_registros
-            WHERE registrado_em >= date('now', '-30 days')
-            AND tipo = 'ENTRADA'
+            WHERE tipo = 'ENTRADA'
+            ${filtroData}
             GROUP BY date(registrado_em)
             ORDER BY data ASC
         `).all();
 
-        // Status das justificativas (Aprovadas vs Pendentes)
+        // Status das justificativas no período
         const justificativasStatus = await DB.prepare(`
             SELECT 
                 status,
                 COUNT(*) as total
             FROM justificativas_ponto
             WHERE ativo = 1
+            ${filtroDataJustificativa}
             GROUP BY status
         `).all();
 
-        // Tipos de justificativas mais comuns
+        // Tipos de justificativas mais comuns no período
         const justificativasTipos = await DB.prepare(`
             SELECT 
                 tipo,
                 COUNT(*) as total
             FROM justificativas_ponto
             WHERE ativo = 1 AND status = 'aprovada'
+            ${filtroDataJustificativa}
             GROUP BY tipo
         `).all();
 
@@ -101,10 +112,19 @@ rotasRelatorios.get('/frequencia/geral', autenticacaoRequerida(), verificarPermi
 
 /**
  * 👤 RELATÓRIO DE FREQUÊNCIA POR MEMBRO
- * Retorna o histórico resumido de cada membro.
+ * Retorna o histórico resumido de cada membro com base no período.
  */
 rotasRelatorios.get('/frequencia/membros', autenticacaoRequerida(), verificarPermissao('relatorios:visualizar'), async (c: Context) => {
     const { DB } = c.env;
+    const { data_inicio, data_fim } = c.req.query();
+
+    const subFiltroPonto = data_inicio && data_fim 
+        ? `AND registrado_em BETWEEN '${data_inicio}' AND '${data_fim}'`
+        : "";
+
+    const subFiltroJustificativa = data_inicio && data_fim 
+        ? `AND criado_em BETWEEN '${data_inicio}' AND '${data_fim}'`
+        : "";
 
     try {
         const membrosFrequencia = await DB.prepare(`
@@ -114,8 +134,8 @@ rotasRelatorios.get('/frequencia/membros', autenticacaoRequerida(), verificarPer
                 u.email,
                 e.nome as equipe_nome,
                 g.nome as grupo_nome,
-                (SELECT COUNT(DISTINCT date(registrado_em)) FROM ponto_registros WHERE usuario_id = u.id AND tipo = 'ENTRADA') as dias_presentes,
-                (SELECT COUNT(*) FROM justificativas_ponto WHERE usuario_id = u.id AND status = 'aprovada') as justificativas_aprovadas,
+                (SELECT COUNT(DISTINCT date(registrado_em)) FROM ponto_registros WHERE usuario_id = u.id AND tipo = 'ENTRADA' ${subFiltroPonto}) as dias_presentes,
+                (SELECT COUNT(*) FROM justificativas_ponto WHERE usuario_id = u.id AND status = 'aprovada' ${subFiltroJustificativa}) as justificativas_aprovadas,
                 (SELECT MAX(registrado_em) FROM ponto_registros WHERE usuario_id = u.id) as ultima_batida
             FROM usuarios u
             LEFT JOIN equipes e ON u.equipe_id = e.id
@@ -132,5 +152,6 @@ rotasRelatorios.get('/frequencia/membros', autenticacaoRequerida(), verificarPer
         return c.json({ erro: 'Falha ao gerar relatório de frequência por membro' }, 500);
     }
 });
+
 
 export default rotasRelatorios;

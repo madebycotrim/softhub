@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { api } from '@/compartilhado/servicos/api';
 
 export interface RelatorioEquipes {
@@ -46,61 +46,63 @@ export interface RelatorioFrequenciaMembro {
     ultima_batida: string | null;
 }
 
-export function usarRelatorios() {
-    const [equipesRelatorio, setEquipesRelatorio] = useState<RelatorioEquipes | null>(null);
-    const [frequenciaGeral, setFrequenciaGeral] = useState<RelatorioFrequenciaGeral | null>(null);
-    const [frequenciaMembros, setFrequenciaMembros] = useState<RelatorioFrequenciaMembro[]>([]);
-    const [carregando, setCarregando] = useState(false);
-    const [erro, setErro] = useState<string | null>(null);
-
-    const carregarRelatorioEquipes = useCallback(async () => {
-        try {
+/**
+ * Hook para buscar relatórios gerenciais com React Query.
+ * Suporta filtragem por período de data.
+ */
+export function usarRelatorios(dataInicio?: string, dataFim?: string) {
+    
+    // 1. Relatório de Estrutura (Estático, muda pouco)
+    const queryEquipes = useQuery<RelatorioEquipes>({
+        queryKey: ['relatorios', 'equipes'],
+        queryFn: async () => {
             const res = await api.get('/api/relatorios/equipes');
-            setEquipesRelatorio(res.data);
-        } catch (e: any) {
-            setErro(e.response?.data?.erro || 'Erro ao carregar relatório de equipes');
-        }
-    }, []);
+            return res.data;
+        },
+        staleTime: 10 * 60 * 1000, // 10 minutos
+    });
 
-    const carregarRelatorioFrequenciaGeral = useCallback(async () => {
-        try {
-            const res = await api.get('/api/relatorios/frequencia/geral');
-            setFrequenciaGeral(res.data);
-        } catch (e: any) {
-            setErro(e.response?.data?.erro || 'Erro ao carregar frequência geral');
-        }
-    }, []);
+    // 2. Relatório de Frequência Geral (Dinâmico p/ período)
+    const queryFrequenciaGeral = useQuery<RelatorioFrequenciaGeral>({
+        queryKey: ['relatorios', 'frequencia', 'geral', dataInicio, dataFim],
+        queryFn: async () => {
+            const res = await api.get('/api/relatorios/frequencia/geral', {
+                params: { data_inicio: dataInicio, data_fim: dataFim }
+            });
+            return res.data;
+        },
+    });
 
-    const carregarRelatorioFrequenciaMembros = useCallback(async () => {
-        try {
-            const res = await api.get('/api/relatorios/frequencia/membros');
-            setFrequenciaMembros(res.data.membros);
-        } catch (e: any) {
-            setErro(e.response?.data?.erro || 'Erro ao carregar frequência de membros');
-        }
-    }, []);
+    // 3. Relatório de Membros (Dinâmico p/ período)
+    const queryFrequenciaMembros = useQuery<RelatorioFrequenciaMembro[]>({
+        queryKey: ['relatorios', 'frequencia', 'membros', dataInicio, dataFim],
+        queryFn: async () => {
+            const res = await api.get('/api/relatorios/frequencia/membros', {
+                params: { data_inicio: dataInicio, data_fim: dataFim }
+            });
+            return res.data.membros || [];
+        },
+    });
 
-    const carregarTudo = useCallback(async () => {
-        setCarregando(true);
-        setErro(null);
-        await Promise.all([
-            carregarRelatorioEquipes(),
-            carregarRelatorioFrequenciaGeral(),
-            carregarRelatorioFrequenciaMembros()
-        ]);
-        setCarregando(false);
-    }, [carregarRelatorioEquipes, carregarRelatorioFrequenciaGeral, carregarRelatorioFrequenciaMembros]);
-
-    useEffect(() => {
-        carregarTudo();
-    }, [carregarTudo]);
+    const carregando = queryEquipes.isLoading || queryFrequenciaGeral.isLoading || queryFrequenciaMembros.isLoading;
+    const erro = (
+        (queryEquipes.error as any)?.response?.data?.erro || 
+        (queryFrequenciaGeral.error as any)?.response?.data?.erro || 
+        (queryFrequenciaMembros.error as any)?.response?.data?.erro || 
+        null
+    );
 
     return {
-        equipesRelatorio,
-        frequenciaGeral,
-        frequenciaMembros,
+        equipesRelatorio: queryEquipes.data || null,
+        frequenciaGeral: queryFrequenciaGeral.data || null,
+        frequenciaMembros: queryFrequenciaMembros.data || [],
         carregando,
         erro,
-        recarregar: carregarTudo
+        recarregar: () => {
+            queryEquipes.refetch();
+            queryFrequenciaGeral.refetch();
+            queryFrequenciaMembros.refetch();
+        }
     };
 }
+

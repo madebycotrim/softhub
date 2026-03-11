@@ -27,6 +27,8 @@ import { PaginaDashboard } from '@/funcionalidades/dashboard/componentes/PaginaD
 import { PainelLogs } from '@/funcionalidades/admin/componentes/PainelLogs';
 import { PainelJustificativas } from '@/funcionalidades/admin/componentes/PainelJustificativas';
 import GerenciarMembros from '@/funcionalidades/admin/componentes/GerenciarMembros';
+import PaginaBacklog from '@/funcionalidades/backlog/componentes/PaginaBacklog';
+
 
 import { PaginaConfiguracoes } from '@/funcionalidades/admin/componentes/PaginaConfiguracoes';
 import PaginaRelatorios from '@/funcionalidades/admin/componentes/PaginaRelatorios';
@@ -67,7 +69,9 @@ export const rotas = createBrowserRouter([
                 element: <RotaProtegida><LayoutPrincipal><div className="flex w-full h-full items-center justify-center text-muted-foreground">Selecione uma opção no menu lateral</div></LayoutPrincipal></RotaProtegida>,
             },
             { path: '/app/dashboard', element: <RotaProtegida><LayoutPrincipal><PaginaDashboard /></LayoutPrincipal></RotaProtegida> },
+            { path: '/app/backlog', element: <RotaProtegida><LayoutPrincipal><PaginaBacklog /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/kanban', element: <RotaProtegida><LayoutPrincipal><QuadroKanban /></LayoutPrincipal></RotaProtegida> },
+
             { path: '/app/ponto', element: <RotaProtegida><LayoutPrincipal><BaterPonto /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/membros', element: <RotaProtegida><LayoutPrincipal><DiretorioMembros /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/membro/:id', element: <RotaProtegida><LayoutPrincipal><PerfilDinamico /></LayoutPrincipal></RotaProtegida> },

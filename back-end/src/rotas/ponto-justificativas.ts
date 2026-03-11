@@ -3,6 +3,8 @@ import { Env } from '../index';
 import { autenticacaoRequerida, verificarPermissao } from '../middleware/auth';
 import { registrarLog } from '../servicos/servico-logs';
 import { criarNotificacoes } from '../servicos/servico-notificacoes';
+import { z } from 'zod';
+import { zValidator } from '@hono/zod-validator';
 
 const rotasPontoJustificativas = new Hono<{ Bindings: Env, Variables: { usuario: any } }>();
 
@@ -11,14 +13,16 @@ const rotasPontoJustificativas = new Hono<{ Bindings: Env, Variables: { usuario:
 // ==========================================
 
 // 1. Membro enviando justificativa
-rotasPontoJustificativas.post('/justificativas', autenticacaoRequerida(), verificarPermissao('ponto:justificar'), async (c: Context) => {
-    const { DB } = c.env;
-    const { data, tipo, motivo } = await c.req.json();
-    const usuario = c.get('usuario') as any;
+const JustificativaSchema = z.object({
+    data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    tipo: z.enum(['esquecimento', 'falta', 'atestado', 'outro']),
+    motivo: z.string().min(5)
+});
 
-    if (!data || !tipo || !motivo) {
-        return c.json({ erro: 'Data, tipo e motivo são obrigatórios.' }, 400);
-    }
+rotasPontoJustificativas.post('/justificativas', autenticacaoRequerida(), verificarPermissao('ponto:justificar'), zValidator('json', JustificativaSchema), async (c: Context) => {
+    const { DB } = c.env;
+    const { data, tipo, motivo } = (c.req as any).valid('json');
+    const usuario = c.get('usuario') as any;
 
     // Blindagem: Data no Futuro
     const dataBrasilia = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', year:'numeric', month:'2-digit', day:'2-digit'}).format(new Date());
@@ -86,9 +90,9 @@ rotasPontoJustificativas.post('/justificativas', autenticacaoRequerida(), verifi
 });
 
 // 1.1. Membro editando justificativa pendente
-rotasPontoJustificativas.patch('/justificativas/:id', autenticacaoRequerida(), verificarPermissao('ponto:justificar'), async (c: Context) => {
+rotasPontoJustificativas.patch('/justificativas/:id', autenticacaoRequerida(), verificarPermissao('ponto:justificar'), zValidator('json', JustificativaSchema), async (c: Context) => {
     const { DB } = c.env;
-    const { data, tipo, motivo } = await c.req.json();
+    const { data, tipo, motivo } = (c.req as any).valid('json');
     const usuario = c.get('usuario') as any;
     const id = c.req.param('id');
 
@@ -258,10 +262,14 @@ rotasPontoJustificativas.patch('/admin/justificativas/:id/aprovar', autenticacao
 });
 
 // 5. Admin Rejeitando Justificativa
-rotasPontoJustificativas.patch('/admin/justificativas/:id/rejeitar', autenticacaoRequerida(), verificarPermissao('ponto:aprovar_justificativa'), async (c: Context) => {
+const RejeicaoSchema = z.object({
+    motivoRejeicao: z.string().min(3)
+});
+
+rotasPontoJustificativas.patch('/admin/justificativas/:id/rejeitar', autenticacaoRequerida(), verificarPermissao('ponto:aprovar_justificativa'), zValidator('json', RejeicaoSchema), async (c: Context) => {
     const { DB } = c.env;
     const justificativaId = c.req.param('id');
-    const { motivoRejeicao } = await c.req.json();
+    const { motivoRejeicao } = (c.req as any).valid('json');
     const usuario = c.get('usuario') as any;
 
     const resAlvar = await DB.prepare(`SELECT * FROM justificativas_ponto WHERE id = ?`).bind(justificativaId).first();

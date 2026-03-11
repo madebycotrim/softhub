@@ -45,3 +45,25 @@ Acesse: *Dashboard Cloudflare -> D1 -> softhub_db -> Metrics*
 - **Sinal de Alerta:** Ver `5.000 Queries Executed`, mas absurdos `20.000.000 Rows Read`.
 - **Motivo do Alerta:** Confirma o Item (1). Consultas sem Índice ou mal formatadas. O banco não achou nada velozmente e precisou varrer tudo exaustivamente.
 - **O que fazer:** Rode o `db:explain` com a sua Query e aplique os índices de correção.
+
+---
+
+## 3. Monitoramento de Rate Limiting (Escudo Anti-Abuso) 🛡️
+
+Implementamos um limite de **60 requisições por minuto por IP** para evitar spam e garantir a estabilidade.
+
+- **Sinal de Alerta:** Usuários relatando erro `429 (Too Many Requests)` durante o uso normal.
+- **Motivo do Alerta:** Pode indicar um loop de requisição no frontend ou muitos usuários compartilhando o mesmo IP de saída (NAT agressivo da rede local). 
+- **O que fazer:** 
+    1. Verifique o console do navegador do usuário no PC do laboratório.
+    2. Use `wrangler tail` para ver quais IPs estão sendo bloqueados.
+    3. Se necessário, aumente o limite no `index.ts` do backend.
+
+## 4. React Query e Performance de Rede ⚛️
+
+Padronizamos os hooks para usar `@tanstack/react-query`. Isso economiza requests via cache.
+
+- **Dica de Ouro:** Use o `React Query DevTools` em ambiente de desenvolvimento.
+- **O que observar:** Verifique se as queries estão entrando em estado `stale` muito rápido.
+- **Configuração Atual:** Padronizamos para `staleTime: 30000ms` (30 segundos). Isso significa que se o usuário mudar de tela e voltar em menos de 30s, **zero requests** serão feitos ao servidor.
+

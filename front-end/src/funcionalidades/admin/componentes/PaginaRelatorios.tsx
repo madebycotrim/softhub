@@ -20,21 +20,25 @@ import { formatarDataHora } from '@/utilitarios/formatadores';
 const CORES = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
 export default function PaginaRelatorios() {
+    const [dataInicio, setDataInicio] = useState('');
+    const [dataFim, setDataFim] = useState('');
+    
     const { 
         equipesRelatorio, 
         frequenciaGeral, 
         frequenciaMembros, 
         carregando, 
         erro 
-    } = usarRelatorios();
+    } = usarRelatorios(dataInicio, dataFim);
 
     const [abaAtiva, setAbaAtiva] = useState<'geral' | 'equipes' | 'membros'>('geral');
     const [busca, setBusca] = useState('');
 
-    const membrosFiltrados = frequenciaMembros.filter(m => 
+    const membrosFiltrados = (frequenciaMembros || []).filter(m => 
         m.nome.toLowerCase().includes(busca.toLowerCase()) || 
         m.email.toLowerCase().includes(busca.toLowerCase())
     );
+
 
     return (
         <div className="w-full space-y-6 animate-in fade-in duration-700 pb-20">
@@ -43,13 +47,38 @@ export default function PaginaRelatorios() {
                     subtitulo="Análise estratégica de estrutura, frequência e engajamento."
                     icone={FileText}
                 >
-                    <button
-                        onClick={() => window.print()}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
-                    >
-                        <Download className="w-4 h-4" /> Exportar / Imprimir
-                    </button>
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                        <div className="flex items-center gap-2 bg-card border border-border rounded-2xl px-3 py-1.5">
+                            <div className="flex flex-col">
+                                <span className="text-[8px] font-black uppercase text-muted-foreground/40 leading-none mb-1">De</span>
+                                <input 
+                                    type="date" 
+                                    value={dataInicio}
+                                    onChange={(e) => setDataInicio(e.target.value)}
+                                    className="bg-transparent text-[11px] font-bold text-foreground focus:outline-none"
+                                />
+                            </div>
+                            <div className="w-px h-6 bg-border mx-1" />
+                            <div className="flex flex-col">
+                                <span className="text-[8px] font-black uppercase text-muted-foreground/40 leading-none mb-1">Até</span>
+                                <input 
+                                    type="date" 
+                                    value={dataFim}
+                                    onChange={(e) => setDataFim(e.target.value)}
+                                    className="bg-transparent text-[11px] font-bold text-foreground focus:outline-none"
+                                />
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={() => window.print()}
+                            className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all w-full sm:w-auto justify-center"
+                        >
+                            <Download className="w-4 h-4" /> Exportar / Imprimir
+                        </button>
+                    </div>
                 </CabecalhoFuncionalidade>
+
 
                 {carregando && frequenciaMembros.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-32 gap-4 bg-card border border-border rounded-3xl">

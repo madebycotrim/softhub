@@ -1,4 +1,6 @@
 import { Hono, Context } from 'hono';
+import { z } from 'zod';
+import { zValidator } from '@hono/zod-validator';
 import { Env } from '../index';
 import { autenticacaoRequerida, verificarPermissao } from '../middleware/auth';
 import { registrarLog } from '../servicos/servico-logs';
@@ -54,10 +56,17 @@ rotasAvisos.get('/', autenticacaoRequerida(), verificarPermissao('avisos:visuali
 });
 
 // Criar aviso (Requer líder ou admin, validado em Etapa Superior ou frontend mock)
-rotasAvisos.post('/', autenticacaoRequerida(), verificarPermissao('avisos:criar'), async (c: Context) => {
+const CriarAvisoSchema = z.object({
+    titulo: z.string().min(3),
+    conteudo: z.string().min(5),
+    prioridade: z.enum(['baixa', 'media', 'alta', 'urgente']),
+    expira_em: z.string().nullable().optional()
+});
+
+rotasAvisos.post('/', autenticacaoRequerida(), verificarPermissao('avisos:criar'), zValidator('json', CriarAvisoSchema), async (c: Context) => {
     const { DB } = c.env;
     const usuario = c.get('usuario') as any;
-    const { titulo, conteudo, prioridade, expira_em } = await c.req.json();
+    const { titulo, conteudo, prioridade, expira_em } = (c.req as any).valid('json');
 
     try {
         const novoId = crypto.randomUUID();

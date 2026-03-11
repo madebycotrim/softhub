@@ -3,6 +3,8 @@ import { Env } from '../index';
 import { autenticacaoRequerida, verificarPermissao } from '../middleware/auth';
 import { registrarLog } from '../servicos/servico-logs';
 import { criarNotificacoes } from '../servicos/servico-notificacoes';
+import { z } from 'zod';
+import { zValidator } from '@hono/zod-validator';
 
 const rotasUsuarios = new Hono<{ Bindings: Env; Variables: { usuario: any } }>();
 
@@ -64,20 +66,17 @@ rotasUsuarios.get('/', autenticacaoRequerida(), verificarPermissao('membros:visu
 
 // ─── PATCH /perfil — Editar Próprio Perfil ────────────────────────────────────
 
-rotasUsuarios.patch('/perfil', autenticacaoRequerida(), async (c) => {
+const PerfilSchema = z.object({
+    bio: z.string().nullable().optional(),
+    foto_perfil: z.string().nullable().optional(),
+});
+
+rotasUsuarios.patch('/perfil', autenticacaoRequerida(), zValidator('json', PerfilSchema), async (c) => {
     const { DB } = c.env;
     const usuario = c.get('usuario') as any;
-
-    let bio: string | null = null;
-    let foto_perfil: string | null = null;
-
-    try {
-        const body = await c.req.json();
-        bio = body.bio ?? null;
-        foto_perfil = body.foto_perfil ?? null;
-    } catch {
-        return c.json({ erro: 'Corpo da requisição inválido.' }, 400);
-    }
+    const body = (c.req as any).valid('json');
+    const bio = body.bio ?? null;
+    const foto_perfil = body.foto_perfil ?? null;
 
     try {
         // Buscar estado atual para o log "Antes/Depois"
@@ -110,21 +109,16 @@ rotasUsuarios.patch('/perfil', autenticacaoRequerida(), async (c) => {
 });
 
 // ─── PATCH /:id/role — Alterar Role ──────────────────────────────────────────
-rotasUsuarios.patch('/:id/role', autenticacaoRequerida(), verificarPermissao('membros:alterar_role'), async (c: Context) => {
+
+const RoleSchema = z.object({
+    role: z.enum(['ADMIN', 'COORDENADOR', 'GESTOR', 'LIDER', 'SUBLIDER', 'MEMBRO']),
+});
+
+rotasUsuarios.patch('/:id/role', autenticacaoRequerida(), verificarPermissao('membros:alterar_role'), zValidator('json', RoleSchema), async (c: Context) => {
     const { DB } = c.env;
     const usuarioLogado = c.get('usuario') as any;
     const id = c.req.param('id');
-
-    let role: string;
-    try {
-        ({ role } = await c.req.json());
-    } catch {
-        return c.json({ erro: 'Corpo da requisição inválido.' }, 400);
-    }
-
-    if (!role) {
-        return c.json({ erro: 'O campo "role" é obrigatório.' }, 400);
-    }
+    const { role } = (c.req as any).valid('json');
 
     try {
         // Buscar estado atual para o log "Antes/Depois"
@@ -164,24 +158,19 @@ rotasUsuarios.patch('/:id/role', autenticacaoRequerida(), verificarPermissao('me
 });
 
 // ─── PATCH /:id/status — Ativar / Desativar ───────────────────
-rotasUsuarios.patch('/:id/status', autenticacaoRequerida(), verificarPermissao('membros:desativar'), async (c: Context) => {
+
+const StatusSchema = z.object({
+    ativo: z.boolean()
+});
+
+rotasUsuarios.patch('/:id/status', autenticacaoRequerida(), verificarPermissao('membros:desativar'), zValidator('json', StatusSchema), async (c: Context) => {
     const { DB } = c.env;
     const usuarioLogado = c.get('usuario') as any;
     const id = c.req.param('id');
+    const { ativo } = (c.req as any).valid('json');
 
     if (usuarioLogado.id === id) {
         return c.json({ erro: 'Você não pode desativar ou excluir sua própria conta.' }, 400);
-    }
-
-    let ativo: boolean;
-    try {
-        ({ ativo } = await c.req.json());
-    } catch {
-        return c.json({ erro: 'Corpo da requisição inválido.' }, 400);
-    }
-
-    if (typeof ativo !== 'boolean') {
-        return c.json({ erro: 'O campo "ativo" deve ser um booleano.' }, 400);
     }
 
     try {
@@ -286,23 +275,17 @@ rotasUsuarios.post('/limpeza-geral', autenticacaoRequerida(), verificarPermissao
 });
 
 // ─── POST / — Pré-cadastro de Membro ──────────────────────────
-rotasUsuarios.post('/', autenticacaoRequerida(), verificarPermissao('membros:gerenciar'), async (c: Context) => {
+
+const PreCadastroSchema = z.object({
+    email: z.string().email(),
+    role: z.enum(['ADMIN', 'COORDENADOR', 'GESTOR', 'LIDER', 'SUBLIDER', 'MEMBRO']),
+    funcoes: z.array(z.string()).optional()
+});
+
+rotasUsuarios.post('/', autenticacaoRequerida(), verificarPermissao('membros:gerenciar'), zValidator('json', PreCadastroSchema), async (c: Context) => {
     const { DB } = c.env;
     const usuarioLogado = c.get('usuario') as any;
-
-    let email: string;
-    let role: string;
-    let funcoes: string[] | undefined;
-
-    try {
-        ({ email, role, funcoes } = await c.req.json());
-    } catch {
-        return c.json({ erro: 'Corpo da requisição inválido.' }, 400);
-    }
-
-    if (!email || !role) {
-        return c.json({ erro: 'E-mail e Role são obrigatórios.' }, 400);
-    }
+    const { email, role, funcoes } = (c.req as any).valid('json');
 
     const emailLimpo = email.toLowerCase().trim();
 
@@ -391,22 +374,16 @@ rotasUsuarios.post('/', autenticacaoRequerida(), verificarPermissao('membros:ger
 });
 
 // ─── PATCH /:id/funcoes — Alterar Funções ─────────────────────
-rotasUsuarios.patch('/:id/funcoes', autenticacaoRequerida(), verificarPermissao('membros:gerenciar'), async (c: Context) => {
+
+const FuncoesSchema = z.object({
+    funcoes: z.array(z.string())
+});
+
+rotasUsuarios.patch('/:id/funcoes', autenticacaoRequerida(), verificarPermissao('membros:gerenciar'), zValidator('json', FuncoesSchema), async (c: Context) => {
     const { DB } = c.env;
     const usuarioLogado = c.get('usuario') as any;
     const id = c.req.param('id');
-
-    let funcoes: string[];
-    try {
-        const body = await c.req.json();
-        funcoes = body.funcoes;
-    } catch {
-        return c.json({ erro: 'Corpo da requisição inválido.' }, 400);
-    }
-
-    if (!Array.isArray(funcoes)) {
-        return c.json({ erro: 'O campo "funcoes" deve ser um array.' }, 400);
-    }
+    const { funcoes } = (c.req as any).valid('json');
 
     try {
         // Buscar estado atual para o log "Antes/Depois"
