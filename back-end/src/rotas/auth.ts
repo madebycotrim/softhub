@@ -11,7 +11,10 @@ import { AzureAdClaims, getJwksUri, validarClaims } from '../servicos/servico-ms
 const rotasAuth = new Hono<{ Bindings: Env }>();
 
 rotasAuth.post('/msal', async (c) => {
-    const { DB, JWT_SECRET, MSAL_TENANT_ID, MSAL_CLIENT_ID, DOMINIO_INSTITUCIONAL, BOOTSTRAP_ADMIN_EMAIL } = c.env;
+    // Captura com fallback para os nomes salvos no dashboard (VITE_)
+    const MSAL_TENANT_ID = c.env.MSAL_TENANT_ID || (c.env as any).VITE_MSAL_TENANT_ID;
+    const MSAL_CLIENT_ID = c.env.MSAL_CLIENT_ID || (c.env as any).VITE_MSAL_CLIENT_ID;
+    const { DB, JWT_SECRET, DOMINIO_INSTITUCIONAL, BOOTSTRAP_ADMIN_EMAIL } = c.env;
     const ip = c.req.header('CF-Connecting-IP') ?? 'desconhecido';
 
     try {
