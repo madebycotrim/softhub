@@ -43,8 +43,8 @@ rotasAvisos.get('/', autenticacaoRequerida(), verificarPermissao('avisos:visuali
         }));
 
         const resposta = c.json(formatado);
-        // Obriga o Workers Cache API a respeitar 10 min de vida para o cache de borda
-        resposta.headers.set('Cache-Control', 'max-age=600');
+        // s-maxage: 10 min na borda do Cloudflare, no-cache: navegador deve validar sempre
+        resposta.headers.set('Cache-Control', 's-maxage=600, no-cache');
         await cache.put(cacheKey, resposta.clone());
 
         return resposta;
@@ -96,6 +96,10 @@ rotasAvisos.post('/', autenticacaoRequerida(), verificarPermissao('avisos:criar'
             dadosNovos: { titulo, prioridade, expira_em }
         });
 
+        // Invalida cache de avisos
+        const cache = await caches.open('avisos-cache');
+        await cache.delete(new URL('/api/avisos', c.req.url).toString());
+
         return c.json({ sucesso: true, id: novoId });
     } catch (erro) {
         return c.json({ erro: 'Falha ao criar aviso' }, 500);
@@ -119,6 +123,10 @@ rotasAvisos.delete('/:id', autenticacaoRequerida(), verificarPermissao('avisos:r
             entidadeTipo: 'avisos',
             entidadeId: id
         });
+
+        // Invalida cache de avisos
+        const cache = await caches.open('avisos-cache');
+        await cache.delete(new URL('/api/avisos', c.req.url).toString());
 
         return c.json({ sucesso: true });
     } catch (erro) {

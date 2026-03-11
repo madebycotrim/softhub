@@ -24,7 +24,7 @@ export function usarChecklist(tarefaId: string) {
     } = useQuery({
         queryKey,
         queryFn: async () => {
-            const res = await api.get(`/tarefas/${tarefaId}/checklist`);
+            const res = await api.get(`/api/tarefas/${tarefaId}/checklist`);
             return res.data || [];
         },
         enabled: !!tarefaId,
@@ -33,7 +33,7 @@ export function usarChecklist(tarefaId: string) {
     const erro = error ? (error as any).response?.data?.erro || 'Erro ao carregar checklist' : null;
 
     const mutacaoAdicionar = useMutation({
-        mutationFn: (texto: string) => api.post(`/tarefas/${tarefaId}/checklist`, { texto }),
+        mutationFn: (texto: string) => api.post(`/api/tarefas/${tarefaId}/checklist`, { texto }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey });
         },
@@ -41,14 +41,14 @@ export function usarChecklist(tarefaId: string) {
 
     const mutacaoAlternar = useMutation({
         mutationFn: ({ itemId, concluido }: { itemId: string; concluido: boolean }) => 
-            api.patch(`/tarefas/${tarefaId}/checklist/${itemId}`, { concluido }),
+            api.patch(`/api/tarefas/${tarefaId}/checklist/${itemId}`, { concluido }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey });
         },
     });
 
     const mutacaoRemover = useMutation({
-        mutationFn: (itemId: string) => api.delete(`/tarefas/${tarefaId}/checklist/${itemId}`),
+        mutationFn: (itemId: string) => api.delete(`/api/tarefas/${tarefaId}/checklist/${itemId}`),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey });
         },

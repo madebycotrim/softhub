@@ -22,7 +22,7 @@ export function usarComentarios(tarefaId: string) {
     } = useQuery({
         queryKey,
         queryFn: async () => {
-            const { data } = await api.get(`/tarefas/${tarefaId}/comentarios`);
+            const { data } = await api.get(`/api/tarefas/${tarefaId}/comentarios`);
             return data || [];
         },
         enabled: !!tarefaId,
@@ -31,14 +31,14 @@ export function usarComentarios(tarefaId: string) {
     const erro = error ? (error as any).response?.data?.erro || 'Erro ao carregar comentários' : null;
 
     const mutacaoEnviar = useMutation({
-        mutationFn: (conteudo: string) => api.post(`/tarefas/${tarefaId}/comentarios`, { conteudo }),
+        mutationFn: (conteudo: string) => api.post(`/api/tarefas/${tarefaId}/comentarios`, { conteudo }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey });
         },
     });
 
     const mutacaoExcluir = useMutation({
-        mutationFn: (id: string) => api.delete(`/tarefas/comentarios/${id}`),
+        mutationFn: (id: string) => api.delete(`/api/tarefas/comentarios/${id}`),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey });
         },
@@ -46,7 +46,7 @@ export function usarComentarios(tarefaId: string) {
 
     const mutacaoEditar = useMutation({
         mutationFn: ({ id, conteudo }: { id: string; conteudo: string }) => 
-            api.patch(`/tarefas/comentarios/${id}`, { conteudo }),
+            api.patch(`/api/tarefas/comentarios/${id}`, { conteudo }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey });
         },
