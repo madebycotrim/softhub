@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ambiente } from '../../configuracoes/ambiente';
+import { ambiente } from '@/configuracoes/ambiente';
 
 /**
  * Instância axios pré-configurada apontando para a URL do backend (Hono Worker).

@@ -7,15 +7,15 @@ import {
     User, 
     Network
 } from 'lucide-react';
-import { usarRelatorios } from '../hooks/usarRelatorios';
-import type { RelatorioFrequenciaMembro } from '../hooks/usarRelatorios';
-import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
-import { Carregando } from '../../compartilhado/componentes/Carregando';
-import { BarraBusca } from '../../compartilhado/componentes/BarraBusca';
+import { usarRelatorios } from '@/funcionalidades/admin/hooks/usarRelatorios';
+import type { RelatorioFrequenciaMembro } from '@/funcionalidades/admin/hooks/usarRelatorios';
+import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
+import { Carregando } from '@/compartilhado/componentes/Carregando';
+import { BarraBusca } from '@/compartilhado/componentes/BarraBusca';
 import { 
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
-import { formatarDataHora } from '../../utilitarios/formatadores';
+import { formatarDataHora } from '@/utilitarios/formatadores';
 
 const CORES = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 

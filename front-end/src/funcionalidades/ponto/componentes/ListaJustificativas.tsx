@@ -1,9 +1,9 @@
-import { formatarDataHora } from '../../utilitarios/formatadores';
-import { Emblema } from '../../compartilhado/componentes/Emblema';
-import type { JustificativaPonto } from '../hooks/usarJustificativa';
-import { EstadoVazio } from '../../compartilhado/componentes/EstadoVazio';
+import { formatarDataHora } from '@/utilitarios/formatadores';
+import { Emblema } from '@/compartilhado/componentes/Emblema';
+import type { JustificativaPonto } from '@/funcionalidades/ponto/hooks/usarJustificativa';
+import { EstadoVazio } from '@/compartilhado/componentes/EstadoVazio';
 import { Pencil, Trash2 } from 'lucide-react';
-import { Tooltip } from '../../compartilhado/componentes/Tooltip';
+import { Tooltip } from '@/compartilhado/componentes/Tooltip';
 
 interface ListaJustificativasProps {
     justificativas: JustificativaPonto[];

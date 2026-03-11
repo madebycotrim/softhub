@@ -1,6 +1,6 @@
 import { ShieldCheck, MapPin, Mail, Calendar } from 'lucide-react';
-import { formatarDataHora } from '../../../utilitarios/formatadores';
-import { Emblema } from '../../../compartilhado/componentes/Emblema';
+import { formatarDataHora } from '@/utilitarios/formatadores';
+import { Emblema } from '@/compartilhado/componentes/Emblema';
 
 interface CardSobreMimProps {
     membro: any;

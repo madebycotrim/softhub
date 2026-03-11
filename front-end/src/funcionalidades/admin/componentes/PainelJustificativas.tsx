@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { Bot, CheckCircle, XCircle, Loader2, AlertTriangle } from 'lucide-react';
-import { Tooltip } from '../../compartilhado/componentes/Tooltip';
-import { formatarDataHora } from '../../utilitarios/formatadores';
-import { Emblema } from '../../compartilhado/componentes/Emblema';
-import { Avatar } from '../../compartilhado/componentes/Avatar';
-import { ConfirmacaoExclusao } from '../../compartilhado/componentes/ConfirmacaoExclusao';
-import { usarJustificativasAdmin } from '../hooks/usarJustificativasAdmin';
-import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
-import { Modal } from '../../compartilhado/componentes/Modal';
-import { Carregando } from '../../compartilhado/componentes/Carregando';
+import { Tooltip } from '@/compartilhado/componentes/Tooltip';
+import { formatarDataHora } from '@/utilitarios/formatadores';
+import { Emblema } from '@/compartilhado/componentes/Emblema';
+import { Avatar } from '@/compartilhado/componentes/Avatar';
+import { ConfirmacaoExclusao } from '@/compartilhado/componentes/ConfirmacaoExclusao';
+import { usarJustificativasAdmin } from '@/funcionalidades/admin/hooks/usarJustificativasAdmin';
+import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
+import { Modal } from '@/compartilhado/componentes/Modal';
+import { Carregando } from '@/compartilhado/componentes/Carregando';
 
 /** Mapeia o tipo técnico para rótulo amigável. */
 const formatarTipo = (tipo: string): string => {

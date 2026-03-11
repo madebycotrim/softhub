@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { api } from '../../compartilhado/servicos/api';
-// import { usarAutenticacao } from '../../funcionalidades/autenticacao/usarAutenticacao';
+import { api } from '@/compartilhado/servicos/api';
+// import { usarAutenticacao } from '@/funcionalidades/funcionalidades/autenticacao/usarAutenticacao';
 
 export interface Tarefa {
     id: string;

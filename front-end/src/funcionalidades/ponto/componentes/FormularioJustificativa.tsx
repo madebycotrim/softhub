@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Modal } from '../../compartilhado/componentes/Modal';
+import { Modal } from '@/compartilhado/componentes/Modal';
 import { Fingerprint, Calendar, Info, AlertCircle } from 'lucide-react';
-import { Carregando } from '../../compartilhado/componentes/Carregando';
+import { Carregando } from '@/compartilhado/componentes/Carregando';
 
 const esquemaJustificativa = z.object({
     data: z.string().optional().or(z.literal('')),

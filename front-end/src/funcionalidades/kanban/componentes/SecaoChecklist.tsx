@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { usarChecklist } from '../hooks/usarChecklist';
-import { usarPermissaoAcesso } from '../../compartilhado/hooks/usarPermissao';
+import { usarChecklist } from '@/funcionalidades/kanban/hooks/usarChecklist';
+import { usarPermissaoAcesso } from '@/compartilhado/hooks/usarPermissao';
 import { Plus, Trash2, CheckSquare, Square } from 'lucide-react';
-import { Tooltip } from '../../compartilhado/componentes/Tooltip';
-import { Carregando } from '../../compartilhado/componentes/Carregando';
+import { Tooltip } from '@/compartilhado/componentes/Tooltip';
+import { Carregando } from '@/compartilhado/componentes/Carregando';
 
 interface SecaoChecklistProps {
     tarefaId: string;

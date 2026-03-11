@@ -2,9 +2,9 @@ import { useState, type ReactNode } from 'react';
 import { BarraLateral } from './BarraLateral';
 import { Menu, X, QrCode, Sun, Moon } from 'lucide-react';
 import { Tooltip } from './Tooltip';
-import { usarTema } from '../../contexto/ContextoTema';
+import { usarTema } from '@/contexto/ContextoTema';
 import { Modal } from './Modal';
-import ScannerQR from '../../funcionalidades/autenticacao/componentes/ScannerQR';
+import ScannerQR from '@/funcionalidades/autenticacao/componentes/ScannerQR';
 
 interface LayoutPrincipalProps {
     children: ReactNode;

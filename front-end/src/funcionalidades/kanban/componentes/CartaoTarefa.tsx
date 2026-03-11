@@ -1,11 +1,11 @@
-import { Avatar } from '../../compartilhado/componentes/Avatar';
-import { Tooltip } from '../../compartilhado/componentes/Tooltip';
-import { Emblema } from '../../compartilhado/componentes/Emblema';
-import { CORES_PRIORIDADE, LABELS_PRIORIDADE } from '../../utilitarios/constantes';
-import type { Tarefa } from '../hooks/usarKanban';
+import { Avatar } from '@/compartilhado/componentes/Avatar';
+import { Tooltip } from '@/compartilhado/componentes/Tooltip';
+import { Emblema } from '@/compartilhado/componentes/Emblema';
+import { CORES_PRIORIDADE, LABELS_PRIORIDADE } from '@/utilitarios/constantes';
+import type { Tarefa } from '@/funcionalidades/kanban/hooks/usarKanban';
 import { useDraggable } from '@dnd-kit/core';
-import { usarPermissaoAcesso } from '../../compartilhado/hooks/usarPermissao';
-import { usarChecklist } from '../hooks/usarChecklist';
+import { usarPermissaoAcesso } from '@/compartilhado/hooks/usarPermissao';
+import { usarChecklist } from '@/funcionalidades/kanban/hooks/usarChecklist';
 import { CheckCircle2 } from 'lucide-react';
 
 interface CartaoTarefaProps {

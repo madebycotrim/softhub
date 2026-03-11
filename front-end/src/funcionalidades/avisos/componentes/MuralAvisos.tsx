@@ -1,16 +1,16 @@
 import { Plus, Trash2, Megaphone } from 'lucide-react';
-import { usarAvisos } from '../hooks/usarAvisos';
-import { Avatar } from '../../compartilhado/componentes/Avatar';
-import { Emblema } from '../../compartilhado/componentes/Emblema';
-import { Carregando } from '../../compartilhado/componentes/Carregando';
-import { formatarDataHora } from '../../utilitarios/formatadores';
-import { usarPermissao, usarPermissaoAcesso } from '../../compartilhado/hooks/usarPermissao';
+import { usarAvisos } from '@/funcionalidades/avisos/hooks/usarAvisos';
+import { Avatar } from '@/compartilhado/componentes/Avatar';
+import { Emblema } from '@/compartilhado/componentes/Emblema';
+import { Carregando } from '@/compartilhado/componentes/Carregando';
+import { formatarDataHora } from '@/utilitarios/formatadores';
+import { usarPermissao, usarPermissaoAcesso } from '@/compartilhado/hooks/usarPermissao';
 import { useState } from 'react';
-import { Modal } from '../../compartilhado/componentes/Modal';
+import { Modal } from '@/compartilhado/componentes/Modal';
 import { FormularioAviso } from './FormularioAviso';
-import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
-import { EstadoVazio } from '../../compartilhado/componentes/EstadoVazio';
-// import { usarAutenticacao } from '../autenticacao/usarAutenticacao';
+import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
+import { EstadoVazio } from '@/compartilhado/componentes/EstadoVazio';
+// import { usarAutenticacao } from '@/funcionalidades/avisos/autenticacao/usarAutenticacao';
 
 export function MuralAvisos() {
     const { avisos, carregando, erro } = usarAvisos();

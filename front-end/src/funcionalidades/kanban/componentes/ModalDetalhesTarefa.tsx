@@ -1,7 +1,7 @@
-import { Modal } from '../../compartilhado/componentes/Modal';
-import { Emblema } from '../../compartilhado/componentes/Emblema';
-import { CORES_PRIORIDADE, LABELS_PRIORIDADE } from '../../utilitarios/constantes';
-import type { Tarefa } from '../hooks/usarKanban';
+import { Modal } from '@/compartilhado/componentes/Modal';
+import { Emblema } from '@/compartilhado/componentes/Emblema';
+import { CORES_PRIORIDADE, LABELS_PRIORIDADE } from '@/utilitarios/constantes';
+import type { Tarefa } from '@/funcionalidades/kanban/hooks/usarKanban';
 import { SecaoChecklist } from './SecaoChecklist';
 import { JornalTarefa } from './JornalTarefa';
 

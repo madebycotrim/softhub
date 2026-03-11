@@ -1,0 +1,2 @@
+﻿Updated: funcionalidades\autenticacao\componentes\TelaLogin.tsx
+Done! Fixed 1 files.

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { usarConfiguracoes } from '../hooks/usarConfiguracoes';
-import { Carregando } from '../../compartilhado/componentes/Carregando';
-import { usarPermissaoAcesso } from '../../compartilhado/hooks/usarPermissao';
+import { usarConfiguracoes } from '@/funcionalidades/admin/hooks/usarConfiguracoes';
+import { Carregando } from '@/compartilhado/componentes/Carregando';
+import { usarPermissaoAcesso } from '@/compartilhado/hooks/usarPermissao';
 import { 
     Plus, Lock, ShieldCheck, UserCircle,
     MessageSquare,
@@ -10,7 +10,7 @@ import {
     LayoutGrid, FileText, Database, Globe,
     Pencil, Check, X
 } from 'lucide-react';
-import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
+import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
 
 /**
  * Mapa completo de todas as permissões reais do sistema,

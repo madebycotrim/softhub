@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Download, Loader2 } from 'lucide-react';
-import { api } from '../../compartilhado/servicos/api';
-import { usarPermissao } from '../../compartilhado/hooks/usarPermissao';
-import { Modal } from '../../compartilhado/componentes/Modal';
-import { Tooltip } from '../../compartilhado/componentes/Tooltip';
+import { api } from '@/compartilhado/servicos/api';
+import { usarPermissao } from '@/compartilhado/hooks/usarPermissao';
+import { Modal } from '@/compartilhado/componentes/Modal';
+import { Tooltip } from '@/compartilhado/componentes/Tooltip';
 
 export function BotaoExportarPonto() {
     const podeExportar = usarPermissao('LIDER_EQUIPE');

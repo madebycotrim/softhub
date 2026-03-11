@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { MoreHorizontal, Trash, Edit2 } from 'lucide-react';
-import { formatarTempoAtras } from '../../utilitarios/formatadores';
-import { Avatar } from '../../compartilhado/componentes/Avatar';
-import type { Comentario } from '../hooks/usarComentarios';
+import { formatarTempoAtras } from '@/utilitarios/formatadores';
+import { Avatar } from '@/compartilhado/componentes/Avatar';
+import type { Comentario } from '@/funcionalidades/kanban/hooks/usarComentarios';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/compartilhado/componentes/ui/dropdown-menu';
-import { ConfirmacaoExclusao } from '../../compartilhado/componentes/ConfirmacaoExclusao';
+import { ConfirmacaoExclusao } from '@/compartilhado/componentes/ConfirmacaoExclusao';
 
 interface CartaoComentarioProps {
     comentario: Comentario;

@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { usarJornalTarefa } from '../hooks/usarJornalTarefa';
-import { usarComentarios } from '../hooks/usarComentarios';
-import { formatarTempoAtras, formatarEventoHistorico } from '../../utilitarios/formatadores';
-import { usarPermissaoAcesso } from '../../compartilhado/hooks/usarPermissao';
+import { usarJornalTarefa } from '@/funcionalidades/kanban/hooks/usarJornalTarefa';
+import { usarComentarios } from '@/funcionalidades/kanban/hooks/usarComentarios';
+import { formatarTempoAtras, formatarEventoHistorico } from '@/utilitarios/formatadores';
+import { usarPermissaoAcesso } from '@/compartilhado/hooks/usarPermissao';
 import { History, Send, Layout, UserPlus, Tag, CheckCircle2 } from 'lucide-react';
-import { Tooltip } from '../../compartilhado/componentes/Tooltip';
-import { Avatar } from '../../compartilhado/componentes/Avatar';
-import { Carregando } from '../../compartilhado/componentes/Carregando';
+import { Tooltip } from '@/compartilhado/componentes/Tooltip';
+import { Avatar } from '@/compartilhado/componentes/Avatar';
+import { Carregando } from '@/compartilhado/componentes/Carregando';
 import { useContext } from 'react';
-import { ContextoAutenticacao } from '../../contexto/ContextoAutenticacao';
+import { ContextoAutenticacao } from '@/contexto/ContextoAutenticacao';
 
 interface JornalTarefaProps {
     tarefaId: string;

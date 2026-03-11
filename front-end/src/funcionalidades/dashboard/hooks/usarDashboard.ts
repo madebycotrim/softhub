@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { api } from '../../compartilhado/servicos/api';
-import type { Aviso } from '../avisos/usarAvisos';
+import { api } from '@/compartilhado/servicos/api';
+import type { Aviso } from '@/funcionalidades/dashboard/avisos/usarAvisos';
 
 export interface MetricaDashboard {
     totalTarefas: number;

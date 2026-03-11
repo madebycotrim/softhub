@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { api } from '../../compartilhado/servicos/api';
+import { api } from '@/compartilhado/servicos/api';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

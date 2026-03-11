@@ -12,18 +12,18 @@ import {
 import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { FolderKanban } from 'lucide-react';
-import { COLUNAS_KANBAN } from '../../utilitarios/constantes';
-import type { ColunaKanban } from '../../utilitarios/constantes';
-import { usarKanban } from '../hooks/usarKanban';
-import type { Tarefa, FiltrosKanban } from '../hooks/usarKanban';
+import { COLUNAS_KANBAN } from '@/utilitarios/constantes';
+import type { ColunaKanban } from '@/utilitarios/constantes';
+import { usarKanban } from '@/funcionalidades/kanban/hooks/usarKanban';
+import type { Tarefa, FiltrosKanban } from '@/funcionalidades/kanban/hooks/usarKanban';
 import { CartaoTarefa } from './CartaoTarefa';
-import { usarPermissaoAcesso } from '../../compartilhado/hooks/usarPermissao';
-import { Carregando } from '../../compartilhado/componentes/Carregando';
-import { EstadoVazio } from '../../compartilhado/componentes/EstadoVazio';
+import { usarPermissaoAcesso } from '@/compartilhado/hooks/usarPermissao';
+import { Carregando } from '@/compartilhado/componentes/Carregando';
+import { EstadoVazio } from '@/compartilhado/componentes/EstadoVazio';
 import { ModalDetalhesTarefa } from './ModalDetalhesTarefa';
 import { PainelFiltrosKanban } from './PainelFiltrosKanban';
-import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
-import { BarraBusca } from '../../compartilhado/componentes/BarraBusca';
+import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
+import { BarraBusca } from '@/compartilhado/componentes/BarraBusca';
 
 /** Mapeamento amigável das colunas */
 const LABELS_COLUNAS: Record<ColunaKanban, string> = {

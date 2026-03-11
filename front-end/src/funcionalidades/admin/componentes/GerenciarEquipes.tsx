@@ -1,8 +1,8 @@
 import { useState, useRef, useLayoutEffect, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { LayoutGrid, Users, Plus, Pencil, Trash2, UserCheck, Search, ChevronDown, Check, ArrowRightLeft, X, AlertTriangle } from 'lucide-react';
-import { Tooltip } from '../../compartilhado/componentes/Tooltip';
-import { usarEquipes, type Grupo, type Equipe } from '../hooks/usarEquipes';
+import { Tooltip } from '@/compartilhado/componentes/Tooltip';
+import { usarEquipes, type Grupo, type Equipe } from '@/funcionalidades/admin/hooks/usarEquipes';
 
 type MembroSimples = {
     id: string;
@@ -15,12 +15,12 @@ type MembroSimples = {
     grupos_ids?: string | null;
 };
 
-import { Carregando } from '../../compartilhado/componentes/Carregando';
-import { Modal } from '../../compartilhado/componentes/Modal';
-import { ConfirmacaoExclusao } from '../../compartilhado/componentes/ConfirmacaoExclusao';
-import { Avatar } from '../../compartilhado/componentes/Avatar';
-import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
-import { EstadoVazio } from '../../compartilhado/componentes/EstadoVazio';
+import { Carregando } from '@/compartilhado/componentes/Carregando';
+import { Modal } from '@/compartilhado/componentes/Modal';
+import { ConfirmacaoExclusao } from '@/compartilhado/componentes/ConfirmacaoExclusao';
+import { Avatar } from '@/compartilhado/componentes/Avatar';
+import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
+import { EstadoVazio } from '@/compartilhado/componentes/EstadoVazio';
 
 // ─── Componentes Auxiliares ───────────────────────────────────────────────────
 

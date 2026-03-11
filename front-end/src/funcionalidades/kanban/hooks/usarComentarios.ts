@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { api } from '../../compartilhado/servicos/api';
+import { api } from '@/compartilhado/servicos/api';
 
 export interface Comentario {
     id: string;

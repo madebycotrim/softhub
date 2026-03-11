@@ -1,12 +1,12 @@
 import { ShieldAlert, Activity, FileText, Search, Calendar, X, FolderKanban, Clock, Users, Key, Settings, ChevronDown } from 'lucide-react';
-import { EstadoVazio } from '../../compartilhado/componentes/EstadoVazio';
-import { Paginacao } from '../../compartilhado/componentes/Paginacao';
-import { formatarDataHora } from '../../utilitarios/formatadores';
-import { usarLogs } from '../hooks/usarLogs';
-import { Carregando } from '../../compartilhado/componentes/Carregando';
-import { Emblema } from '../../compartilhado/componentes/Emblema';
+import { EstadoVazio } from '@/compartilhado/componentes/EstadoVazio';
+import { Paginacao } from '@/compartilhado/componentes/Paginacao';
+import { formatarDataHora } from '@/utilitarios/formatadores';
+import { usarLogs } from '@/funcionalidades/admin/hooks/usarLogs';
+import { Carregando } from '@/compartilhado/componentes/Carregando';
+import { Emblema } from '@/compartilhado/componentes/Emblema';
 import { useState, Fragment } from 'react';
-import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
+import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
 
 /** Painel de auditoria com tabela semântica padronizada. */
 export function PainelLogs() {    const {

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { usarComentarios } from '../hooks/usarComentarios';
+import { usarComentarios } from '@/funcionalidades/kanban/hooks/usarComentarios';
 import { CartaoComentario } from './CartaoComentario';
-import { Carregando } from '../../compartilhado/componentes/Carregando';
+import { Carregando } from '@/compartilhado/componentes/Carregando';
 import { Send, MessageSquare } from 'lucide-react';
 import { useContext } from 'react';
-import { ContextoAutenticacao } from '../../contexto/ContextoAutenticacao';
+import { ContextoAutenticacao } from '@/contexto/ContextoAutenticacao';
 
 interface SecaoComentariosProps {
     tarefaId: string;

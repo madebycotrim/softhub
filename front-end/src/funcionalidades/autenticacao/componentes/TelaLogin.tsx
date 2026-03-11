@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import { useMsal } from '@azure/msal-react';
 import { useSearchParams, useNavigate } from 'react-router';
 import { AlertCircle, Globe, Code, Info, Download } from 'lucide-react';
-import { ambiente } from '../../configuracoes/ambiente';
-import { api } from '../../compartilhado/servicos/api';
-import { usarAutenticacaoContexto } from '../../contexto/ContextoAutenticacao';
-import logoUnieuro from '../../assets/logo-unieuro-branca.png';
-import { loginRequest } from '../../configuracoes/msal';
+import { ambiente } from '@/configuracoes/ambiente';
+import { api } from '@/compartilhado/servicos/api';
+import { usarAutenticacaoContexto } from '@/contexto/ContextoAutenticacao';
+import logoUnieuro from '@/assets/logo-unieuro-branca.png';
+import { loginRequest } from '@/configuracoes/msal';
 import PainelQRCode from './PainelQRCode';
-import { usarDispositivo } from '../../compartilhado/hooks/usarDispositivo';
+import { usarDispositivo } from '@/compartilhado/hooks/usarDispositivo';
 
 /**
  * Tela de login com estética Discord-Style (Minimalista e Funcional).

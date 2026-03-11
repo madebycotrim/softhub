@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { api } from '../../compartilhado/servicos/api';
-import { formatarTempoAtras, formatarEventoHistorico } from '../../utilitarios/formatadores';
+import { api } from '@/compartilhado/servicos/api';
+import { formatarTempoAtras, formatarEventoHistorico } from '@/utilitarios/formatadores';
 import { History, UserPlus, Tag, Layout } from 'lucide-react';
 
 interface EventoHistorico {

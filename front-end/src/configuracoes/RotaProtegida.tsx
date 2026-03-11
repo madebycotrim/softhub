@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router';
-import { usarAutenticacaoContexto } from '../contexto/ContextoAutenticacao';
-import { usarPermissao } from '../compartilhado/hooks/usarPermissao';
+import { usarAutenticacaoContexto } from '@/contexto/ContextoAutenticacao';
+import { usarPermissao } from '@/compartilhado/hooks/usarPermissao';
 
 interface RotaProtegidaProps {
     children: ReactNode;

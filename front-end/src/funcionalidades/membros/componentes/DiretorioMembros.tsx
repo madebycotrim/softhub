@@ -1,14 +1,14 @@
 import { useState, useMemo } from 'react';
 import { Mail, Calendar, Users } from 'lucide-react';
 import { Link } from 'react-router';
-import { usarMembros } from '../hooks/usarMembros';
-import { Avatar } from '../../compartilhado/componentes/Avatar';
-import { Carregando } from '../../compartilhado/componentes/Carregando';
-import { EstadoVazio } from '../../compartilhado/componentes/EstadoVazio';
-import { formatarDataHora } from '../../utilitarios/formatadores';
-import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
-import { BarraBusca } from '../../compartilhado/componentes/BarraBusca';
-import type { Membro } from '../hooks/usarMembros';
+import { usarMembros } from '@/funcionalidades/membros/hooks/usarMembros';
+import { Avatar } from '@/compartilhado/componentes/Avatar';
+import { Carregando } from '@/compartilhado/componentes/Carregando';
+import { EstadoVazio } from '@/compartilhado/componentes/EstadoVazio';
+import { formatarDataHora } from '@/utilitarios/formatadores';
+import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
+import { BarraBusca } from '@/compartilhado/componentes/BarraBusca';
+import type { Membro } from '@/funcionalidades/membros/hooks/usarMembros';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

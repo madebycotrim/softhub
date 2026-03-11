@@ -1,20 +1,20 @@
 import { useState, useMemo } from 'react';
 import { Plus, AlertTriangle, LayoutDashboard, ScrollText, History, Fingerprint } from 'lucide-react';
-import { usarPonto } from '../hooks/usarPonto';
-import { formatarDataHora } from '../../utilitarios/formatadores';
-import { usarJustificativas } from '../hooks/usarJustificativa';
+import { usarPonto } from '@/funcionalidades/ponto/hooks/usarPonto';
+import { formatarDataHora } from '@/utilitarios/formatadores';
+import { usarJustificativas } from '@/funcionalidades/ponto/hooks/usarJustificativa';
 import { ListaJustificativas } from './ListaJustificativas';
 import { FormularioJustificativa } from './FormularioJustificativa';
 import { BotaoExportarPonto } from './BotaoExportarPonto';
-import { usarPermissaoAcesso } from '../../compartilhado/hooks/usarPermissao';
+import { usarPermissaoAcesso } from '@/compartilhado/hooks/usarPermissao';
 import { useEffect as useReactEffect } from 'react';
-import { BarraBusca } from '../../compartilhado/componentes/BarraBusca';
-import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
-import { Carregando } from '../../compartilhado/componentes/Carregando';
-import { EstadoVazio } from '../../compartilhado/componentes/EstadoVazio';
-import { Tooltip } from '../../compartilhado/componentes/Tooltip';
-import { ConfirmacaoExclusao } from '../../compartilhado/componentes/ConfirmacaoExclusao';
-import type { JustificativaPonto } from '../hooks/usarJustificativa';
+import { BarraBusca } from '@/compartilhado/componentes/BarraBusca';
+import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
+import { Carregando } from '@/compartilhado/componentes/Carregando';
+import { EstadoVazio } from '@/compartilhado/componentes/EstadoVazio';
+import { Tooltip } from '@/compartilhado/componentes/Tooltip';
+import { ConfirmacaoExclusao } from '@/compartilhado/componentes/ConfirmacaoExclusao';
+import type { JustificativaPonto } from '@/funcionalidades/ponto/hooks/usarJustificativa';
 
 /**
  * Interface de registro e visualização diária do ponto.

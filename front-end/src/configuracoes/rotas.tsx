@@ -1,25 +1,25 @@
 import { createBrowserRouter, Navigate, Outlet, useParams } from 'react-router';
 import { MsalProvider } from '@azure/msal-react';
 import { msalInstance } from './msal';
-import { ProvedorAutenticacao } from '../contexto/ContextoAutenticacao';
-import { ProvedorTema } from '../contexto/ContextoTema';
+import { ProvedorAutenticacao } from '@/contexto/ContextoAutenticacao';
+import { ProvedorTema } from '@/contexto/ContextoTema';
 import { RotaProtegida } from './RotaProtegida';
-import TelaLogin from '../funcionalidades/autenticacao/componentes/TelaLogin';
-import { LayoutPrincipal } from '../compartilhado/componentes/LayoutPrincipal';
+import TelaLogin from '@/funcionalidades/autenticacao/componentes/TelaLogin';
+import { LayoutPrincipal } from '@/compartilhado/componentes/LayoutPrincipal';
 
-import { QuadroKanban } from '../funcionalidades/kanban/componentes/QuadroKanban';
-import { BaterPonto } from '../funcionalidades/ponto/componentes/BaterPonto';
-import { DiretorioMembros } from '../funcionalidades/membros/componentes/DiretorioMembros';
-import { PerfilMembro } from '../funcionalidades/membros/componentes/PerfilMembro';
-import { MuralAvisos } from '../funcionalidades/avisos/componentes/MuralAvisos';
-import { PaginaDashboard } from '../funcionalidades/dashboard/componentes/PaginaDashboard';
-import { PainelLogs } from '../funcionalidades/admin/componentes/PainelLogs';
-import { PainelJustificativas } from '../funcionalidades/admin/componentes/PainelJustificativas';
-import GerenciarMembros from '../funcionalidades/admin/componentes/GerenciarMembros';
+import { QuadroKanban } from '@/funcionalidades/kanban/componentes/QuadroKanban';
+import { BaterPonto } from '@/funcionalidades/ponto/componentes/BaterPonto';
+import { DiretorioMembros } from '@/funcionalidades/membros/componentes/DiretorioMembros';
+import { PerfilMembro } from '@/funcionalidades/membros/componentes/PerfilMembro';
+import { MuralAvisos } from '@/funcionalidades/avisos/componentes/MuralAvisos';
+import { PaginaDashboard } from '@/funcionalidades/dashboard/componentes/PaginaDashboard';
+import { PainelLogs } from '@/funcionalidades/admin/componentes/PainelLogs';
+import { PainelJustificativas } from '@/funcionalidades/admin/componentes/PainelJustificativas';
+import GerenciarMembros from '@/funcionalidades/admin/componentes/GerenciarMembros';
 
-import { PaginaConfiguracoes } from '../funcionalidades/admin/componentes/PaginaConfiguracoes';
-import PaginaRelatorios from '../funcionalidades/admin/componentes/PaginaRelatorios';
-import { GerenciarEquipes } from '../funcionalidades/admin/componentes/GerenciarEquipes';
+import { PaginaConfiguracoes } from '@/funcionalidades/admin/componentes/PaginaConfiguracoes';
+import PaginaRelatorios from '@/funcionalidades/admin/componentes/PaginaRelatorios';
+import { GerenciarEquipes } from '@/funcionalidades/admin/componentes/GerenciarEquipes';
 
 /**
  * Layout raiz — renderizado em TODAS as rotas.

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { api } from '../../compartilhado/servicos/api';
-import type { JustificativaPonto } from '../ponto/usarJustificativa';
+import { api } from '@/compartilhado/servicos/api';
+import type { JustificativaPonto } from '@/funcionalidades/admin/ponto/usarJustificativa';
 
 export interface JustificativaAdmin extends JustificativaPonto {
     usuario_nome: string;

@@ -1,26 +1,26 @@
 import { useState, useMemo, useCallback, useEffect, memo } from 'react';
 import { UserCog, X, Shield, Mail, Trash2, Loader2, UserCheck, Archive, ListPlus, CheckSquare, Square, Download, AlertCircle, ChevronDown, RotateCcw, Eraser, User, Users as UsersIcon, Plus } from 'lucide-react';
-import { Tooltip } from '../../compartilhado/componentes/Tooltip';
+import { Tooltip } from '@/compartilhado/componentes/Tooltip';
 import { Link } from 'react-router';
-import { api } from '../../compartilhado/servicos/api';
-import { usarMembros } from '../../membros/hooks/usarMembros';
-import type { Membro } from '../../membros/hooks/usarMembros';
-import { Avatar } from '../../compartilhado/componentes/Avatar';
-import { Carregando } from '../../compartilhado/componentes/Carregando';
-import { usarAutenticacao } from '../../autenticacao/hooks/usarAutenticacao';
-import { usarPermissaoAcesso } from '../../compartilhado/hooks/usarPermissao';
-import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
-import { Modal } from '../../compartilhado/componentes/Modal';
-import { ConfirmacaoExclusao } from '../../compartilhado/componentes/ConfirmacaoExclusao';
-import { EstadoVazio } from '../../compartilhado/componentes/EstadoVazio';
-import { ambiente } from '../../configuracoes/ambiente';
-import { usarConfiguracoes } from '../hooks/usarConfiguracoes';
-import { usarDebounce } from '../../compartilhado/hooks/usarDebounce';
-import { BarraBusca } from '../../compartilhado/componentes/BarraBusca';
-import { usarAutenticacaoContexto } from '../../contexto/ContextoAutenticacao';
-import { usarToast } from '../../compartilhado/hooks/usarToast';
-import { ToastContainer } from '../../compartilhado/componentes/ToastContainer';
-import { Paginacao } from '../../compartilhado/componentes/Paginacao';
+import { api } from '@/compartilhado/servicos/api';
+import { usarMembros } from '@/funcionalidades/membros/hooks/usarMembros';
+import type { Membro } from '@/funcionalidades/membros/hooks/usarMembros';
+import { Avatar } from '@/compartilhado/componentes/Avatar';
+import { Carregando } from '@/compartilhado/componentes/Carregando';
+import { usarAutenticacao } from '@/funcionalidades/autenticacao/hooks/usarAutenticacao';
+import { usarPermissaoAcesso } from '@/compartilhado/hooks/usarPermissao';
+import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
+import { Modal } from '@/compartilhado/componentes/Modal';
+import { ConfirmacaoExclusao } from '@/compartilhado/componentes/ConfirmacaoExclusao';
+import { EstadoVazio } from '@/compartilhado/componentes/EstadoVazio';
+import { ambiente } from '@/configuracoes/ambiente';
+import { usarConfiguracoes } from '@/funcionalidades/admin/hooks/usarConfiguracoes';
+import { usarDebounce } from '@/compartilhado/hooks/usarDebounce';
+import { BarraBusca } from '@/compartilhado/componentes/BarraBusca';
+import { usarAutenticacaoContexto } from '@/contexto/ContextoAutenticacao';
+import { usarToast } from '@/compartilhado/hooks/usarToast';
+import { ToastContainer } from '@/compartilhado/componentes/ToastContainer';
+import { Paginacao } from '@/compartilhado/componentes/Paginacao';
 
 /**
  * Hook customizado para gerenciar a lógica de administração de membros.

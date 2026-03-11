@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { Camera, X, CheckCircle, AlertCircle, Loader2, Settings, Monitor, ArrowRight } from 'lucide-react';
-import { api } from '../../compartilhado/servicos/api';
-import { Avatar } from '../../compartilhado/componentes/Avatar';
-import { usarAutenticacaoContexto } from '../../contexto/ContextoAutenticacao';
+import { api } from '@/compartilhado/servicos/api';
+import { Avatar } from '@/compartilhado/componentes/Avatar';
+import { usarAutenticacaoContexto } from '@/contexto/ContextoAutenticacao';
 
-import { vibrar, vibrarErro, somSucesso } from '../../utilitarios/haptics';
+import { vibrar, vibrarErro, somSucesso } from '@/utilitarios/haptics';
 
 interface ScannerQRProps {
     aoFechar: () => void;

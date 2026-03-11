@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 // 🔴 CORRIGIDO: importava de '../../contexto/ContextoAutenticacao' diretamente (path frágil).
 // Agora importa do hook centralizado no próprio contexto, garantindo caminho único.
-import { usarAutenticacaoContexto } from '../../contexto/ContextoAutenticacao';
+import { usarAutenticacaoContexto } from '@/contexto/ContextoAutenticacao';
 
 /**
  * Hook utilitário APENAS para UX (mostrar/esconder botões e seções).
@@ -15,7 +15,7 @@ import { usarAutenticacaoContexto } from '../../contexto/ContextoAutenticacao';
  */
 
 import { useState, useEffect } from 'react';
-import { api } from '../servicos/api';
+import { api } from '@/compartilhado/servicos/api';
 
 const HIERARQUIA_ROLES = ['MEMBRO', 'SUBLIDER', 'LIDER', 'GESTOR', 'COORDENADOR', 'ADMIN'] as const;
 

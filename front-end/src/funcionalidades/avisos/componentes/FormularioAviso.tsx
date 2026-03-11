@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Carregando } from '../../compartilhado/componentes/Carregando';
+import { Carregando } from '@/compartilhado/componentes/Carregando';
 
 const esquemaAviso = z.object({
     titulo: z.string().min(5, 'O título deve ter pelo menos 5 caracteres.').max(100, 'Máximo de 100 caracteres.'),

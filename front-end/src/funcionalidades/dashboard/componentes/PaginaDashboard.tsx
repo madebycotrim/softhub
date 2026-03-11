@@ -1,11 +1,11 @@
 import { Link } from 'react-router';
 import { CheckCircle2, ListChecks, Megaphone, ChevronRight, LayoutDashboard } from 'lucide-react';
-import { usarDashboard } from '../hooks/usarDashboard';
-import { Carregando } from '../../compartilhado/componentes/Carregando';
-import { EstadoVazio } from '../../compartilhado/componentes/EstadoVazio';
-import { Avatar } from '../../compartilhado/componentes/Avatar';
-import { formatarDataHora } from '../../utilitarios/formatadores';
-import { CabecalhoFuncionalidade } from '../../compartilhado/componentes/CabecalhoFuncionalidade';
+import { usarDashboard } from '@/funcionalidades/dashboard/hooks/usarDashboard';
+import { Carregando } from '@/compartilhado/componentes/Carregando';
+import { EstadoVazio } from '@/compartilhado/componentes/EstadoVazio';
+import { Avatar } from '@/compartilhado/componentes/Avatar';
+import { formatarDataHora } from '@/utilitarios/formatadores';
+import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
 
 /**
  * Dashboard principal (Página inicial logada).

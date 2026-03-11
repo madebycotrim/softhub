@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Filter, X } from 'lucide-react';
-import type { FiltrosKanban } from '../hooks/usarKanban';
-import { LABELS_PRIORIDADE } from '../../utilitarios/constantes';
-import { usarDebounce } from '../../compartilhado/hooks/usarDebounce';
+import type { FiltrosKanban } from '@/funcionalidades/kanban/hooks/usarKanban';
+import { LABELS_PRIORIDADE } from '@/utilitarios/constantes';
+import { usarDebounce } from '@/compartilhado/hooks/usarDebounce';
 
 interface PainelFiltrosProps {
     filtros: FiltrosKanban;

@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { RefreshCw, CheckCircle } from 'lucide-react';
-import { api } from '../../compartilhado/servicos/api';
-import { usarAutenticacaoContexto } from '../../contexto/ContextoAutenticacao';
+import { api } from '@/compartilhado/servicos/api';
+import { usarAutenticacaoContexto } from '@/contexto/ContextoAutenticacao';
 import { useNavigate } from 'react-router';
-import { usarDispositivo } from '../../compartilhado/hooks/usarDispositivo';
+import { usarDispositivo } from '@/compartilhado/hooks/usarDispositivo';
 
 /**
  * Componente que gera e exibe o QR Code na tela de login desktop.

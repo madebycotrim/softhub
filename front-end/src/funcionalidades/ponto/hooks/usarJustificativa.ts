@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { api } from '../../compartilhado/servicos/api';
-// import { usarAutenticacao } from '../autenticacao/usarAutenticacao';
+import { api } from '@/compartilhado/servicos/api';
+// import { usarAutenticacao } from '@/funcionalidades/ponto/autenticacao/usarAutenticacao';
 
 export interface JustificativaPonto {
     id: string;

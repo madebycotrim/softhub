@@ -1,5 +1,5 @@
 import { CheckCircle2, AlertCircle } from 'lucide-react';
-import type { ToastState } from '../hooks/usarToast';
+import type { ToastState } from '@/compartilhado/hooks/usarToast';
 
 interface ToastContainerProps {
     toasts: ToastState[];
