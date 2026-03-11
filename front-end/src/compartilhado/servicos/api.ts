@@ -1,60 +1,70 @@
-import axios from 'axios';
 import { ambiente } from '@/configuracoes/ambiente';
 
-/**
- * Instância axios pré-configurada apontando para a URL do backend (Hono Worker).
- */
-export const api = axios.create({
-    baseURL: ambiente.apiUrl,
-});
-
-/**
- * Interceptador de request:
- * Insere o Bearer Token do localStorage em todas as requisições, caso ele exista.
- */
-api.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('softhub_token');
-
-        if (token) {
-            if (!config.headers) {
-                config.headers = axios.AxiosHeaders.from({});
-            }
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-
-        return config;
-    },
-    (erro) => {
-        return Promise.reject(erro);
+class ApiError extends Error {
+    response?: { data: any, status: number };
+    constructor(message: string, data: any, status: number) {
+        super(message);
+        this.response = { data, status };
     }
-);
+}
 
-/**
- * Interceptador de response:
- * Capta respostas de erro 401 (Não Autorizado) visando deslogar o usuário,
- * forçando o recarregamento na tela de login.
- */
-api.interceptors.response.use(
-    (resposta) => {
-        // Trata sucesso normalmente
-        return resposta;
-    },
-    (erro) => {
-        // Caso receba 401 do backend, token expirou ou é inválido
-        if (erro.response && erro.response.status === 401) {
-            // Limpa storage forçadamente
-            localStorage.removeItem('softhub_token');
-            localStorage.removeItem('softhub_usuario');
+async function doFetch(method: string, url: string, data?: any, config?: any) {
+    const token = localStorage.getItem('softhub_token');
+    const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        ...config?.headers,
+    };
 
-            // Se não estivermos rodando no servidor, redireciona o browser.
-            // Observação: React Router seria o ideal para evitar full-page reload, mas o redirecionamento
-            // tradicional costuma ser à prova de falhas na camada da API.
-            if (typeof window !== 'undefined') {
-                window.location.href = '/login';
-            }
-        }
-
-        return Promise.reject(erro);
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
     }
-);
+
+    let queryString = '';
+    if (config?.params) {
+        const query = new URLSearchParams();
+        Object.entries(config.params).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) query.append(key, String(value));
+        });
+        queryString = `?${query.toString()}`;
+    }
+
+    // Habilita cross-origin nativo por padrão assim como axios
+    const uri = url.startsWith('http') ? url : `${ambiente.apiUrl}${url}`;
+    const res = await fetch(`${uri}${queryString}`, {
+        method,
+        headers,
+        body: data ? JSON.stringify(data) : undefined,
+    });
+
+    if (res.status === 401) {
+        localStorage.removeItem('softhub_token');
+        localStorage.removeItem('softhub_usuario');
+        if (typeof window !== 'undefined') {
+            window.location.href = '/login';
+        }
+        throw new ApiError('Não autorizado', { erro: 'Não autorizado' }, 401);
+    }
+
+    let resData;
+    try {
+        // Tenta fazer o parse JSON
+        resData = await res.json();
+    } catch {
+        resData = null;
+    }
+
+    if (!res.ok) {
+        throw new ApiError(`Erro HTTP ${res.status}`, resData, res.status);
+    }
+
+    // Formato retrocompatível com a codebase legada
+    return { data: resData, status: res.status };
+}
+
+export const api = {
+    get: (url: string, config?: any) => doFetch('GET', url, undefined, config),
+    post: (url: string, data?: any, config?: any) => doFetch('POST', url, data, config),
+    put: (url: string, data?: any, config?: any) => doFetch('PUT', url, data, config),
+    patch: (url: string, data?: any, config?: any) => doFetch('PATCH', url, data, config),
+    delete: (url: string, config?: any) => doFetch('DELETE', url, undefined, config),
+};

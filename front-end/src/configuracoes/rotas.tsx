@@ -1,11 +1,22 @@
 import { createBrowserRouter, Navigate, Outlet, useParams } from 'react-router';
 import { MsalProvider } from '@azure/msal-react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { msalInstance } from './msal';
 import { ProvedorAutenticacao } from '@/contexto/ContextoAutenticacao';
 import { ProvedorTema } from '@/contexto/ContextoTema';
 import { RotaProtegida } from './RotaProtegida';
 import TelaLogin from '@/funcionalidades/autenticacao/componentes/TelaLogin';
 import { LayoutPrincipal } from '@/compartilhado/componentes/LayoutPrincipal';
+
+const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            refetchOnWindowFocus: false,
+            retry: 1,
+            staleTime: 5 * 60 * 1000, // 5 minutos sem refetch desnecessário
+        },
+    },
+});
 
 import { QuadroKanban } from '@/funcionalidades/kanban/componentes/QuadroKanban';
 import { BaterPonto } from '@/funcionalidades/ponto/componentes/BaterPonto';
@@ -27,13 +38,15 @@ import { GerenciarEquipes } from '@/funcionalidades/admin/componentes/GerenciarE
  */
 function LayoutRaiz() {
     return (
-        <ProvedorTema>
-            <MsalProvider instance={msalInstance}>
-                <ProvedorAutenticacao>
-                    <Outlet />
-                </ProvedorAutenticacao>
-            </MsalProvider>
-        </ProvedorTema>
+        <QueryClientProvider client={queryClient}>
+            <ProvedorTema>
+                <MsalProvider instance={msalInstance}>
+                    <ProvedorAutenticacao>
+                        <Outlet />
+                    </ProvedorAutenticacao>
+                </MsalProvider>
+            </ProvedorTema>
+        </QueryClientProvider>
     );
 }
 

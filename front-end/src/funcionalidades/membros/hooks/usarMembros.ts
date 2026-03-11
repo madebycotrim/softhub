@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/compartilhado/servicos/api';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -24,9 +25,6 @@ export interface ResultadoOperacao {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/**
- * Normaliza o campo `ativo` que pode vir como boolean ou number (0/1) do backend.
- */
 function normalizarMembro(m: unknown): Membro {
     const raw = m as Record<string, unknown>;
     return {
@@ -48,10 +46,6 @@ function normalizarMembro(m: unknown): Membro {
     };
 }
 
-/**
- * Extrai a lista de membros do payload da API,
- * suportando formato novo `{ membros: [] }` e formato legado `[]`.
- */
 function extrairLista(data: unknown): unknown[] {
     if (Array.isArray(data)) return data;
     if (data && typeof data === 'object' && Array.isArray((data as Record<string, unknown>).membros)) {
@@ -62,116 +56,94 @@ function extrairLista(data: unknown): unknown[] {
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
-/**
- * Hook para gerenciar os membros da plataforma.
- *
- * Fornece:
- * - Lista de membros com loading/erro
- * - CRUD: adicionar, deletar
- * - `atualizarMembro`: atualização local para optimistic updates
- * - `recarregar`: refetch manual
- * - Cancelamento automático de requests ao desmontar o componente
- */
 export function usarMembros() {
-    const [membros, setMembros] = useState<Membro[]>([]);
-    const [carregando, setCarregando] = useState(true);
-    const [erro, setErro] = useState<string | null>(null);
+    const queryClient = useQueryClient();
 
-    /** 
-     * Carrega a lista completa de membros ativos.
-     * @param silencioso Se true, não altera o estado de carregando/erro inicial.
-     */
-    const carregar = useCallback(async (silencioso = false) => {
-        if (!silencioso) {
-            setCarregando(true);
-            setErro(null);
-        }
-
-        try {
+    // 1. Fetching com React Query
+    const { 
+        data: membros = [], 
+        isLoading: carregando, 
+        error 
+    } = useQuery({
+        queryKey: ['membros'],
+        queryFn: async () => {
             const res = await api.get('/api/usuarios');
-            const lista = extrairLista(res.data).map(normalizarMembro);
-            setMembros(lista);
-            setErro(null);
-        } catch (e: any) {
-            console.error('[usarMembros] Erro ao carregar diretório:', e);
-            if (!silencioso) {
-                setErro(e.response?.data?.erro || 'Não foi possível carregar o diretório de membros.');
-            }
-        } finally {
-            if (!silencioso) setCarregando(false);
+            return extrairLista(res.data).map(normalizarMembro);
         }
-    }, []);
+    });
 
-    useEffect(() => {
-        carregar();
-    }, [carregar]);
+    const erro = error instanceof Error ? error.message : null;
 
-    /** 
-     * Adiciona um novo membro ao sistema.
-     * @param dados E-mail, cargo e funções opcionais.
-     */
-    const adicionarMembro = useCallback(async (
-        dados: { email: string; role: string; funcoes?: string[] }
-    ): Promise<ResultadoOperacao> => {
-        setErro(null);
-        try {
+    // 2. Mutations
+    const mutationAdicionar = useMutation({
+        mutationFn: async (dados: { email: string; role: string; funcoes?: string[] }) => {
             const res = await api.post('/api/usuarios', dados);
-            const payload = res.data?.usuario ?? res.data;
-            const novoMembro = payload?.id ? normalizarMembro(payload) : null;
-
-            if (novoMembro) {
-                setMembros(prev => [...prev, novoMembro]);
-            } else {
-                await carregar(true);
-            }
-
-            return { sucesso: true };
-        } catch (e: any) {
-            const msg = e.response?.data?.erro || 'Erro ao cadastrar membro.';
-            setErro(msg);
-            return { sucesso: false, erro: msg };
+            return res.data?.usuario ?? res.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['membros'] });
         }
-    }, [carregar]);
+    });
 
-    /** 
-     * Desativa um membro (soft delete) com rollback otimista.
-     * @param id UUID do membro.
-     */
-    const deletarMembro = useCallback(async (id: string): Promise<ResultadoOperacao> => {
-        const backupMembros = [...membros];
-        setErro(null);
-
-        // 1. Optimistic Update
-        setMembros(prev => prev.filter(m => m.id !== id));
-
-        try {
+    const mutationDeletar = useMutation({
+        mutationFn: async (id: string) => {
             await api.patch(`/api/usuarios/${id}/status`, { ativo: false });
-            await carregar(true); // Confirma estado real
+        },
+        // Optimistic Update
+        onMutate: async (id) => {
+            await queryClient.cancelQueries({ queryKey: ['membros'] });
+            const snapshot = queryClient.getQueryData<Membro[]>(['membros']);
+            
+            queryClient.setQueryData<Membro[]>(['membros'], old => 
+                old ? old.filter(m => m.id !== id) : []
+            );
+
+            return { snapshot };
+        },
+        onError: (_err, _id, context) => {
+            if (context?.snapshot) {
+                queryClient.setQueryData(['membros'], context.snapshot);
+            }
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ['membros'] });
+        }
+    });
+
+    // ─── Adaptação para a interface antiga ───────────────────────────────────
+
+    const carregar = useCallback(async () => {
+        await queryClient.invalidateQueries({ queryKey: ['membros'] });
+    }, [queryClient]);
+
+    const adicionarMembro = useCallback(async (dados: { email: string; role: string; funcoes?: string[] }): Promise<ResultadoOperacao> => {
+        try {
+            await mutationAdicionar.mutateAsync(dados);
             return { sucesso: true };
         } catch (e: any) {
-            // 2. Rollback
-            console.error('[usarMembros] Erro ao remover membro, revertendo:', e);
-            setMembros(backupMembros);
-            const msg = e.response?.data?.erro || 'Erro ao remover membro.';
-            setErro(msg);
-            return { sucesso: false, erro: msg };
+            return { sucesso: false, erro: e.message || 'Erro ao cadastrar membro.' };
         }
-    }, [membros, carregar]);
+    }, [mutationAdicionar]);
 
-    /**
-     * Atualiza um membro no estado local sem fazer request à API.
-     * Use para optimistic updates externos.
-     */
+    const deletarMembro = useCallback(async (id: string): Promise<ResultadoOperacao> => {
+        try {
+            await mutationDeletar.mutateAsync(id);
+            return { sucesso: true };
+        } catch (e: any) {
+            return { sucesso: false, erro: e.message || 'Erro ao remover membro.' };
+        }
+    }, [mutationDeletar]);
+
     const atualizarMembro = useCallback((membroAtualizado: Membro) => {
-        setMembros(prev =>
-            prev.map(m => m.id === membroAtualizado.id ? membroAtualizado : m)
+        queryClient.setQueryData<Membro[]>(['membros'], old => 
+            old ? old.map(m => m.id === membroAtualizado.id ? membroAtualizado : m) : []
         );
-    }, []);
+    }, [queryClient]);
 
     return {
         membros,
         carregando,
-        erro,
+        erro: erro || (mutationAdicionar.error?.message) || (mutationDeletar.error?.message) || null,
         recarregar: carregar,
         adicionarMembro,
         deletarMembro,

@@ -1,4 +1,6 @@
 import { Hono, Context } from 'hono';
+import { z } from 'zod';
+import { zValidator } from '@hono/zod-validator';
 import { Env } from '../index';
 import { autenticacaoRequerida, verificarPermissao } from '../middleware/auth';
 import { registrarLog } from '../servicos/servico-logs';
@@ -63,11 +65,20 @@ rotasTarefas.get('/', autenticacaoRequerida(), verificarPermissao('tarefas:visua
     }
 });
 
-// Mover Tarefa
-rotasTarefas.patch('/:id/mover', autenticacaoRequerida(), verificarPermissao('tarefas:mover'), async (c: Context) => {
+// Mover Tarefa com Validação Estrita (Fase 2)
+const MoverTarefaSchema = z.object({
+    status: z.enum(['backlog', 'todo', 'in_progress', 'em_revisao', 'concluida']),
+});
+
+rotasTarefas.patch('/:id/mover', 
+    autenticacaoRequerida(), 
+    verificarPermissao('tarefas:mover'), 
+    zValidator('json', MoverTarefaSchema), 
+    async (c: Context) => {
+    
     const { DB } = c.env;
     const id = c.req.param('id');
-    const { status: colunaDestino } = await c.req.json();
+    const { status: colunaDestino } = (c.req as any).valid('json');
 
     try {
         const usuario = c.get('usuario') as any; // tipagem simplificada
