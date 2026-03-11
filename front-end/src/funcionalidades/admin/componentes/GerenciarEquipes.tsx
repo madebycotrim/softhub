@@ -1,6 +1,6 @@
 import { useState, useRef, useLayoutEffect, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { LayoutGrid, Users, Plus, Pencil, Trash2, UserCheck, Search, ChevronDown, Check, ArrowRightLeft, X, AlertTriangle } from 'lucide-react';
+import { LayoutGrid, Users, Plus, Pencil, Trash2, UserCheck, Search, ChevronDown, Check, ArrowRightLeft, X } from 'lucide-react';
 import { Tooltip } from '@/compartilhado/componentes/Tooltip';
 import { usarEquipes, type Grupo, type Equipe } from '@/funcionalidades/admin/hooks/usarEquipes';
 
@@ -20,6 +20,7 @@ import { Modal } from '@/compartilhado/componentes/Modal';
 import { ConfirmacaoExclusao } from '@/compartilhado/componentes/ConfirmacaoExclusao';
 import { Avatar } from '@/compartilhado/componentes/Avatar';
 import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
+import { EstadoErro } from '@/compartilhado/componentes/EstadoErro';
 import { EstadoVazio } from '@/compartilhado/componentes/EstadoVazio';
 
 // ─── Componentes Auxiliares ───────────────────────────────────────────────────
@@ -1013,19 +1014,7 @@ export function GerenciarEquipes() {
                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Sincronizando Estrutura</span>
                     </div>
                 ) : erro && equipesAtivas.length === 0 ? (
-                    <div className="flex-1 flex flex-col items-center justify-center gap-4 bg-white border border-rose-100 rounded-3xl p-10 text-center">
-                        <div className="w-16 h-16 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mb-2">
-                             <AlertTriangle size={32} />
-                        </div>
-                        <h3 className="text-lg font-bold text-slate-900">Erro ao carregar estrutura</h3>
-                        <p className="text-sm text-slate-500 max-w-xs">{erro}</p>
-                        <button 
-                            onClick={() => window.location.reload()}
-                            className="mt-4 px-6 py-2 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest"
-                        >
-                            Tentar Novamente
-                        </button>
-                    </div>
+                    <EstadoErro titulo="Erro ao carregar estrutura" mensagem={erro} />
                 ) : (
                     <>
                         {/* Sidebar: Lista de Equipes */}

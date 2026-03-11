@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate, Outlet, useParams } from 'react-router';
+import { createBrowserRouter, Navigate, Outlet } from 'react-router';
 import { MsalProvider } from '@azure/msal-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { msalInstance } from './msal';
@@ -21,7 +21,7 @@ const queryClient = new QueryClient({
 import { QuadroKanban } from '@/funcionalidades/kanban/componentes/QuadroKanban';
 import { BaterPonto } from '@/funcionalidades/ponto/componentes/BaterPonto';
 
-import { PerfilMembro } from '@/funcionalidades/membros/componentes/PerfilMembro';
+
 import { MuralAvisos } from '@/funcionalidades/avisos/componentes/MuralAvisos';
 import { PaginaDashboard } from '@/funcionalidades/dashboard/componentes/PaginaDashboard';
 import { PainelLogs } from '@/funcionalidades/admin/componentes/PainelLogs';
@@ -52,10 +52,7 @@ function LayoutRaiz() {
     );
 }
 
-function PerfilDinamico() {
-    const { id } = useParams();
-    return <PerfilMembro membroId={id || ''} />;
-}
+
 
 export const rotas = createBrowserRouter([
     {
@@ -74,7 +71,7 @@ export const rotas = createBrowserRouter([
 
             { path: '/app/ponto', element: <RotaProtegida><LayoutPrincipal><BaterPonto /></LayoutPrincipal></RotaProtegida> },
 
-            { path: '/app/membro/:id', element: <RotaProtegida><LayoutPrincipal><PerfilDinamico /></LayoutPrincipal></RotaProtegida> },
+
             { path: '/app/avisos', element: <RotaProtegida><LayoutPrincipal><MuralAvisos /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/admin/logs', element: <RotaProtegida><LayoutPrincipal><PainelLogs /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/admin/membros', element: <RotaProtegida roleMinimo="ADMIN"><LayoutPrincipal><GerenciarMembros /></LayoutPrincipal></RotaProtegida> },

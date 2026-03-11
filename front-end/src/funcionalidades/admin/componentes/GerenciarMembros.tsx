@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect, memo } from 'react';
-import { UserCog, X, Shield, Mail, Trash2, Loader2, ListPlus, Download, AlertCircle, ChevronDown, User, Users as UsersIcon, Plus, CheckSquare, Square, History } from 'lucide-react';
+import { UserCog, X, Shield, Mail, Trash2, Loader2, ListPlus, Download, AlertCircle, ChevronDown, Users as UsersIcon, Plus, CheckSquare, Square, History } from 'lucide-react';
 import { Tooltip } from '@/compartilhado/componentes/Tooltip';
-import { Link } from 'react-router';
+
 import { api } from '@/compartilhado/servicos/api';
 import { usarMembros } from '@/funcionalidades/membros/hooks/usarMembros';
 import type { Membro } from '@/funcionalidades/membros/hooks/usarMembros';
@@ -13,6 +13,7 @@ import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFu
 import { Modal } from '@/compartilhado/componentes/Modal';
 import { ConfirmacaoExclusao } from '@/compartilhado/componentes/ConfirmacaoExclusao';
 import { EstadoVazio } from '@/compartilhado/componentes/EstadoVazio';
+import { EstadoErro } from '@/compartilhado/componentes/EstadoErro';
 import { ambiente } from '@/configuracoes/ambiente';
 import { usarConfiguracoes } from '@/funcionalidades/admin/hooks/usarConfiguracoes';
 import { usarDebounce } from '@/compartilhado/hooks/usarDebounce';
@@ -344,14 +345,7 @@ const LinhaMembro = memo(({
             {/* Ações */}
             <td className="px-3 py-3">
                 <div className="flex items-center justify-end gap-1">
-                    <Tooltip texto="Ver perfil">
-                        <Link
-                            to={`/app/membro/${membro.id}`}
-                            className="p-2 rounded-xl transition-all text-primary hover:bg-primary/5"
-                        >
-                            <User size={20} />
-                        </Link>
-                    </Tooltip>
+
 
                     {!ehOMesmoUsuario && podeDesativar && (
                         <Tooltip texto="Remover acesso">
@@ -810,18 +804,12 @@ export default function GerenciarMembros() {
                              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Buscando Membros</span>
                         </div>
                     ) : erro ? (
-                        <div className="flex flex-col items-center justify-center py-20 text-center px-4">
-                            <div className="w-16 h-16 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center mb-4">
-                                <AlertCircle size={32} />
-                            </div>
-                            <h3 className="text-lg font-bold text-foreground">Erro ao carregar dados</h3>
-                            <p className="text-sm text-muted-foreground max-w-xs mt-2">{erro}</p>
-                            <button
-                                onClick={() => recarregar()}
-                                className="mt-6 px-6 py-2 bg-primary text-primary-foreground rounded-2xl text-sm font-bold"
-                            >
-                                Tentar Novamente
-                            </button>
+                        <div className="py-20 flex justify-center w-full">
+                            <EstadoErro 
+                                titulo="Erro ao carregar dados"
+                                mensagem={erro}
+                                aoTentarNovamente={recarregar}
+                            />
                         </div>
                     ) : listaFiltrada.length === 0 ? (
                         <div className="py-12">

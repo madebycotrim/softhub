@@ -5,15 +5,13 @@ export interface RelatorioEquipes {
     grupos: {
         id: string;
         nome: string;
-        lider_nome: string | null;
-        total_equipes: number;
+        equipe_nome: string | null;
         total_membros: number;
     }[];
     equipes: {
         id: string;
         nome: string;
         lider_nome: string | null;
-        grupo_nome: string | null;
         total_membros: number;
     }[];
 }

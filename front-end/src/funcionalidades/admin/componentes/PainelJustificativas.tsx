@@ -10,6 +10,7 @@ import { usarJustificativasAdmin } from '@/funcionalidades/admin/hooks/usarJusti
 import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
 import { Modal } from '@/compartilhado/componentes/Modal';
 import { Carregando } from '@/compartilhado/componentes/Carregando';
+import { EstadoErro } from '@/compartilhado/componentes/EstadoErro';
 
 /** Mapeia o tipo técnico para rótulo amigável. */
 const formatarTipo = (tipo: string): string => {
@@ -87,18 +88,8 @@ export function PainelJustificativas() {
                              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Sincronizando Justificativas</span>
                         </div>
                     ) : erro && justificativas.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center gap-4 p-10 text-center animate-in fade-in">
-                            <div className="w-16 h-16 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mb-2">
-                                <AlertTriangle size={32} />
-                            </div>
-                            <h3 className="text-lg font-bold text-slate-900">Erro ao carregar justificativas</h3>
-                            <p className="text-sm text-slate-500 max-w-xs">{erro}</p>
-                            <button 
-                                onClick={() => window.location.reload()}
-                                className="mt-4 px-6 py-2 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest"
-                            >
-                                Tentar Novamente
-                            </button>
+                        <div className="h-full w-full flex items-center justify-center p-6">
+                            <EstadoErro titulo="Erro ao carregar justificativas" mensagem={erro} />
                         </div>
                     ) : justificativas.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
