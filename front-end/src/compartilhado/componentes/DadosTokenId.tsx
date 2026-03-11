@@ -21,7 +21,7 @@ export function DadosTokenId({ idTokenClaims }: DadosTokenIdProps) {
                 <p className="text-xs text-slate-400">Dados técnicos validados pela plataforma de identidade da Microsoft.</p>
             </div>
 
-            <div className="bg-slate-950/50 border border-white/5 rounded-xl overflow-hidden">
+            <div className="bg-slate-950/50 border border-white/5 rounded-2xl overflow-hidden">
                 <Table>
                     <TableHeader className="bg-slate-900/50">
                         <TableRow className="border-white/5 hover:bg-transparent">

@@ -66,7 +66,7 @@ export function ModalCriarTarefa({ aberto, aoFechar, aoCriar }: ModalCriarTarefa
                     <input
                         {...register('titulo')}
                         placeholder="Ex: Refatorar middleware de autenticação..."
-                        className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        className="w-full bg-background border border-border rounded-2xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     />
                     {errors.titulo && <p className="text-xs text-destructive mt-1">{errors.titulo.message}</p>}
                 </div>
@@ -88,7 +88,7 @@ export function ModalCriarTarefa({ aberto, aoFechar, aoCriar }: ModalCriarTarefa
                         {...register('descricao')}
                         rows={4}
                         placeholder="Descreva o que precisa ser feito..."
-                        className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
+                        className="w-full bg-background border border-border rounded-2xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
                     />
                     {errors.descricao && <p className="text-xs text-destructive mt-1">{errors.descricao.message}</p>}
                 </div>
@@ -111,7 +111,7 @@ export function ModalCriarTarefa({ aberto, aoFechar, aoCriar }: ModalCriarTarefa
                                     className="hidden"
                                 />
                                 <div className={`
-                                    py-2 text-center rounded-xl border text-[10px] font-black uppercase tracking-tighter transition-all
+                                    py-2 text-center rounded-2xl border text-[10px] font-black uppercase tracking-tighter transition-all
                                     ${watch('prioridade') === key 
                                         ? 'bg-primary border-primary text-primary-foreground shadow-md' 
                                         : 'bg-muted/30 border-border md:hover:bg-muted/50'}
@@ -127,14 +127,14 @@ export function ModalCriarTarefa({ aberto, aoFechar, aoCriar }: ModalCriarTarefa
                     <button
                         type="button"
                         onClick={aoFechar}
-                        className="flex-1 h-12 rounded-xl text-[10px] font-black uppercase tracking-widest border border-border hover:bg-muted transition-all"
+                        className="flex-1 h-12 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-border hover:bg-muted transition-all"
                     >
                         Cancelar
                     </button>
                     <button
                         type="submit"
                         disabled={carregandoCriacao}
-                        className="flex-[2] h-12 bg-primary text-primary-foreground rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+                        className="flex-[2] h-12 bg-primary text-primary-foreground rounded-2xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
                     >
                         {carregandoCriacao ? <Carregando tamanho="sm" Centralizar={false} /> : <Plus size={14} />}
                         Criar Tarefa

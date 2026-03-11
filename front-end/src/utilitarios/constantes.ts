@@ -1,8 +1,8 @@
 export const COLUNAS_KANBAN = [
-    'a_fazer',
-    'em_andamento',
+    'todo',
+    'in_progress',
     'em_revisao',
-    'concluido',
+    'concluida',
 ] as const;
 
 export type ColunaKanban = typeof COLUNAS_KANBAN[number];

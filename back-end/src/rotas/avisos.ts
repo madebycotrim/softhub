@@ -46,7 +46,7 @@ rotasAvisos.get('/', autenticacaoRequerida(), verificarPermissao('avisos:visuali
         // Obriga o Workers Cache API a respeitar 10 min de vida para o cache de borda
         resposta.headers.set('Cache-Control', 'max-age=600');
         await cache.put(cacheKey, resposta.clone());
-        
+
         return resposta;
     } catch (erro) {
         console.error('[ERRO DB] GET /avisos', erro);
@@ -57,7 +57,7 @@ rotasAvisos.get('/', autenticacaoRequerida(), verificarPermissao('avisos:visuali
 // Criar aviso (Requer líder ou admin, validado em Etapa Superior ou frontend mock)
 const CriarAvisoSchema = z.object({
     titulo: z.string().min(3),
-    conteudo: z.string().min(5),
+    conteudo: z.string().optional().default(''),
     prioridade: z.enum(['info', 'importante', 'urgente']),
     expira_em: z.string().nullable().optional()
 });

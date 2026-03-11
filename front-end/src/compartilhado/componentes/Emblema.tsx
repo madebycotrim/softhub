@@ -21,7 +21,7 @@ export function Emblema({ texto, variante = 'cinza', className = '' }: EmblemaPr
         alerta: 'bg-orange-100 text-orange-700 border-orange-300 shadow-[0_0_10px_rgba(249,115,22,0.15)]',
     };
 
-    const padroes = 'inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-0.5 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all';
+    const padroes = 'inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-0.5 rounded-2xl text-[10px] font-black uppercase tracking-wider border transition-all';
     const estiloAtivo = estilos[variante];
 
     return (

@@ -158,7 +158,7 @@ export function PainelJustificativas() {
                                                     {just.motivo}
                                                 </span>
                                                 {analisesIA[just.id] && (
-                                                    <div className={`mt-2 p-2.5 rounded-xl border text-[11px] leading-snug animate-in slide-in-from-top-2 duration-300 ${
+                                                    <div className={`mt-2 p-2.5 rounded-2xl border text-[11px] leading-snug animate-in slide-in-from-top-2 duration-300 ${
                                                         analisesIA[just.id].sugestao === 'aprovar' 
                                                         ? 'bg-emerald-50/50 border-emerald-100 text-emerald-700' 
                                                         : analisesIA[just.id].sugestao === 'rejeitar'
@@ -172,7 +172,7 @@ export function PainelJustificativas() {
                                                     </div>
                                                 )}
                                                 {just.status === 'rejeitada' && just.motivo_rejeicao && (
-                                                    <div className="mt-1 p-2 bg-destructive/10 border border-destructive/20 rounded-lg text-xs text-destructive">
+                                                    <div className="mt-1 p-2 bg-destructive/10 border border-destructive/20 rounded-2xl text-xs text-destructive">
                                                         <span className="font-bold">Reprovação:</span> {just.motivo_rejeicao}
                                                     </div>
                                                 )}
@@ -218,7 +218,7 @@ export function PainelJustificativas() {
                                                         </Tooltip>
                                                     </>
                                                 ) : (
-                                                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest px-2 py-1 bg-muted rounded-lg">
+                                                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest px-2 py-1 bg-muted rounded-2xl">
                                                         Fechado
                                                     </span>
                                                 )}

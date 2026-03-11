@@ -97,7 +97,7 @@ export function LayoutPrincipal({ children }: LayoutPrincipalProps) {
                     </div>
                 </header>
 
-                <main className="flex-1 overflow-y-auto px-4 sm:px-6 pb-20 lg:pb-6 pt-4 lg:pt-6 relative z-10 transition-all overflow-x-hidden">
+                <main className="flex-1 p-6 overflow-y-auto relative z-10 transition-all overflow-x-hidden">
                     {children}
                 </main>
             </div>

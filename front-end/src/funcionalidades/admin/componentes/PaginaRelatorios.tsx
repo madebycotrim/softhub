@@ -100,7 +100,7 @@ export default function PaginaRelatorios() {
                 </BarraFiltros>
 
                 {carregando && frequenciaMembros.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-32 gap-4 bg-card/40 backdrop-blur-md border border-border/40 rounded-[32px] w-full mt-4">
+                    <div className="flex flex-col items-center justify-center py-32 gap-4 bg-card/40 backdrop-blur-md border border-border/40 rounded-2xl w-full mt-4">
                         <Carregando Centralizar={false} tamanho="lg" />
                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Processando Estratégia...</span>
                     </div>
@@ -115,7 +115,7 @@ export default function PaginaRelatorios() {
                 {abaAtiva === 'geral' && frequenciaGeral && (
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                         {/* Gráfico de Tendência */}
-                        <div className="lg:col-span-8 bg-card/40 backdrop-blur-md border border-border/40 rounded-[32px] p-8 shadow-sm">
+                        <div className="lg:col-span-8 bg-card/40 backdrop-blur-md border border-border/40 rounded-2xl p-8 shadow-sm">
                             <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground/60 mb-8">Tendência de Presença (30 dias)</h3>
                             <div className="h-[300px] w-full min-w-0">
                                 {frequenciaGeral.tendencia && frequenciaGeral.tendencia.length > 0 ? (
@@ -155,7 +155,7 @@ export default function PaginaRelatorios() {
 
                         {/* Justificativas */}
                         <div className="lg:col-span-4 space-y-6">
-                            <div className="bg-card/40 backdrop-blur-md border border-border/40 rounded-[32px] p-8 shadow-sm">
+                            <div className="bg-card/40 backdrop-blur-md border border-border/40 rounded-2xl p-8 shadow-sm">
                                 <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground/60 mb-6">Status Justificativas</h3>
                                 <div className="space-y-4">
                                     {frequenciaGeral.statusJustificativas.map((status, i) => (
@@ -173,7 +173,7 @@ export default function PaginaRelatorios() {
                                 </div>
                             </div>
 
-                            <div className="bg-card/40 backdrop-blur-md border border-border/40 rounded-[32px] p-8 shadow-sm">
+                            <div className="bg-card/40 backdrop-blur-md border border-border/40 rounded-2xl p-8 shadow-sm">
                                 <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground/60 mb-6">Motivos de Ausência (Aprovados)</h3>
                                 <div className="space-y-4">
                                     {frequenciaGeral.tiposJustificativas.map((tipo, i) => (
@@ -197,7 +197,7 @@ export default function PaginaRelatorios() {
                 {/* ── SEÇÃO: EQUIPES ── */}
                 {abaAtiva === 'equipes' && equipesRelatorio && (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div className="bg-card/40 backdrop-blur-md border border-border/40 rounded-[32px] p-8 shadow-sm relative">
+                        <div className="bg-card/40 backdrop-blur-md border border-border/40 rounded-2xl p-8 shadow-sm relative">
                              <div className="flex items-center gap-4 mb-8">
                                 <div className="p-3 bg-indigo-500/10 rounded-2xl text-indigo-500">
                                     <Network size={22} className="opacity-80"/>
@@ -211,7 +211,7 @@ export default function PaginaRelatorios() {
                                 {equipesRelatorio.equipes.map((equipe) => (
                                     <div key={equipe.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-muted/10 border border-border/40 rounded-2xl hover:bg-muted/30 transition-all">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black uppercase tracking-widest text-xs">
+                                            <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black uppercase tracking-widest text-xs">
                                                 {equipe.nome.substring(0,2)}
                                             </div>
                                             <div>
@@ -222,7 +222,7 @@ export default function PaginaRelatorios() {
                                             </div>
                                         </div>
                                         <div className="flex items-center sm:justify-end gap-3 px-2 sm:px-0">
-                                            <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-background border border-border/30 w-16">
+                                            <div className="flex flex-col items-center justify-center p-2 rounded-2xl bg-background border border-border/30 w-16">
                                                 <span className="text-sm font-black text-foreground leading-none mb-1">{equipe.total_membros}</span>
                                                 <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground">Membros</span>
                                             </div>
@@ -235,7 +235,7 @@ export default function PaginaRelatorios() {
                             </div>
                         </div>
 
-                        <div className="bg-card/40 backdrop-blur-md border border-border/40 rounded-[32px] p-8 shadow-sm relative">
+                        <div className="bg-card/40 backdrop-blur-md border border-border/40 rounded-2xl p-8 shadow-sm relative">
                              <div className="flex items-center gap-4 mb-8">
                                 <div className="p-3 bg-purple-500/10 rounded-2xl text-purple-500">
                                     <UsersIcon size={22} className="opacity-80"/>
@@ -249,7 +249,7 @@ export default function PaginaRelatorios() {
                                 {equipesRelatorio.grupos.map((grupo) => (
                                     <div key={grupo.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-muted/10 border border-border/40 rounded-2xl hover:bg-muted/30 transition-all">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-500 font-black uppercase tracking-widest text-xs">
+                                            <div className="w-10 h-10 rounded-2xl bg-purple-500/10 flex items-center justify-center text-purple-500 font-black uppercase tracking-widest text-xs">
                                                 {grupo.nome.substring(0,2)}
                                             </div>
                                             <div>
@@ -260,7 +260,7 @@ export default function PaginaRelatorios() {
                                             </div>
                                         </div>
                                         <div className="flex items-center sm:justify-end px-2 sm:px-0">
-                                            <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-background border border-border/30 w-16">
+                                            <div className="flex flex-col items-center justify-center p-2 rounded-2xl bg-background border border-border/30 w-16">
                                                 <span className="text-sm font-black text-foreground leading-none mb-1">{grupo.total_membros}</span>
                                                 <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground">Membros</span>
                                             </div>
@@ -277,7 +277,7 @@ export default function PaginaRelatorios() {
 
                 {/* ── SEÇÃO: MEMBROS ── */}
                 {abaAtiva === 'membros' && frequenciaMembros && (
-                    <div className="bg-card/40 backdrop-blur-md border border-border/40 rounded-[32px] p-8 shadow-sm overflow-hidden space-y-8">
+                    <div className="bg-card/40 backdrop-blur-md border border-border/40 rounded-2xl p-8 shadow-sm overflow-hidden space-y-8">
                         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                             <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground/60">Análise de Frequência Individual</h3>
 
@@ -299,7 +299,7 @@ export default function PaginaRelatorios() {
                                         <tr key={m.id} className="hover:bg-muted/20 transition-colors">
                                             <td className="px-4 py-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-[11px] font-black text-primary shrink-0">
+                                                    <div className="w-8 h-8 rounded-2xl bg-primary/10 flex items-center justify-center text-[11px] font-black text-primary shrink-0">
                                                         {m.nome.charAt(0)}
                                                     </div>
                                                     <div className="min-w-0">
@@ -315,12 +315,12 @@ export default function PaginaRelatorios() {
                                                 </div>
                                             </td>
                                             <td className="px-3 py-4 text-center">
-                                                <span className="px-3 py-1 bg-primary/5 border border-primary/10 rounded-lg text-xs font-black text-primary">
+                                                <span className="px-3 py-1 bg-primary/5 border border-primary/10 rounded-2xl text-xs font-black text-primary">
                                                     {m.dias_presentes}
                                                 </span>
                                             </td>
                                             <td className="px-3 py-4 text-center">
-                                                <span className={`px-3 py-1 bg-amber-500/5 border border-amber-500/10 rounded-lg text-xs font-black ${m.justificativas_aprovadas > 3 ? 'text-red-400' : 'text-amber-500'}`}>
+                                                <span className={`px-3 py-1 bg-amber-500/5 border border-amber-500/10 rounded-2xl text-xs font-black ${m.justificativas_aprovadas > 3 ? 'text-red-400' : 'text-amber-500'}`}>
                                                     {m.justificativas_aprovadas}
                                                 </span>
                                             </td>

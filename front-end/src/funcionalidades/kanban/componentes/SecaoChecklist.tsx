@@ -29,36 +29,41 @@ export function SecaoChecklist({ tarefaId }: SecaoChecklistProps) {
     };
 
     return (
-        <div className="mt-6 space-y-4">
+        <div className="mt-8 space-y-5">
             <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                    Checklist
-                    <span className="text-[10px] bg-secondary text-secondary-foreground px-1.5 py-0.5 rounded border border-border">
-                        {totalConcluidos}/{totalItens}
+                <div className="flex items-center gap-3">
+                    <h3 className="text-sm font-black text-foreground uppercase tracking-widest flex items-center gap-2">
+                        Checklist
+                    </h3>
+                    <span className="text-[10px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-2xl border border-primary/20 shadow-sm">
+                        {totalConcluidos} de {totalItens}
                     </span>
-                </h3>
+                </div>
 
                 {totalItens > 0 && (
-                    <div className="w-24 bg-secondary rounded-full h-1.5 overflow-hidden">
-                        <div
-                            className="bg-emerald-500 h-1.5 transition-all duration-500"
-                            style={{ width: `${progresso}%` }}
-                        />
+                    <div className="flex items-center gap-3">
+                         <span className="text-[11px] font-black text-emerald-500/80 tracking-tighter">{Math.round(progresso)}%</span>
+                        <div className="w-20 bg-muted rounded-full h-1.5 overflow-hidden border border-border/40 shadow-inner">
+                            <div
+                                className="bg-emerald-500 h-full transition-all duration-700 ease-out shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                                style={{ width: `${progresso}%` }}
+                            />
+                        </div>
                     </div>
                 )}
             </div>
 
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 gap-1">
                 {itens.map((item) => (
-                    <div key={item.id} className="group flex items-center gap-3 p-2 rounded-xl hover:bg-accent transition-colors border border-transparent hover:border-border">
+                    <div key={item.id} className="group flex items-center gap-3 p-3 rounded-2xl hover:bg-muted/40 transition-all border border-transparent hover:border-border/40">
                         <button
                             onClick={() => alternarItem(item.id, !item.concluido)}
-                            className={`shrink-0 transition-colors ${item.concluido ? 'text-emerald-500' : 'text-muted-foreground hover:text-foreground'}`}
+                            className={`shrink-0 w-6 h-6 flex items-center justify-center rounded-2xl border-2 transition-all ${item.concluido ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'border-muted-foreground/30 text-transparent hover:border-primary/50'}`}
                         >
-                            {item.concluido ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+                            <CheckSquare className={`w-3.5 h-3.5 ${item.concluido ? 'scale-100 opacity-100' : 'scale-75 opacity-0'}`} strokeWidth={3} />
                         </button>
 
-                        <span className={`text-sm flex-1 transition-all ${item.concluido ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
+                        <span className={`text-[13px] font-medium flex-1 transition-all ${item.concluido ? 'text-muted-foreground/60 line-through decoration-muted-foreground/30' : 'text-foreground hover:text-primary transition-colors cursor-default'}`}>
                             {item.texto}
                         </span>
 
@@ -66,7 +71,7 @@ export function SecaoChecklist({ tarefaId }: SecaoChecklistProps) {
                             <Tooltip texto="Remover item">
                                 <button
                                     onClick={() => removerItem(item.id)}
-                                    className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-destructive transition-all"
+                                    className="opacity-0 group-hover:opacity-100 p-2 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 rounded-2xl transition-all"
                                 >
                                     <Trash2 className="w-3.5 h-3.5" />
                                 </button>
@@ -80,17 +85,17 @@ export function SecaoChecklist({ tarefaId }: SecaoChecklistProps) {
                 <form onSubmit={aoAdicionar} className="relative mt-2">
                     <input
                         type="text"
-                        placeholder="Adicionar item..."
+                        placeholder="Adicionar um novo item ao checklist..."
                         value={novoTexto}
                         onChange={(e) => setNovoTexto(e.target.value)}
-                        className="w-full bg-background border border-input rounded-xl pl-3 pr-10 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-all"
+                        className="w-full bg-muted/30 border border-border/60 rounded-2xl pl-4 pr-12 py-3 text-[13px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:bg-card focus:border-primary/40 focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"
                     />
                     <button
                         type="submit"
                         disabled={!novoTexto.trim() || enviando}
-                        className="absolute right-2 top-1.5 p-1 text-primary hover:text-primary/80 disabled:opacity-0 transition-all font-sans"
+                        className="absolute right-2 top-2 p-2 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 transition-all disabled:opacity-0 shadow-lg"
                     >
-                        {enviando ? <Carregando /> : <Plus className="w-4 h-4" />}
+                        {enviando ? <Carregando tamanho="sm" /> : <Plus className="w-4.5 h-4.5" />}
                     </button>
                 </form>
             )}

@@ -307,7 +307,7 @@ const LinhaMembro = memo(({
                 <div className="relative w-fit">
                     <select
                         aria-label={`Papel de ${membro.nome}`}
-                        className={`w-fit bg-muted/20 border border-border/50 rounded-xl px-2 py-1.5 pr-8 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none ${
+                        className={`w-fit bg-muted/20 border border-border/50 rounded-2xl px-2 py-1.5 pr-8 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none ${
                             !podeAlterarRole ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
                         }`}
                         value={membro.role}
@@ -331,7 +331,7 @@ const LinhaMembro = memo(({
                         membro.equipe_nome.split(',').map((item: string, i: number) => (
                             <span 
                                 key={i} 
-                                className="inline-flex items-center px-2 py-0.5 rounded-md bg-muted/40 border border-border/50 text-[10px] font-medium text-muted-foreground/80 whitespace-nowrap"
+                                className="inline-flex items-center px-2 py-0.5 rounded-2xl bg-muted/40 border border-border/50 text-[10px] font-medium text-muted-foreground/80 whitespace-nowrap"
                             >
                                 {item.trim()}
                             </span>
@@ -351,7 +351,7 @@ const LinhaMembro = memo(({
                         <Tooltip texto="Remover acesso">
                             <button
                                 onClick={() => onRemover(membro)}
-                                className="p-2 rounded-xl transition-all text-muted-foreground/50 hover:text-red-500 hover:bg-red-500/5"
+                                className="p-2 rounded-2xl transition-all text-muted-foreground/50 hover:text-red-500 hover:bg-red-500/5"
                             >
                                 {salvando ? (
                                     <Carregando Centralizar={false} tamanho="sm" />
@@ -405,7 +405,7 @@ const BulkActions = memo(({ selecionados, onClear, onBulkUpdate, onExport, roles
                 </div>
                 <button
                     onClick={onClear}
-                    className="ml-4 p-1.5 text-muted-foreground hover:text-primary transition-colors bg-muted/50 rounded-lg lg:bg-transparent"
+                    className="ml-4 p-1.5 text-muted-foreground hover:text-primary transition-colors bg-muted/50 rounded-2xl lg:bg-transparent"
                 >
                     <X size={20} />
                 </button>
@@ -416,7 +416,7 @@ const BulkActions = memo(({ selecionados, onClear, onBulkUpdate, onExport, roles
                     <button
                         onClick={() => handleAction('remover')}
                         disabled={processando}
-                        className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all border border-red-500/20 disabled:opacity-50"
+                        className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-2xl text-[11px] font-black uppercase tracking-widest bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all border border-red-500/20 disabled:opacity-50"
                     >
                         {processando ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={20} />} 
                         Remover
@@ -427,7 +427,7 @@ const BulkActions = memo(({ selecionados, onClear, onBulkUpdate, onExport, roles
                     <div className="relative group/bulk-role shrink-0">
                         <button 
                             disabled={processando}
-                            className="flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest bg-primary/10 text-primary hover:bg-primary/20 transition-all border border-primary/20 disabled:opacity-50"
+                            className="flex items-center gap-2 px-3 py-2 rounded-2xl text-[11px] font-black uppercase tracking-widest bg-primary/10 text-primary hover:bg-primary/20 transition-all border border-primary/20 disabled:opacity-50"
                         >
                             {processando ? <Loader2 size={18} className="animate-spin" /> : <Shield size={20} />} 
                             Nível <ChevronDown size={20} />
@@ -450,7 +450,7 @@ const BulkActions = memo(({ selecionados, onClear, onBulkUpdate, onExport, roles
 
                 <button
                     onClick={onExport}
-                    className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest bg-muted hover:bg-muted/80 text-foreground transition-all border border-border"
+                    className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-2xl text-[11px] font-black uppercase tracking-widest bg-muted hover:bg-muted/80 text-foreground transition-all border border-border"
                 >
                     <Download size={20} /> Exportar
                 </button>
@@ -613,7 +613,7 @@ const StatsCards = memo(({ membros }: { membros: Membro[] }) => {
             ].map((card) => (
                 <div key={card.label} className="bg-white/50 backdrop-blur-sm border border-slate-200/60 rounded-2xl p-4 flex items-center justify-between shadow-sm transition-all hover:bg-white/80">
                     <div className="flex items-center gap-3 min-w-0">
-                        <div className={`w-10 h-10 rounded-lg ${card.bg} ${card.cor} flex items-center justify-center shrink-0`}>
+                        <div className={`w-10 h-10 rounded-2xl ${card.bg} ${card.cor} flex items-center justify-center shrink-0`}>
                             <card.icone size={20} />
                         </div>
                         <div className="min-w-0">
@@ -622,7 +622,7 @@ const StatsCards = memo(({ membros }: { membros: Membro[] }) => {
                         </div>
                     </div>
                     {card.detalhe && (
-                        <span className="text-[9px] font-black text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-md self-end mb-0.5">
+                        <span className="text-[9px] font-black text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-2xl self-end mb-0.5">
                             {card.detalhe}
                         </span>
                     )}
@@ -761,7 +761,7 @@ export default function GerenciarMembros() {
                                 placeholder="Buscar membro..."
                                 value={busca}
                                 onChange={e => { setBusca(e.target.value); setPagina(1); }}
-                                className="w-full h-11 bg-background border border-border rounded-xl pl-10 pr-4 text-sm font-medium outline-none focus:bg-background focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-foreground placeholder:text-muted-foreground"
+                                className="w-full h-11 bg-background border border-border rounded-2xl pl-10 pr-4 text-sm font-medium outline-none focus:bg-background focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-foreground placeholder:text-muted-foreground"
                             />
                             {busca && (
                                 <button
@@ -779,7 +779,7 @@ export default function GerenciarMembros() {
                                 <div className="flex items-center gap-2">
                                     <button
                                     onClick={() => setModalAberto(true)}
-                                    className="h-11 px-5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-md active:scale-95 whitespace-nowrap"
+                                    className="h-11 px-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-xs font-bold flex items-center gap-2 transition-all shadow-md active:scale-95 whitespace-nowrap"
                                 >
                                     <Plus size={20} />
                                     <span>Adicionar</span>
@@ -788,7 +788,7 @@ export default function GerenciarMembros() {
                                 <Tooltip texto="Importar em Lote">
                                     <button
                                         onClick={() => setModalLoteAberto(true)}
-                                        className="w-11 h-11 bg-white border border-border/50 text-muted-foreground hover:text-primary hover:border-primary/20 rounded-xl transition-all flex items-center justify-center"
+                                        className="w-11 h-11 bg-white border border-border/50 text-muted-foreground hover:text-primary hover:border-primary/20 rounded-2xl transition-all flex items-center justify-center"
                                     >
                                         <ListPlus size={20} />
                                     </button>
@@ -802,7 +802,7 @@ export default function GerenciarMembros() {
 
             <StatsCards membros={membros} />
 
-            <div className="bg-card border border-border rounded-3xl overflow-hidden shadow-sm flex-1 flex flex-col">
+            <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm flex-1 flex flex-col">
 
                 {/* Tabela semântica de membros */}
                 <div className="overflow-x-auto flex-1 h-0 relative">

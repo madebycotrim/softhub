@@ -35,7 +35,7 @@ export function SecaoComentarios({ tarefaId }: SecaoComentariosProps) {
     };
 
     if (erro) {
-        return <div className="text-sm text-destructive p-4 border border-destructive/20 rounded-lg bg-destructive/10 mb-4">Falha ao carregar comentários: {erro}</div>;
+        return <div className="text-sm text-destructive p-4 border border-destructive/20 rounded-2xl bg-destructive/10 mb-4">Falha ao carregar comentários: {erro}</div>;
     }
 
     return (
@@ -56,14 +56,14 @@ export function SecaoComentarios({ tarefaId }: SecaoComentariosProps) {
                         <p className="text-sm">Nenhum comentário. Seja o primeiro!</p>
                     </div>
                 ) : (
-                    comentarios.map(c => (
+                    comentarios.map((c: any) => (
                         <CartaoComentario
                             key={c.id}
                             comentario={c}
                             usuarioLogadoId={usuario?.id || ''}
                             ehLider={ehLiderOuAdmin}
-                            aoExcluir={excluirComentario}
-                            aoEditar={editarComentario}
+                            aoExcluir={async (id) => { await excluirComentario(id); }}
+                            aoEditar={async (id, conteudo) => { await editarComentario(id, conteudo); }}
                         />
                     ))
                 )}
@@ -86,7 +86,7 @@ export function SecaoComentarios({ tarefaId }: SecaoComentariosProps) {
                     <button
                         type="submit"
                         disabled={!novoComentario.trim() || enviando}
-                        className="absolute right-2 bottom-2 p-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground transition-colors disabled:opacity-50 disabled:hover:bg-primary flex items-center justify-center"
+                        className="absolute right-2 bottom-2 p-2 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground transition-colors disabled:opacity-50 disabled:hover:bg-primary flex items-center justify-center"
                     >
                         {enviando ? <Carregando tamanho="sm" className="border-white" /> : <Send className="w-4 h-4" />}
                     </button>

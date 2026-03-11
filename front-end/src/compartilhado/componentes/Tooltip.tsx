@@ -116,7 +116,7 @@ export function Tooltip({ texto, children, posicao = 'top', atraso = 300 }: Tool
                     }}
                     className={`pointer-events-none animate-in fade-in zoom-in-95 duration-200 ${classesPosicao[posicao]}`}
                 >
-                    <div className="relative px-3 py-1.5 bg-slate-950 text-white text-[9px] font-black uppercase tracking-widest rounded-lg shadow-[0_10px_30px_-5px_rgba(0,0,0,0.5)] whitespace-nowrap border border-white/10">
+                    <div className="relative px-3 py-1.5 bg-slate-950 text-white text-[9px] font-black uppercase tracking-widest rounded-2xl shadow-[0_10px_30px_-5px_rgba(0,0,0,0.5)] whitespace-nowrap border border-white/10">
                         {texto}
                         {/* Seta (Pointer) - Quadrado rotacionado 45° */}
                         <div className={`absolute w-2 h-2 bg-slate-950 border border-white/5 ${classesSeta[posicao]}`} />

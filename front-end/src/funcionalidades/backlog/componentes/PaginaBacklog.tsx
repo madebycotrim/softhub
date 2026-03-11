@@ -89,7 +89,7 @@ export default function PaginaBacklog() {
 
             {/* Listagem */}
             {carregando ? (
-                <div className="flex flex-col items-center justify-center py-40 bg-white/5 backdrop-blur-md border border-white/10 rounded-[40px] shadow-2xl">
+                <div className="flex flex-col items-center justify-center py-40 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-2xl">
                     <div className="relative">
                         <div className="absolute inset-0 bg-primary/20 blur-3xl animate-pulse rounded-full" />
                         <Carregando Centralizar={false} tamanho="lg" />
@@ -106,7 +106,7 @@ export default function PaginaBacklog() {
                     descricao="Nenhuma tarefa corresponde aos filtros selecionados. Limpe os filtros ou crie uma nova demanda."
                 />
             ) : (
-                <div className="bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[40px] shadow-2xl shadow-black/40 overflow-hidden animate-in slide-in-from-bottom-4 duration-700">
+                <div className="bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl shadow-black/40 overflow-hidden animate-in slide-in-from-bottom-4 duration-700">
                     <div className="overflow-x-auto">
                         <table className="w-full border-collapse">
                             <thead>

@@ -37,7 +37,7 @@ export function BarraFiltros({
     className = ""
 }: BarraFiltrosProps) {
     return (
-        <div className={`my-6 flex flex-col lg:flex-row gap-3 items-start lg:items-center justify-between p-3 bg-card border border-border rounded-[24px] shadow-sm w-full animate-in fade-in slide-in-from-top-4 duration-700 ${className}`}>
+        <div className={`my-6 flex flex-col lg:flex-row gap-3 items-start lg:items-center justify-between p-3 bg-card border border-border rounded-2xl shadow-sm w-full animate-in fade-in slide-in-from-top-4 duration-700 ${className}`}>
             <div className="flex flex-col lg:flex-row flex-1 items-stretch lg:items-center gap-3 w-full">
                 {/* Busca Principal */}
                 <div className={`relative group flex-1 max-w-xl transition-opacity duration-300 ${desabilitarBusca ? 'opacity-30 grayscale pointer-events-none' : ''}`}>
@@ -48,7 +48,7 @@ export function BarraFiltros({
                         value={busca}
                         onChange={(e) => aoMudarBusca(e.target.value)}
                         disabled={desabilitarBusca}
-                        className="w-full h-11 pl-12 pr-4 py-3 bg-background border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all font-medium placeholder:text-muted-foreground text-foreground disabled:cursor-not-allowed"
+                        className="w-full h-11 pl-12 pr-4 py-3 bg-background border border-border rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all font-medium placeholder:text-muted-foreground text-foreground disabled:cursor-not-allowed"
                     />
                     {busca && (
                         <button 
@@ -70,7 +70,7 @@ export function BarraFiltros({
             {temFiltrosAtivos && aoLimparFiltros && (
                 <button
                     onClick={aoLimparFiltros}
-                    className="h-11 px-4 text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition-all border border-rose-100 hover:border-rose-200 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest shrink-0"
+                    className="h-11 px-4 text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-2xl transition-all border border-rose-100 hover:border-rose-200 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest shrink-0"
                 >
                     <X size={14} />
                     Limpar
@@ -101,7 +101,7 @@ export function FiltroSelect({
             <select
                 value={valor}
                 onChange={(e) => aoMudar(e.target.value)}
-                className={`h-11 pl-4 pr-10 bg-background border border-border rounded-xl text-[10px] font-black uppercase tracking-widest text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all appearance-none cursor-pointer min-w-[120px] shadow-sm hover:bg-accent hover:text-accent-foreground ${valor ? 'text-primary border-primary/20 bg-primary/5' : ''}`}
+                className={`h-11 pl-4 pr-10 bg-background border border-border rounded-2xl text-[10px] font-black uppercase tracking-widest text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all appearance-none cursor-pointer min-w-[120px] shadow-sm hover:bg-accent hover:text-accent-foreground ${valor ? 'text-primary border-primary/20 bg-primary/5' : ''}`}
             >
                 <option value="" className="bg-popover text-popover-foreground">{rotuloPadrao}</option>
                 {opcoes.map(opt => (
@@ -132,7 +132,7 @@ export function FiltroDataRange({
     desabilitado?: boolean;
 }) {
     return (
-        <div className={`flex items-center bg-background border border-border rounded-xl px-4 h-11 focus-within:ring-2 focus-within:ring-primary/40 focus-within:border-primary transition-all shadow-sm ${desabilitado ? 'opacity-30 pointer-events-none' : 'hover:border-primary/20'}`}>
+        <div className={`flex items-center bg-background border border-border rounded-2xl px-4 h-11 focus-within:ring-2 focus-within:ring-primary/40 focus-within:border-primary transition-all shadow-sm ${desabilitado ? 'opacity-30 pointer-events-none' : 'hover:border-primary/20'}`}>
             <Calendar size={14} className={`mr-3 shrink-0 ${inicio || fim ? 'text-primary' : 'text-muted-foreground'}`} />
             <input
                 type="date"
@@ -164,12 +164,12 @@ export function FiltroToggle({
     aoMudar: (v: any) => void;
 }) {
     return (
-        <div className="flex items-center bg-background border border-border rounded-xl p-1 h-11 shadow-sm">
+        <div className="flex items-center bg-background border border-border rounded-2xl p-1 h-11 shadow-sm">
             {opcoes.map((opt) => (
                 <button
                     key={opt.valor}
                     onClick={() => aoMudar(opt.valor)}
-                    className={`px-4 h-full rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center ${
+                    className={`px-4 h-full rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center ${
                         valorAtivo === opt.valor
                             ? 'bg-slate-950 text-white shadow-md'
                             : 'text-muted-foreground hover:text-foreground'
@@ -206,7 +206,7 @@ export function FiltroPills({
                     <button
                         key={key}
                         onClick={() => aoToggle(key)}
-                        className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 whitespace-nowrap border ${valoresAtivos.includes(key)
+                        className={`px-3 py-1.5 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 whitespace-nowrap border ${valoresAtivos.includes(key)
                             ? variante === 'primary' 
                                 ? 'bg-primary text-primary-foreground border-primary shadow-[0_0_20px_rgba(37,99,235,0.3)]'
                                 : 'bg-slate-950 text-white border-slate-950 shadow-md'

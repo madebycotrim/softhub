@@ -273,7 +273,7 @@ function ModalAlocacao({ aberto, aoFechar, grupos, membros, aoAlocar, grupoIdPad
                                     
                                     <div className="shrink-0 pl-2">
                                         {jaVinculado ? (
-                                            <div className="bg-slate-200 text-slate-500 text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg">Vinculado</div>
+                                            <div className="bg-slate-200 text-slate-500 text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-2xl">Vinculado</div>
                                         ) : (
                                             <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all
                                                 ${selecionado ? 'bg-blue-600 border-blue-600' : 'bg-transparent border-slate-200 group-hover:border-blue-300'}
@@ -300,7 +300,7 @@ function ModalAlocacao({ aberto, aoFechar, grupos, membros, aoAlocar, grupoIdPad
                     <button 
                         type="button" 
                         onClick={aoFechar} 
-                        className="w-full sm:w-auto px-6 h-12 text-[10px] font-black text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-all uppercase tracking-widest"
+                        className="w-full sm:w-auto px-6 h-12 text-[10px] font-black text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-2xl transition-all uppercase tracking-widest"
                     >
                         CANCELAR
                     </button>
@@ -308,7 +308,7 @@ function ModalAlocacao({ aberto, aoFechar, grupos, membros, aoAlocar, grupoIdPad
                         type="button"
                         onClick={handleAlocar}
                         disabled={salvando || selecionados.length === 0}
-                        className="w-full sm:flex-1 h-12 bg-blue-600 text-white rounded-xl text-[10px] font-black shadow-sm hover:bg-blue-700 hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-30 disabled:translate-y-0 disabled:shadow-none flex items-center justify-center gap-2 group px-4 uppercase tracking-widest"
+                        className="w-full sm:flex-1 h-12 bg-blue-600 text-white rounded-2xl text-[10px] font-black shadow-sm hover:bg-blue-700 hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-30 disabled:translate-y-0 disabled:shadow-none flex items-center justify-center gap-2 group px-4 uppercase tracking-widest"
                     >
                         {salvando ? <Carregando Centralizar={false} tamanho="sm" className="border-t-white border-white/30" /> : (
                             <>
@@ -638,7 +638,7 @@ function DetalheEquipe({
                                         <button 
                                             onClick={handleSalvarEquipeInline} 
                                             disabled={salvandoInline}
-                                            className="p-1.5 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all disabled:opacity-30" 
+                                            className="p-1.5 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-2xl transition-all disabled:opacity-30" 
                                         >
                                             {salvandoInline ? <Carregando Centralizar={false} tamanho="sm" className="border-t-emerald-500 border-emerald-500/30" /> : <Check size={16} strokeWidth={2.5} />}
                                         </button>
@@ -649,7 +649,7 @@ function DetalheEquipe({
                                             setEditandoEquipe(false);
                                         }}
                                         disabled={salvandoInline}
-                                        className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all disabled:opacity-30"
+                                        className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-2xl transition-all disabled:opacity-30"
                                     >
                                         <X size={16} strokeWidth={2.5} />
                                     </button>
@@ -736,7 +736,7 @@ function DetalheEquipe({
             <div className="flex-1 overflow-y-auto min-h-0 pr-2 -mr-2 custom-scrollbar">
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 {grupos.length === 0 ? (
-                    <div className="col-span-full py-12 bg-white/50 border-2 border-dashed border-slate-100 rounded-3xl">
+                    <div className="col-span-full py-12 bg-white/50 border-2 border-dashed border-slate-100 rounded-2xl">
                         <EstadoVazio 
                             titulo="Equipe sem Grupos"
                             descricao="Esta equipe ainda não possui grupos de trabalho definidos."
@@ -802,7 +802,7 @@ function DetalheEquipe({
                                                     <button 
                                                         onClick={() => handleSalvarInline(g.id)} 
                                                         disabled={salvandoInline}
-                                                        className="p-2 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-xl transition-all disabled:opacity-30" 
+                                                        className="p-2 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-2xl transition-all disabled:opacity-30" 
                                                     >
                                                         {salvandoInline ? <Carregando Centralizar={false} tamanho="sm" className="border-t-emerald-500 border-emerald-500/30" /> : <Check size={18} strokeWidth={2.5} />}
                                                     </button>
@@ -810,7 +810,7 @@ function DetalheEquipe({
                                                 <button
                                                     onClick={() => setEditandoId(null)}
                                                     disabled={salvandoInline}
-                                                    className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all disabled:opacity-30"
+                                                    className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-2xl transition-all disabled:opacity-30"
                                                 >
                                                     <X size={18} strokeWidth={2.5} />
                                                 </button>
@@ -842,7 +842,7 @@ function DetalheEquipe({
                                                         Pessoas ({membrosDoGrupo.length})
                                                     </h6>
                                                     <Tooltip texto="Alocar membro">
-                                                        <button onClick={() => aoAlocar(g.id, equipe.id)} className="w-8 h-8 rounded-xl bg-white border border-slate-100 text-slate-400 flex items-center justify-center hover:bg-slate-50 hover:text-blue-600 transition-all shadow-sm">
+                                                        <button onClick={() => aoAlocar(g.id, equipe.id)} className="w-8 h-8 rounded-2xl bg-white border border-slate-100 text-slate-400 flex items-center justify-center hover:bg-slate-50 hover:text-blue-600 transition-all shadow-sm">
                                                             <Plus size={16} />
                                                         </button>
                                                     </Tooltip>
@@ -1009,7 +1009,7 @@ export function GerenciarEquipes() {
 
             <div className="flex-1 flex overflow-hidden pt-6 gap-6 relative">
                 {carregando && equipesAtivas.length === 0 ? (
-                    <div className="flex-1 flex flex-col items-center justify-center gap-4 bg-white border border-slate-100 rounded-3xl animate-in fade-in duration-500">
+                    <div className="flex-1 flex flex-col items-center justify-center gap-4 bg-white border border-slate-100 rounded-2xl animate-in fade-in duration-500">
                         <Carregando Centralizar={false} tamanho="lg" />
                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Sincronizando Estrutura</span>
                     </div>
@@ -1088,7 +1088,7 @@ export function GerenciarEquipes() {
                                                                             setEditandoSidebarId(null);
                                                                         }
                                                                     }}
-                                                                    className="p-1 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"
+                                                                    className="p-1 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-2xl transition-all"
                                                                 >
                                                                     {salvandoSidebarInline ? <Carregando Centralizar={false} tamanho="sm" className="w-3.5 h-3.5" /> : <Check size={14} strokeWidth={3} />}
                                                                 </button>
@@ -1099,7 +1099,7 @@ export function GerenciarEquipes() {
                                                                         ev.stopPropagation();
                                                                         setEditandoSidebarId(null);
                                                                     }}
-                                                                    className="p-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                                                                    className="p-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-2xl transition-all"
                                                                 >
                                                                     <X size={14} strokeWidth={3} />
                                                                 </button>
@@ -1176,7 +1176,7 @@ export function GerenciarEquipes() {
                             aoSalvarNomeEquipe={(id, nome) => editarEquipe(id, { nome })}
                         />
                     ) : (
-                        <div className="flex-1 flex items-center justify-center bg-white border border-slate-100 rounded-3xl">
+                        <div className="flex-1 flex items-center justify-center bg-white border border-slate-100 rounded-2xl">
                             <EstadoVazio 
                                 titulo="Selecione uma Equipe"
                                 descricao="Escolha uma equipe na lateral para gerenciar lideranças, grupos e membros alocados."

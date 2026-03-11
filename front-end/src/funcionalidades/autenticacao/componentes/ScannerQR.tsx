@@ -17,7 +17,7 @@ interface ScannerQRProps {
  */
 export default function ScannerQR({ aoFechar }: ScannerQRProps) {
     const { usuario } = usarAutenticacaoContexto();
-    const [status, setStatus] = useState<'ocioso' | 'pedindo_permissao' | 'scaneando' | 'confirmacao' | 'autorizando' | 'sucesso' | 'erro'>('ocioso');
+    const [status, setStatus] = useState<'ocioso' | 'pedindo_permissao' | 'scaneando' | 'validando' | 'confirmacao' | 'autorizando' | 'sucesso' | 'erro'>('ocioso');
     const [erro, setErro] = useState<string | null>(null);
     const [sessaoIdPendente, setSessaoIdPendente] = useState<string | null>(null);
     const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
@@ -33,6 +33,19 @@ export default function ScannerQR({ aoFechar }: ScannerQRProps) {
         };
     }, []);
 
+    // Verifica se já teve permissão antes para inicializar automático
+    useEffect(() => {
+        if (status === 'ocioso') {
+            const jaAutorizou = localStorage.getItem('qr_camera_autorizada') === 'true';
+            if (jaAutorizou) {
+                const timer = setTimeout(() => {
+                    pedirPermissao();
+                }, 400); // 400ms para aguardar a transição suave do modal
+                return () => clearTimeout(timer);
+            }
+        }
+    }, [status]);
+
     const pedirPermissao = async () => {
         setErro(null);
         setStatus('pedindo_permissao');
@@ -41,6 +54,9 @@ export default function ScannerQR({ aoFechar }: ScannerQRProps) {
             // Solicita permissão nativa
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
             stream.getTracks().forEach(track => track.stop()); // Libera para o sensor do leitor
+            
+            // Salva no navegador que o usuário confia no QR app para auto-abrir nas próximas
+            localStorage.setItem('qr_camera_autorizada', 'true');
             
             iniciarLeitura();
         } catch (err: any) {
@@ -86,7 +102,16 @@ export default function ScannerQR({ aoFechar }: ScannerQRProps) {
     };
 
     const onScanSuccess = async (decodedText: string) => {
-        if (!decodedText || decodedText.length < 30) return;
+        // Verifica se é pelo menos parecido com um UUID
+        if (!decodedText || decodedText.length < 30) {
+            setErro('QR Code inválido ou não reconhecido.');
+            setStatus('erro');
+            vibrarErro();
+            if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
+                await html5QrCodeRef.current.stop();
+            }
+            return;
+        }
 
         // Feedback haptico sutil ao ler
         vibrar(60);
@@ -96,18 +121,21 @@ export default function ScannerQR({ aoFechar }: ScannerQRProps) {
             await html5QrCodeRef.current.stop();
         }
 
-        setSessaoIdPendente(decodedText);
-        setStatus('confirmacao');
-
-        // Notifica o backend imediatamente para mostrar o avatar no PC
+        // Valida e notifica o backend imediatamente para mostrar o avatar no PC
         identificarUsuario(decodedText);
     };
 
     const identificarUsuario = async (sessaoId: string) => {
+        setStatus('validando');
         try {
             await api.post('/api/auth/qr/identificar', { sessaoId });
-        } catch (e) {
+            setSessaoIdPendente(sessaoId);
+            setStatus('confirmacao');
+        } catch (e: any) {
             console.error('[Scanner] Falha ao identificar no desktop:', e);
+            setErro(e.response?.data?.erro || 'QR Code inválido ou não pertence ao sistema.');
+            setStatus('erro');
+            vibrarErro();
         }
     };
 
@@ -132,7 +160,7 @@ export default function ScannerQR({ aoFechar }: ScannerQRProps) {
         <div className="flex flex-col items-center justify-center space-y-8 pt-4 min-h-[500px]">
             
             {(status === 'ocioso' || status === 'pedindo_permissao') && (
-                <div className="text-center space-y-10 px-8 animate-in fade-in slide-in-from-top-4 duration-700">
+                <div className="text-center space-y-10 px-8 flex flex-col items-center justify-center animate-in fade-in slide-in-from-top-4 duration-700 w-full">
                     <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center mx-auto text-blue-600 border border-slate-200 relative shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] transition-transform hover:scale-105 duration-500">
                         <Camera size={48} strokeWidth={1.5} />
                         {status === 'pedindo_permissao' && (
@@ -147,19 +175,27 @@ export default function ScannerQR({ aoFechar }: ScannerQRProps) {
                             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600/60">Acesso Rápido</span>
                             <h3 className="text-3xl font-black text-slate-900 tracking-tight">QR Login</h3>
                         </div>
-                        <p className="text-[15px] text-slate-500 font-medium leading-relaxed max-w-[240px] mx-auto">
-                            Digitalize para entrar instantaneamente. Sua câmera será usada apenas para leitura.
+                        <p className="text-[15px] text-slate-500 font-medium leading-relaxed max-w-[260px] mx-auto min-h-[44px]">
+                            {status === 'pedindo_permissao' 
+                                ? 'Aguardando autorização da câmera pelo seu navegador...' 
+                                : 'Digitalize para entrar instantaneamente.'}
                         </p>
                     </div>
 
-                    <div className="flex flex-col gap-4 w-full">
-                        <button
-                            onClick={pedirPermissao}
-                            disabled={status === 'pedindo_permissao'}
-                            className="w-full h-15 bg-slate-900 text-white font-bold rounded-2xl shadow-xl shadow-slate-200 active:scale-95 transition-all flex items-center justify-center gap-2 text-lg"
-                        >
-                            {status === 'pedindo_permissao' ? <Loader2 className="animate-spin" /> : 'Abrir Câmera'}
-                        </button>
+                    <div className="flex flex-col gap-4 w-full pt-4">
+                        {status === 'pedindo_permissao' ? (
+                            <div className="w-full h-14 bg-blue-50 text-blue-600 font-bold rounded-2xl flex items-center justify-center gap-3">
+                                <Loader2 className="animate-spin" size={20} />
+                                Solicitando Permissão
+                            </div>
+                        ) : (
+                            <button
+                                onClick={pedirPermissao}
+                                className="w-full h-14 bg-slate-900 text-white font-bold rounded-2xl shadow-xl shadow-slate-200 active:scale-95 transition-all flex items-center justify-center gap-2 text-lg hover:bg-black"
+                            >
+                                Abrir Câmera
+                            </button>
+                        )}
                         <button onClick={aoFechar} className="py-2 text-xs text-slate-400 font-black uppercase tracking-widest hover:text-slate-600 transition-colors">Cancelar</button>
                     </div>
                 </div>
@@ -217,7 +253,7 @@ export default function ScannerQR({ aoFechar }: ScannerQRProps) {
                             </div>
                         </div>
 
-                        <div className="w-16 h-16 bg-slate-50 border border-slate-100 rounded-3xl flex items-center justify-center text-slate-900 shadow-xl relative z-10">
+                        <div className="w-16 h-16 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center text-slate-900 shadow-xl relative z-10">
                             <Monitor size={32} strokeWidth={1.5} />
                         </div>
                     </div>
@@ -244,6 +280,13 @@ export default function ScannerQR({ aoFechar }: ScannerQRProps) {
                             Refazer Leitura
                         </button>
                     </div>
+                </div>
+            )}
+
+            {status === 'validando' && (
+                <div className="text-center space-y-6">
+                    <Loader2 className="w-16 h-16 text-primary animate-spin mx-auto" />
+                    <p className="text-slate-900 font-black text-xl tracking-tight">Verificando QR Code...</p>
                 </div>
             )}
 

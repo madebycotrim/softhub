@@ -168,7 +168,7 @@ export default function TelaLogin() {
                             <img src={logoUnieuro} alt="Logo Unieuro" className="w-10 h-10 lg:w-12 lg:h-12 object-contain" />
                             <div className="space-y-1.5">
                                 <h1 className="text-xl lg:text-[24px] font-[900] leading-none tracking-tight">FÁBRICA DE SOFTWARE</h1>
-                                <div className="inline-flex items-center px-2 py-0.5 bg-red-600/20 rounded-md border border-red-500/20">
+                                <div className="inline-flex items-center px-2 py-0.5 bg-red-600/20 rounded-2xl border border-red-500/20">
                                     <span className="text-[10px] lg:text-[11px] tracking-[0.3em] text-red-500 font-black uppercase">SoftHub</span>
                                 </div>
                             </div>
@@ -192,7 +192,7 @@ export default function TelaLogin() {
                     <div className="mt-8 lg:mt-0 relative z-10 hidden sm:block">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <div className="p-2 bg-white/5 rounded-xl border border-white/10">
+                                <div className="p-2 bg-white/5 rounded-2xl border border-white/10">
                                     <Globe size={14} className="opacity-40" />
                                 </div>
                                 <span className="text-[11px] font-black uppercase tracking-[0.2em] opacity-30">Campus Águas Claras</span>
@@ -205,7 +205,7 @@ export default function TelaLogin() {
                 </div>
 
                 {/* Área de Acesso (Login Microsoft + Prompt PWA) */}
-                <div className="flex-1 flex flex-col lg:flex-row items-stretch bg-white -mt-8 lg:mt-0 rounded-t-[32px] lg:rounded-none relative z-20">
+                <div className="flex-1 flex flex-col lg:flex-row items-stretch bg-white -mt-8 lg:mt-0 rounded-t-[32px] lg:rounded-2xl relative z-20">
 
                     {/* Lado Central: Acesso Microsoft */}
                     <div className="flex-1 p-8 lg:p-12 flex flex-col items-center justify-center">
@@ -271,7 +271,7 @@ export default function TelaLogin() {
                                             className="w-full flex items-center justify-center h-14 bg-accent/5 hover:bg-accent/10 rounded-2xl transition-all active:scale-[0.98] group"
                                         >
                                             <div className="flex items-center gap-3">
-                                                <div className="p-2 bg-primary/10 rounded-xl text-primary opacity-60 group-hover:opacity-100 transition-opacity">
+                                                <div className="p-2 bg-primary/10 rounded-2xl text-primary opacity-60 group-hover:opacity-100 transition-opacity">
                                                     <Download size={18} />
                                                 </div>
                                                 <span className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground">Instalar Aplicativo</span>

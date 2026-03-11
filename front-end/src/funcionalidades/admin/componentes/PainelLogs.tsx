@@ -198,7 +198,7 @@ export function PainelLogs() {    const {
                                                         const info = getModuloInfo(log.modulo);
                                                         const Icone = info.icone;
                                                         return (
-                                                            <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl border ${info.bg} ${info.borda} ${info.cor}`}>
+                                                            <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-2xl border ${info.bg} ${info.borda} ${info.cor}`}>
                                                                 <Icone size={12} strokeWidth={2.5} />
                                                                 <span className="text-[10px] font-black uppercase tracking-widest">{info.label}</span>
                                                             </div>
@@ -209,7 +209,7 @@ export function PainelLogs() {    const {
                                                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight truncate max-w-[80px]">
                                                             {log.entidade_tipo || '—'}
                                                         </span>
-                                                        <div className={`mt-1 p-1 rounded-lg transition-transform ${expandidoId === log.id ? 'rotate-180 bg-primary/10 text-primary' : 'text-slate-300'}`}>
+                                                        <div className={`mt-1 p-1 rounded-2xl transition-transform ${expandidoId === log.id ? 'rotate-180 bg-primary/10 text-primary' : 'text-slate-300'}`}>
                                                             <Activity size={12} />
                                                         </div>
                                                     </div>

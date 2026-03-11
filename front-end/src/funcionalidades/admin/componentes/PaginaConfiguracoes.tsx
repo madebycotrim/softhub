@@ -301,14 +301,14 @@ export function PaginaConfiguracoes() {
                                                             <button 
                                                                 onClick={() => handleRenomearRoleAction(role)}
                                                                 disabled={salvandoRole}
-                                                                className="p-1 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"
+                                                                className="p-1 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-2xl transition-all"
                                                             >
                                                                 {salvandoRole ? <Carregando Centralizar={false} tamanho="sm" className="w-3 h-3" /> : <Check size={12} strokeWidth={3} />}
                                                             </button>
                                                             <button 
                                                                 onClick={() => setEditandoRole(null)}
                                                                 disabled={salvandoRole}
-                                                                className="p-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                                                                className="p-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-2xl transition-all"
                                                             >
                                                                 <X size={12} strokeWidth={3} />
                                                             </button>
@@ -337,7 +337,7 @@ export function PaginaConfiguracoes() {
                                         {!CARGOS_FIXOS.includes(role) && podeEditar && editandoRole !== role && (
                                             <button
                                                 onClick={() => handleRemoverCargo(role)}
-                                                className="p-1.5 text-slate-300/40 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all opacity-0 group-hover/card:opacity-100"
+                                                className="p-1.5 text-slate-300/40 hover:text-rose-500 hover:bg-rose-50 rounded-2xl transition-all opacity-0 group-hover/card:opacity-100"
                                                 title="Remover cargo"
                                             >
                                                 <Trash2 size={13} />
@@ -437,7 +437,7 @@ export function PaginaConfiguracoes() {
                                                         className="px-6 py-3 border-y border-slate-100"
                                                     >
                                                         <div className="flex items-center gap-3">
-                                                            <div className="p-1 px-2.5 bg-white border border-slate-100 rounded-lg shadow-sm">
+                                                            <div className="p-1 px-2.5 bg-white border border-slate-100 rounded-2xl shadow-sm">
                                                                 <IconeModulo size={12} className="text-blue-500" />
                                                             </div>
                                                             <span className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-500">
@@ -474,7 +474,7 @@ export function PaginaConfiguracoes() {
                                                                                 : !podeEditar ? 'Sem permissão para editar'
                                                                                 : undefined
                                                                             }
-                                                                            className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-300 ${
+                                                                            className={`w-7 h-7 rounded-2xl flex items-center justify-center transition-all duration-300 ${
                                                                                 forcadoPorTodos
                                                                                     ? 'bg-emerald-500/10 text-emerald-600 cursor-not-allowed border border-emerald-500/20 shadow-sm'
                                                                                     : podeEditar ? 'cursor-pointer active:scale-90 hover:scale-105 shadow-sm' : 'cursor-not-allowed opacity-20 grayscale'

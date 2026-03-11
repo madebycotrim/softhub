@@ -43,8 +43,8 @@ export function JornalTarefa({ tarefaId }: JornalTarefaProps) {
 
     return (
         <div className="flex flex-col gap-6 mt-8">
-            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest flex items-center gap-2">
-                <History className="w-4 h-4 text-slate-400" />
+            <h3 className="text-sm font-bold text-foreground uppercase tracking-widest flex items-center gap-2">
+                <History className="w-4 h-4 text-muted-foreground" />
                 Linha do Tempo
             </h3>
 
@@ -61,7 +61,7 @@ export function JornalTarefa({ tarefaId }: JornalTarefaProps) {
                             value={novoComentario}
                             onChange={(e) => setNovoComentario(e.target.value)}
                             placeholder="Escreva um comentário ou atualização..."
-                            className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3 pr-12 text-sm text-slate-900 resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all min-h-[80px]"
+                            className="w-full bg-muted/40 border border-border/60 rounded-2xl p-4 pr-12 text-sm text-foreground resize-none focus:outline-none focus:bg-card focus:border-primary/40 focus:ring-4 focus:ring-primary/10 transition-all min-h-[90px] shadow-sm"
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
                                     e.preventDefault();
@@ -73,7 +73,7 @@ export function JornalTarefa({ tarefaId }: JornalTarefaProps) {
                             <button
                                 type="submit"
                                 disabled={!novoComentario.trim() || enviando}
-                                className="absolute right-2 bottom-2 p-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition-colors disabled:opacity-30 flex items-center justify-center shadow-lg"
+                                className="absolute right-3 bottom-3 p-2.5 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 transition-all disabled:opacity-30 flex items-center justify-center shadow-lg active:scale-95"
                             >
                                 {enviando ? <Carregando tamanho="sm" /> : <Send className="w-4 h-4" />}
                             </button>
@@ -83,14 +83,14 @@ export function JornalTarefa({ tarefaId }: JornalTarefaProps) {
             )}
 
             {/* Feed Chronológico */}
-            <div className="relative space-y-8 pl-1">
+            <div className="relative space-y-8 pl-2">
                 {/* Linha vertical centralizada nos avatares */}
-                <div className="absolute left-[19px] top-2 bottom-2 w-0.5 bg-slate-100" />
+                <div className="absolute left-[26px] top-6 bottom-4 w-px bg-border/60" />
 
                 {carregando && entradas.length === 0 ? (
                     <div className="flex justify-center py-10"><Carregando /></div>
                 ) : entradas.length === 0 ? (
-                    <div className="text-center py-10 text-slate-400 text-sm italic">Nenhuma atividade registrada ainda.</div>
+                    <div className="text-center py-10 text-muted-foreground text-sm italic">Nenhuma atividade registrada ainda.</div>
                 ) : (
                     entradas.map((entrada) => (
                         <div key={entrada.id} className="relative flex gap-4 group">
@@ -101,32 +101,33 @@ export function JornalTarefa({ tarefaId }: JornalTarefaProps) {
                                         nome={entrada.usuario.nome} 
                                         fotoPerfil={entrada.usuario.foto} 
                                         tamanho="md"
-                                        className="ring-4 ring-white"
+                                        className="ring-[6px] ring-background relative z-10"
                                     />
                                 ) : (
-                                    <div className="w-10 h-10 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-slate-500 shadow-sm ring-4 ring-white">
+                                    <div className="w-10 h-10 rounded-full bg-muted border border-border/50 flex items-center justify-center text-muted-foreground shadow-sm ring-[6px] ring-background relative z-10">
                                         <IconeEvento campo={entrada.conteudo.campo} />
                                     </div>
                                 )}
                             </div>
 
                             {/* Conteúdo */}
-                            <div className="flex-1 pt-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-sm font-bold text-slate-900">{entrada.usuario.nome}</span>
-                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                            <div className="flex-1 pt-0.5">
+                                <div className="flex items-center gap-2.5 mb-2">
+                                    <span className="text-[13px] font-bold text-foreground">{entrada.usuario.nome}</span>
+                                    <span className="text-[10px] text-muted-foreground/60 font-bold uppercase tracking-wider">
                                         {formatarTempoAtras(entrada.data)}
                                     </span>
                                 </div>
 
                                 {entrada.tipo === 'comentario' ? (
-                                    <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm text-slate-700 leading-relaxed shadow-sm group-hover:bg-white transition-colors">
+                                    <div className="bg-card border border-border/60 rounded-2xl p-4 text-[14px] text-card-foreground leading-relaxed shadow-sm hover:border-border transition-colors">
                                         {entrada.conteudo}
                                     </div>
                                 ) : (
-                                    <p className="text-sm text-slate-500 font-medium">
+                                    <div className="bg-muted/30 border border-border/30 rounded-2xl rounded-tl-sm px-4 py-3 text-[13px] text-muted-foreground font-medium flex items-center gap-2">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-primary/40 shrink-0" />
                                         {formatarEventoHistorico(entrada.conteudo.campo, entrada.conteudo.antigo, entrada.conteudo.novo)}
-                                    </p>
+                                    </div>
                                 )}
                             </div>
                         </div>

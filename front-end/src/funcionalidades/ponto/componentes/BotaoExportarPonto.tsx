@@ -52,7 +52,7 @@ export function BotaoExportarPonto() {
         <Tooltip texto="Gerar Relatório CSV" posicao="left">
             <button
                 onClick={() => setAberto(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent/80 text-accent-foreground rounded-lg border border-border transition-colors text-sm font-medium"
+                className="flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent/80 text-accent-foreground rounded-2xl border border-border transition-colors text-sm font-medium"
             >
                 <Download className="w-4 h-4" />
                 Exportar CSV
@@ -73,7 +73,7 @@ export function BotaoExportarPonto() {
                                 type="date"
                                 value={dataInicio}
                                 onChange={(e) => setDataInicio(e.target.value)}
-                                className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                                className="w-full bg-background border border-input rounded-2xl px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                             />
                         </div>
                         <div className="space-y-2">
@@ -82,7 +82,7 @@ export function BotaoExportarPonto() {
                                 type="date"
                                 value={dataFim}
                                 onChange={(e) => setDataFim(e.target.value)}
-                                className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                                className="w-full bg-background border border-input rounded-2xl px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                             />
                         </div>
                     </div>

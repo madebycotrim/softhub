@@ -13,7 +13,7 @@ interface PainelFiltrosProps {
 export function PainelFiltrosKanban({ filtros, aoFiltrar }: PainelFiltrosProps) {
     const [buscaText, setBuscaText] = useState(filtros.busca || '');
     const [prioridades, setPrioridades] = useState<string[]>(filtros.prioridades || []);
-    
+
     const buscaDebounced = usarDebounce(buscaText, 500);
 
     // Efeito para disparar aoFiltrar quando debounce atualiza
@@ -40,22 +40,22 @@ export function PainelFiltrosKanban({ filtros, aoFiltrar }: PainelFiltrosProps) 
     const temFiltroAtivo = !!(buscaText || prioridades.length > 0 || filtros.responsavelId);
 
     return (
-        <div className="mb-6">
-            <BarraFiltros
-                busca={buscaText}
-                aoMudarBusca={setBuscaText}
-                placeholderBusca="Filtrar tarefas no quadro..."
-                temFiltrosAtivos={temFiltroAtivo}
-                aoLimparFiltros={limparFiltros}
-            >
-                <FiltroPills 
-                    label="Prioridade" 
-                    opcoes={LABELS_PRIORIDADE} 
-                    valoresAtivos={prioridades} 
-                    aoToggle={togglePrioridade} 
-                    variante="primary"
-                />
-            </BarraFiltros>
-        </div>
+
+        <BarraFiltros
+            busca={buscaText}
+            aoMudarBusca={setBuscaText}
+            placeholderBusca="Filtrar tarefas no quadro..."
+            temFiltrosAtivos={temFiltroAtivo}
+            aoLimparFiltros={limparFiltros}
+        >
+            <FiltroPills
+                label="Prioridade"
+                opcoes={LABELS_PRIORIDADE}
+                valoresAtivos={prioridades}
+                aoToggle={togglePrioridade}
+                variante="primary"
+            />
+        </BarraFiltros>
+
     );
 }

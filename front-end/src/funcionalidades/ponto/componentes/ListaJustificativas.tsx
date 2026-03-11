@@ -103,7 +103,7 @@ export function ListaJustificativas({ justificativas, aoEditar, aoExcluir }: Lis
                                         <Tooltip texto="Editar" posicao="top">
                                             <button 
                                                 onClick={() => aoEditar(just)}
-                                                className="p-1.5 rounded-xl text-slate-400 hover:text-primary hover:bg-primary/5 transition-colors"
+                                                className="p-1.5 rounded-2xl text-slate-400 hover:text-primary hover:bg-primary/5 transition-colors"
                                             >
                                                 <Pencil className="w-4 h-4" />
                                             </button>
@@ -111,7 +111,7 @@ export function ListaJustificativas({ justificativas, aoEditar, aoExcluir }: Lis
                                         <Tooltip texto="Excluir" posicao="top">
                                             <button 
                                                 onClick={() => aoExcluir(just.id)}
-                                                className="p-1.5 rounded-xl text-slate-400 hover:text-destructive hover:bg-destructive/5 transition-colors"
+                                                className="p-1.5 rounded-2xl text-slate-400 hover:text-destructive hover:bg-destructive/5 transition-colors"
                                             >
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
