@@ -22,9 +22,6 @@ export default defineConfig(({ mode }) => {
                             if (id.includes('@fluentui')) {
                                 return 'vendor-fluentui';
                             }
-                            if (id.includes('zod') || id.includes('react-hook-form')) {
-                                return 'vendor-forms';
-                            }
                             if (id.includes('lucide-react') || id.includes('@radix-ui')) {
                                 return 'vendor-ui-core';
                             }
@@ -93,7 +90,7 @@ export default defineConfig(({ mode }) => {
         server: {
             proxy: {
                 '/api': {
-                    target: env.VITE_API || 'api.softhub.workers.dev',
+                    target: env.VITE_PROXY_TARGET || 'https://softhub.madebycotrim-67c.workers.dev',
                     changeOrigin: true,
                     secure: false,
                 },
