@@ -56,22 +56,26 @@ export default function TelaLogin() {
     const erro = erroLocal ?? (erroRedirect ? mensagemErroRedirect[erroRedirect] : null);
 
     useEffect(() => {
-        // Redirecionamento instantâneo se já estiver logado
+        // Se já está logado no SoftHub, sai do Login
         if (estaAutenticado) {
             navigate('/app/dashboard', { replace: true });
             return;
         }
 
-        const autenticarNoBackend = async (conta: any) => {
+        // Se já temos um erro na tela, não tenta autenticar automático (morte do combo 401+loop)
+        if (erroLocal) return;
+
+        const realizarAutenticacaoNoBackend = async (conta: any) => {
             if (travaAuthGlobal) return;
             travaAuthGlobal = true;
 
             const email = (conta.username || '').toLowerCase();
-            const dominiosValidos = [ambiente.dominioInstitucional, 'unieuro.com.br'];
+            const dominiosValidos = [ambiente.dominioInstitucional, 'unieuro.com.br', 'unieuro.edu.br'];
             
             if (!dominiosValidos.some(d => email.endsWith(`@${d}`))) {
-                console.warn('[Login] ❌ Domínio inválido:', email);
-                setErroLocal(`Use seu email institucional (@unieuro.edu.br ou @unieuro.com.br).`);
+                console.warn('[Login] ❌ Domínio não autorizado:', email);
+                setErroLocal(`Use o e-mail institucional (@unieuro.edu.br ou .com.br).`);
+                setCarregando(false);
                 return;
             }
 
@@ -91,36 +95,45 @@ export default function TelaLogin() {
                 entrar(response.data.usuario, response.data.token);
                 navigate('/app/dashboard', { replace: true });
             } catch (error: any) {
-                console.error('[Login] ❌ Falha:', error);
-                setErroLocal(error.response?.data?.erro || 'Erro ao conectar com o servidor.');
+                console.error('[Login] ❌ Erro autenticação:', error);
+                
+                // Mensagem amigável com ajuda técnica se for 401
+                const dataErro = error.response?.data;
+                const msgUser = dataErro?.erro || 'Tente logar manualmente clicando no botão.';
+                const detalhe = dataErro?.detalhe ? ` (${dataErro.detalhe})` : '';
+
+                setErroLocal(`${msgUser}${detalhe}`);
                 setCarregando(false);
-                // Mantemos a trava true para evitar loops. O usuário deve dar F5 em caso de erro real.
+                // NÃO limpamos travaAuthGlobal aqui. Isso para o looping.
             }
         };
 
-        // Processa o retorno da Microsoft e cache de uma vez
+        // Captura o resultado de um retorno de login microsoft
         instance.handleRedirectPromise().then((response) => {
             if (response?.account) {
-                autenticarNoBackend(response.account);
+                realizarAutenticacaoNoBackend(response.account);
             } else {
-                const accounts = instance.getAllAccounts();
-                if (accounts.length > 0 && !estaAutenticado) {
-                    autenticarNoBackend(accounts[0]);
+                // Se não foi redirect, vê se já tem sessão microsoft salva
+                const contasSessao = instance.getAllAccounts();
+                if (contasSessao.length > 0 && !estaAutenticado && !travaAuthGlobal && !erroLocal) {
+                    realizarAutenticacaoNoBackend(contasSessao[0]);
                 }
             }
-        }).catch(err => console.error('[Login] MSAL Error:', err));
+        }).catch(err => {
+            console.error('[Login] MSAL Error:', err);
+            setErroLocal('A comunicação com a Microsoft falhou.');
+        });
 
-        // Eventos para Popup ou Login automático
         const callbackId = instance.addEventCallback((event: any) => {
             if (event.eventType === 'msal:loginSuccess' && event.payload?.account) {
-                autenticarNoBackend(event.payload.account);
+                realizarAutenticacaoNoBackend(event.payload.account);
             }
         });
 
         return () => {
             if (callbackId) instance.removeEventCallback(callbackId);
         };
-    }, [instance, navigate, entrar, estaAutenticado]);
+    }, [instance, navigate, entrar, estaAutenticado, erroLocal]);
 
     const handleLogin = async () => {
         setCarregando(true);

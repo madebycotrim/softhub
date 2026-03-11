@@ -10,9 +10,9 @@ export interface AzureAdClaims {
     iat: number;
 }
 
-// ── JWKS URI do Azure AD ──────────────────────────────────────────────────────
-export function getJwksUri(tenantId: string): string {
-    return `https://login.microsoftonline.com/${tenantId}/discovery/v2.0/keys`;
+// ── JWKS URI do Azure AD (Usando common para suportar múltiplos tenants da mesma org) ──────
+export function getJwksUri(_tenantId: string): string {
+    return `https://login.microsoftonline.com/common/discovery/v2.0/keys`;
 }
 
 // ── Validação das claims de negócio ───────────────────────────────────────────
