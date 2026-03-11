@@ -49,7 +49,7 @@ export default function TelaLogin() {
 
     const erroRedirect = searchParams.get('erro');
     const mensagemErroRedirect: Record<string, string> = {
-        'dominio': `Conta não autorizada. Use seu email @${ambiente.dominioInstitucional}.`,
+        'dominio': `Conta não autorizada. Use seu email de um dos domínios institucionais permitidos.`,
         'nao-autorizado': 'Acesso negado. Conta não cadastrada ou desativada.',
         'backend': 'Falha ao validar sua conta. Tente novamente.',
     };
@@ -72,11 +72,11 @@ export default function TelaLogin() {
             travaAuthGlobal = true;
 
             const email = (conta.username || '').toLowerCase();
-            const dominiosValidos = [ambiente.dominioInstitucional, 'unieuro.com.br', 'unieuro.edu.br'];
+            const dominiosValidos = ambiente.VITE_DOMINIOS_INSTITUCIONAIS;
             
             if (!dominiosValidos.some(d => email.endsWith(`@${d}`))) {
                 console.warn('[Login] ❌ Domínio não autorizado:', email);
-                setErroLocal(`Use o e-mail institucional (@unieuro.edu.br ou .com.br).`);
+                setErroLocal(`Use o e-mail institucional (${dominiosValidos.map(d => `@${d}`).join(' ou ')}).`);
                 setCarregando(false);
                 return;
             }
@@ -260,7 +260,7 @@ export default function TelaLogin() {
                                 <div className="flex items-center justify-center lg:justify-start gap-1.5 text-slate-500 text-[11px] lg:text-[11.5px] font-medium">
                                     <Info size={11} className="shrink-0" />
                                     <span>
-                                        Use seu e-mail <span className="text-slate-900 font-bold">@unieuro.edu.br</span> ou <span className="text-slate-900 font-bold">.com.br</span>
+                                        Use seu e-mail institucional ({ambiente.VITE_DOMINIOS_INSTITUCIONAIS.map(d => `@${d}`).join(' ou ')})
                                     </span>
                                 </div>
 

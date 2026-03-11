@@ -7,9 +7,8 @@ binding = 'DB'
 database_name = 'softhub_db'
 database_id = '631a8b23-4a75-4e59-8b73-61af4b07d5f7'
 
-# Corrigido o nome do binding para corresponder ao código (SISTEMA_KV)
 [[kv_namespaces]]
-binding = "SISTEMA_KV"
+binding = "softhub_kv"
 id = "148fcf4fa8464a24b5f8f038ee1657f3"
 
 [ai]

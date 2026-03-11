@@ -1,7 +1,5 @@
-const meta = import.meta;
-
 // A URL de fallback não deve ter a barra no final para evitar o problema da "barra dupla".
-const url = meta.env.VITE_API || 'https://api.softhub.workers.dev';
+const url = import.meta.env.VITE_API || 'https://api.softhub.workers.dev';
 
 if (!url) {
     console.error(
@@ -11,9 +9,24 @@ if (!url) {
     throw new Error('Variáveis de ambiente inválidas. Verifique o arquivo .env');
 }
 
-export const ambiente = {
+interface ConfiguracoesAmbiente {
+    apiUrl: string;
+    VITE_API: string; // Mantido para compatibilidade se necessário
+    VITE_DOMINIOS_INSTITUCIONAIS: string[];
+    msalClientId: string;
+    msalTenantId: string;
+    IS_DEV: boolean;
+    IS_PROD: boolean;
+    IS_TEST: boolean;
+}
+
+export const ambiente: ConfiguracoesAmbiente = {
+    apiUrl: url,
     VITE_API: url,
-    IS_DEV: meta.env.DEV,
-    IS_PROD: meta.env.PROD,
-    IS_TEST: meta.env.VITEST_WORKER_ID !== undefined,
+    VITE_DOMINIOS_INSTITUCIONAIS: (import.meta.env.VITE_DOMINIOS_INSTITUCIONAIS || 'unieuro.com.br,unieuro.edu.br').split(','),
+    msalClientId: import.meta.env.VITE_MSAL_CLIENT_ID || '',
+    msalTenantId: import.meta.env.VITE_MSAL_TENANT_ID || '',
+    IS_DEV: !!import.meta.env.DEV,
+    IS_PROD: !!import.meta.env.PROD,
+    IS_TEST: !!import.meta.env.VITEST_WORKER_ID,
 };

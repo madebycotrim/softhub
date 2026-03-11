@@ -189,8 +189,8 @@ function ModalConvitesEmLote({ aberto, aoFechar, aoCadastrar, recarregar }: Moda
                     <p className="text-xs text-muted-foreground leading-relaxed">
                         Cole uma lista de e-mails institucionais (um por linha). O sistema autorizará o acesso de todos automaticamente.
                         <br /><br />
-                        <strong>Formato aceito:</strong>
-                        <br />- nome@{ambiente.dominioInstitucional}
+                        <strong>Domínios aceitos:</strong>
+                        <br />- {ambiente.VITE_DOMINIOS_INSTITUCIONAIS.map(d => `@${d}`).join(', ')}
                     </p>
                 </div>
 
@@ -199,7 +199,7 @@ function ModalConvitesEmLote({ aberto, aoFechar, aoCadastrar, recarregar }: Moda
                     <textarea
                         value={texto}
                         onChange={e => setTexto(e.target.value)}
-                        placeholder={`Ex: mateus@${ambiente.dominioInstitucional}`}
+                        placeholder={`Ex: mateus@${ambiente.VITE_DOMINIOS_INSTITUCIONAIS[0]}`}
                         className="w-full h-48 bg-background border border-border rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all resize-none"
                     />
                 </div>
@@ -474,7 +474,7 @@ interface ModalCadastroProps {
  */
 function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, rolesDisponiveis }: ModalCadastroProps) {
     const [usuarioEmail, setUsuarioEmail] = useState('');
-    const [dominio, setDominio] = useState(`@${ambiente.dominioInstitucional}`);
+    const [dominio, setDominio] = useState(`@${ambiente.VITE_DOMINIOS_INSTITUCIONAIS[0]}`);
     const [role, setRole] = useState(rolesDisponiveis[0] || 'MEMBRO');
     const [salvando, setSalvando] = useState(false);
     const [erro, setErro] = useState<string | null>(null);
@@ -482,7 +482,7 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, rolesDisponiveis }
     useEffect(() => {
         if (aberto) {
             setUsuarioEmail('');
-            setDominio(`@${ambiente.dominioInstitucional}`);
+            setDominio(`@${ambiente.VITE_DOMINIOS_INSTITUCIONAIS[0]}`);
             setRole(rolesDisponiveis[0] || 'MEMBRO');
             setErro(null);
         }
@@ -532,8 +532,9 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, rolesDisponiveis }
                                     onChange={e => setDominio(e.target.value)}
                                     className="bg-transparent text-[13px] font-semibold focus:outline-none cursor-pointer appearance-none pr-5"
                                 >
-                                    <option value={`@${ambiente.dominioInstitucional}`}>@{ambiente.dominioInstitucional}</option>
-                                    <option value="@unieuro.edu.br">@unieuro.edu.br</option>
+                                    {ambiente.VITE_DOMINIOS_INSTITUCIONAIS.map(d => (
+                                        <option key={d} value={`@${d}`}>@{d}</option>
+                                    ))}
                                 </select>
                                 <ChevronDown size={20} className="absolute right-2.5 pointer-events-none opacity-40" />
                             </div>
