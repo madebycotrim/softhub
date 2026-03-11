@@ -20,6 +20,15 @@ rotasPontoJustificativas.post('/justificativas', autenticacaoRequerida(), verifi
         return c.json({ erro: 'Data, tipo e motivo são obrigatórios.' }, 400);
     }
 
+    // Blindagem: Data no Futuro
+    const dataBrasilia = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', year:'numeric', month:'2-digit', day:'2-digit'}).format(new Date());
+    const [diaB, mesB, anoB] = dataBrasilia.split('/');
+    const hojeBrasiliaIso = `${anoB}-${mesB}-${diaB}`;
+
+    if (data > hojeBrasiliaIso) {
+        return c.json({ erro: 'Não é permitido enviar justificativas para o futuro.' }, 400);
+    }
+
     try {
         // Regra de Duplicata
         const ext = await DB.prepare(`SELECT id FROM justificativas_ponto WHERE usuario_id = ? AND data = ?`)
@@ -88,6 +97,15 @@ rotasPontoJustificativas.patch('/justificativas/:id', autenticacaoRequerida(), v
     
     const atual = atualRes as any;
     if (atual.status !== 'pendente') return c.json({ erro: 'Apenas justificativas pendentes podem ser editadas.' }, 400);
+
+    // Blindagem: Data no Futuro
+    const dataBrasilia = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', year:'numeric', month:'2-digit', day:'2-digit'}).format(new Date());
+    const [diaB, mesB, anoB] = dataBrasilia.split('/');
+    const hojeBrasiliaIso = `${anoB}-${mesB}-${diaB}`;
+
+    if (data > hojeBrasiliaIso) {
+        return c.json({ erro: 'Não é permitido enviar justificativas para o futuro.' }, 400);
+    }
 
     // Validação de duplicata se a data mudou
     if (data !== atual.data) {

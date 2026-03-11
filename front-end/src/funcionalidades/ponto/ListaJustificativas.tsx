@@ -43,13 +43,13 @@ export function ListaJustificativas({ justificativas, aoEditar, aoExcluir }: Lis
             <table className="w-full border-collapse">
                 <thead>
                     <tr className="border-b border-border/60 bg-muted/30">
-                        <th className="px-3 py-2.5 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">
+                        <th className="px-3 py-2.5 text-center text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">
                             Data
                         </th>
-                        <th className="px-3 py-2.5 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">
+                        <th className="px-3 py-2.5 text-center text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">
                             Tipo
                         </th>
-                        <th className="px-3 py-2.5 text-left text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 hidden sm:table-cell">
+                        <th className="px-3 py-2.5 text-center text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 hidden sm:table-cell">
                             Motivo
                         </th>
                         <th className="px-3 py-2.5 text-center text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">
@@ -64,22 +64,22 @@ export function ListaJustificativas({ justificativas, aoEditar, aoExcluir }: Lis
                     {justificativas.map(just => (
                         <tr key={just.id} className="hover:bg-muted/20 transition-colors">
                             {/* Data */}
-                            <td className="px-3 py-3 align-top">
-                                <p className="text-xs font-bold text-foreground">
+                            <td className="px-3 py-3 align-middle text-center">
+                                <p className="text-[11px] text-foreground">
                                     {formatarDataHora(just.criado_em)}
                                 </p>
                             </td>
 
                             {/* Tipo */}
-                            <td className="px-3 py-3 align-top">
+                            <td className="px-3 py-3 align-middle text-center">
                                 <span className="text-[11px] font-bold text-primary/70 uppercase tracking-wide">
                                     {formatarTipo(just.tipo)}
                                 </span>
                             </td>
 
                             {/* Motivo */}
-                            <td className="px-3 py-3 align-top hidden sm:table-cell">
-                                <p className="text-xs text-muted-foreground line-clamp-2 max-w-[200px]">
+                            <td className="px-3 py-3 align-middle text-center hidden sm:table-cell">
+                                <p className="text-[11px] text-muted-foreground line-clamp-2 max-w-[200px] mx-auto">
                                     {just.motivo}
                                 </p>
                                 {just.status === 'rejeitada' && just.motivo_rejeicao && (
@@ -90,14 +90,14 @@ export function ListaJustificativas({ justificativas, aoEditar, aoExcluir }: Lis
                             </td>
 
                             {/* Status */}
-                            <td className="px-3 py-3 align-top text-center w-28">
+                            <td className="px-3 py-3 align-middle text-center w-28">
                                 {just.status === 'aprovada' && <Emblema texto="Aprovada" variante="verde" />}
                                 {just.status === 'rejeitada' && <Emblema texto="Rejeitada" variante="vermelho" />}
                                 {just.status === 'pendente' && <Emblema texto="Pendente" variante="amarelo" />}
                             </td>
                             
                             {/* Ações */}
-                            <td className="px-3 py-3 align-top text-center w-24">
+                            <td className="px-3 py-3 align-middle text-center w-24">
                                 {just.status === 'pendente' ? (
                                     <div className="flex items-center justify-center gap-2">
                                         <Tooltip texto="Editar" posicao="top">

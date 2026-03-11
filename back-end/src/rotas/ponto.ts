@@ -17,21 +17,34 @@ rotasPonto.get('/', autenticacaoRequerida(), verificarPermissao('ponto:visualiza
         const horaBrasilia = (agora.getUTCHours() - 3 + 24) % 24;
         const hojeIso = agora.toISOString().split('T')[0];
 
-        // Busca batida mais recente de hoje
-        const ultimo = await DB.prepare(`
+        // Busca a batida mais recente geral para identificar pendências de dias anteriores
+        const ultimaGeral = await DB.prepare(`
             SELECT * FROM ponto_registros 
-            WHERE usuario_id = ? AND date(registrado_em) = date('now', '-3 hours')
+            WHERE usuario_id = ? AND ativo = 1
             ORDER BY registrado_em DESC LIMIT 1
         `).bind(usuario.id).first() as any;
 
-        // REGRA: Se tiver entrada aberta e passou das 17h, encerra automaticamente
-        if (ultimo?.tipo === 'entrada' && horaBrasilia >= 17) {
-            const dataSaidaAuto = `${hojeIso}T20:00:00Z`; // 17h Brasília = 20h UTC
+        // REGRA: Se tiver entrada aberta de um dia anterior, ou de hoje após as 17h, encerra automaticamente
+        let deveEncerrarAuto = false;
+        let dataEncerramentoIso = '';
+
+        if (ultimaGeral?.tipo === 'entrada') {
+            const diaUltimaBatida = ultimaGeral.registrado_em.split('T')[0];
             
+            if (diaUltimaBatida !== hojeIso) {
+                deveEncerrarAuto = true;
+                dataEncerramentoIso = `${diaUltimaBatida}T20:00:00Z`; // 17h Brasília do dia do esquecimento
+            } else if (horaBrasilia >= 17) {
+                deveEncerrarAuto = true;
+                dataEncerramentoIso = `${hojeIso}T20:00:00Z`; // 17h Brasília de hoje
+            }
+        }
+
+        if (deveEncerrarAuto) {
             await DB.prepare(`
                 INSERT INTO ponto_registros (id, usuario_id, tipo, registrado_em, ip_origem)
                 VALUES (?, ?, ?, ?, ?)
-            `).bind(crypto.randomUUID(), usuario.id, 'saida', dataSaidaAuto, 'SISTEMA_AUTO').run();
+            `).bind(crypto.randomUUID(), usuario.id, 'saida', dataEncerramentoIso, 'SISTEMA_AUTO').run();
 
             await registrarLog(DB, {
                 usuarioId: usuario.id,
@@ -40,7 +53,7 @@ rotasPonto.get('/', autenticacaoRequerida(), verificarPermissao('ponto:visualiza
                 usuarioRole: usuario.role,
                 acao: 'PONTO_SAIDA_AUTO',
                 modulo: 'ponto',
-                descricao: `Saída automática processada às 17h (usuário esqueceu de bater)`,
+                descricao: `Saída automática processada para o dia ${dataEncerramentoIso.split('T')[0]} (esquecimento)`,
                 ip: '127.0.0.1',
                 entidadeTipo: 'ponto_registros'
             });
@@ -49,14 +62,14 @@ rotasPonto.get('/', autenticacaoRequerida(), verificarPermissao('ponto:visualiza
         // Busca batidas de hoje (atualizado)
         const hoje = await DB.prepare(`
             SELECT * FROM ponto_registros 
-            WHERE usuario_id = ? AND date(registrado_em) = date('now', '-3 hours')
+            WHERE usuario_id = ? AND date(registrado_em) = date('now', '-3 hours') AND ativo = 1
             ORDER BY registrado_em ASC
         `).bind(usuario.id).all();
 
         // Busca histórico Geral (20 últimos)
         const historico = await DB.prepare(`
             SELECT * FROM ponto_registros 
-            WHERE usuario_id = ? 
+            WHERE usuario_id = ? AND ativo = 1
             ORDER BY registrado_em DESC LIMIT 20
         `).bind(usuario.id).all();
 
@@ -86,15 +99,15 @@ rotasPonto.post('/', autenticacaoRequerida(), verificarPermissao('ponto:registra
         const usuario = c.get('usuario') as any;
         const ipOrigem = c.req.header('CF-Connecting-IP') || '127.0.0.1';
 
-        // Workflow 9 - Verificar sequência
+        // Workflow 9 - Verificar sequência (Blindado)
         const ultimo = await DB.prepare(`
             SELECT tipo FROM ponto_registros
-            WHERE usuario_id = ? AND DATE(registrado_em) = DATE('now', '-3 hours')
+            WHERE usuario_id = ? AND DATE(registrado_em) = DATE('now', '-3 hours') AND ativo = 1
             ORDER BY registrado_em DESC LIMIT 1
         `).bind(usuario.id).first() as any;
 
         if (ultimo?.tipo === tipo) {
-            return c.json({ erro: `Você já registrou sua ${tipo}.` }, 400);
+            return c.json({ erro: `Você já registrou sua ${tipo} hoje.` }, 400);
         }
 
         // Inserção no banco provisória para Etapa 5
