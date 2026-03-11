@@ -72,7 +72,7 @@ function ColunaDropZone({ id, titulo, tarefas, aoApertarTarefa }: { id: ColunaKa
 
             <div
                 ref={setNodeRef}
-                className={`flex-1 p-4 overflow-y-auto flex flex-col gap-4 scrollbar-none transition-all duration-300 ${isOver ? 'bg-primary/5 ring-2 ring-inset ring-primary/30 rounded-2xl' : ''
+                className={`flex-1 p-4 overflow-y-auto overflow-x-hidden flex flex-col gap-4 scrollbar-none transition-all duration-300 ${isOver ? 'bg-primary/5 ring-2 ring-inset ring-primary/30 rounded-2xl' : ''
                     }`}
             >
                 {tarefas.map(tarefa => (
@@ -213,7 +213,7 @@ export function QuadroKanban({ projetoId = 'p1' }: { projetoId?: string }) {
                             onDragStart={handleDragStart}
                             onDragEnd={handleDragEnd}
                         >
-                        <div className="h-full flex justify-between gap-6 overflow-x-auto custom-scrollbar scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border/40 hover:scrollbar-thumb-border/60">
+                        <div className="h-full flex justify-between gap-6 overflow-x-hidden scrollbar-none">
                                 {COLUNAS_KANBAN.map(coluna => (
                                     <ColunaDropZone
                                         key={coluna}
