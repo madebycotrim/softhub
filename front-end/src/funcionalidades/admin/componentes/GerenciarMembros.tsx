@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, memo } from 'react';
-import { UserCog, X, Shield, Mail, Trash2, Loader2, ListPlus, Download, AlertCircle, ChevronDown, Users as UsersIcon, Plus, CheckSquare, Square, History } from 'lucide-react';
+import { UserCog, X, Shield, Mail, Trash2, Loader2, ListPlus, Download, ChevronDown, Users as UsersIcon, Plus, CheckSquare, Square, History } from 'lucide-react';
 import { Tooltip } from '@/compartilhado/componentes/Tooltip';
 
 import { api } from '@/compartilhado/servicos/api';
@@ -14,6 +14,7 @@ import { Modal } from '@/compartilhado/componentes/Modal';
 import { ConfirmacaoExclusao } from '@/compartilhado/componentes/ConfirmacaoExclusao';
 import { EstadoVazio } from '@/compartilhado/componentes/EstadoVazio';
 import { EstadoErro } from '@/compartilhado/componentes/EstadoErro';
+import { Alerta } from '@/compartilhado/componentes/Alerta';
 import { ambiente } from '@/configuracoes/ambiente';
 import { usarConfiguracoes } from '@/funcionalidades/admin/hooks/usarConfiguracoes';
 import { usarDebounce } from '@/compartilhado/hooks/usarDebounce';
@@ -558,11 +559,8 @@ function ModalCadastroMembro({ aberto, aoFechar, aoCadastrar, rolesDisponiveis }
                         </select>
                     </div>
                 </div>
-
                 {erro && (
-                    <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-2xl text-xs flex items-center gap-2 animate-in shake duration-300">
-                        <AlertCircle className="w-5 h-5 shrink-0" /> {erro}
-                    </div>
+                    <Alerta tipo="erro" mensagem={erro} className="mt-4" />
                 )}
 
                 <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 mt-6 border-t border-border/50">

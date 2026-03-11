@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bot, CheckCircle, XCircle, Loader2, AlertTriangle, Wand2 } from 'lucide-react';
+import { Bot, CheckCircle, XCircle, Loader2, Wand2 } from 'lucide-react';
 import { api } from '@/compartilhado/servicos/api';
 import { Tooltip } from '@/compartilhado/componentes/Tooltip';
 import { formatarDataHora } from '@/utilitarios/formatadores';

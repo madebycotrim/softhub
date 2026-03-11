@@ -10,6 +10,7 @@ import {
 import { usarRelatorios } from '@/funcionalidades/admin/hooks/usarRelatorios';
 import type { RelatorioFrequenciaMembro } from '@/funcionalidades/admin/hooks/usarRelatorios';
 import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
+import { Alerta } from '@/compartilhado/componentes/Alerta';
 import { Carregando } from '@/compartilhado/componentes/Carregando';
 import { 
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
@@ -126,9 +127,7 @@ export default function PaginaRelatorios() {
                     <>
 
                 {erro && (
-                    <div className="flex items-center gap-2 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm font-bold animate-in shake">
-                        {erro}
-                    </div>
+                    <Alerta tipo="erro" mensagem={erro} className="mb-4" />
                 )}
 
                 {/* ── SEÇÃO: GERAL ── */}

@@ -1,4 +1,4 @@
-import { CheckCircle2, AlertCircle } from 'lucide-react';
+import { CheckCircle2, AlertTriangle } from 'lucide-react';
 import type { ToastState } from '@/compartilhado/hooks/usarToast';
 
 interface ToastContainerProps {
@@ -9,24 +9,24 @@ export function ToastContainer({ toasts }: ToastContainerProps) {
     if (toasts.length === 0) return null;
 
     return (
-        <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none">
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center gap-3 pointer-events-none">
             {toasts.map(toast => (
                 <div
                     key={toast.id}
                     role="status"
                     aria-live="polite"
                     className={`
-                        flex items-center gap-3 px-4 py-3 rounded-2xl shadow-lg text-sm font-medium
-                        animate-in slide-in-from-bottom-2 fade-in duration-300
+                        flex items-center justify-center gap-2 px-6 py-2.5 rounded-full shadow-xl text-[11px] font-black uppercase tracking-widest
+                        animate-in slide-in-from-bottom-4 fade-in duration-300
                         ${toast.tipo === 'sucesso'
-                            ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
-                            : 'bg-red-500/10 border border-red-500/20 text-red-400'
+                            ? 'bg-emerald-600 text-white shadow-emerald-600/20'
+                            : 'bg-[#e1003d] text-white shadow-[#e1003d]/20'
                         }
                     `}
                 >
                     {toast.tipo === 'sucesso'
                         ? <CheckCircle2 className="w-4 h-4 shrink-0" />
-                        : <AlertCircle className="w-4 h-4 shrink-0" />
+                        : <AlertTriangle className="w-4 h-4 shrink-0" />
                     }
                     {toast.mensagem}
                 </div>

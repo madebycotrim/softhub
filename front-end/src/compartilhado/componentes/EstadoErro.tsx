@@ -1,31 +1,38 @@
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, RotateCw } from 'lucide-react';
 
 interface EstadoErroProps {
     titulo?: string;
     mensagem: string;
     aoTentarNovamente?: () => void;
     textoBotao?: string;
+    children?: React.ReactNode;
 }
 
 export function EstadoErro({ 
-    titulo = 'Ocorreu um erro', 
     mensagem, 
-    aoTentarNovamente = () => window.location.reload(),
-    textoBotao = 'Tentar Novamente'
+    aoTentarNovamente,
+    children
 }: EstadoErroProps) {
     return (
-        <div className="flex-1 flex flex-col items-center justify-center gap-4 bg-card border border-rose-500/10 rounded-3xl p-10 text-center w-full min-h-[300px]">
-            <div className="w-16 h-16 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center mb-2">
-                 <AlertTriangle size={32} />
+        <div className="flex-1 w-full flex items-end justify-center pb-24 px-8 min-h-[400px]">
+            <div className={`
+                flex items-center min-w-[200px] max-w-lg justify-center gap-2 px-6 py-2.5 rounded-full shadow-2xl text-[11px] font-black uppercase tracking-[0.15em]
+                animate-in zoom-in-95 fade-in duration-300
+                bg-[#e1003d] text-white shadow-[#e1003d]/30
+            `}>
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <span className="truncate">{mensagem}</span>
+                {aoTentarNovamente && (
+                    <button 
+                        onClick={aoTentarNovamente}
+                        className="ml-2 hover:opacity-80 transition-opacity p-1 bg-white/10 rounded-full"
+                        title="Tentar Novamente"
+                    >
+                        <RotateCw className="w-3.5 h-3.5" />
+                    </button>
+                )}
             </div>
-            <h3 className="text-lg font-bold text-foreground">{titulo}</h3>
-            <p className="text-sm text-muted-foreground max-w-sm">{mensagem}</p>
-            <button 
-                onClick={aoTentarNovamente}
-                className="mt-4 px-6 py-2.5 bg-foreground text-background rounded-2xl text-[11px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-md"
-            >
-                {textoBotao}
-            </button>
+            {children}
         </div>
     );
 }

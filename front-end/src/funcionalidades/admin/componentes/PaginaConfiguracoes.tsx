@@ -11,6 +11,7 @@ import {
     Pencil, Check, X
 } from 'lucide-react';
 import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
+import { Alerta } from '@/compartilhado/componentes/Alerta';
 
 /**
  * Mapa completo de todas as permissões reais do sistema,
@@ -156,7 +157,7 @@ export function PaginaConfiguracoes() {
         })).filter(modulo => modulo.permissoes.length > 0);
     }, [buscaPermissao]);
 
-    if (erro) return <div className="p-10 text-center text-red-500 font-bold uppercase tracking-widest">{erro}</div>;
+    if (erro) return <div className="p-10 flex justify-center"><Alerta tipo="erro" mensagem={erro} /></div>;
 
     /** Alterna uma permissão entre ativo/inativo para um cargo */
     const handleTogglePermissao = async (role: string, permissao: string) => {
@@ -384,10 +385,7 @@ export function PaginaConfiguracoes() {
                             </div>
 
                             {erroLocal && (
-                                <div className="flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-[10px] font-black uppercase tracking-widest animate-in slide-in-from-right-4">
-                                    <X size={14} strokeWidth={3} />
-                                    {erroLocal}
-                                </div>
+                                <Alerta tipo="erro" mensagem={erroLocal} className="w-auto animate-in slide-in-from-right-4" />
                             )}
 
                             <div className="relative group/search max-w-xs w-full">

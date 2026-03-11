@@ -3,12 +3,12 @@ import {
     Plus,
     Search,
     ChevronRight,
-    User,
-    AlertTriangle
+    User
 } from 'lucide-react';
 import { usarBacklog } from '../hooks/usarBacklog';
 import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
 import { Carregando } from '@/compartilhado/componentes/Carregando';
+import { EstadoErro } from '@/compartilhado/componentes/EstadoErro';
 import { EstadoVazio } from '@/compartilhado/componentes/EstadoVazio';
 import { Emblema } from '@/compartilhado/componentes/Emblema';
 import { LABELS_PRIORIDADE, LABELS_STATUS } from '@/utilitarios/constantes';
@@ -113,9 +113,8 @@ export default function PaginaBacklog() {
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mt-4 animate-pulse">Sincronizando Demandas</span>
                 </div>
             ) : erro ? (
-                <div className="p-8 bg-red-500/5 border border-red-500/10 rounded-[40px] text-center">
-                    <AlertTriangle className="w-8 h-8 text-red-500 mx-auto mb-4" />
-                    <p className="text-red-500 font-bold">{erro}</p>
+                <div className="py-12 max-w-lg mx-auto w-full">
+                    <EstadoErro titulo="Erro no Backlog" mensagem={erro} />
                 </div>
             ) : tarefas.length === 0 ? (
                 <EstadoVazio

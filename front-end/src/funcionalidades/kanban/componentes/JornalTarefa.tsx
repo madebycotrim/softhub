@@ -9,6 +9,7 @@ import { Avatar } from '@/compartilhado/componentes/Avatar';
 import { Carregando } from '@/compartilhado/componentes/Carregando';
 import { useContext } from 'react';
 import { ContextoAutenticacao } from '@/contexto/ContextoAutenticacao';
+import { Alerta } from '@/compartilhado/componentes/Alerta';
 
 interface JornalTarefaProps {
     tarefaId: string;
@@ -38,7 +39,7 @@ export function JornalTarefa({ tarefaId }: JornalTarefaProps) {
         }
     };
 
-    if (erro) return <div className="text-sm text-red-500 py-4">{erro}</div>;
+    if (erro) return <div className="py-4"><Alerta tipo="erro" mensagem={erro} /></div>;
 
     return (
         <div className="flex flex-col gap-6 mt-8">

@@ -4,6 +4,7 @@ import { usarDashboard } from '@/funcionalidades/dashboard/hooks/usarDashboard';
 import { Carregando } from '@/compartilhado/componentes/Carregando';
 import { EstadoVazio } from '@/compartilhado/componentes/EstadoVazio';
 import { Avatar } from '@/compartilhado/componentes/Avatar';
+import { EstadoErro } from '@/compartilhado/componentes/EstadoErro';
 import { formatarDataHora } from '@/utilitarios/formatadores';
 import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
 
@@ -37,8 +38,8 @@ export function PaginaDashboard() {
                     <span className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Consolidando Métricas</span>
                 </div>
             ) : erro ? (
-                <div className="py-24 text-center">
-                    <p className="text-destructive font-black uppercase tracking-widest text-[10px]">{erro}</p>
+                <div className="py-24 max-w-lg mx-auto">
+                    <EstadoErro titulo="Processamento Interrompido" mensagem={erro} />
                 </div>
             ) : !metricas ? (
                 <EstadoVazio 

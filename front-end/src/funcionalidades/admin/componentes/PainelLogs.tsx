@@ -5,6 +5,7 @@ import { formatarDataHora } from '@/utilitarios/formatadores';
 import { usarLogs } from '@/funcionalidades/admin/hooks/usarLogs';
 import { Carregando } from '@/compartilhado/componentes/Carregando';
 import { Emblema } from '@/compartilhado/componentes/Emblema';
+import { EstadoErro } from '@/compartilhado/componentes/EstadoErro';
 import { useState, Fragment } from 'react';
 import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
 
@@ -190,17 +191,14 @@ export function PainelLogs() {    const {
                 </div>
             </div>
 
-            {erro && (
-                <div className="mx-6 mb-6 p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-3 text-rose-600 animate-in slide-in-from-top-2">
-                    <ShieldAlert size={18} />
-                    <p className="text-xs font-bold uppercase tracking-widest">{erro}</p>
-                </div>
-            )}
-
             {/* Tabela Semântica */}
             <div className="flex-1 min-h-0 bg-card border border-border rounded-2xl flex flex-col shadow-sm overflow-hidden">
                 <div className="flex-1 overflow-auto relative">
-                    {carregando && logs.length === 0 ? (
+                    {erro ? (
+                        <div className="h-full flex items-center justify-center p-6">
+                            <EstadoErro titulo="Erro ao carregar auditoria" mensagem={erro} />
+                        </div>
+                    ) : carregando && logs.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center gap-4 bg-muted/5 animate-in fade-in duration-500">
                              <Carregando Centralizar={false} tamanho="lg" />
                              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Sincronizando Auditoria</span>

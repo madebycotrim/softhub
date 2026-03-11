@@ -22,6 +22,7 @@ import { Avatar } from '@/compartilhado/componentes/Avatar';
 import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
 import { EstadoErro } from '@/compartilhado/componentes/EstadoErro';
 import { EstadoVazio } from '@/compartilhado/componentes/EstadoVazio';
+import { Alerta } from '@/compartilhado/componentes/Alerta';
 
 // ─── Componentes Auxiliares ───────────────────────────────────────────────────
 
@@ -219,9 +220,7 @@ function ModalAlocacao({ aberto, aoFechar, grupos, membros, aoAlocar, grupoIdPad
         >
             <div className="flex flex-col gap-6">
                 {erro && (
-                    <div className="p-3 bg-rose-50 border border-rose-100 rounded-2xl text-[11px] font-bold text-rose-600 uppercase tracking-widest animate-in fade-in slide-in-from-top-2 duration-300">
-                        {erro}
-                    </div>
+                    <Alerta tipo="erro" mensagem={erro} className="mb-4" />
                 )}
                 <div className="flex flex-col gap-4">
                     <div className="flex flex-col gap-2">

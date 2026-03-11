@@ -20,6 +20,7 @@ import { CartaoTarefa } from './CartaoTarefa';
 import { usarPermissaoAcesso } from '@/compartilhado/hooks/usarPermissao';
 import { Carregando } from '@/compartilhado/componentes/Carregando';
 import { EstadoVazio } from '@/compartilhado/componentes/EstadoVazio';
+import { EstadoErro } from '@/compartilhado/componentes/EstadoErro';
 import { ModalDetalhesTarefa } from './ModalDetalhesTarefa';
 import { PainelFiltrosKanban } from './PainelFiltrosKanban';
 import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
@@ -143,8 +144,8 @@ export function QuadroKanban({ projetoId = 'p1' }: { projetoId?: string }) {
                         </div>
                     </div>
                 ) : erro ? (
-                    <div className="h-full bg-card/10 border border-red-500/10 rounded-3xl flex items-center justify-center p-12">
-                         <p className="text-destructive font-black uppercase tracking-widest text-[10px]">{erro}</p>
+                    <div className="h-full flex items-center justify-center p-12">
+                         <EstadoErro titulo="Erro no Kanban" mensagem={erro} />
                     </div>
                 ) : tarefas.length === 0 ? (
                     <div className="h-full bg-card/20 border border-border/50 rounded-3xl flex items-center justify-center">

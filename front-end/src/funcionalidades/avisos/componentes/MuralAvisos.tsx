@@ -3,6 +3,7 @@ import { usarAvisos } from '@/funcionalidades/avisos/hooks/usarAvisos';
 import { Avatar } from '@/compartilhado/componentes/Avatar';
 import { Emblema } from '@/compartilhado/componentes/Emblema';
 import { Carregando } from '@/compartilhado/componentes/Carregando';
+import { EstadoErro } from '@/compartilhado/componentes/EstadoErro';
 import { formatarDataHora } from '@/utilitarios/formatadores';
 import { usarPermissao, usarPermissaoAcesso } from '@/compartilhado/hooks/usarPermissao';
 import { useState } from 'react';
@@ -61,8 +62,8 @@ export function MuralAvisos() {
                         <span className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Buscando Comunicados</span>
                     </div>
                 ) : erro ? (
-                    <div className="py-24 flex flex-col items-center justify-center bg-card/10 border border-red-500/10 rounded-3xl">
-                         <p className="text-destructive font-black uppercase tracking-widest text-[10px]">{erro}</p>
+                    <div className="py-24 max-w-lg mx-auto w-full">
+                         <EstadoErro titulo="Erro no Mural" mensagem={erro} />
                     </div>
                 ) : avisosOrdenados.length === 0 ? (
                     <EstadoVazio 

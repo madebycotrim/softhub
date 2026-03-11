@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useMsal } from '@azure/msal-react';
 import { useSearchParams, useNavigate } from 'react-router';
-import { AlertCircle, Globe, Code, Info, Download } from 'lucide-react';
+import { Globe, Code, Info, Download } from 'lucide-react';
 import { ambiente } from '@/configuracoes/ambiente';
 import { api } from '@/compartilhado/servicos/api';
 import { usarAutenticacaoContexto } from '@/contexto/ContextoAutenticacao';
@@ -9,6 +9,8 @@ import logoUnieuro from '@/assets/logo-unieuro-branca.png';
 import { loginRequest } from '@/configuracoes/msal';
 import PainelQRCode from './PainelQRCode';
 import { usarDispositivo } from '@/compartilhado/hooks/usarDispositivo';
+
+import { Alerta } from '@/compartilhado/componentes/Alerta';
 
 /**
  * Tela de login com estética Discord-Style (Minimalista e Funcional).
@@ -169,10 +171,7 @@ export default function TelaLogin() {
                             </div>
 
                             {erro && (
-                                <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-4 text-red-600 text-[11px] font-bold animate-in shake duration-500">
-                                    <AlertCircle size={16} className="shrink-0" />
-                                    <span>{erro}</span>
-                                </div>
+                                <Alerta tipo="erro" mensagem={erro} flutuante />
                             )}
 
                             <div className="space-y-6 lg:space-y-8">

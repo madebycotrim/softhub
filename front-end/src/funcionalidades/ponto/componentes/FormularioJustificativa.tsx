@@ -3,8 +3,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Modal } from '@/compartilhado/componentes/Modal';
-import { Fingerprint, Calendar, Info, AlertCircle } from 'lucide-react';
+import { Fingerprint, Calendar, Info } from 'lucide-react';
 import { Carregando } from '@/compartilhado/componentes/Carregando';
+import { Alerta } from '@/compartilhado/componentes/Alerta';
 
 const esquemaJustificativa = z.object({
     data: z.string().optional().or(z.literal('')),
@@ -85,10 +86,7 @@ export function FormularioJustificativa({ aberto, aoFechar, aoSalvar, justificat
         >
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 {erroGlobal && (
-                    <div className="p-4 bg-rose-50 text-rose-600 rounded-2xl text-xs font-bold uppercase tracking-widest border border-rose-100 flex items-center gap-3">
-                        <AlertCircle className="w-4 h-4" />
-                        {erroGlobal}
-                    </div>
+                    <Alerta tipo="erro" mensagem={erroGlobal} className="mb-4" />
                 )}
 
                 <div className="space-y-6">

@@ -14,6 +14,7 @@ import { Carregando } from '@/compartilhado/componentes/Carregando';
 import { EstadoVazio } from '@/compartilhado/componentes/EstadoVazio';
 import { Tooltip } from '@/compartilhado/componentes/Tooltip';
 import { ConfirmacaoExclusao } from '@/compartilhado/componentes/ConfirmacaoExclusao';
+import { Alerta } from '@/compartilhado/componentes/Alerta';
 import type { JustificativaPonto } from '@/funcionalidades/ponto/hooks/usarJustificativa';
 
 /**
@@ -330,12 +331,7 @@ export function BaterPonto() {
 
                 {/* Banner de Erro Flutuante se houver erro */}
                 {(erroPonto || erro) && (
-                    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-8">
-                        <div className="bg-rose-600 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 border border-rose-500/50">
-                            <AlertTriangle className="w-4 h-4" />
-                            <span className="text-xs font-bold uppercase tracking-widest">{erroPonto || erro}</span>
-                        </div>
-                    </div>
+                    <Alerta tipo="erro" mensagem={erroPonto || erro || "Erro desconhecido"} flutuante />
                 )}
 
                 <FormularioJustificativa 
