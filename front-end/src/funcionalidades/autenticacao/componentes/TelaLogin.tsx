@@ -114,12 +114,6 @@ export default function TelaLogin() {
         instance.handleRedirectPromise().then((response) => {
             if (response?.account) {
                 realizarAutenticacaoNoBackend(response.account);
-            } else {
-                // Se não foi redirect, vê se já tem sessão microsoft salva
-                const contasSessao = instance.getAllAccounts();
-                if (contasSessao.length > 0 && !estaAutenticado && !travaAuthGlobal && !erroLocal) {
-                    realizarAutenticacaoNoBackend(contasSessao[0]);
-                }
             }
         }).catch(err => {
             console.error('[Login] MSAL Error:', err);
