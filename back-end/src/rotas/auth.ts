@@ -27,15 +27,26 @@ rotasAuth.post('/msal', async (c) => {
         try {
             if (!MSAL_TENANT_ID) throw new Error('MSAL_TENANT_ID não configurado no ambiente.');
 
-            const rawPayload = await verifyWithJwks(idToken, {
-                jwks_uri: getJwksUri(MSAL_TENANT_ID),
-                allowedAlgorithms: ['RS256']
-            });
-            payload = rawPayload as unknown as AzureAdClaims;
+            // Tenta primeiro com o Tenant específico (Geralmente falha em cross-domain)
+            try {
+                const rawPayload = await verifyWithJwks(idToken, {
+                    jwks_uri: getJwksUri(MSAL_TENANT_ID),
+                    allowedAlgorithms: ['RS256']
+                });
+                payload = rawPayload as unknown as AzureAdClaims;
+            } catch (e: any) {
+                // Se falhou, tenta com o endpoint GLOBAL (Resolve o Token Inválido)
+                console.warn('[Auth] Tentando validação via Common JWKS...');
+                const rawPayload = await verifyWithJwks(idToken, {
+                    jwks_uri: getJwksUri('common'),
+                    allowedAlgorithms: ['RS256']
+                });
+                payload = rawPayload as unknown as AzureAdClaims;
+            }
         } catch (e: any) {
-            console.error('[Auth] ❌ FALHA JWKS:', e.message, '| Token capturado:', idToken.substring(0, 15) + '...');
+            console.error('[Auth] ❌ FALHA DE ASSINATURA FINAL:', e.message);
             return c.json({
-                erro: 'Token inválido (Microsoft REJEITOU a assinatura).',
+                erro: 'Assinatura do Token não pôde ser validada pela Microsoft.',
                 detalhe: e.message
             }, 401);
         }
