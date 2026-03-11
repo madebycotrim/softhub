@@ -1,4 +1,4 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/compartilhado/componentes/ui/table";
 import { criarTabelaClaims } from "../../utilitarios/utilitario-claims";
 
 interface DadosTokenIdProps {

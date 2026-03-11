@@ -1,7 +1,7 @@
-import { FolderKanban, Clock, Users, Megaphone, LayoutDashboard, Database, Settings, LogOut, Sun, Moon, QrCode, FileText, ClipboardCheck, LayoutGrid, Bell, Trash2, CheckCircle2 } from 'lucide-react';
+import { FolderKanban, Clock, Users, Megaphone, LayoutDashboard, Database, Settings, LogOut, Sun, Moon, QrCode, FileText, LayoutGrid, Bell, Trash2, CheckCircle2 } from 'lucide-react';
 import { useLocation, Link } from 'react-router';
 import { Tooltip } from './Tooltip';
-import { usarAutenticacao } from '../../funcionalidades/autenticacao/usarAutenticacao';
+import { usarAutenticacao } from '../../funcionalidades/autenticacao/hooks/usarAutenticacao';
 import { usarTema } from '../../contexto/ContextoTema';
 import { usarPermissaoAcesso } from '../hooks/usarPermissao';
 import { Avatar } from './Avatar';

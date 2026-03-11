@@ -1,8 +1,8 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/compartilhado/componentes/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/compartilhado/componentes/ui/form';
+import { Input } from '@/compartilhado/componentes/ui/input';
+import { Textarea } from '@/compartilhado/componentes/ui/textarea';
+import { Button } from '@/compartilhado/componentes/ui/button';
 
 interface ModalEditarPerfilProps {
     editando: boolean;

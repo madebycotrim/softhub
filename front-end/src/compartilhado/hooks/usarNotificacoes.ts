@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { api } from '../servicos/api';
-import { usarAutenticacao } from '../../funcionalidades/autenticacao/usarAutenticacao';
+import { usarAutenticacao } from '../../funcionalidades/autenticacao/hooks/usarAutenticacao';
 
 export interface Notificacao {
     id: string;

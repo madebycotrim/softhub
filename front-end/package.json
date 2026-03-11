@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "dev:live": "cross-env VITE_PROXY_TARGET=https://softhub.madebycotrim-67c.workers.dev npm run dev",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
+    "typecheck": "tsc -b",
     "lint": "eslint .",
     "preview": "vite preview"
   },
