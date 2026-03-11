@@ -54,18 +54,17 @@ rotasLogs.get('/', autenticacaoRequerida(), async (c: Context) => {
     const bParams: any[] = [];
 
     // Se NÃO tem permissão geral OU se pediu explicitamente apenas os seus
-    // (Lembrando que se chegou aqui e não tem geral, ele OBRIGATORIAMENTE tem a de próprios)
     if (!temPermissaoGeral || apenasMeus) {
-        whereClause += ' AND usuario_id = ?';
+        whereClause += ' AND l.usuario_id = ?';
         bParams.push(usuarioLogado.id);
     }
 
     if (filtroModulo) {
-        whereClause += ' AND modulo = ?';
+        whereClause += ' AND l.modulo = ?';
         bParams.push(filtroModulo);
     }
     if (filtroAcao) {
-        whereClause += ' AND acao LIKE ?';
+        whereClause += ' AND l.acao LIKE ?';
         bParams.push(`%${filtroAcao}%`);
     }
     if (busca) {
@@ -83,7 +82,7 @@ rotasLogs.get('/', autenticacaoRequerida(), async (c: Context) => {
     }
 
     try {
-        const queryCount = `SELECT COUNT(*) as total FROM logs l LEFT JOIN usuarios u ON l.usuario_id = u.id ${whereClause.replace(/usuario_id/g, 'l.usuario_id').replace(/modulo/g, 'l.modulo').replace(/acao/g, 'l.acao').replace(/criado_em/g, 'l.criado_em')}`;
+        const queryCount = `SELECT COUNT(*) as total FROM logs l LEFT JOIN usuarios u ON l.usuario_id = u.id ${whereClause}`;
         const stmtCount = DB.prepare(queryCount);
         const resCount = await (bParams.length > 0 ? stmtCount.bind(...bParams) : stmtCount).all();
         const resultsCount = resCount.results as any;
@@ -95,7 +94,7 @@ rotasLogs.get('/', autenticacaoRequerida(), async (c: Context) => {
                    l.dados_anteriores, l.dados_novos, l.criado_em
             FROM logs l
             LEFT JOIN usuarios u ON l.usuario_id = u.id
-            ${whereClause.replace(/usuario_id/g, 'l.usuario_id').replace(/modulo/g, 'l.modulo').replace(/acao/g, 'l.acao').replace(/criado_em/g, 'l.criado_em')}
+            ${whereClause}
             ORDER BY l.criado_em DESC 
             LIMIT ? OFFSET ?
         `;
@@ -113,9 +112,9 @@ rotasLogs.get('/', autenticacaoRequerida(), async (c: Context) => {
             }
         });
 
-    } catch (erro) {
-        console.error('[ERRO DB] GET /logs', erro);
-        return c.json({ erro: 'Falha ao buscar logs' }, 500);
+    } catch (erro: any) {
+        console.error('[ERRO DB] GET /logs', erro.message);
+        return c.json({ erro: 'Falha ao buscar logs', detalhe: erro.message }, 500);
     }
 });
 

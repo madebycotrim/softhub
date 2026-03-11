@@ -97,7 +97,9 @@ export function usarLogs() {
             setErro(null);
         } catch (e: any) {
             console.error('[ERRO LOGS]', e);
-            setErro(e.response?.data?.erro || 'Sua sessão pode ter expirado ou o servidor está temporariamente indisponível.');
+            const erroApi = e.response?.data?.erro || 'Erro ao carregar logs';
+            const detalheApi = e.response?.data?.detalhe ? ` (${e.response.data.detalhe})` : '';
+            setErro(`${erroApi}${detalheApi}`);
         } finally {
             setCarregando(false);
         }
