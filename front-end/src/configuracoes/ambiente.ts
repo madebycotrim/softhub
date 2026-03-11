@@ -1,35 +1,19 @@
-import { z } from 'zod';
+const meta = import.meta;
 
-/**
- * 1. Definimos o esquema com os nomes originais (VITE_...)
- * 2. Usamos .transform() para mapear para camelCase automaticamente
- */
-const esquemaAmbiente = z.object({
-    VITE_MSAL_CLIENT_ID: z.string().min(1, 'ID do Cliente MSAL é obrigatório'),
-    VITE_MSAL_TENANT_ID: z.string().min(1, 'ID do Tenant MSAL é obrigatório'),
-    VITE_API_URL: z.string().url('URL da API inválida').default('https://api.softhub.workers.dev/'),
-}).transform((dados) => ({
-    msalClientId: dados.VITE_MSAL_CLIENT_ID,
-    msalTenantId: dados.VITE_MSAL_TENANT_ID,
-    apiUrl: dados.VITE_API_URL,
-}));
+// A URL de fallback não deve ter a barra no final para evitar o problema da "barra dupla".
+const url = meta.env.VITE_API_URL || 'https://api.softhub.workers.dev';
 
-// Validamos o import.meta.env
-const resultado = esquemaAmbiente.safeParse(import.meta.env);
-
-if (!resultado.success) {
-    // Melhoramos a legibilidade do erro no console
-    const mensagensDeErro = resultado.error.issues
-        .map((issue) => `   - ${issue.path.join('.')}: ${issue.message}`)
-        .join('\n');
-
-    console.error(`❌ Erro de configuração (Environment Variables):\n${mensagensDeErro}`);
-
-    // Em desenvolvimento, é bom lançar erro para parar a aplicação
+if (!url) {
+    console.error(
+        '❌ Erro de configuração (Environment Variables):\n' +
+        '   - VITE_API_URL: URL da API inválida'
+    );
     throw new Error('Variáveis de ambiente inválidas. Verifique o arquivo .env');
 }
 
-export const ambiente = resultado.data;
-
-// Exportamos o tipo para usar em outras partes do projeto se necessário
-export type Ambiente = z.infer<typeof esquemaAmbiente>;
+export const ambiente = {
+    VITE_API_URL: url,
+    IS_DEV: meta.env.DEV,
+    IS_PROD: meta.env.PROD,
+    IS_TEST: meta.env.VITEST_WORKER_ID !== undefined,
+};
