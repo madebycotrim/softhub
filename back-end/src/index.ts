@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { rateLimiter } from 'hono-rate-limiter';
 import rotasUsuarios from './rotas/usuarios';
 import rotasTarefas from './rotas/tarefas';
 import rotasTarefasDetalhes from './rotas/tarefas-detalhes';
@@ -27,6 +28,18 @@ export type Env = {
 };
 
 const app = new Hono<{ Bindings: Env }>();
+
+// Limite Global Tolerante: 60 acessos a cada 1 minuto por IP.
+const limiteGlobal = rateLimiter({
+    windowMs: 60 * 1000, 
+    limit: 60, 
+    standardHeaders: "draft-6",
+    keyGenerator: (c) => c.req.header("cf-connecting-ip") ?? "",
+    message: { erro: "Muitas requisições. O sistema identificou spam." }
+});
+
+app.use("*", limiteGlobal); 
+
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────
 // Em dev: aceita qualquer origem localhost independente de porta.

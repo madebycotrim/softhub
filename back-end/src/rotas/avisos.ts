@@ -7,6 +7,12 @@ const rotasAvisos = new Hono<{ Bindings: Env, Variables: { usuario: any } }>();
 
 // Listar avisos ativos
 rotasAvisos.get('/', autenticacaoRequerida(), verificarPermissao('avisos:visualizar'), async (c: Context) => {
+    // Fase 1 - Cacheamento nativo
+    const cache = await caches.open('avisos-cache');
+    const cacheKey = c.req.url;
+    const cachedRes = await cache.match(cacheKey);
+    if (cachedRes) return cachedRes;
+
     const { DB } = c.env;
 
     try {
@@ -35,7 +41,12 @@ rotasAvisos.get('/', autenticacaoRequerida(), verificarPermissao('avisos:visuali
             }
         }));
 
-        return c.json(formatado);
+        const resposta = c.json(formatado);
+        // Obriga o Workers Cache API a respeitar 10 min de vida para o cache de borda
+        resposta.headers.set('Cache-Control', 'max-age=600');
+        await cache.put(cacheKey, resposta.clone());
+        
+        return resposta;
     } catch (erro) {
         console.error('[ERRO DB] GET /avisos', erro);
         return c.json({ erro: 'Falha ao buscar avisos' }, 500);
