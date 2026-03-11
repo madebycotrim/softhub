@@ -33,7 +33,25 @@ export type Env = {
 
 const app = new Hono<{ Bindings: Env }>();
 
-// Limite Global Tolerante: 60 acessos a cada 1 minuto por IP.
+// ─── CORS (DEVE ser o primeiro middleware) ────────────────────────────────────
+// CORS precisa rodar ANTES de tudo para que respostas de erro (429, 503)
+// também incluam os headers Access-Control-Allow-Origin, senão o navegador bloqueia.
+
+app.use('*', cors({
+    origin: (origin) => {
+        // Permite localhost e qualquer subdomínio do projeto no Cloudflare
+        if (!origin || /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin) || origin.includes('madebycotrim') || origin.includes('pages.dev')) {
+            return origin;
+        }
+        return null; // Bloqueia outros
+    },
+    allowMethods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+}));
+
+// ─── Rate Limiter Global ──────────────────────────────────────────────────────
+// 120 req/min por IP (acomoda polling do QR Code a cada 800ms ≈ 75 req/min)
 // Inicialização lazy para evitar operações assíncronas no escopo global
 // (Cloudflare Workers proíbe setTimeout/crypto fora de handlers)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -43,7 +61,7 @@ app.use("*", (c, next) => {
     if (!_limiteGlobal) {
         _limiteGlobal = rateLimiter({
             windowMs: 60 * 1000, 
-            limit: 60, 
+            limit: 120, 
             standardHeaders: "draft-6",
             keyGenerator: (c) => c.req.header("cf-connecting-ip") ?? "",
             message: { erro: "Muitas requisições. O sistema identificou spam." }
@@ -66,28 +84,6 @@ app.use('*', async (c, next) => {
     }
     await next();
 });
-
-
-// ─── CORS ─────────────────────────────────────────────────────────────────────
-// Em dev: aceita qualquer origem localhost independente de porta.
-// Em produção: substituir pela URL real do frontend.
-
-// O Hono exige que a função retorne a própria origem (para permitir) ou null (para bloquear)
-
-// ─── CORS ─────────────────────────────────────────────────────────────────────
-
-app.use('*', cors({
-    origin: (origin) => {
-        // Permite localhost e qualquer subdomínio do projeto no Cloudflare
-        if (!origin || /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin) || origin.includes('madebycotrim') || origin.includes('pages.dev')) {
-            return origin;
-        }
-        return null; // Bloqueia outros
-    },
-    allowMethods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-}));
 
 // ─── Erro global ──────────────────────────────────────────────────────────────
 

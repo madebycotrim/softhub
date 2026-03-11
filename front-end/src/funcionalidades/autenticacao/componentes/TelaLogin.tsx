@@ -175,12 +175,25 @@ export default function TelaLogin() {
                             )}
 
                             <div className="space-y-6 lg:space-y-8">
+                                {/* ─────────────────────────────────────────────────────────────────
+                                    BOTÃO OFICIAL MICROSOFT — NÃO ALTERAR
+                                    Segue exatamente as diretrizes de branding da Microsoft:
+                                    - Background: #2F2F2F
+                                    - Altura: 41px
+                                    - Padding: 12px (todos os lados)
+                                    - Fonte: Segoe UI, 15px, weight 600, cor #FFFFFF
+                                    - Ícone: 21x21px, 4 quadrantes coloridos
+                                    - Gap entre ícone e texto: 12px
+                                    - Border-radius: mínimo (padrão Microsoft)
+                                    Ref: https://learn.microsoft.com/en-us/entra/identity-platform/howto-add-branding-in-apps
+                                    ───────────────────────────────────────────────────────────────── */}
                                 <button
                                     onClick={handleLogin}
                                     disabled={carregando || inProgress !== 'none'}
-                                    className="w-full flex items-center h-[41px] bg-[#2F2F2F] hover:bg-[#3F3F3F] active:bg-[#1F1F1F] transition-all disabled:opacity-50 group rounded-2xl active:scale-[0.98] px-[12px] gap-[12px] border border-transparent shadow-sm"
+                                    className="w-full flex items-center h-[41px] bg-[#2F2F2F] disabled:opacity-50 px-[12px] gap-[12px] border border-[#2F2F2F]"
                                     style={{ 
-                                        fontFamily: "'Segoe UI', 'Segoe UI Web (West European)', 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif" 
+                                        fontFamily: "'Segoe UI', 'Segoe UI Web (West European)', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif",
+                                        borderRadius: '2px',
                                     }}
                                 >
                                     <div className="flex shrink-0">
@@ -191,7 +204,7 @@ export default function TelaLogin() {
                                             <rect x="11" y="11" width="10" height="10" fill="#FFB900" />
                                         </svg>
                                     </div>
-                                    <span className="text-[15px] font-semibold text-white leading-none whitespace-nowrap">Entrar com Microsoft</span>
+                                    <span className="text-[15px] text-white leading-none whitespace-nowrap" style={{ fontWeight: 600 }}>Sign in with Microsoft</span>
                                 </button>
 
                                 <div className="flex items-center justify-center lg:justify-start gap-1.5 text-slate-500 text-[11px] lg:text-[11.5px] font-medium">
