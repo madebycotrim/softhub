@@ -8,7 +8,8 @@
     "deploy": "wrangler deploy",
     "db:init": "node src/db/iniciar-banco.js --remote",
     "db:init:remote": "wrangler d1 execute DB --remote --file=src/db/migrations/001_tabelas_base.sql && wrangler d1 execute DB --remote --file=src/db/migrations/002_tabelas_modulos.sql",
-    "db:seed": "wrangler d1 execute DB --remote --file=src/db/seed.sql"
+    "db:seed": "wrangler d1 execute DB --remote --file=src/db/seed.sql",
+    "db:explain": "wrangler d1 execute DB --remote --command"
   },
   "keywords": [],
   "author": "",
