@@ -14,6 +14,7 @@ rotasRelatorios.get('/equipes', autenticacaoRequerida(), verificarPermissao('rel
     try {
         // 1. Resumo de Grupos
         const gruposResumo = await DB.prepare(`
+            SELECT
                 g.id,
                 g.nome,
                 (SELECT nome FROM equipes WHERE id = g.equipe_id) as equipe_nome,

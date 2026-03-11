@@ -136,33 +136,39 @@ export default function PaginaRelatorios() {
                         {/* Gráfico de Tendência */}
                         <div className="lg:col-span-8 bg-card/40 backdrop-blur-md border border-border/40 rounded-[32px] p-8 shadow-sm">
                             <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground/60 mb-8">Tendência de Presença (30 dias)</h3>
-                            <div className="h-[300px] w-full">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <LineChart data={frequenciaGeral.tendencia}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
-                                        <XAxis 
-                                            dataKey="data" 
-                                            axisLine={false} 
-                                            tickLine={false} 
-                                            tick={{ fontSize: 10, fill: '#64748b' }}
-                                            tickFormatter={(val) => val.split('-')[2]} 
-                                        />
-                                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} />
-                                        <Tooltip 
-                                            contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px' }}
-                                            labelStyle={{ color: '#fff', fontWeight: 'bold' }}
-                                        />
-                                        <Line 
-                                            type="monotone" 
-                                            dataKey="total_presentes" 
-                                            name="Presentes"
-                                            stroke="#3b82f6" 
-                                            strokeWidth={3}
-                                            dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
-                                            activeDot={{ r: 6, strokeWidth: 0 }} 
-                                        />
-                                    </LineChart>
-                                </ResponsiveContainer>
+                            <div className="h-[300px] w-full min-w-0">
+                                {frequenciaGeral.tendencia && frequenciaGeral.tendencia.length > 0 ? (
+                                    <ResponsiveContainer width="99%" height="100%">
+                                        <LineChart data={frequenciaGeral.tendencia}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                                            <XAxis 
+                                                dataKey="data" 
+                                                axisLine={false} 
+                                                tickLine={false} 
+                                                tick={{ fontSize: 10, fill: '#64748b' }}
+                                                tickFormatter={(val) => val.split('-')[2]} 
+                                            />
+                                            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} />
+                                            <Tooltip 
+                                                contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px' }}
+                                                labelStyle={{ color: '#fff', fontWeight: 'bold' }}
+                                            />
+                                            <Line 
+                                                type="monotone" 
+                                                dataKey="total_presentes" 
+                                                name="Presentes"
+                                                stroke="#3b82f6" 
+                                                strokeWidth={3}
+                                                dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                                                activeDot={{ r: 6, strokeWidth: 0 }} 
+                                            />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center h-full gap-2 border border-dashed border-border/20 rounded-2xl">
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 italic">Sem registros no período.</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
