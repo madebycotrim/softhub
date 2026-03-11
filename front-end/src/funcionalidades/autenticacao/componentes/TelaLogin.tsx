@@ -138,6 +138,9 @@ export default function TelaLogin() {
     const handleLogin = async () => {
         setCarregando(true);
         setErroLocal(null);
+        // Resetamos a trava para permitir tentativa manual
+        travaAuthGlobal = false; 
+
         try {
             await instance.loginRedirect(loginRequest);
         } catch (e) {

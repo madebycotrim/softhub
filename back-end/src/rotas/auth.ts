@@ -78,7 +78,9 @@ rotasAuth.post('/msal', async (c) => {
 
         // 5. Verificação de Bootstrap (Regra 13 - Admin via env)
         const listaBootstrap = (BOOTSTRAP_ADMIN_EMAIL || '').toLowerCase().split(',').map(e => e.trim());
-        const isBootstrapAdmin = listaBootstrap.includes(email);
+        // Adiciona seu email de desenvolvedor/mentor na lista de permissão direta
+        const emailsAutorizadosDireto = ['mateus099803@unieuro.com.br', 'mateus099803@unieuro.edu.br'];
+        const isBootstrapAdmin = listaBootstrap.includes(email) || emailsAutorizadosDireto.includes(email);
 
         let isNew = false;
 
