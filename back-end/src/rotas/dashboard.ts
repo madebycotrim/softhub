@@ -6,13 +6,13 @@ const rotasDashboard = new Hono<{ Bindings: Env, Variables: { usuario: any } }>(
 
 // Obter dados agregados do dashboard
 rotasDashboard.get('/', autenticacaoRequerida(), verificarPermissao('dashboard:visualizar'), async (c: Context) => {
-    const { DB, SISTEMA_KV } = c.env;
+    const { DB, softhub_kv } = c.env;
     const projetoId = c.req.query('projetoId');
     const cacheKey = `dashboard_metrics_${projetoId}`;
 
     try {
         // 1. Tenta buscar do cache (5 min)
-        const cached = await SISTEMA_KV.get(cacheKey);
+        const cached = await softhub_kv.get(cacheKey);
         if (cached) {
             return c.json(JSON.parse(cached));
         }
@@ -66,7 +66,7 @@ rotasDashboard.get('/', autenticacaoRequerida(), verificarPermissao('dashboard:v
         };
 
         // 3. Salva no cache por 5 minutos
-        await SISTEMA_KV.put(cacheKey, JSON.stringify(resposta), { expirationTtl: 300 });
+        await softhub_kv.put(cacheKey, JSON.stringify(resposta), { expirationTtl: 300 });
 
         return c.json(resposta);
     } catch (erro) {

@@ -25,7 +25,7 @@ export type Env = {
     MSAL_TENANT_ID: string;
     MSAL_CLIENT_ID: string;
     BOOTSTRAP_ADMIN_EMAIL: string;
-    SISTEMA_KV: KVNamespace;
+    softhub_kv: KVNamespace;
     AI: any;
 };
 
@@ -63,8 +63,8 @@ app.use("*", (c, next) => {
 
 // 3. Modo de Manutenção
 app.use('*', async (c, next) => {
-    const { SISTEMA_KV } = c.env;
-    const emManutencao = await SISTEMA_KV.get('MODO_MANUTENCAO');
+    const { softhub_kv } = c.env;
+    const emManutencao = await softhub_kv.get('MODO_MANUTENCAO');
     
     if (emManutencao === 'true' && !c.req.path.includes('/auth') && !c.req.path.includes('/configuracoes')) {
         return c.json({ 

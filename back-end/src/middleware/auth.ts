@@ -14,13 +14,13 @@ type HonoEnv = { Bindings: Env; Variables: { usuario: UsuarioAutenticado } };
 // ─── Funções Auxiliares (com cache) ──────────────────────────────────────────
 
 async function getHierarquiaRoles(c: Context<HonoEnv>): Promise<string[] | null> {
-    const { DB, SISTEMA_KV } = c.env;
-    let hierarquiaJson = await SISTEMA_KV.get('hierarquia_roles');
+    const { DB, softhub_kv } = c.env;
+    let hierarquiaJson = await softhub_kv.get('hierarquia_roles');
     if (!hierarquiaJson) {
         const resConfig = await DB.prepare('SELECT valor FROM configuracoes_sistema WHERE chave = ?').bind('hierarquia_roles').first<{ valor: string }>();
         if (resConfig) {
             hierarquiaJson = resConfig.valor;
-            await SISTEMA_KV.put('hierarquia_roles', hierarquiaJson, { expirationTtl: 3600 });
+            await softhub_kv.put('hierarquia_roles', hierarquiaJson, { expirationTtl: 3600 });
         } else {
             console.error('[AUTH] CRÍTICO: hierarquia_roles não encontrada no banco de dados.');
             return null;
@@ -37,13 +37,13 @@ async function getHierarquiaRoles(c: Context<HonoEnv>): Promise<string[] | null>
 }
 
 async function getPermissoesRoles(c: Context<HonoEnv>): Promise<Record<string, any> | null> {
-    const { DB, SISTEMA_KV } = c.env;
-    let permissoesJson = await SISTEMA_KV.get('permissoes_roles');
+    const { DB, softhub_kv } = c.env;
+    let permissoesJson = await softhub_kv.get('permissoes_roles');
     if (!permissoesJson) {
         const resConfig = await DB.prepare('SELECT valor FROM configuracoes_sistema WHERE chave = ?').bind('permissoes_roles').first<{ valor: string }>();
         if (resConfig) {
             permissoesJson = resConfig.valor;
-            await SISTEMA_KV.put('permissoes_roles', permissoesJson, { expirationTtl: 3600 });
+            await softhub_kv.put('permissoes_roles', permissoesJson, { expirationTtl: 3600 });
         } else {
             console.error('[AUTH] CRÍTICO: permissoes_roles não encontradas no banco de dados.');
             return null;
