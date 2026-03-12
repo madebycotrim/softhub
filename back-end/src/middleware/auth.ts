@@ -87,20 +87,25 @@ export function autenticacaoRequerida(roleMinimoRequerido?: string) {
             return c.json({ erro: 'Sua sessão foi encerrada porque você entrou em outro dispositivo.' }, 401);
         }
 
+        c.set('usuario', { id: resUsuario.id, role: resUsuario.role, email: resUsuario.email, nome: resUsuario.nome });
+
+        if (resUsuario.role === 'ADMIN') {
+            return await next();
+        }
+
         if (roleMinimoRequerido) {
             const hierarquiaRoles = await getHierarquiaRoles(c);
             if (!hierarquiaRoles) {
-                return c.json({ erro: 'Erro crítico de configuração do sistema.' }, 500);
+                return c.json({ erro: 'O sistema ainda não foi configurado. Contate o administrador.' }, 500);
             }
             const indiceUsuario = hierarquiaRoles.indexOf(resUsuario.role as any);
             const indiceRequerido = hierarquiaRoles.indexOf(roleMinimoRequerido as any);
             if (indiceUsuario === -1 || indiceRequerido === -1 || indiceUsuario < indiceRequerido) {
-                console.warn(`[AUTH] Acesso negado: Usuário ${resUsuario.nome} tentou acessar recurso que exige ${roleMinimoRequerido}`);
+                console.warn(`[AUTH] Acesso negado: Usuário ${resUsuario.nome} tentou recurso que exige ${roleMinimoRequerido}`);
                 return c.json({ erro: 'Permissão insuficiente.' }, 403);
             }
         }
 
-        c.set('usuario', { id: resUsuario.id, role: resUsuario.role, email: resUsuario.email, nome: resUsuario.nome });
         await next();
     };
 }
@@ -111,32 +116,36 @@ export function verificarPermissao(permissaoRequerida: string) {
     return async (c: Context<HonoEnv>, next: Next) => {
         const usuario = c.get('usuario');
         if (!usuario || !usuario.role) {
-            return c.json({ erro: 'Usuário não autenticado ou sem role definida.' }, 401);
+            return c.json({ erro: 'Usuário não autenticado.' }, 401);
         }
+
+        // ADMIN tem permissão total sempre, independente do banco
+        if (usuario.role === 'ADMIN') return await next();
 
         const permissoes_roles = await getPermissoesRoles(c);
         if (!permissoes_roles) {
-            return c.json({ erro: 'Erro crítico na configuração de permissões do sistema.' }, 500);
+            return c.json({ erro: 'Configurações de permissão não encontradas.' }, 500);
         }
 
         const [modulo, acao] = permissaoRequerida.split(':');
-        const configModulo = permissoes_roles[usuario.role];
+        const configRole = permissoes_roles[usuario.role];
 
-        if (!configModulo) {
-            console.warn(`[AUTH] Role ${usuario.role} não possui configurações de permissão.`);
-            return c.json({ erro: 'Permissão insuficiente.' }, 403);
+        if (!configRole) {
+            return c.json({ erro: 'Seu cargo não possui permissões configuradas.' }, 403);
         }
 
-        // Suporte a curinga (ADMIN: {"*": true}) ou permissão direta (modulo:acao)
-        const temPermissao = configModulo['*'] === true || 
-                            configModulo[permissaoRequerida] === true ||
-                            configModulo[modulo]?.[acao] === true;
+        // Suporte a curinga (ADMIN: {"*": true})
+        if (configRole['*'] === true) return await next();
 
-        if (temPermissao) {
-            await next();
-        } else {
-            console.warn(`[AUTH] Acesso negado: Usuário ${usuario.nome} (Role: ${usuario.role}) tentou '${permissaoRequerida}'`);
-            return c.json({ erro: 'Você não tem permissão para esta tela.' }, 403);
+        // Verifica formato plano: {"modulo:acao": true}
+        if (configRole[permissaoRequerida] === true) return await next();
+
+        // Verifica formato aninhado: {"modulo": {"acao": true}}
+        if (configRole[modulo] && typeof configRole[modulo] === 'object' && configRole[modulo][acao] === true) {
+            return await next();
         }
+
+        console.warn(`[AUTH] Acesso negado: Usuário ${usuario.nome} (Role: ${usuario.role}) tentou '${permissaoRequerida}'`);
+        return c.json({ erro: 'Você não tem permissão para esta tela.' }, 403);
     };
 }
