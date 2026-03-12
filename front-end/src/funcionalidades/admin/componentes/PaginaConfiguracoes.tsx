@@ -41,7 +41,6 @@ const PERMISSOES_SISTEMA = [
             { chave: 'ponto:visualizar', label: 'Visualizar Histórico' },
             { chave: 'ponto:justificar', label: 'Enviar Justificativa' },
             { chave: 'ponto:aprovar_justificativa', label: 'Aprovar Justificativa' },
-            { chave: 'ponto:exportar_csv', label: 'Exportar CSV' },
         ],
     },
     {

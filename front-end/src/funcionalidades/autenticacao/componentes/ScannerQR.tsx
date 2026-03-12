@@ -161,18 +161,18 @@ export default function ScannerQR({ aoFechar }: ScannerQRProps) {
             
             {(status === 'ocioso' || status === 'pedindo_permissao') && (
                 <div className="text-center space-y-10 px-8 flex flex-col items-center justify-center animate-in fade-in slide-in-from-top-4 duration-700 w-full">
-                    <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center mx-auto text-blue-600 border border-slate-200 relative shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] transition-transform hover:scale-105 duration-500">
+                    <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center mx-auto text-red-600 border border-slate-200 relative shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] transition-transform hover:scale-105 duration-500">
                         <Camera size={48} strokeWidth={1.5} />
                         {status === 'pedindo_permissao' && (
-                            <div className="absolute -inset-1.5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                            <div className="absolute -inset-1.5 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
                         )}
                         {/* Glow effect */}
-                        <div className="absolute -inset-4 bg-blue-500/5 rounded-[2.5rem] -z-10 blur-xl" />
+                        <div className="absolute -inset-4 bg-red-500/5 rounded-[2.5rem] -z-10 blur-xl" />
                     </div>
                     
                     <div className="space-y-4">
                         <div className="space-y-1">
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600/60">Acesso Rápido</span>
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-red-600/60">Acesso Rápido</span>
                             <h3 className="text-3xl font-black text-slate-900 tracking-tight">QR Login</h3>
                         </div>
                         <p className="text-[15px] text-slate-500 font-medium leading-relaxed max-w-[260px] mx-auto min-h-[44px]">
@@ -184,7 +184,7 @@ export default function ScannerQR({ aoFechar }: ScannerQRProps) {
 
                     <div className="flex flex-col gap-4 w-full pt-4">
                         {status === 'pedindo_permissao' ? (
-                            <div className="w-full h-14 bg-blue-50 text-blue-600 font-bold rounded-2xl flex items-center justify-center gap-3">
+                            <div className="w-full h-14 bg-red-50 text-red-600 font-bold rounded-2xl flex items-center justify-center gap-3">
                                 <Loader2 className="animate-spin" size={20} />
                                 Solicitando Permissão
                             </div>
@@ -204,8 +204,8 @@ export default function ScannerQR({ aoFechar }: ScannerQRProps) {
             {status === 'scaneando' && (
                 <div className="w-full flex flex-col items-center space-y-10 px-4 animate-in zoom-in-95 duration-500">
                     <div className="text-center space-y-2">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full mb-2">
-                            <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse" />
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-50 text-red-600 rounded-full mb-2">
+                            <div className="w-2 h-2 bg-red-600 rounded-full animate-pulse" />
                             <span className="text-[10px] font-black uppercase tracking-wider">Câmera Ativa</span>
                         </div>
                         <h3 className="text-2xl font-black text-slate-900 tracking-tight">Escanear Código</h3>
@@ -218,7 +218,7 @@ export default function ScannerQR({ aoFechar }: ScannerQRProps) {
                         
                         {/* Linha de Scan de Alta Tecnologia */}
                         <div className="absolute inset-0 pointer-events-none z-10">
-                            <div className="w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent shadow-[0_0_15px_rgba(59,130,246,0.8)] absolute top-0 animate-scan-line" />
+                            <div className="w-full h-1  bg-gradient-to-r from-transparent via-red-500 to-transparent shadow-[0_0_15px_rgba(239,68,68,0.8)] absolute top-0 animate-scan-line" />
                             
                             {/* Cantos Estilizados */}
                             <div className="absolute top-4 left-4 w-6 h-6 border-t-4 border-l-4 border-white/80 rounded-tl-sm" />
@@ -243,13 +243,13 @@ export default function ScannerQR({ aoFechar }: ScannerQRProps) {
                     {/* Visualização de Conexão */}
                     <div className="flex items-center justify-center gap-6 w-full max-w-xs relative my-6">
                         <div className="relative group">
-                            <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl animate-pulse group-hover:bg-blue-500/30 transition-all" />
+                            <div className="absolute inset-0 bg-red-500/20 rounded-full blur-xl animate-pulse group-hover:bg-red-500/30 transition-all" />
                             <Avatar nome={usuario?.nome || ''} fotoPerfil={usuario?.foto_perfil || null} tamanho="lg" className="relative z-10 w-16 h-16 ring-4 ring-white shadow-xl" />
                         </div>
 
                         <div className="flex-1 h-px bg-gradient-to-r from-blue-200 via-blue-500 to-blue-200 relative overflow-hidden">
                             <div className="absolute top-1/2 left-0 -translate-y-1/2 animate-infinite-scroll">
-                                <ArrowRight className="w-4 h-4 text-blue-500 opacity-50 ml-10" />
+                                <ArrowRight className="w-4 h-4 text-red-500 opacity-50 ml-10" />
                             </div>
                         </div>
 
@@ -262,14 +262,14 @@ export default function ScannerQR({ aoFechar }: ScannerQRProps) {
                         <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-none">Confirmar Acesso?</h3>
                         <div className="flex flex-col items-center">
                             <p className="text-[15px] text-slate-500 font-medium">Você está autorizando o acesso para:</p>
-                            <span className="text-[15px] font-black text-blue-600 uppercase mt-1 tracking-tight">{usuario?.nome}</span>
+                            <span className="text-[15px] font-black text-red-600 uppercase mt-1 tracking-tight">{usuario?.nome}</span>
                         </div>
                     </div>
 
                     <div className="flex flex-col gap-4 w-full pt-4">
                         <button
                             onClick={autorizarSessao}
-                            className="w-full h-14 bg-blue-600 text-white font-bold rounded-2xl shadow-xl shadow-blue-100 active:scale-95 transition-all flex items-center justify-center gap-2"
+                            className="w-full h-14 bg-red-600 text-white font-bold rounded-2xl shadow-xl shadow-red-100 active:scale-95 transition-all flex items-center justify-center gap-2"
                         >
                              Liberar Computador
                         </button>

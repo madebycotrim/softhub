@@ -57,6 +57,17 @@ export function usarPonto() {
         }
     }, [mutationBaterPonto]);
 
+    const baterPontoTeste = useCallback(async (tipo: 'entrada' | 'saida') => {
+        try {
+            await api.post('/api/ponto/teste', { tipo });
+            queryClient.invalidateQueries({ queryKey: ['ponto'] });
+            return true;
+        } catch (e: any) {
+             const msgErro = e.response?.data?.erro || 'Erro no bypass de teste.';
+             throw new Error(msgErro);
+        }
+    }, [queryClient]);
+
     const erroFinal = erroQuery instanceof Error ? erroQuery.message : (mutationBaterPonto.error as Error)?.message || null;
 
     return { 
@@ -65,6 +76,7 @@ export function usarPonto() {
         carregando, 
         erro: erroFinal, 
         baterPonto, 
+        baterPontoTeste,
         recarregar: refetch 
     };
 }

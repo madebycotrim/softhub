@@ -75,4 +75,35 @@ rotasPonto.post('/',
         }
     });
 
+// RODOVIA DE TESTE: Registro de ponto sem travas (Somente ADMIN)
+rotasPonto.post('/teste', 
+    autenticacaoRequerida('ADMIN'), 
+    zValidator('json', BaterPontoSchema), 
+    async (c: Context) => {
+        const { DB } = c.env;
+        const { tipo } = (c.req as any).valid('json');
+
+        try {
+            const usuario = c.get('usuario') as any;
+            const ipOrigem = c.req.header('CF-Connecting-IP') || '127.0.0.1';
+
+            // Registra sem validar horário ou IP
+            await DB.prepare(`INSERT INTO ponto_registros (id, usuario_id, tipo, ip_origem) VALUES (?, ?, ?, ?)`).bind(crypto.randomUUID(), usuario.id, tipo, ipOrigem).run();
+
+            await registrarLog(DB, {
+                usuarioId: usuario.id,
+                acao: tipo === 'entrada' ? 'PONTO_ENTRADA_TESTE' : 'PONTO_SAIDA_TESTE',
+                modulo: 'ponto',
+                descricao: `[TESTE] Batida de ${tipo} registrada via endpoint de bypass`,
+                ip: ipOrigem,
+                entidadeTipo: 'ponto_registros'
+            });
+
+            return c.json({ sucesso: true, mensagem: `[TESTE] ${tipo} registrado com sucesso.` });
+        } catch (erro) {
+            console.error("[ERRO-TESTE] POST /api/ponto/teste", erro);
+            return c.json({ erro: 'Falha ao registrar ponto de teste' }, 500);
+        }
+    });
+
 export default rotasPonto;

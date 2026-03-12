@@ -78,12 +78,10 @@ export default function PainelQRCode() {
     return (
         <div className="flex flex-col items-center text-center animate-in fade-in slide-in-from-bottom-8 duration-1000">
             {/* Label discreta mas legível acima do QR */}
-            <div className="flex items-center gap-3 mb-10">
-                <div className="h-[1px] w-8 bg-red-600/20" />
+            <div className="mb-10">
                 <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] whitespace-nowrap">
                     ACESSO INSTANTÂNEO
                 </span>
-                <div className="h-[1px] w-8 bg-red-600/20" />
             </div>
 
             {/* Container QR - Ultra Minimalist & Large */}
@@ -92,7 +90,7 @@ export default function PainelQRCode() {
 
                     {status === 'gerando' && (
                         <div className="w-[240px] h-[240px] flex flex-col items-center justify-center gap-3">
-                            <RefreshCw className="w-8 h-8 text-primary animate-spin" />
+                            <RefreshCw className="w-8 h-8 text-red-600 animate-spin" />
                             <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">Iniciando</span>
                         </div>
                     )}
@@ -156,15 +154,12 @@ function EstadoAutorizado({ usuario, status }: { usuario: any, status: string })
     return (
         <div className="w-[240px] h-auto flex flex-col items-center justify-center animate-in zoom-in duration-500 py-4">
             <div className="relative mb-4">
-                <div className={`relative ${isAutorizado ? 'ring-4 ring-green-500/20' : 'ring-4 ring-blue-500/20'} rounded-2xl transition-all duration-500`}>
+                <div className="relative rounded-2xl transition-all duration-500">
                     <Avatar 
                         nome={usuario?.nome || 'Usuário'} 
                         fotoPerfil={usuario?.foto_perfil} 
                         tamanho="2xl"
                     />
-                    <div className={`absolute -bottom-2 -right-2 w-8 h-8 rounded-full border-4 border-white flex items-center justify-center text-white shadow-lg transition-all duration-500 ${isAutorizado ? 'bg-green-500' : 'bg-blue-500'}`}>
-                        {isAutorizado ? <CheckCircle size={14} strokeWidth={3} /> : <div className="w-2 h-2 bg-white rounded-full animate-pulse" />}
-                    </div>
                 </div>
             </div>
             <div className="flex flex-col items-center">
@@ -175,12 +170,14 @@ function EstadoAutorizado({ usuario, status }: { usuario: any, status: string })
                     {usuario?.email}
                 </span>
             </div>
-            <div className="mt-6 flex items-center gap-2">
-                <div className={`h-1.5 w-1.5 rounded-full animate-pulse ${isAutorizado ? 'bg-green-500' : 'bg-blue-500'}`} />
-                <span className={`text-[10px] font-black uppercase tracking-widest ${isAutorizado ? 'text-green-600' : 'text-blue-600'}`}>
-                    {isAutorizado ? 'Acesso Liberado' : 'Aguardando Confirmação'}
-                </span>
-            </div>
+            {isAutorizado && (
+                <div className="mt-6 flex items-center gap-2">
+                    <div className="h-1.5 w-1.5 rounded-full animate-pulse bg-green-500" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-green-600">
+                        Acesso Liberado
+                    </span>
+                </div>
+            )}
         </div>
     );
 }

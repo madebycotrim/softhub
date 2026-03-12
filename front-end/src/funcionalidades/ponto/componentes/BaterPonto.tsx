@@ -5,7 +5,6 @@ import { formatarDataHora } from '@/utilitarios/formatadores';
 import { usarJustificativas } from '@/funcionalidades/ponto/hooks/usarJustificativa';
 import { ListaJustificativas } from './ListaJustificativas';
 import { FormularioJustificativa } from './FormularioJustificativa';
-import { BotaoExportarPonto } from './BotaoExportarPonto';
 import { usarPermissaoAcesso } from '@/compartilhado/hooks/usarPermissao';
 import { useEffect as useReactEffect } from 'react';
 import { BarraBusca } from '@/compartilhado/componentes/BarraBusca';
@@ -22,7 +21,7 @@ import type { JustificativaPonto } from '@/funcionalidades/ponto/hooks/usarJusti
  * Controla os blocos de lógica de travamento fora da rede da Instituição (simulado via errors textuais na UI).
  */
 export function BaterPonto() {
-    const { registrosHoje, historico, carregando, erro, baterPonto } = usarPonto();
+    const { registrosHoje, historico, carregando, erro, baterPonto, baterPontoTeste } = usarPonto();
     const { justificativas, enviarJustificativa, editarJustificativa, excluirJustificativa } = usarJustificativas();
 
     const [salvando, setSalvando] = useState(false);
@@ -35,7 +34,7 @@ export function BaterPonto() {
 
     const podeRegistrar = usarPermissaoAcesso('ponto:registrar');
     const podeJustificar = usarPermissaoAcesso('ponto:justificar');
-    const podeExportarCsv = usarPermissaoAcesso('ponto:exportar_csv');
+    const isAdmin = usarPermissaoAcesso('membros:gerenciar'); // Simplificacao para verificar se e admin
 
     // Calcula qual é o próximo tipo baseado no último registro de hoje
     const ultimoRegistro = useMemo(() => {
@@ -142,7 +141,24 @@ export function BaterPonto() {
                         </Tooltip>
                         
                         <div className="flex items-center gap-2">
-                            {podeExportarCsv && <BotaoExportarPonto />}
+                            {isAdmin && (
+                                <button 
+                                    onClick={async () => {
+                                        setSalvando(true);
+                                        try {
+                                            await baterPontoTeste(proximoTipo);
+                                        } catch (e: any) {
+                                            setErroPonto(e.message);
+                                        } finally {
+                                            setSalvando(false);
+                                        }
+                                    }}
+                                    className="h-11 px-4 bg-amber-500/10 text-amber-600 border border-amber-500/20 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-500/20 transition-all flex items-center gap-2"
+                                >
+                                    <Fingerprint className="w-4 h-4" />
+                                    <span className="hidden sm:inline">Modo Teste</span>
+                                </button>
+                            )}
 
                             {podeJustificar && (
                                 <button 
@@ -150,7 +166,7 @@ export function BaterPonto() {
                                         setJustificativaEditando(null);
                                         setModalJustificativaAberto(true);
                                     }}
-                                    className="h-11 px-5 bg-foreground text-background rounded-2xl text-xs font-bold flex items-center gap-2 transition-all active:scale-95"
+                                    className="h-11 px-5 bg-primary text-primary-foreground rounded-2xl text-xs font-bold flex items-center gap-2 transition-all active:scale-95 shadow-lg shadow-primary/20"
                                 >
                                     <Plus className="w-4 h-4" />
                                     <span>Justificar</span>
