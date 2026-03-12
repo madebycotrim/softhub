@@ -55,7 +55,7 @@ rotasDashboard.get('/', autenticacaoRequerida(), verificarPermissao('dashboard:v
             SELECT t.id, t.titulo, t.status, t.prioridade 
             FROM tarefas t
             JOIN tarefas_responsaveis tr ON tr.tarefa_id = t.id
-            WHERE tr.usuario_id = ? AND t.status != 'concluida'
+            WHERE tr.usuario_id = ? AND t.status != 'concluido'
             ORDER BY t.criado_em DESC LIMIT 5
         `).bind(usuario.id).all();
 

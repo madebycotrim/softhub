@@ -120,17 +120,23 @@ export function verificarPermissao(permissaoRequerida: string) {
         }
 
         const [modulo, acao] = permissaoRequerida.split(':');
-        if (!modulo || !acao) {
-             return c.json({ erro: 'Formato de permissão inválido no código.' }, 500);
+        const configModulo = permissoes_roles[usuario.role];
+
+        if (!configModulo) {
+            console.warn(`[AUTH] Role ${usuario.role} não possui configurações de permissão.`);
+            return c.json({ erro: 'Permissão insuficiente.' }, 403);
         }
 
-        const temPermissao = permissoes_roles[usuario.role]?.[modulo]?.[acao] === true;
+        // Suporte a curinga (ADMIN: {"*": true}) ou permissão direta (modulo:acao)
+        const temPermissao = configModulo['*'] === true || 
+                            configModulo[permissaoRequerida] === true ||
+                            configModulo[modulo]?.[acao] === true;
 
         if (temPermissao) {
             await next();
         } else {
-            console.warn(`[AUTH] Acesso negado: Usuário ${usuario.nome} (Role: ${usuario.role}) tentou realizar a ação '${permissaoRequerida}' sem permissão.`);
-            return c.json({ erro: 'Você não tem permissão para realizar esta ação.' }, 403);
+            console.warn(`[AUTH] Acesso negado: Usuário ${usuario.nome} (Role: ${usuario.role}) tentou '${permissaoRequerida}'`);
+            return c.json({ erro: 'Você não tem permissão para esta tela.' }, 403);
         }
     };
 }
