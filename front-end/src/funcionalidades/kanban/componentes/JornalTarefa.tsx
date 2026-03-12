@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, useContext, type FormEvent } from 'react';
 import { usarJornalTarefa } from '@/funcionalidades/kanban/hooks/usarJornalTarefa';
 import { usarComentarios } from '@/funcionalidades/kanban/hooks/usarComentarios';
 import { formatarTempoAtras, formatarEventoHistorico } from '@/utilitarios/formatadores';
@@ -7,7 +7,7 @@ import { History, Send, Layout, UserPlus, Tag, CheckCircle2 } from 'lucide-react
 import { Tooltip } from '@/compartilhado/componentes/Tooltip';
 import { Avatar } from '@/compartilhado/componentes/Avatar';
 import { Carregando } from '@/compartilhado/componentes/Carregando';
-import { useContext } from 'react';
+
 import { ContextoAutenticacao } from '@/contexto/ContextoAutenticacao';
 import { Alerta } from '@/compartilhado/componentes/Alerta';
 
@@ -23,7 +23,7 @@ export function JornalTarefa({ tarefaId }: JornalTarefaProps) {
     const [novoComentario, setNovoComentario] = useState('');
     const [enviando, setEnviando] = useState(false);
 
-    const handleEnviar = async (e: React.FormEvent) => {
+    const handleEnviar = async (e: FormEvent) => {
         e.preventDefault();
         if (!novoComentario.trim()) return;
 

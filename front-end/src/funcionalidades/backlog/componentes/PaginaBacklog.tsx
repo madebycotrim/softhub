@@ -5,6 +5,7 @@ import {
     User
 } from 'lucide-react';
 import { usarBacklog } from '../hooks/usarBacklog';
+import { usarPermissaoAcesso } from '@/compartilhado/hooks/usarPermissao';
 import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
 import { Carregando } from '@/compartilhado/componentes/Carregando';
 import { EstadoErro } from '@/compartilhado/componentes/EstadoErro';
@@ -42,6 +43,8 @@ export default function PaginaBacklog() {
         setPrioridadeFiltro(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p]);
     };
 
+    const podeCriar = usarPermissaoAcesso('tarefas:criar');
+
     return (
         <div className="w-full space-y-6 animate-in fade-in duration-700 pb-20">
             <CabecalhoFuncionalidade
@@ -49,12 +52,14 @@ export default function PaginaBacklog() {
                 subtitulo="Visão detalhada e gestão completa de todas as tarefas do projeto."
                 icone={ListTodo}
             >
-                <button
-                    onClick={() => setModalCriarAberto(true)}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
-                >
-                    <Plus className="w-4 h-4" /> Nova Tarefa
-                </button>
+                {podeCriar && (
+                    <button
+                        onClick={() => setModalCriarAberto(true)}
+                        className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+                    >
+                        <Plus className="w-4 h-4" /> Nova Tarefa
+                    </button>
+                )}
             </CabecalhoFuncionalidade>
 
             <BarraFiltros

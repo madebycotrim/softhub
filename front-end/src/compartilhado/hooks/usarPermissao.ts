@@ -23,6 +23,9 @@ export function usarPermissao(roleMinimoRequerido: string | null): boolean {
         // Sem usuário ou sem role — nega
         if (!usuario?.role) return false;
 
+        // ADMIN sempre tem permissão total por hierarquia
+        if (usuario.role === 'ADMIN') return true;
+
         const indiceUsuario = hierarquia_roles.indexOf(usuario.role);
         const indiceRequerido = hierarquia_roles.indexOf(roleMinimoRequerido);
 

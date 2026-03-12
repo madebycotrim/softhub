@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo, Fragment, type FormEvent } from 'react';
 import { usarConfiguracoes } from '@/funcionalidades/admin/hooks/usarConfiguracoes';
 import { Carregando } from '@/compartilhado/componentes/Carregando';
 import { usarPermissaoAcesso } from '@/compartilhado/hooks/usarPermissao';
@@ -198,7 +198,7 @@ export function PaginaConfiguracoes() {
     };
 
     /** Adiciona um novo cargo com permissões básicas */
-    const handleAddCargo = async (e: React.FormEvent) => {
+    const handleAddCargo = async (e: FormEvent) => {
         e.preventDefault();
         if (!novoCargo || !configuracoes) return;
         const novasPermissoes = {
@@ -429,7 +429,7 @@ export function PaginaConfiguracoes() {
                                     {permissoesFiltradas.map((grupo) => {
                                         const IconeModulo = grupo.icone;
                                         return (
-                                            <React.Fragment key={grupo.modulo}>
+                                            <Fragment key={grupo.modulo}>
                                                 {/* Separador de módulo */}
                                                 <tr className="bg-slate-50/20">
                                                     <td
@@ -496,7 +496,7 @@ export function PaginaConfiguracoes() {
                                                         })}
                                                     </tr>
                                                 ))}
-                                            </React.Fragment>
+                                            </Fragment>
                                         );
                                     })}
 

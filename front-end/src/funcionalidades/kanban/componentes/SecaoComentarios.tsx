@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import { useState, useContext, type FormEvent } from 'react';
 import { usarComentarios } from '@/funcionalidades/kanban/hooks/usarComentarios';
 import { CartaoComentario } from './CartaoComentario';
 import { Carregando } from '@/compartilhado/componentes/Carregando';
 import { Send, MessageSquare } from 'lucide-react';
-import { useContext } from 'react';
+
 import { ContextoAutenticacao } from '@/contexto/ContextoAutenticacao';
+import { usarPermissaoAcesso } from '@/compartilhado/hooks/usarPermissao';
 
 interface SecaoComentariosProps {
     tarefaId: string;
@@ -17,9 +18,11 @@ export function SecaoComentarios({ tarefaId }: SecaoComentariosProps) {
     const [novoComentario, setNovoComentario] = useState('');
     const [enviando, setEnviando] = useState(false);
 
-    const ehLiderOuAdmin = usuario?.role === 'ADMIN' || usuario?.role === 'LIDER_GRUPO' || usuario?.role === 'LIDER_EQUIPE';
+    const podeComentar = usarPermissaoAcesso('tarefas:comentar');
+    const podeRemoverAlheio = usarPermissaoAcesso('tarefas:editar'); // Liderança ou superior
+    const ehLiderOuAdmin = podeRemoverAlheio;
 
-    const handleEnviar = async (e: React.FormEvent) => {
+    const handleEnviar = async (e: FormEvent) => {
         e.preventDefault();
         if (!novoComentario.trim()) return;
 
@@ -69,29 +72,35 @@ export function SecaoComentarios({ tarefaId }: SecaoComentariosProps) {
                 )}
             </div>
 
-            <div className="p-4 border-t border-border bg-muted/50 rounded-b-2xl shrink-0">
-                <form onSubmit={handleEnviar} className="relative flex items-end gap-2">
-                    <textarea
-                        value={novoComentario}
-                        onChange={(e) => setNovoComentario(e.target.value)}
-                        placeholder="Adicione um comentário..."
-                        className="w-full bg-background border border-input rounded-2xl p-3 pr-12 text-sm text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary transition-shadow min-h-[60px]"
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                                e.preventDefault();
-                                handleEnviar(e);
-                            }
-                        }}
-                    />
-                    <button
-                        type="submit"
-                        disabled={!novoComentario.trim() || enviando}
-                        className="absolute right-2 bottom-2 p-2 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground transition-colors disabled:opacity-50 disabled:hover:bg-primary flex items-center justify-center"
-                    >
-                        {enviando ? <Carregando tamanho="sm" className="border-white" /> : <Send className="w-4 h-4" />}
-                    </button>
-                </form>
-            </div>
+            {podeComentar ? (
+                <div className="p-4 border-t border-border bg-muted/50 rounded-b-2xl shrink-0">
+                    <form onSubmit={handleEnviar} className="relative flex items-end gap-2">
+                        <textarea
+                            value={novoComentario}
+                            onChange={(e) => setNovoComentario(e.target.value)}
+                            placeholder="Adicione um comentário..."
+                            className="w-full bg-background border border-input rounded-2xl p-3 pr-12 text-sm text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary transition-all min-h-[60px]"
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleEnviar(e);
+                                }
+                            }}
+                        />
+                        <button
+                            type="submit"
+                            disabled={!novoComentario.trim() || enviando}
+                            className="absolute right-2 bottom-2 p-2 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground transition-all disabled:opacity-50 disabled:hover:bg-primary flex items-center justify-center"
+                        >
+                            {enviando ? <Carregando Centralizar={false} tamanho="sm" className="border-white" /> : <Send className="w-4 h-4" />}
+                        </button>
+                    </form>
+                </div>
+            ) : (
+                <div className="p-4 border-t border-border bg-muted/30 rounded-b-2xl shrink-0 text-center">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 italic">Comentários restritos</p>
+                </div>
+            )}
         </div>
     );
 }

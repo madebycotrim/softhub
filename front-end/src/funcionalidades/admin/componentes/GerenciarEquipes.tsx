@@ -15,6 +15,8 @@ type MembroSimples = {
     grupos_ids?: string | null;
 };
 
+import { Emblema } from '@/compartilhado/componentes/Emblema';
+import { usarPermissaoAcesso } from '@/compartilhado/hooks/usarPermissao';
 import { Carregando } from '@/compartilhado/componentes/Carregando';
 import { Modal } from '@/compartilhado/componentes/Modal';
 import { ConfirmacaoExclusao } from '@/compartilhado/componentes/ConfirmacaoExclusao';
@@ -506,6 +508,8 @@ function ModalSelecaoLider({
 // ─── Componente: CardMembroFino ──────────────────────────────────────────────
 
 function CardMembroFino({ membro, aoRemover, aoMover }: { membro: MembroSimples, aoRemover: () => void, aoMover: () => void }) {
+    const podeEditar = usarPermissaoAcesso('equipes:editar_equipe');
+
     return (
         <div className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-2xl hover:border-slate-300 transition-all group">
             <div className="flex items-center gap-3">
@@ -515,24 +519,26 @@ function CardMembroFino({ membro, aoRemover, aoMover }: { membro: MembroSimples,
                     <p className="text-[9px] text-slate-400 font-medium truncate max-w-[120px]">{membro.email}</p>
                 </div>
             </div>
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                <Tooltip texto="Mover para outro grupo">
-                    <button
-                        onClick={aoMover}
-                        className="p-1.5 text-slate-300 hover:text-blue-500 transition-all"
-                    >
-                        <ArrowRightLeft size={14} />
-                    </button>
-                </Tooltip>
-                <Tooltip texto="Remover deste grupo">
-                    <button
-                        onClick={aoRemover}
-                        className="p-1.5 text-slate-300 hover:text-red-500 transition-all"
-                    >
-                        <Plus size={14} className="rotate-45" />
-                    </button>
-                </Tooltip>
-            </div>
+            {podeEditar && (
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                    <Tooltip texto="Mover para outro grupo">
+                        <button
+                            onClick={aoMover}
+                            className="p-1.5 text-slate-300 hover:text-blue-500 transition-all"
+                        >
+                            <ArrowRightLeft size={14} />
+                        </button>
+                    </Tooltip>
+                    <Tooltip texto="Remover deste grupo">
+                        <button
+                            onClick={aoRemover}
+                            className="p-1.5 text-slate-300 hover:text-red-500 transition-all"
+                        >
+                            <Plus size={14} className="rotate-45" />
+                        </button>
+                    </Tooltip>
+                </div>
+            )}
         </div>
     );
 }
@@ -602,6 +608,10 @@ function DetalheEquipe({
     const lider = useMemo(() => membros.find(m => m.id === equipe.lider_id), [membros, equipe.lider_id]);
     const subLider = useMemo(() => membros.find(m => m.id === equipe.sub_lider_id), [membros, equipe.sub_lider_id]);
 
+    const podeEditarEquipe = usarPermissaoAcesso('equipes:editar_equipe');
+    const podeCriarGrupo = usarPermissaoAcesso('equipes:criar_grupo');
+    const podeEditarGrupo = usarPermissaoAcesso('equipes:editar_grupo');
+
     return (
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col h-full overflow-hidden">
             <div className="shrink-0">
@@ -658,17 +668,19 @@ function DetalheEquipe({
                         ) : (
                             <div className="flex items-center gap-2 group/title">
                                 <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{equipe.nome}</h2>
-                                <Tooltip texto="Renomear equipe">
-                                    <button 
-                                        onClick={() => {
-                                            setEditandoEquipe(true);
-                                            setNomeTemp(equipe.nome);
-                                        }}
-                                        className="opacity-0 group-hover/title:opacity-100 p-1 text-slate-300 hover:text-slate-600 transition-all"
-                                    >
-                                        <Pencil size={14} />
-                                    </button>
-                                </Tooltip>
+                                {podeEditarEquipe && (
+                                    <Tooltip texto="Renomear equipe">
+                                        <button 
+                                            onClick={() => {
+                                                setEditandoEquipe(true);
+                                                setNomeTemp(equipe.nome);
+                                            }}
+                                            className="opacity-0 group-hover/title:opacity-100 p-1 text-slate-300 hover:text-slate-600 transition-all"
+                                        >
+                                            <Pencil size={14} />
+                                        </button>
+                                    </Tooltip>
+                                )}
                             </div>
                         )}
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
@@ -683,8 +695,8 @@ function DetalheEquipe({
             {/* Leadership Section */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
                 <div 
-                    onClick={() => aoSelecionarLider('lider')}
-                    className={`flex items-center gap-5 p-5 rounded-2xl border transition-all cursor-pointer group/lead ${equipe.lider_id ? 'bg-slate-50/50 border-slate-100 shadow-sm hover:border-blue-200' : 'bg-white border-dashed border-slate-200 hover:bg-slate-50'}`}
+                    onClick={() => podeEditarEquipe && aoSelecionarLider('lider')}
+                    className={`flex items-center gap-5 p-5 rounded-2xl border transition-all group/lead ${equipe.lider_id ? 'bg-slate-50/50 border-slate-100 shadow-sm hover:border-blue-200' : 'bg-white border-dashed border-slate-200 hover:bg-slate-50'} ${podeEditarEquipe ? 'cursor-pointer' : 'cursor-default'}`}
                 >
                     <Avatar 
                         nome={equipe.lider_nome || '?'} 
@@ -701,8 +713,8 @@ function DetalheEquipe({
                 </div>
 
                 <div 
-                    onClick={() => aoSelecionarLider('sub_lider')}
-                    className={`flex items-center gap-5 p-5 rounded-2xl border transition-all cursor-pointer group/lead ${equipe.sub_lider_id ? 'bg-slate-50/50 border-slate-100 shadow-sm hover:border-blue-200' : 'bg-white border-dashed border-slate-200 hover:bg-slate-50'}`}
+                    onClick={() => podeEditarEquipe && aoSelecionarLider('sub_lider')}
+                    className={`flex items-center gap-5 p-5 rounded-2xl border transition-all group/lead ${equipe.sub_lider_id ? 'bg-slate-50/50 border-slate-100 shadow-sm hover:border-blue-200' : 'bg-white border-dashed border-slate-200 hover:bg-slate-50'} ${podeEditarEquipe ? 'cursor-pointer' : 'cursor-default'}`}
                 >
                     <Avatar 
                         nome={equipe.sub_lider_nome || '?'} 
@@ -722,12 +734,14 @@ function DetalheEquipe({
             {/* Side-by-Side Groups Header */}
             <div className="flex items-center justify-between mb-4 shrink-0">
                 <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400/80">Grupos de Trabalho</h4>
-                <button
-                    onClick={aoAdicionarGrupo}
-                    className="text-slate-400 hover:text-blue-600 font-bold text-[10px] uppercase tracking-widest transition-colors flex items-center gap-1.5"
-                >
-                    <Plus size={14} /> Novo Grupo
-                </button>
+                {podeCriarGrupo && (
+                    <button
+                        onClick={aoAdicionarGrupo}
+                        className="text-slate-400 hover:text-blue-600 font-bold text-[10px] uppercase tracking-widest transition-colors flex items-center gap-1.5"
+                    >
+                        <Plus size={14} /> Novo Grupo
+                    </button>
+                )}
             </div>
 
             </div>
@@ -780,17 +794,19 @@ function DetalheEquipe({
                                             ) : (
                                                 <div className="flex items-center gap-2 group/title">
                                                     <h5 className="text-lg font-bold text-slate-900 tracking-tight">{g.nome}</h5>
-                                                    <Tooltip texto="Renomear grupo">
-                                                        <button 
-                                                            onClick={() => {
-                                                                setEditandoId(g.id);
-                                                                setNomeTemp(g.nome);
-                                                            }}
-                                                            className="opacity-0 group-hover/title:opacity-100 p-1 text-slate-300 hover:text-slate-600 transition-all"
-                                                        >
-                                                            <Pencil size={14} />
-                                                        </button>
-                                                    </Tooltip>
+                                                    {podeEditarGrupo && (
+                                                        <Tooltip texto="Renomear grupo">
+                                                            <button 
+                                                                onClick={() => {
+                                                                    setEditandoId(g.id);
+                                                                    setNomeTemp(g.nome);
+                                                                }}
+                                                                className="opacity-0 group-hover/title:opacity-100 p-1 text-slate-300 hover:text-slate-600 transition-all"
+                                                            >
+                                                                <Pencil size={14} />
+                                                            </button>
+                                                        </Tooltip>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
@@ -815,7 +831,7 @@ function DetalheEquipe({
                                                     <X size={18} strokeWidth={2.5} />
                                                 </button>
                                             </div>
-                                        ) : (
+                                        ) : podeEditarGrupo && (
                                             <Tooltip texto="Excluir grupo">
                                                 <button 
                                                     onClick={() => aoExcluirGrupo(g)} 
@@ -841,11 +857,13 @@ function DetalheEquipe({
                                                     <h6 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
                                                         Pessoas ({membrosDoGrupo.length})
                                                     </h6>
-                                                    <Tooltip texto="Alocar membro">
-                                                        <button onClick={() => aoAlocar(g.id, equipe.id)} className="w-8 h-8 rounded-2xl bg-white border border-slate-100 text-slate-400 flex items-center justify-center hover:bg-slate-50 hover:text-blue-600 transition-all shadow-sm">
-                                                            <Plus size={16} />
-                                                        </button>
-                                                    </Tooltip>
+                                                    {podeEditarEquipe && (
+                                                        <Tooltip texto="Alocar membro">
+                                                            <button onClick={() => aoAlocar(g.id, equipe.id)} className="w-8 h-8 rounded-2xl bg-white border border-slate-100 text-slate-400 flex items-center justify-center hover:bg-slate-50 hover:text-blue-600 transition-all shadow-sm">
+                                                                <Plus size={16} />
+                                                            </button>
+                                                        </Tooltip>
+                                                    )}
                                                 </div>
                                                 <div className="flex-1 overflow-y-auto min-h-0 space-y-2.5 pr-2 custom-scrollbar">
                                                     {membrosDoGrupo.map(membro => (
@@ -885,6 +903,9 @@ export function GerenciarEquipes() {
         criarEquipe, editarEquipe, desativarEquipe,
         alocarMembro, moverMembro
     } = usarEquipes();
+
+    const podeCriarEquipe = usarPermissaoAcesso('equipes:criar_equipe');
+    const podeEditarEquipe = usarPermissaoAcesso('equipes:editar_equipe');
 
     const [idEquipeAtiva, setIdEquipeAtiva] = useState<string | null>(null);
     const [buscaEquipe, setBuscaEquipe] = useState('');
@@ -998,13 +1019,15 @@ export function GerenciarEquipes() {
                 icone={LayoutGrid}
                 variante="destaque"
             >
-                <button
-                    onClick={() => setModalOrg({ aberto: true, tipo: 'equipe' })}
-                    className="h-11 px-5 rounded-2xl bg-blue-600 text-white font-bold text-xs shadow-md hover:bg-blue-700 transition-all flex items-center gap-2 active:scale-95 uppercase tracking-widest"
-                >
-                    <Plus size={18} />
-                    <span>Nova Equipe</span>
-                </button>
+                {podeCriarEquipe && (
+                    <button
+                        onClick={() => setModalOrg({ aberto: true, tipo: 'equipe' })}
+                        className="h-11 px-5 rounded-2xl bg-blue-600 text-white font-bold text-xs shadow-md hover:bg-blue-700 transition-all flex items-center gap-2 active:scale-95 uppercase tracking-widest"
+                    >
+                        <Plus size={18} />
+                        <span>Nova Equipe</span>
+                    </button>
+                )}
             </CabecalhoFuncionalidade>
 
             <div className="flex-1 flex overflow-hidden pt-6 gap-6 relative">
@@ -1110,18 +1133,20 @@ export function GerenciarEquipes() {
                                                     <>
                                                         <div className="flex items-center gap-2 group/title w-fit max-w-full">
                                                             <p className={`font-black text-sm tracking-tight transition-colors ${idEquipeAtiva === e.id ? 'text-slate-900' : 'text-slate-500 group-hover/btn:text-slate-900'}`}>{e.nome}</p>
-                                                            <Tooltip texto="Renomear equipe">
-                                                                <button
-                                                                    onClick={(ev) => {
-                                                                        ev.stopPropagation();
-                                                                        setEditandoSidebarId(e.id);
-                                                                        setNomeSidebarTemp(e.nome);
-                                                                    }}
-                                                                    className="opacity-0 group-hover/title:opacity-100 p-1 text-slate-300 hover:text-blue-500 transition-all"
-                                                                >
-                                                                    <Pencil size={11} />
-                                                                </button>
-                                                            </Tooltip>
+                                                            {podeEditarEquipe && (
+                                                                <Tooltip texto="Renomear equipe">
+                                                                    <button
+                                                                        onClick={(ev) => {
+                                                                            ev.stopPropagation();
+                                                                            setEditandoSidebarId(e.id);
+                                                                            setNomeSidebarTemp(e.nome);
+                                                                        }}
+                                                                        className="opacity-0 group-hover/title:opacity-100 p-1 text-slate-300 hover:text-blue-500 transition-all"
+                                                                    >
+                                                                        <Pencil size={11} />
+                                                                    </button>
+                                                                </Tooltip>
+                                                            )}
                                                         </div>
                                                         <div className="flex items-center gap-2 mt-0.5">
                                                             <p className="text-[9px] font-black text-slate-400/60 uppercase tracking-[0.15em] truncate">
@@ -1134,7 +1159,7 @@ export function GerenciarEquipes() {
                                         </div>
                                     </div>
                                     
-                                    {!editandoSidebarId && (
+                                    {!editandoSidebarId && podeEditarEquipe && (
                                         <Tooltip texto="Excluir equipe">
                                             <button
                                                 onClick={(ev) => {

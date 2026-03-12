@@ -5,6 +5,7 @@ import { api } from '@/compartilhado/servicos/api';
 import { usarAutenticacaoContexto } from '@/contexto/ContextoAutenticacao';
 import { useNavigate } from 'react-router';
 import { usarDispositivo } from '@/compartilhado/hooks/usarDispositivo';
+import { Avatar } from '@/compartilhado/componentes/Avatar';
 
 /**
  * Componente que gera e exibe o QR Code na tela de login desktop.
@@ -155,21 +156,15 @@ function EstadoAutorizado({ usuario, status }: { usuario: any, status: string })
     return (
         <div className="w-[240px] h-auto flex flex-col items-center justify-center animate-in zoom-in duration-500 py-4">
             <div className="relative mb-4">
-                <div className={`w-24 h-24 rounded-full border-4 ${isAutorizado ? 'border-green-500/20' : 'border-blue-500/20'} p-1 flex items-center justify-center bg-white shadow-xl transition-colors duration-500`}>
-                    {usuario?.foto_perfil ? (
-                        <img 
-                            src={usuario.foto_perfil} 
-                            alt={usuario.nome} 
-                            className="w-full h-full rounded-full object-cover"
-                        />
-                    ) : (
-                        <div className="w-full h-full rounded-full bg-slate-100 flex items-center justify-center text-slate-400 font-black text-2xl uppercase">
-                            {usuario?.nome?.[0]}
-                        </div>
-                    )}
-                </div>
-                <div className={`absolute -bottom-1 -right-1 w-8 h-8 rounded-full border-4 border-white flex items-center justify-center text-white shadow-lg transition-all duration-500 ${isAutorizado ? 'bg-green-500' : 'bg-blue-500'}`}>
-                    {isAutorizado ? <CheckCircle size={14} strokeWidth={3} /> : <div className="w-2 h-2 bg-white rounded-full animate-pulse" />}
+                <div className={`relative ${isAutorizado ? 'ring-4 ring-green-500/20' : 'ring-4 ring-blue-500/20'} rounded-2xl transition-all duration-500`}>
+                    <Avatar 
+                        nome={usuario?.nome || 'Usuário'} 
+                        fotoPerfil={usuario?.foto_perfil} 
+                        tamanho="2xl"
+                    />
+                    <div className={`absolute -bottom-2 -right-2 w-8 h-8 rounded-full border-4 border-white flex items-center justify-center text-white shadow-lg transition-all duration-500 ${isAutorizado ? 'bg-green-500' : 'bg-blue-500'}`}>
+                        {isAutorizado ? <CheckCircle size={14} strokeWidth={3} /> : <div className="w-2 h-2 bg-white rounded-full animate-pulse" />}
+                    </div>
                 </div>
             </div>
             <div className="flex flex-col items-center">
