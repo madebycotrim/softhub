@@ -96,22 +96,47 @@ export default function PainelQRCode() {
                     )}
 
                     {status === 'pendente' && sessao?.id && (
-                        <div className="relative animate-in zoom-in duration-700 flex items-center justify-center group/qr">
-                            <QRCodeSVG
-                                value={sessao.id}
-                                size={240}
-                                level="H"
-                                fgColor="#020617"
-                                marginSize={0}
-                                includeMargin={false}
-                            />
+                        <div className="relative animate-in zoom-in duration-1000 flex items-center justify-center group/qr p-6 bg-white rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100">
+                            <div className="relative overflow-hidden rounded-xl">
+                                <QRCodeSVG
+                                    value={sessao.id}
+                                    size={210}
+                                    level="H"
+                                    fgColor="#0f172a"
+                                    marginSize={0}
+                                    includeMargin={false}
+                                />
+                                
+                                {/* 🎇 Efeito High-Tech de Scanner */}
+                                <div className="absolute inset-x-0 h-[3px] bg-gradient-to-r from-transparent via-red-500 to-transparent shadow-[0_0_15px_rgba(239,68,68,0.8)] opacity-0 group-hover/qr:opacity-100 transition-opacity duration-500 animate-[scan_3s_linear_infinite]" 
+                                     style={{ 
+                                         animation: 'scan 2.5s ease-in-out infinite',
+                                         top: '0%' 
+                                     }} 
+                                />
+                                
+                                <style>{`
+                                    @keyframes scan {
+                                        0% { top: 0%; opacity: 0; }
+                                        20% { opacity: 1; }
+                                        80% { opacity: 1; }
+                                        100% { top: 100%; opacity: 0; }
+                                    }
+                                `}</style>
+                            </div>
+
+                            {/* Detalhes de canto decorativos */}
+                            <div className="absolute top-4 left-4 w-4 h-4 border-t-2 border-l-2 border-slate-200 rounded-tl-lg" />
+                            <div className="absolute top-4 right-4 w-4 h-4 border-t-2 border-r-2 border-slate-200 rounded-tr-lg" />
+                            <div className="absolute bottom-4 left-4 w-4 h-4 border-b-2 border-l-2 border-slate-200 rounded-bl-lg" />
+                            <div className="absolute bottom-4 right-4 w-4 h-4 border-b-2 border-r-2 border-slate-200 rounded-br-lg" />
                         </div>
                     )}
 
                     {(status === 'expirado' || status === 'erro') && sessao && (
-                        <div className="w-[240px] h-[240px] relative z-10 flex flex-col items-center justify-center animate-in fade-in duration-300">
-                            {/* Background Overlay */}
-                            <div className="absolute inset-0 bg-white/95 backdrop-blur-[2px]" />
+                        <div className="w-[280px] h-[280px] relative z-10 flex flex-col items-center justify-center animate-in fade-in zoom-in duration-500">
+                            {/* Background Overlay Premium */}
+                            <div className="absolute inset-0 bg-white/80 backdrop-blur-md rounded-[2.5rem] border border-slate-200 shadow-xl" />
 
                             {/* Blurred QR Background */}
                             <div className="absolute inset-0 flex items-center justify-center blur-[4px] grayscale opacity-5 pointer-events-none">

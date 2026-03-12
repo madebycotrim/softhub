@@ -68,20 +68,31 @@ rotasConfiguracoes.post('/', autenticacaoRequerida('ADMIN'), async (c) => {
     }
 
     const transacoes = Object.entries(body).map(([chave, valor]) => {
-        return DB.prepare('INSERT OR REPLACE INTO configuracoes_sistema (chave, valor) VALUES (?, ?)')
-            .bind(chave, JSON.stringify(valor));
+        const valorFinal = valor === undefined ? null : valor;
+        return DB.prepare(`
+            INSERT INTO configuracoes_sistema (id, chave, valor) 
+            VALUES (?, ?, ?) 
+            ON CONFLICT(chave) DO UPDATE SET valor = excluded.valor
+        `).bind(crypto.randomUUID(), chave, JSON.stringify(valorFinal));
     });
 
     try {
         await DB.batch(transacoes);
         
-        // Limpa cache KV para todas as chaves atualizadas
-        for (const chave of Object.keys(body)) {
-            await softhub_kv.delete(chave);
+        // Limpa cache KV de forma resiliente
+        if (softhub_kv) {
+            for (const chave of Object.keys(body)) {
+                try {
+                    await softhub_kv.delete(chave);
+                } catch (kvErro) {
+                    console.error(`[CONFIG] Falha ao limpar KV para ${chave}:`, kvErro);
+                }
+            }
         }
         
         return c.json({ sucesso: true, mensagem: 'Configurações salvas com sucesso.' });
     } catch (e: any) {
+        console.error('[CONFIG] Erro no batch POST /:', e);
         return c.json({ erro: 'Falha ao salvar configurações', detalhe: e.message }, 500);
     }
 });
@@ -95,15 +106,27 @@ rotasConfiguracoes.patch('/:chave', autenticacaoRequerida('ADMIN'), async (c) =>
     if (!chave) return c.json({ erro: 'Chave não especificada.' }, 400);
 
     try {
-        await DB.prepare('INSERT OR REPLACE INTO configuracoes_sistema (chave, valor) VALUES (?, ?)')
-            .bind(chave, JSON.stringify(valor))
+        const valorFinal = valor === undefined ? null : valor;
+        await DB.prepare(`
+            INSERT INTO configuracoes_sistema (id, chave, valor) 
+            VALUES (?, ?, ?) 
+            ON CONFLICT(chave) DO UPDATE SET valor = excluded.valor
+        `)
+            .bind(crypto.randomUUID(), chave, JSON.stringify(valorFinal))
             .run();
         
-        // Limpa cache no KV para forçar atualização no próximo acesso
-        await softhub_kv.delete(chave);
+        // Limpa cache no KV de forma resiliente
+        if (softhub_kv) {
+            try {
+                await softhub_kv.delete(chave);
+            } catch (kvErro) {
+                console.error(`[CONFIG] Falha ao limpar KV para ${chave}:`, kvErro);
+            }
+        }
         
         return c.json({ sucesso: true, mensagem: `Configuração ${chave} atualizada.` });
     } catch (e: any) {
+        console.error(`[CONFIG] Erro ao atualizar ${chave}:`, e);
         return c.json({ erro: 'Falha ao atualizar configuração', detalhe: e.message }, 500);
     }
 });

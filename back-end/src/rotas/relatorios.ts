@@ -93,10 +93,27 @@ rotasRelatorios.get('/frequencia/geral', autenticacaoRequerida(), verificarPermi
             GROUP BY tipo
         `).all();
 
+        // Lista detalhada de justificativas no período para auditoria
+        const justificativasLista = await DB.prepare(`
+            SELECT 
+                j.id,
+                u.nome as usuario_nome,
+                j.tipo,
+                j.status,
+                j.descricao,
+                j.criado_em
+            FROM justificativas_ponto j
+            JOIN usuarios u ON u.id = j.usuario_id
+            WHERE 1=1
+            ${filtroDataJustificativa}
+            ORDER BY j.criado_em DESC
+        `).all();
+
         return c.json({
             tendencia: presencasDiarias.results,
             statusJustificativas: justificativasStatus.results,
-            tiposJustificativas: justificativasTipos.results
+            tiposJustificativas: justificativasTipos.results,
+            justificativasLista: justificativasLista.results
         });
     } catch (erro) {
         console.error('[ERRO DB] GET /relatorios/frequencia/geral', erro);
@@ -129,6 +146,7 @@ rotasRelatorios.get('/frequencia/membros', autenticacaoRequerida(), verificarPer
                 (SELECT GROUP_CONCAT(e.nome) FROM usuarios_organizacao uo JOIN equipes e ON e.id = uo.equipe_id WHERE uo.usuario_id = u.id) as equipe_nome,
                 (SELECT GROUP_CONCAT(g.nome) FROM usuarios_organizacao uo JOIN grupos g ON g.id = uo.grupo_id WHERE uo.usuario_id = u.id) as grupo_nome,
                 (SELECT COUNT(DISTINCT date(registrado_em)) FROM ponto_registros WHERE usuario_id = u.id AND tipo = 'ENTRADA' ${subFiltroPonto}) as dias_presentes,
+                (SELECT GROUP_CONCAT(DISTINCT date(registrado_em)) FROM ponto_registros WHERE usuario_id = u.id AND tipo = 'ENTRADA' ${subFiltroPonto}) as datas_presenca,
                 (SELECT COUNT(*) FROM justificativas_ponto WHERE usuario_id = u.id AND status = 'aprovada' ${subFiltroJustificativa}) as justificativas_aprovadas,
                 (SELECT MAX(registrado_em) FROM ponto_registros WHERE usuario_id = u.id) as ultima_batida
             FROM usuarios u

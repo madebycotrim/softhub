@@ -29,6 +29,14 @@ export interface RelatorioFrequenciaGeral {
         tipo: string;
         total: number;
     }[];
+    justificativasLista: {
+        id: string;
+        usuario_nome: string;
+        tipo: string;
+        status: string;
+        descricao: string;
+        criado_em: string;
+    }[];
 }
 
 export interface RelatorioFrequenciaMembro {
@@ -38,6 +46,7 @@ export interface RelatorioFrequenciaMembro {
     equipe_nome: string | null;
     grupo_nome: string | null;
     dias_presentes: number;
+    datas_presenca: string | null;
     justificativas_aprovadas: number;
     ultima_batida: string | null;
 }

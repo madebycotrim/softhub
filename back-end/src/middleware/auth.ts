@@ -112,14 +112,13 @@ export function autenticacaoRequerida(roleMinimoRequerido?: string) {
 
 // ─── Middleware de Verificação de Permissão Específica ──────────────────────
 
-export function verificarPermissao(permissaoRequerida: string) {
+export function verificarPermissao(permissaoRequerida: string | string[]) {
     return async (c: Context<HonoEnv>, next: Next) => {
         const usuario = c.get('usuario');
         if (!usuario || !usuario.role) {
             return c.json({ erro: 'Usuário não autenticado.' }, 401);
         }
 
-        // ADMIN tem permissão total sempre, independente do banco
         if (usuario.role === 'ADMIN') return await next();
 
         const permissoes_roles = await getPermissoesRoles(c);
@@ -127,23 +126,29 @@ export function verificarPermissao(permissaoRequerida: string) {
             return c.json({ erro: 'Configurações de permissão não encontradas.' }, 500);
         }
 
-        const [modulo, acao] = permissaoRequerida.split(':');
-        const configRole = permissoes_roles[usuario.role];
+        const permissoes = Array.isArray(permissaoRequerida) ? permissaoRequerida : [permissaoRequerida];
+        const configRole = permissoes_roles[usuario.role] || {};
+        const configTodos = permissoes_roles['TODOS'] || {};
 
-        if (!configRole) {
-            return c.json({ erro: 'Seu cargo não possui permissões configuradas.' }, 403);
-        }
+        const temAcesso = permissoes.some(p => {
+            const [modulo, acao] = p.split(':');
+            
+            // 1. Curinga
+            if (configRole['*'] === true || configTodos['*'] === true) return true;
 
-        // Suporte a curinga (ADMIN: {"*": true})
-        if (configRole['*'] === true) return await next();
+            // 2. Plano
+            if (configRole[p] === true || configTodos[p] === true) return true;
 
-        // Verifica formato plano: {"modulo:acao": true}
-        if (configRole[permissaoRequerida] === true) return await next();
+            // 3. Aninhado
+            if ((configRole[modulo] && typeof configRole[modulo] === 'object' && configRole[modulo][acao] === true) ||
+                (configTodos[modulo] && typeof configTodos[modulo] === 'object' && configTodos[modulo][acao] === true)) {
+                return true;
+            }
 
-        // Verifica formato aninhado: {"modulo": {"acao": true}}
-        if (configRole[modulo] && typeof configRole[modulo] === 'object' && configRole[modulo][acao] === true) {
-            return await next();
-        }
+            return false;
+        });
+
+        if (temAcesso) return await next();
 
         console.warn(`[AUTH] Acesso negado: Usuário ${usuario.nome} (Role: ${usuario.role}) tentou '${permissaoRequerida}'`);
         return c.json({ erro: 'Você não tem permissão para esta tela.' }, 403);

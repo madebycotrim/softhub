@@ -10,7 +10,7 @@ const rotasTarefasDetalhes = new Hono<{ Bindings: Env, Variables: { usuario: any
 
 // === COMENTÁRIOS DA TAREFA ===
 
-rotasTarefasDetalhes.get('/:id/comentarios', autenticacaoRequerida(), verificarPermissao('tarefas:visualizar'), async (c: Context) => {
+rotasTarefasDetalhes.get('/:id/comentarios', autenticacaoRequerida(), verificarPermissao('tarefas:visualizar_detalhes'), async (c: Context) => {
     const { DB } = c.env;
     const tarefaId = c.req.param('id');
     try {
@@ -157,7 +157,7 @@ rotasTarefasDetalhes.delete('/comentarios/:id', autenticacaoRequerida(), verific
 
 // === Workflow 29: Histórico da Tarefa ===
 
-rotasTarefasDetalhes.get('/:id/historico', autenticacaoRequerida(), verificarPermissao('tarefas:visualizar'), async (c: Context) => {
+rotasTarefasDetalhes.get('/:id/historico', autenticacaoRequerida(), verificarPermissao('tarefas:visualizar_detalhes'), async (c: Context) => {
     const { DB } = c.env;
     const tarefaId = c.req.param('id');
 
@@ -179,7 +179,7 @@ rotasTarefasDetalhes.get('/:id/historico', autenticacaoRequerida(), verificarPer
 // === Workflow 31: Checklist de Tarefas ===
 
 // Listar itens do checklist
-rotasTarefasDetalhes.get('/:id/checklist', autenticacaoRequerida(), verificarPermissao('tarefas:visualizar'), async (c: Context) => {
+rotasTarefasDetalhes.get('/:id/checklist', autenticacaoRequerida(), verificarPermissao('tarefas:visualizar_detalhes'), async (c: Context) => {
     const { DB } = c.env;
     const tarefaId = c.req.param('id');
     try {
@@ -220,7 +220,7 @@ const AtualizarItemChecklistSchema = z.object({
     texto: z.string().min(1).max(255).optional()
 });
 
-rotasTarefasDetalhes.patch('/:tarefaId/checklist/:itemId', autenticacaoRequerida(), verificarPermissao('tarefas:visualizar'), zValidator('json', AtualizarItemChecklistSchema), async (c: Context) => {
+rotasTarefasDetalhes.patch('/:tarefaId/checklist/:itemId', autenticacaoRequerida(), verificarPermissao('tarefas:visualizar_detalhes'), zValidator('json', AtualizarItemChecklistSchema), async (c: Context) => {
     const { DB } = c.env;
     const { concluido, texto } = (c.req as any).valid('json');
     const itemId = c.req.param('itemId');

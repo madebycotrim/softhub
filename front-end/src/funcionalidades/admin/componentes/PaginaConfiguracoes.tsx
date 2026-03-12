@@ -20,16 +20,19 @@ import { Alerta } from '@/compartilhado/componentes/Alerta';
 const PERMISSOES_SISTEMA = [
     {
         modulo: 'tarefas',
-        label: 'Kanban / Tarefas',
+        label: 'Kanban & Backlog',
         icone: FolderKanban,
         permissoes: [
-            { chave: 'tarefas:visualizar', label: 'Visualizar' },
+            { chave: 'tarefas:visualizar_kanban', label: 'Visualizar Quadro Kanban' },
+            { chave: 'tarefas:visualizar_backlog', label: 'Visualizar Backlog' },
+            { chave: 'tarefas:visualizar_detalhes', label: 'Ver Detalhes da Tarefa' },
             { chave: 'tarefas:criar', label: 'Criar' },
             { chave: 'tarefas:editar', label: 'Editar' },
             { chave: 'tarefas:mover', label: 'Mover' },
             { chave: 'tarefas:arquivar', label: 'Arquivar' },
             { chave: 'tarefas:comentar', label: 'Comentar' },
             { chave: 'tarefas:checklist', label: 'Checklist' },
+            { chave: 'tarefas:visualizar_historico', label: 'Ver Histórico da Tarefa' },
         ],
     },
     {
@@ -41,6 +44,7 @@ const PERMISSOES_SISTEMA = [
             { chave: 'ponto:visualizar', label: 'Visualizar Histórico' },
             { chave: 'ponto:justificar', label: 'Enviar Justificativa' },
             { chave: 'ponto:aprovar_justificativa', label: 'Aprovar Justificativa' },
+            { chave: 'ponto:exportar', label: 'Exportar Relatório (CSV)' },
         ],
     },
     {
@@ -48,21 +52,20 @@ const PERMISSOES_SISTEMA = [
         label: 'Membros',
         icone: UserCircle,
         permissoes: [
-
-
-            { chave: 'membros:gerenciar', label: 'Gerenciar Membros' },
+            { chave: 'membros:gerenciar', label: 'Gerenciar Membros (Lista)' },
             { chave: 'membros:alterar_role', label: 'Alterar Cargo' },
             { chave: 'membros:desativar', label: 'Desativar Membro' },
         ],
     },
     {
         modulo: 'avisos',
-        label: 'Avisos',
+        label: 'Avisos & Notificações',
         icone: MessageSquare,
         permissoes: [
-            { chave: 'avisos:visualizar', label: 'Visualizar' },
-            { chave: 'avisos:criar', label: 'Criar' },
-            { chave: 'avisos:remover', label: 'Remover' },
+            { chave: 'avisos:visualizar', label: 'Visualizar Mural' },
+            { chave: 'avisos:criar', label: 'Criar Aviso' },
+            { chave: 'avisos:remover', label: 'Remover Aviso' },
+            { chave: 'sistema:notificacoes', label: 'Receber Notificações Críticas' },
         ],
     },
     {
@@ -70,11 +73,12 @@ const PERMISSOES_SISTEMA = [
         label: 'Estrutura de Equipes',
         icone: LayoutGrid,
         permissoes: [
-            { chave: 'equipes:visualizar', label: 'Visualizar' },
+            { chave: 'equipes:visualizar', label: 'Visualizar Organograma' },
             { chave: 'equipes:criar_grupo', label: 'Criar Grupo' },
             { chave: 'equipes:editar_grupo', label: 'Editar Grupo' },
             { chave: 'equipes:criar_equipe', label: 'Criar Equipe' },
             { chave: 'equipes:editar_equipe', label: 'Editar Equipe' },
+            { chave: 'equipes:alocar_membro', label: 'Alocar/Mover Membros' },
         ],
     },
     {
@@ -82,7 +86,7 @@ const PERMISSOES_SISTEMA = [
         label: 'Dashboard',
         icone: LayoutDashboard,
         permissoes: [
-            { chave: 'dashboard:visualizar', label: 'Visualizar' },
+            { chave: 'dashboard:visualizar', label: 'Visualizar Métricas Gerais' },
         ],
     },
     {
@@ -90,7 +94,8 @@ const PERMISSOES_SISTEMA = [
         label: 'Relatórios',
         icone: FileText,
         permissoes: [
-            { chave: 'relatorios:visualizar', label: 'Visualizar' },
+            { chave: 'relatorios:visualizar', label: 'Visualizar Relatórios' },
+            { chave: 'relatorios:imprimir', label: 'Exportar/Imprimir Dados' },
         ],
     },
     {
@@ -98,8 +103,7 @@ const PERMISSOES_SISTEMA = [
         label: 'Painel de Logs',
         icone: Database,
         permissoes: [
-            { chave: 'logs:visualizar', label: 'Ver histórico global (Todos os usuários)' },
-            { chave: 'logs:visualizar_proprios', label: 'Ver histórico próprio (Apenas seu)' },
+            { chave: 'logs:visualizar', label: 'Ver histórico global (Auditoria completa)' },
         ],
     },
     {
@@ -107,8 +111,8 @@ const PERMISSOES_SISTEMA = [
         label: 'Configurações',
         icone: Settings2,
         permissoes: [
-            { chave: 'configuracoes:visualizar', label: 'Visualizar' },
-            { chave: 'configuracoes:editar', label: 'Editar' },
+            { chave: 'configuracoes:visualizar', label: 'Visualizar Painel' },
+            { chave: 'configuracoes:editar', label: 'Editar Governança' },
         ],
     },
 ] as const;

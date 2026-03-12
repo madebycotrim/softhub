@@ -10,7 +10,7 @@ import { criarNotificacoes } from '../servicos/servico-notificacoes';
 const rotasTarefas = new Hono<{ Bindings: Env, Variables: { usuario: any } }>();
 
 // Listar Tarefas do Projeto
-rotasTarefas.get('/', autenticacaoRequerida(), verificarPermissao('tarefas:visualizar'), async (c: Context) => {
+rotasTarefas.get('/', autenticacaoRequerida(), verificarPermissao(['tarefas:visualizar_kanban', 'tarefas:visualizar_backlog', 'tarefas:visualizar_detalhes']), async (c: Context) => {
     const { DB } = c.env;
     const projetoId = c.req.query('projetoId');
 

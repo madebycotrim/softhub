@@ -29,16 +29,16 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
 
     // Permissões de Visualização
     const podeVerDashboard = usarPermissaoAcesso('dashboard:visualizar');
-    const podeVerKanban = usarPermissaoAcesso('tarefas:visualizar');
+    const podeVerKanban = usarPermissaoAcesso('tarefas:visualizar_kanban');
+    const podeVerBacklog = usarPermissaoAcesso('tarefas:visualizar_backlog');
     const podeVerPonto = usarPermissaoAcesso('ponto:visualizar');
 
     const podeVerAvisos = usarPermissaoAcesso('avisos:visualizar');
     const podeVerJustificativas = usarPermissaoAcesso('ponto:aprovar_justificativa');
-    const podeVerMembrosAdmin = usarPermissaoAcesso('membros:gerenciar'); // Geralmente quem gerencia pode ver a lista admin
+    const podeVerMembrosAdmin = usarPermissaoAcesso('membros:gerenciar'); 
 
     const podeVerRelatorios = usarPermissaoAcesso('relatorios:visualizar');
     const podeVerLogs = usarPermissaoAcesso('logs:visualizar');
-    const podeVerMeusLogs = usarPermissaoAcesso('logs:visualizar_proprios');
     const podeVerEquipes = usarPermissaoAcesso('equipes:visualizar');
     const podeVerConfiguracoes = usarPermissaoAcesso('configuracoes:visualizar');
 
@@ -47,7 +47,7 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
             label: 'Visão Geral',
             links: [
                 { label: 'Dashboard', path: '/app/dashboard', icon: LayoutDashboard, visivel: podeVerDashboard },
-                { label: 'Backlog', path: '/app/backlog', icon: ListTodo, visivel: podeVerKanban },
+                { label: 'Backlog', path: '/app/backlog', icon: ListTodo, visivel: podeVerBacklog },
                 { label: 'Avisos', path: '/app/avisos', icon: Megaphone, visivel: podeVerAvisos },
             ],
         },
@@ -65,7 +65,7 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
                 { label: 'Membros', path: '/app/admin/membros', icon: Users, visivel: podeVerMembrosAdmin },
                 { label: 'Equipes', path: '/app/admin/equipes', icon: LayoutGrid, visivel: podeVerEquipes },
                 { label: 'Relatórios', path: '/app/admin/relatorios', icon: FileText, visivel: podeVerRelatorios },
-                { label: 'Logs', path: '/app/admin/logs', icon: Database, visivel: podeVerLogs || podeVerMeusLogs },
+                { label: 'Logs', path: '/app/admin/logs', icon: Database, visivel: podeVerLogs },
                 { label: 'Configurações', path: '/app/admin/configuracoes', icon: Settings, visivel: podeVerConfiguracoes },
             ],
         },
