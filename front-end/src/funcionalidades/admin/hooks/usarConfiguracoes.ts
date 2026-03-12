@@ -5,6 +5,8 @@ export interface ConfiguracoesSistema {
     funcoes_tecnicas: string[];
     nome_sistema: string;
     permissoes_roles: Record<string, Record<string, boolean>>;
+    dominios_autorizados: string[];
+    auto_cadastro: boolean;
 }
 
 export function usarConfiguracoes() {
@@ -24,6 +26,14 @@ export function usarConfiguracoes() {
 
             if (!dados.permissoes_roles || typeof dados.permissoes_roles !== 'object') {
                 dados.permissoes_roles = {};
+            }
+
+            if (!Array.isArray(dados.dominios_autorizados)) {
+                dados.dominios_autorizados = ['unieuro.com.br', 'unieuro.edu.br'];
+            }
+
+            if (typeof dados.auto_cadastro !== 'boolean') {
+                dados.auto_cadastro = false;
             }
 
             setConfiguracoes(dados);

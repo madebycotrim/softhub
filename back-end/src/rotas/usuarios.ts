@@ -161,17 +161,30 @@ rotasUsuarios.post('/', autenticacaoRequerida(), verificarPermissao('membros:ger
 
     const emailLimpo = email.toLowerCase().trim();
 
-    // Verificação de Bootstrap (Regra 13 - Admin via env)
+    // ── Governança de Domínios (D1/KV) ────────────────────────
+    const { softhub_kv } = c.env;
+    let dominiosAutorizados = ['unieuro.com.br', 'unieuro.edu.br'];
+    try {
+        let v = await softhub_kv?.get('dominios_autorizados');
+        if (!v) {
+            const row = await DB.prepare('SELECT valor FROM configuracoes_sistema WHERE chave = ?').bind('dominios_autorizados').first() as any;
+            if (row) v = row.valor;
+        }
+        if (v) dominiosAutorizados = JSON.parse(v);
+    } catch (e) {
+        console.warn('[Membros] Falha ao carregar domínios autorizados, usando fallback.');
+    }
+
     const { BOOTSTRAP_ADMIN_EMAIL } = c.env;
     const listaBootstrap = (BOOTSTRAP_ADMIN_EMAIL || '').toLowerCase().split(',').map((e: any) => e.trim());
     const isBootstrapAdmin = listaBootstrap.includes(emailLimpo);
 
-    // Força ADMIN se estiver na lista de bootstrap
     const roleFinal = isBootstrapAdmin ? 'ADMIN' : role;
 
-    // Validação de domínio obrigatória (Regra de Negócio)
-    if (!emailLimpo.endsWith('@unieuro.com.br') && !emailLimpo.endsWith('@unieuro.edu.br')) {
-        return c.json({ erro: 'Apenas e-mails institucionais da UNIEURO são permitidos.' }, 400);
+    const possuiDominioValido = dominiosAutorizados.some(d => emailLimpo.endsWith(`@${d.toLowerCase()}`));
+
+    if (!possuiDominioValido) {
+        return c.json({ erro: `O domínio do e-mail ${emailLimpo} não é autorizado. Domínios permitidos: ${dominiosAutorizados.join(', ')}` }, 400);
     }
 
     try {

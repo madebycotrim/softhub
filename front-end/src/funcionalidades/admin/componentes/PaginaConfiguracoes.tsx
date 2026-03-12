@@ -8,7 +8,7 @@ import {
     Settings2, Info, Trash2,
     FolderKanban, Clock, LayoutDashboard,
     LayoutGrid, FileText, Database, Globe,
-    Pencil, Check, X
+    Pencil, Check, X, UserPlus, Shield
 } from 'lucide-react';
 import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
 import { Alerta } from '@/compartilhado/componentes/Alerta';
@@ -125,7 +125,7 @@ const CARGOS_FIXOS = ['ADMIN', 'TODOS'];
  * Gestão de cargos e matriz de permissões completa com todas as funções reais do sistema.
  */
 export function PaginaConfiguracoes() {
-    const { configuracoes, erro, atualizarConfiguracao, renomearCargo } = usarConfiguracoes();
+    const { configuracoes, erro, atualizarConfiguracao, renomearCargo, recarregar } = usarConfiguracoes();
 
     const podeEditar = usarPermissaoAcesso('configuracoes:editar');
 
@@ -134,6 +134,8 @@ export function PaginaConfiguracoes() {
     const [salvando, setSalvando] = useState<string | null>(null);
 
     // Estados para edição inline de cargo
+    const [novoDominio, setNovoDominio] = useState('');
+    const [salvandoGov, setSalvandoGov] = useState<string | null>(null);
     const [editandoRole, setEditandoRole] = useState<string | null>(null);
     const [nomeRoleTemp, setNomeRoleTemp] = useState('');
     const [salvandoRole, setSalvandoRole] = useState(false);
@@ -235,9 +237,113 @@ export function PaginaConfiguracoes() {
                 icone={Settings2}
             />
 
+            {/* Banner de Erro Local */}
+            {erroLocal && (
+                <div className="mt-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <Alerta tipo="erro" mensagem={erroLocal} />
+                </div>
+            )}
+
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-6  items-start">
                 {/* Coluna Lateral: Gestão de Cargos */}
                 <div className="lg:col-span-3 space-y-6">
+                    {/* Seção 1: Governança & Segurança */}
+                    <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-6 overflow-hidden relative">
+                        <div className="flex items-center gap-3 px-1">
+                            <div className="p-2.5 bg-indigo-500/5 rounded-2xl text-indigo-500">
+                                <Shield size={18} />
+                            </div>
+                            <div className="flex flex-col">
+                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-foreground">Governança</h3>
+                                <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.05em] leading-tight">Segurança e Acesso</span>
+                            </div>
+                        </div>
+
+                        {/* Switch de Auto-cadastro */}
+                        <div className="space-y-3 px-1">
+                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400/60 block">Auto-cadastro</label>
+                            <button 
+                                disabled={!podeEditar || salvandoGov === 'auto_cadastro'}
+                                onClick={async () => {
+                                    if (!configuracoes) return;
+                                    setSalvandoGov('auto_cadastro');
+                                    await atualizarConfiguracao('auto_cadastro', !configuracoes.auto_cadastro);
+                                    setSalvandoGov(null);
+                                }}
+                                className={`w-full group relative flex items-center justify-between p-4 rounded-2xl border transition-all duration-500 ${
+                                    configuracoes?.auto_cadastro 
+                                    ? 'bg-emerald-500 border-emerald-400 shadow-lg shadow-emerald-500/20 text-white' 
+                                    : 'bg-white/40 border-slate-100/60 text-slate-600 hover:bg-white hover:border-slate-200'
+                                }`}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className={`p-2 rounded-xl transition-colors ${configuracoes?.auto_cadastro ? 'bg-white/20' : 'bg-slate-100'}`}>
+                                        <UserPlus size={16} />
+                                    </div>
+                                    <div className="flex flex-col items-start">
+                                        <span className="text-[11px] font-black uppercase tracking-wider">{configuracoes?.auto_cadastro ? 'Ativado' : 'Desativado'}</span>
+                                        <span className={`text-[9px] font-bold ${configuracoes?.auto_cadastro ? 'text-white/70' : 'text-slate-400'}`}>
+                                            {configuracoes?.auto_cadastro ? 'Livre Registro' : 'Apenas Convidados'}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className={`w-10 h-5 rounded-full relative transition-colors ${configuracoes?.auto_cadastro ? 'bg-white/30' : 'bg-slate-200'}`}>
+                                    <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all shadow-sm ${configuracoes?.auto_cadastro ? 'left-6' : 'left-1'}`} />
+                                </div>
+                            </button>
+                        </div>
+
+                        {/* Domínios Autorizados */}
+                        <div className="space-y-3 px-1">
+                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400/60 block">Domínios Autorizados</label>
+                            <div className="space-y-2">
+                                {(configuracoes?.dominios_autorizados || ['unieuro.edu.br']).map(dominio => (
+                                    <div key={dominio} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100/50 group/dom">
+                                        <span className="text-[11px] font-bold text-slate-600">@{dominio}</span>
+                                        {podeEditar && (configuracoes?.dominios_autorizados || []).length > 1 && (
+                                            <button 
+                                                onClick={async () => {
+                                                    if (!configuracoes) return;
+                                                    const novos = configuracoes.dominios_autorizados.filter(d => d !== dominio);
+                                                    await atualizarConfiguracao('dominios_autorizados', novos);
+                                                }}
+                                                className="opacity-0 group-hover/dom:opacity-100 p-1.5 hover:bg-red-50 hover:text-red-500 rounded-lg transition-all"
+                                            >
+                                                <Trash2 size={12} />
+                                            </button>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                            
+                            {podeEditar && (
+                                <form 
+                                    onSubmit={async (e) => {
+                                        e.preventDefault();
+                                        if (!novoDominio || !configuracoes) return;
+                                        const limpo = novoDominio.replace('@', '').toLowerCase();
+                                        if (configuracoes.dominios_autorizados?.includes(limpo)) return;
+                                        const novos = [...(configuracoes.dominios_autorizados || []), limpo];
+                                        await atualizarConfiguracao('dominios_autorizados', novos);
+                                        setNovoDominio('');
+                                    }}
+                                    className="flex gap-2"
+                                >
+                                    <input 
+                                        placeholder="EX: unieuro.com.br"
+                                        value={novoDominio}
+                                        onChange={e => setNovoDominio(e.target.value)}
+                                        className="flex-1 bg-muted/40 border border-border/50 rounded-xl px-3 py-2 text-[10px] font-bold outline-none focus:bg-background transition-all"
+                                    />
+                                    <button className="p-2 bg-indigo-500 text-white rounded-xl shadow-lg shadow-indigo-500/20 active:scale-95">
+                                        <Plus size={16} strokeWidth={3} />
+                                    </button>
+                                </form>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Seção 2: Gestão de Cargos */}
                     <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-6">
                         <div className="flex items-center gap-3 px-1">
                             <div className="p-2.5 bg-primary/5 rounded-2xl text-primary">

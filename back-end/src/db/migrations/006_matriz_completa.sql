@@ -92,3 +92,8 @@ SET valor = '{
     }
 }'
 WHERE chave = 'permissoes_roles';
+
+-- Configurações iniciais de Governança
+INSERT OR IGNORE INTO configuracoes_sistema (id, chave, valor) VALUES
+('b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e', 'dominios_autorizados', '["unieuro.com.br", "unieuro.edu.br"]'),
+('c3d4e5f6-a7b8-4c9d-d0e1-2f3a4b5c6d7e', 'auto_cadastro', 'false');

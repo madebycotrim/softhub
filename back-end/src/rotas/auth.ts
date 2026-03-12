@@ -11,7 +11,7 @@ import { AzureAdClaims, getJwksUri, validarClaims } from '../servicos/servico-ms
 const rotasAuth = new Hono<{ Bindings: Env }>();
 
 rotasAuth.post('/msal', async (c) => {
-    const { DB, JWT_SECRET, MSAL_TENANT_ID, MSAL_CLIENT_ID, BOOTSTRAP_ADMIN_EMAIL } = c.env;
+    const { DB, JWT_SECRET, MSAL_TENANT_ID, MSAL_CLIENT_ID, BOOTSTRAP_ADMIN_EMAIL, softhub_kv } = c.env;
     const ip = c.req.header('CF-Connecting-IP') ?? 'desconhecido';
 
     try {
@@ -22,12 +22,43 @@ rotasAuth.post('/msal', async (c) => {
             return c.json({ erro: 'idToken ausente.' }, 400);
         }
 
+        // 0. Buscar Governança (Domínios e Auto-cadastro)
+        let dominiosAutorizados = ['unieuro.com.br', 'unieuro.edu.br'];
+        let autoCadastroPermitido = false;
+
+        try {
+            const keys = ['dominios_autorizados', 'auto_cadastro'];
+            const configs: Record<string, any> = {};
+
+            for (const k of keys) {
+                const cached = await softhub_kv?.get(k);
+                let v: string | null = cached || null;
+
+                if (!v) {
+                    const row = await DB.prepare('SELECT valor FROM configuracoes_sistema WHERE chave = ?').bind(k).first() as any;
+                    if (row && typeof row.valor === 'string') {
+                        const valorBD = row.valor;
+                        if (softhub_kv) await softhub_kv.put(k, valorBD);
+                        v = valorBD;
+                    }
+                }
+                
+                if (v && typeof v === 'string') {
+                    configs[k] = JSON.parse(v);
+                }
+            }
+
+            if (Array.isArray(configs.dominios_autorizados)) dominiosAutorizados = configs.dominios_autorizados;
+            if (typeof configs.auto_cadastro === 'boolean') autoCadastroPermitido = configs.auto_cadastro;
+        } catch (e) {
+            console.warn('[Auth] Falha ao carregar configurações de governança, usando padrões.', e);
+        }
+
         // 1. Validar assinatura RS256 com JWKS da Microsoft
         let payload: AzureAdClaims;
         try {
             if (!MSAL_TENANT_ID) throw new Error('MSAL_TENANT_ID não configurado no ambiente.');
 
-            // Tenta primeiro com o Tenant específico (Geralmente falha em cross-domain)
             try {
                 const rawPayload = await verifyWithJwks(idToken, {
                     jwks_uri: getJwksUri(MSAL_TENANT_ID),
@@ -35,8 +66,6 @@ rotasAuth.post('/msal', async (c) => {
                 });
                 payload = rawPayload as unknown as AzureAdClaims;
             } catch (e: any) {
-                // Se falhou, tenta com o endpoint GLOBAL (Resolve o Token Inválido)
-                console.warn('[Auth] Tentando validação via Common JWKS...');
                 const rawPayload = await verifyWithJwks(idToken, {
                     jwks_uri: getJwksUri('common'),
                     allowedAlgorithms: ['RS256']
@@ -44,21 +73,13 @@ rotasAuth.post('/msal', async (c) => {
                 payload = rawPayload as unknown as AzureAdClaims;
             }
         } catch (e: any) {
-            console.error('[Auth] ❌ FALHA DE ASSINATURA FINAL:', e.message);
-            return c.json({
-                erro: 'Assinatura do Token não pôde ser validada pela Microsoft.',
-                detalhe: e.message
-            }, 401);
+            return c.json({ erro: 'Assinatura do Token inválida.', detalhe: e.message }, 401);
         }
 
         // 2. Validar claims de negócio
-        const erroValidacao = validarClaims(payload, MSAL_TENANT_ID, MSAL_CLIENT_ID);
+        const erroValidacao = validarClaims(payload, MSAL_TENANT_ID, MSAL_CLIENT_ID, dominiosAutorizados);
         if (erroValidacao) {
-            console.warn('[Auth] Claims inválidas:', erroValidacao);
-            return c.json({
-                erro: 'Rejeitado por validação de domínio/segurança.',
-                detalhe: erroValidacao
-            }, 403);
+            return c.json({ erro: 'Rejeitado por segurança.', detalhe: erroValidacao }, 403);
         }
 
         // 3. Extrair dados
@@ -66,26 +87,11 @@ rotasAuth.post('/msal', async (c) => {
         const nome = payload.name || email;
 
         // 4. Verificação de DB
-        if (!DB) {
-            console.error('[Auth] Erro: Binding "DB" não encontrado.');
-            return c.json({ erro: 'Erro interno: Banco de dados não configurado.' }, 500);
-        }
-
-        // 5. Upsert do usuário (Whitelist - Regra 13)
-        let usuario;
-        try {
-            const resUsuario = await DB
-                .prepare('SELECT id, nome, email, role, versao_token FROM usuarios WHERE email = ?')
-                .bind(email)
-                .first();
-            usuario = resUsuario as any;
-        } catch (e: any) {
-            console.error('[Auth] Erro ao consultar banco:', e.message);
-            return c.json({
-                erro: 'Erro ao consultar banco de dados. Verifique se o SCHEMA.sql foi executado.',
-                detalhe: e.message
-            }, 500);
-        }
+        const resUsuario = await DB
+            .prepare('SELECT id, nome, email, role, versao_token FROM usuarios WHERE email = ?')
+            .bind(email)
+            .first();
+        let usuario = resUsuario as any;
 
         // 5. Verificação de Bootstrap (Regra 13 - Admin via env)
         const listaBootstrap = (BOOTSTRAP_ADMIN_EMAIL || '').toLowerCase().split(',').map(e => e.trim());
@@ -94,46 +100,34 @@ rotasAuth.post('/msal', async (c) => {
         let isNew = false;
 
         if (!usuario) {
-            if (isBootstrapAdmin) {
-                // Novo usuário via bootstrap é ADMIN
+            if (isBootstrapAdmin || autoCadastroPermitido) {
+                // Novo usuário via bootstrap é ADMIN, via auto-cadastro é MEMBRO
+                const roleFinal = isBootstrapAdmin ? 'ADMIN' : 'MEMBRO';
                 const novoId = crypto.randomUUID();
-                try {
-                    await DB.prepare('INSERT INTO usuarios (id, nome, email, role, versao_token) VALUES (?, ?, ?, "ADMIN", 1)')
-                        .bind(novoId, nome, email)
-                        .run();
-                } catch (e: any) {
-                    return c.json({ erro: 'Falha ao criar usuário de bootstrap.', detalhe: e.message }, 500);
-                }
+                
+                await DB.prepare('INSERT INTO usuarios (id, nome, email, role, versao_token) VALUES (?, ?, ?, ?, 1)')
+                    .bind(novoId, nome, email, roleFinal)
+                    .run();
 
-                usuario = { id: novoId, nome, email, role: 'ADMIN', versao_token: 1 };
+                usuario = { id: novoId, nome, email, role: roleFinal, versao_token: 1 };
                 isNew = true;
             } else {
-                // Acesso negado se não estiver pré-cadastrado
                 return c.json({
-                    erro: 'Acesso negado: email não autorizado.',
-                    detalhe: `O email ${email} não está na lista de membros e não consta na lista de bootstrap.`
+                    erro: 'Acesso negado: cadastro não autorizado.',
+                    detalhe: `O auto-cadastro está desativado e o e-mail ${email} não está pré-autorizado.`
                 }, 403);
             }
         } else {
             // Se já existe mas está na lista de bootstrap, garante que seja ADMIN
             if (isBootstrapAdmin && usuario.role !== 'ADMIN') {
-                try {
-                    await DB.prepare('UPDATE usuarios SET role = "ADMIN", nome = ? WHERE id = ?')
-                        .bind(nome, usuario.id)
-                        .run();
-                    usuario.role = 'ADMIN';
-                    usuario.nome = nome;
-                } catch (e: any) {
-                    console.warn('[Auth] Falha ao elevar cargo para ADMIN via bootstrap:', e.message);
-                }
+                await DB.prepare('UPDATE usuarios SET role = "ADMIN", nome = ? WHERE id = ?')
+                    .bind(nome, usuario.id)
+                    .run();
+                usuario.role = 'ADMIN';
+                usuario.nome = nome;
             } else {
-                // Atualiza nome se mudou no Azure
-                try {
-                    await DB.prepare('UPDATE usuarios SET nome = ? WHERE id = ?').bind(nome, usuario.id).run();
-                    usuario.nome = nome;
-                } catch (e: any) {
-                    console.warn('[Auth] Falha ao atualizar nome do usuário:', e.message);
-                }
+                await DB.prepare('UPDATE usuarios SET nome = ? WHERE id = ?').bind(nome, usuario.id).run();
+                usuario.nome = nome;
             }
         }
 

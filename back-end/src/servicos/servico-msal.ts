@@ -20,11 +20,11 @@ export function validarClaims(
     payload: AzureAdClaims,
     tenantId: string,
     clientId: string,
+    dominiosAutorizados: string[] = ['unieuro.com.br', 'unieuro.edu.br']
 ): string | null {
     // 1. Domínio (Critério Principal)
     const email = (payload.upn || payload.preferred_username || '').toLowerCase();
-    const dominiosValidos = ['unieuro.com.br', 'unieuro.edu.br'];
-    const possuiDominioValido = dominiosValidos.some(d => email.endsWith(`@${d}`));
+    const possuiDominioValido = dominiosAutorizados.some(d => email.endsWith(`@${d.toLowerCase()}`));
 
     if (!possuiDominioValido) {
         return `Domínio não autorizado: ${email}. Use seu e-mail institucional Unieuro.`;
