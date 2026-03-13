@@ -5,7 +5,7 @@ import { Env } from '../index';
 import { autenticacaoRequerida, verificarPermissao } from '../middleware/auth';
 import { registrarLog } from '../servicos/servico-logs';
 import { D1Database } from '@cloudflare/workers-types';
-import { criarNotificacoes } from '../servicos/servico-notificacoes';
+import { criarNotificacoes, removerNotificacoesPorEntidade } from '../servicos/servico-notificacoes';
 
 const rotasTarefas = new Hono<{ Bindings: Env, Variables: { usuario: any } }>({ strict: false });
 
@@ -206,7 +206,8 @@ rotasTarefas.patch('/:id/mover',
                         tipo: 'tarefa',
                         titulo: 'Tarefa precisa de revisão',
                         mensagem: `A tarefa "${tarefa.titulo}" foi movida para Em Revisão por ${usuario.nome}.`,
-                        link: `/app/kanban?tarefa=${id}`
+                        link: `/app/kanban?tarefa=${id}`,
+                        entidadeId: id
                     });
                 }
             }
@@ -219,7 +220,8 @@ rotasTarefas.patch('/:id/mover',
                         tipo: 'tarefa',
                         titulo: 'Tarefa Concluída',
                         mensagem: `A tarefa "${tarefa.titulo}" foi finalizada por ${usuario.nome}.`,
-                        link: `/app/kanban?tarefa=${id}`
+                        link: `/app/kanban?tarefa=${id}`,
+                        entidadeId: id
                     });
                 }
             }
@@ -268,7 +270,8 @@ rotasTarefas.post('/:id/responsaveis', autenticacaoRequerida(), verificarPermiss
             tipo: 'tarefa',
             titulo: 'Você foi atribuído a uma tarefa',
             mensagem: `A tarefa "${tarefa.titulo}" foi atribuída a você.`,
-            link: `/app/kanban?tarefa=${id}`
+            link: `/app/kanban?tarefa=${id}`,
+            entidadeId: id
         });
 
         await registrarLog(DB, {
@@ -300,6 +303,9 @@ rotasTarefas.delete('/:id', autenticacaoRequerida(), verificarPermissao('tarefas
         if (!tarefa) return c.json({ erro: 'Tarefa não encontrada' }, 404);
 
         await DB.prepare('DELETE FROM tarefas WHERE id = ?').bind(id).run();
+        
+        // Remove notificações vinculadas
+        if (id) await removerNotificacoesPorEntidade(DB, id);
 
         await registrarLog(DB, {
             usuarioId: usuario.id,

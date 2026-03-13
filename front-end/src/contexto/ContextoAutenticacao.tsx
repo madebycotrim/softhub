@@ -53,9 +53,7 @@ const CHAVE_PROJETO = 'softhub_projeto_ativo';
 export function ProvedorAutenticacao({ children }: { children: ReactNode }) {
     // Restaura sessão do localStorage de forma SÍNCRONA no estado inicial
     const [token, setToken] = useState<string | null>(() => {
-        const salvo = localStorage.getItem(CHAVE_TOKEN);
-        if (salvo) logger.info('Auth', 'Token pesquisado no cache local');
-        return salvo;
+        return localStorage.getItem(CHAVE_TOKEN);
     });
 
     const [usuario, setUsuario] = useState<Usuario | null>(() => {

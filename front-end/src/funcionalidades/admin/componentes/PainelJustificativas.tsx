@@ -72,7 +72,7 @@ export function PainelJustificativas() {
     };
 
     return (
-        <div className="flex flex-col h-full space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-10">
+        <div className="flex flex-col h-full space-y-6 animar-entrada pb-10">
             <CabecalhoFuncionalidade
                 titulo="Caixa de Auditoria"
                 subtitulo="Revisão e processamento de justificativas de ponto e ausências."
@@ -117,8 +117,8 @@ export function PainelJustificativas() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border/40">
-                                {justificativas.map(just => (
-                                    <tr key={just.id} className="hover:bg-muted/10 transition-colors group/row border-b border-border/20 last:border-none">
+                                {justificativas.map((just, index) => (
+                                    <tr key={just.id} className={`hover:bg-muted/10 transition-colors group/row border-b border-border/20 last:border-none animar-entrada atraso-${(index % 5) + 1}`}>
                                         {/* Membro */}
                                         <td className="px-6 py-5 align-top">
                                             <div className="flex items-center gap-4">

@@ -15,6 +15,7 @@ export interface ParamsNotificacao {
     mensagem: string;
     tipo: 'tarefa' | 'ponto' | 'aviso' | 'sistema';
     link?: string;
+    entidadeId?: string;
 }
 
 export async function criarNotificacoes(db: any, params: ParamsNotificacao): Promise<void> {
@@ -42,9 +43,17 @@ export async function criarNotificacoes(db: any, params: ParamsNotificacao): Pro
     if (idsToNotify.size > 0) {
         const statements = Array.from(idsToNotify).map(id =>
             db.prepare(`
-                INSERT INTO notificacoes (id, usuario_id, tipo, titulo, mensagem, link_acao)
-                VALUES (?, ?, ?, ?, ?, ?)
-            `).bind(crypto.randomUUID(), id, params.tipo, params.titulo, params.mensagem, params.link || null)
+                INSERT INTO notificacoes (id, usuario_id, tipo, titulo, mensagem, link_acao, entidade_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            `).bind(
+                crypto.randomUUID(), 
+                id, 
+                params.tipo, 
+                params.titulo, 
+                params.mensagem, 
+                params.link || null,
+                params.entidadeId || null
+            )
         );
 
         // D1 executa mutations em batch para evitar limitação de requisições separadas
@@ -52,4 +61,13 @@ export async function criarNotificacoes(db: any, params: ParamsNotificacao): Pro
             await db.batch(statements);
         }
     }
+}
+
+/**
+ * Remove todas as notificações vinculadas a uma entidade específica.
+ * Útil para quando um aviso ou tarefa é excluído.
+ */
+export async function removerNotificacoesPorEntidade(db: any, entidadeId: string): Promise<void> {
+    if (!entidadeId) return;
+    await db.prepare('DELETE FROM notificacoes WHERE entidade_id = ?').bind(entidadeId).run();
 }

@@ -234,7 +234,7 @@ export const BaterPonto = memo(() => {
     );
 
     return (
-        <div className="w-full font-sans text-slate-900 animate-in fade-in duration-700">
+        <div className="w-full font-sans text-slate-900 animar-entrada">
             <div className="w-full space-y-4">
 
                 {/* Cabeçalho Padronizado */}

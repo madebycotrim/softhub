@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import type { LucideIcon } from 'lucide-react';
 
 interface CabecalhoFuncionalidadeProps {
@@ -45,7 +45,7 @@ export function CabecalhoFuncionalidade({
     const estilo = cores[variante];
 
     return (
-        <div className={`shrink-0 flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:gap-6 bg-card border ${estilo.border} rounded-2xl p-6 shadow-sm relative overflow-hidden transition-all`}>
+        <div className={`shrink-0 flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:gap-6 bg-card border ${estilo.border} rounded-2xl p-6 shadow-sm relative overflow-hidden transition-all animar-entrada`}>
             <div className="relative z-10 flex items-center gap-4 w-full lg:w-auto">
                 <div className={`p-3 ${estilo.bgIcone} ${estilo.textoIcone} rounded-2xl shrink-0`}>
                     <Icone className="w-6 h-6" />

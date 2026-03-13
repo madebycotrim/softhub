@@ -767,13 +767,13 @@ const DetalheEquipe = memo(({
                         />
                     </div>
                 ) : (
-                    grupos.map(g => {
+                    grupos.map((g, index) => {
                         const partes = g.nome.trim().split(/\s+/);
                         const devePularPrimeira = partes.length > 1 && /^(grupo|grupos)$/i.test(partes[0]);
                         const inicial = devePularPrimeira ? partes[1].charAt(0).toUpperCase() : partes[0].charAt(0).toUpperCase();
 
                         return (
-                            <div key={g.id} className="bg-card border border-border rounded-2xl p-4 flex flex-col h-full shadow-sm hover:shadow-md transition-all overflow-hidden group/gcard">
+                            <div key={g.id} className={`bg-card border border-border rounded-2xl p-4 flex flex-col h-full shadow-sm hover:shadow-md transition-all overflow-hidden group/gcard animar-entrada atraso-${(index % 5) + 1}`}>
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-xl border border-primary/20">
@@ -1024,7 +1024,7 @@ export const GerenciarEquipes = memo(() => {
     const handleSalvarNomeEquipe = useCallback((id: string, nome: string) => editarEquipe(id, { nome }), [editarEquipe]);
 
     return (
-        <div className="flex flex-col h-full space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="flex flex-col h-full space-y-6 animar-entrada">
             <CabecalhoFuncionalidade
                 titulo="Estrutura Organizacional"
                 subtitulo="Gestão de equipes, grupos de trabalho e alocação de lideranças."
@@ -1060,11 +1060,11 @@ export const GerenciarEquipes = memo(() => {
                                 </div>
 
                                 <div className="flex-1 overflow-y-auto p-3 space-y-1.5 custom-scrollbar">
-                                    {equipesAtivas.map(e => (
+                                    {equipesAtivas.map((e, index) => (
                                         <div
                                             key={e.id}
                                             onClick={() => setIdEquipeAtiva(e.id)}
-                                            className={`group/card relative flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${
+                                            className={`group/card relative flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer animar-entrada atraso-${(index % 5) + 1} ${
                                                 idEquipeAtiva === e.id
                                                     ? 'bg-primary/10 border-primary text-primary shadow-sm'
                                                     : 'bg-muted/10 border-transparent hover:bg-muted/30 hover:border-border/50 text-muted-foreground'

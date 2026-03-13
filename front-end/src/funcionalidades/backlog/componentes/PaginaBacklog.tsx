@@ -90,7 +90,7 @@ const PaginaBacklog = memo(() => {
     }
 
     return (
-        <div className="w-full space-y-6 animate-in fade-in duration-700 pb-20">
+        <div className="w-full space-y-6 animar-entrada pb-20">
             <CabecalhoFuncionalidade
                 titulo="Backlog de Demandas"
                 subtitulo="Visão detalhada e gestão completa de todas as tarefas do projeto."
@@ -108,36 +108,38 @@ const PaginaBacklog = memo(() => {
                 </div>
             </CabecalhoFuncionalidade>
 
-            <BarraFiltros
-                busca={busca}
-                aoMudarBusca={setBusca}
-                placeholderBusca="Buscar demanda pelo título ou descrição..."
-                temFiltrosAtivos={busca !== '' || statusFiltro.length > 0 || prioridadeFiltro.length > 0}
-                aoLimparFiltros={() => {
-                    setBusca('');
-                    setStatusFiltro([]);
-                    setPrioridadeFiltro([]);
-                }}
-            >
-                <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
-                    <FiltroPills 
-                        label="Prioridade" 
-                        opcoes={LABELS_PRIORIDADE} 
-                        valoresAtivos={prioridadeFiltro} 
-                        aoToggle={togglePrioridade} 
-                        variante="primary"
-                    />
-                    
-                    <div className="h-6 w-px bg-white/5 hidden lg:block" />
+            <div className="animar-entrada atraso-1">
+                <BarraFiltros
+                    busca={busca}
+                    aoMudarBusca={setBusca}
+                    placeholderBusca="Buscar demanda pelo título ou descrição..."
+                    temFiltrosAtivos={busca !== '' || statusFiltro.length > 0 || prioridadeFiltro.length > 0}
+                    aoLimparFiltros={() => {
+                        setBusca('');
+                        setStatusFiltro([]);
+                        setPrioridadeFiltro([]);
+                    }}
+                >
+                    <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
+                        <FiltroPills 
+                            label="Prioridade" 
+                            opcoes={LABELS_PRIORIDADE} 
+                            valoresAtivos={prioridadeFiltro} 
+                            aoToggle={togglePrioridade} 
+                            variante="primary"
+                        />
+                        
+                        <div className="h-6 w-px bg-white/5 hidden lg:block" />
 
-                    <FiltroPills 
-                        label="Status" 
-                        opcoes={LABELS_STATUS} 
-                        valoresAtivos={statusFiltro} 
-                        aoToggle={toggleStatus} 
-                    />
-                </div>
-            </BarraFiltros>
+                        <FiltroPills 
+                            label="Status" 
+                            opcoes={LABELS_STATUS} 
+                            valoresAtivos={statusFiltro} 
+                            aoToggle={toggleStatus} 
+                        />
+                    </div>
+                </BarraFiltros>
+            </div>
 
             {/* Listagem */}
             {carregando ? (
@@ -158,7 +160,7 @@ const PaginaBacklog = memo(() => {
                     descricao="Nenhuma tarefa corresponde aos filtros selecionados. Limpe os filtros ou crie uma nova demanda."
                 />
             ) : (
-                <div className="bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl shadow-black/40 overflow-hidden animate-in slide-in-from-bottom-4 duration-700">
+                <div className="bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl shadow-black/40 overflow-hidden animar-entrada atraso-2">
                     <div className="overflow-x-auto">
                         <table className="w-full border-collapse">
                             <thead>

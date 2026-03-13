@@ -49,11 +49,11 @@ export function LayoutPrincipal({ children }: LayoutPrincipalProps) {
                     onClick={() => setSidebarAberta(false)}
                 >
                     {/* Backdrop */}
-                    <div className="absolute inset-0 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300" />
+                    <div className="absolute inset-0 bg-background/80 backdrop-blur-sm animar-entrada" />
                     
                     {/* Drawer Content */}
                     <div 
-                        className="absolute inset-y-0 left-0 w-[280px] bg-sidebar border-r border-sidebar-border animate-in slide-in-from-left duration-300"
+                        className="absolute inset-y-0 left-0 w-[280px] bg-sidebar border-r border-sidebar-border animar-entrada"
                         onClick={e => e.stopPropagation()}
                     >
                         <div className="flex flex-col h-full relative">
@@ -112,7 +112,7 @@ export function LayoutPrincipal({ children }: LayoutPrincipalProps) {
                     </div>
                 </header>
 
-                <main className="flex-1 p-6 overflow-y-auto relative z-10 transition-all overflow-x-hidden">
+                <main className="flex-1 p-6 overflow-y-auto relative z-10 transition-all overflow-x-hidden animar-entrada">
                     {children}
                 </main>
             </div>

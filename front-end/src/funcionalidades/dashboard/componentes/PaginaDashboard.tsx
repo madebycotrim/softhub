@@ -99,7 +99,7 @@ export const PaginaDashboard = memo(() => {
                 {/* Coluna da Esquerda: Avisos e Métricas */}
                 <div className="lg:col-span-8 space-y-8">
                     {avisos.length > 0 && (
-                        <section className="space-y-4">
+                        <section className="space-y-4 animar-entrada atraso-1">
                             <div className="flex items-center gap-2 px-1">
                                 <Megaphone className="w-4 h-4 text-primary" />
                                 <h2 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Comunicados Prioritários</h2>
@@ -127,7 +127,7 @@ export const PaginaDashboard = memo(() => {
                         </section>
                     )}
 
-                    <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <section className="grid grid-cols-1 sm:grid-cols-2 gap-4 animar-entrada atraso-2">
                         <div className="bg-card border border-border rounded-2xl p-5 shadow-sm group hover:border-primary/20 transition-all">
                             <div className="flex items-center justify-between mb-4">
                                 <span className="p-2 bg-primary/5 text-primary rounded-2xl"><ListChecks className="w-4 h-4" /></span>
@@ -155,7 +155,7 @@ export const PaginaDashboard = memo(() => {
 
                 {/* Coluna da Direita: Minhas Tarefas */}
                 <div className="lg:col-span-4 space-y-8">
-                    <section className="bg-sidebar border border-sidebar-border/10 rounded-2xl overflow-hidden shadow-xl">
+                    <section className="bg-sidebar border border-sidebar-border/10 rounded-2xl overflow-hidden shadow-xl animar-entrada atraso-3">
                         <div className="p-5 border-b border-sidebar-border/10 bg-sidebar-accent/5 flex items-center justify-between">
                             <h2 className="text-xs font-black uppercase tracking-[0.2em]">Minhas Tarefas</h2>
                             <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-2xl font-bold">{minhasTarefas.length}</span>

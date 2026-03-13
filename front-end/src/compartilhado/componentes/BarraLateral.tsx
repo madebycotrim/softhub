@@ -130,7 +130,7 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
     };
 
     return (
-        <aside className="w-full h-full flex flex-col relative overflow-hidden">
+        <aside className="w-full h-full flex flex-col relative overflow-hidden animar-entrada">
 
             {/* Fundo */}
             <div className="absolute inset-0 bg-sidebar" />

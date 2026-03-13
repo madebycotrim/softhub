@@ -8,6 +8,7 @@ import { Carregando } from '@/compartilhado/componentes/Carregando';
 import { Alerta } from '@/compartilhado/componentes/Alerta';
 import { Modal } from '@/compartilhado/componentes/Modal';
 import { ConfirmacaoExclusao } from '@/compartilhado/componentes/ConfirmacaoExclusao';
+import { usarPermissaoAcesso } from '@/compartilhado/hooks/usarPermissao';
 import { 
     FolderKanban, 
     Plus, 
@@ -31,6 +32,9 @@ type FormProjeto = z.infer<typeof esquemaProjeto>;
 
 export default function GerenciarProjetos() {
     const { projetos, carregando, erro, criarProjeto, editarProjeto, excluirProjeto } = usarProjetos();
+    const podeCriar = usarPermissaoAcesso('projetos:criar');
+    const podeEditar = usarPermissaoAcesso('projetos:editar');
+    const podeExcluir = usarPermissaoAcesso('projetos:excluir');
     const [modalAberto, setModalAberto] = useState(false);
     const [projetoEditando, setProjetoEditando] = useState<string | null>(null);
     const [idExcluindo, setIdExcluindo] = useState<string | null>(null);
@@ -84,19 +88,21 @@ export default function GerenciarProjetos() {
     };
 
     return (
-        <LayoutPrincipal>
-            <div className="flex flex-col gap-8 max-w-6xl mx-auto">
+        <>
+            <div className="flex flex-col gap-6">
                 <CabecalhoFuncionalidade
                     titulo="Gestão de Projetos"
                     subtitulo="Crie novos espaços de trabalho para organizar demandas e squads."
                     icone={FolderKanban}
                 >
-                    <button 
-                        onClick={handleAbrirCriar}
-                        className="h-10 px-4 bg-primary text-primary-foreground rounded-2xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all flex items-center gap-2 shadow-lg shadow-primary/20"
-                    >
-                        <Plus size={14} /> Novo Projeto
-                    </button>
+                    {podeCriar && (
+                        <button 
+                            onClick={handleAbrirCriar}
+                            className="h-10 px-4 bg-primary text-primary-foreground rounded-2xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all flex items-center gap-2 shadow-lg shadow-primary/20"
+                        >
+                            <Plus size={14} /> Novo Projeto
+                        </button>
+                    )}
                 </CabecalhoFuncionalidade>
 
                 {erro && <Alerta tipo="erro" mensagem={erro} />}
@@ -108,28 +114,34 @@ export default function GerenciarProjetos() {
                         <FolderKanban className="w-12 h-12 mx-auto mb-4 text-muted-foreground/20" />
                         <h3 className="text-foreground font-black uppercase tracking-widest mb-2">Sem Projetos</h3>
                         <p className="text-muted-foreground text-sm mb-6">Comece criando o primeiro projeto da sua fábrica.</p>
-                        <button 
-                            onClick={handleAbrirCriar}
-                            className="px-6 py-2.5 bg-primary text-primary-foreground rounded-2xl text-[10px] font-black uppercase tracking-widest"
-                        >
-                            Criar Primeiro Projeto
-                        </button>
+                        {podeCriar && (
+                            <button 
+                                onClick={handleAbrirCriar}
+                                className="px-6 py-2.5 bg-primary text-primary-foreground rounded-2xl text-[10px] font-black uppercase tracking-widest"
+                            >
+                                Criar Primeiro Projeto
+                            </button>
+                        )}
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {projetos.map((p) => (
-                            <div key={p.id} className="group relative bg-card hover:bg-muted/30 border border-border rounded-3xl p-6 transition-all duration-300">
+                        {projetos.map((p, index) => (
+                            <div key={p.id} className={`group relative bg-card hover:bg-muted/30 border border-border rounded-3xl p-6 transition-all duration-300 animar-entrada atraso-${(index % 5) + 1}`}>
                                 <div className="flex justify-between items-start mb-4">
                                     <div className="p-3 bg-muted rounded-2xl text-primary">
                                         <FolderKanban size={20} />
                                     </div>
                                     <div className="flex gap-2">
-                                        <button onClick={() => handleAbrirEditar(p)} className="p-2 hover:bg-background rounded-xl text-muted-foreground hover:text-primary transition-colors">
-                                            <Edit size={14} />
-                                        </button>
-                                        <button onClick={() => setIdExcluindo(p.id)} className="p-2 hover:bg-destructive/10 rounded-xl text-muted-foreground hover:text-destructive transition-colors">
-                                            <Trash2 size={14} />
-                                        </button>
+                                        {podeEditar && (
+                                            <button onClick={() => handleAbrirEditar(p)} className="p-2 hover:bg-background rounded-xl text-muted-foreground hover:text-primary transition-colors">
+                                                <Edit size={14} />
+                                            </button>
+                                        )}
+                                        {podeExcluir && (
+                                            <button onClick={() => setIdExcluindo(p.id)} className="p-2 hover:bg-destructive/10 rounded-xl text-muted-foreground hover:text-destructive transition-colors">
+                                                <Trash2 size={14} />
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
 
@@ -234,6 +246,6 @@ export default function GerenciarProjetos() {
                 descricao="Esta ação excluirá o projeto e TODAS as tarefas vinculadas a ele. Não há como desfazer."
                 carregando={carregando}
             />
-        </LayoutPrincipal>
+        </>
     );
 }

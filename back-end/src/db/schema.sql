@@ -176,6 +176,7 @@ CREATE TABLE IF NOT EXISTS notificacoes (
     mensagem TEXT NOT NULL,
     lida INTEGER NOT NULL DEFAULT 0,
     link_acao TEXT,
+    entidade_id TEXT,
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 

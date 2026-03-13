@@ -37,6 +37,17 @@ const PERMISSOES_SISTEMA = [
         ],
     },
     {
+        modulo: 'projetos',
+        label: 'Projetos & Portfólio',
+        icone: Globe,
+        permissoes: [
+            { chave: 'projetos:visualizar', label: 'Visualizar Projetos' },
+            { chave: 'projetos:criar', label: 'Criar Projetos' },
+            { chave: 'projetos:editar', label: 'Editar Projetos' },
+            { chave: 'projetos:excluir', label: 'Excluir Projetos' },
+        ],
+    },
+    {
         modulo: 'ponto',
         label: 'Ponto Eletrônico',
         icone: Clock,
@@ -232,7 +243,7 @@ export const PaginaConfiguracoes = memo(() => {
     if (erro) return <div className="p-10 flex justify-center"><Alerta tipo="erro" mensagem={erro} /></div>;
 
     return (
-        <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700 pb-10 relative">
+        <div className="w-full animar-entrada pb-10 relative">
             <CabecalhoFuncionalidade
                 titulo="Configurações"
                 subtitulo="Governança, Permissões e Hierarquia do SoftHub"
@@ -250,7 +261,7 @@ export const PaginaConfiguracoes = memo(() => {
                 <div className="lg:col-span-3 space-y-6">
                     {/* Modo de Manutenção - PRIORIDADE MÁXIMA - ADMIN OU DELEGADO */}
                     {(isAdmin || temAcessoCritico) && (
-                        <div className={`border rounded-2xl shadow-lg transition-all duration-500 overflow-hidden ${
+                        <div className={`border rounded-2xl shadow-lg transition-all duration-500 overflow-hidden animar-entrada atraso-1 ${
                             configuracoes?.modo_manutencao 
                             ? 'bg-rose-500/10 border-rose-500/40 shadow-rose-500/5' 
                             : 'bg-card border-border shadow-sm'
@@ -299,7 +310,7 @@ export const PaginaConfiguracoes = memo(() => {
 
                     {/* Seção 1: Governança & Segurança - ADMIN OU DELEGADO */}
                     {(isAdmin || temAcessoCritico) && (
-                        <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden flex flex-col h-fit">
+                        <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden flex flex-col h-fit animar-entrada atraso-2">
                             <div className="p-5 border-b border-border bg-muted/10 flex items-center gap-3">
                                 <div className="p-2.5 bg-indigo-500/10 rounded-xl text-indigo-500 shadow-sm shadow-indigo-500/5">
                                     <Shield size={18} strokeWidth={2.5} />
@@ -401,7 +412,7 @@ export const PaginaConfiguracoes = memo(() => {
 
                     {/* IPs Autorizados para Ponto - ADMIN OU DELEGADO */}
                     {(isAdmin || temAcessoCritico) && (
-                        <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden flex flex-col h-fit">
+                        <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden flex flex-col h-fit animar-entrada atraso-3">
                             <div className="p-5 border-b border-border bg-muted/10 flex items-center gap-3">
                                 <div className="p-2.5 bg-amber-500/10 rounded-xl text-amber-500 shadow-sm shadow-amber-500/5">
                                     <Database size={18} strokeWidth={2.5} />
@@ -466,7 +477,7 @@ export const PaginaConfiguracoes = memo(() => {
                     )}
 
                     {/* Jornada de Trabalho (Novo) */}
-                    <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden flex flex-col h-fit">
+                    <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden flex flex-col h-fit animar-entrada atraso-4">
                         <div className="p-5 border-b border-border bg-muted/10 flex items-center gap-3">
                             <div className="p-2.5 bg-sky-500/10 rounded-xl text-sky-500 shadow-sm shadow-sky-500/5">
                                 <Clock size={18} strokeWidth={2.5} />
@@ -511,7 +522,7 @@ export const PaginaConfiguracoes = memo(() => {
                     </div>
 
                     {/* Seção 2: Gestão de Cargos */}
-                    <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden flex flex-col h-fit">
+                    <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden flex flex-col h-fit animar-entrada atraso-5">
                         <div className="p-5 border-b border-border bg-muted/10 flex items-center gap-3">
                             <div className="p-2.5 bg-primary/10 rounded-xl text-primary shadow-sm shadow-primary/5">
                                 <ShieldCheck size={18} strokeWidth={2.5} />
@@ -601,7 +612,7 @@ export const PaginaConfiguracoes = memo(() => {
                     </div>
 
                     {/* Seção 3: Governança de Dados (Compliance) */}
-                    <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden flex flex-col h-fit">
+                    <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden flex flex-col h-fit animar-entrada atraso-1">
                         <div className="p-5 border-b border-border bg-muted/10 flex items-center gap-3">
                             <div className="p-2.5 bg-slate-500/10 rounded-xl text-slate-500 shadow-sm shadow-slate-500/5">
                                 <Database size={18} strokeWidth={2.5} />
@@ -630,7 +641,7 @@ export const PaginaConfiguracoes = memo(() => {
                 {/* Coluna Principal: Matriz de Permissões Completa - ADMIN OU DELEGADO */}
                 <div className="lg:col-span-9 space-y-6">
                     {(isAdmin || temAcessoCritico) ? (
-                        <section className="bg-card border border-border rounded-2xl shadow-sm flex flex-col overflow-hidden transition-all group/matriz">
+                        <section className="bg-card border border-border rounded-2xl shadow-sm flex flex-col overflow-hidden transition-all group/matriz animar-entrada atraso-2">
                             {/* Header da Matriz */}
                             <div className="px-6 py-6 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-muted/10">
                                 <div className="flex items-center gap-4">

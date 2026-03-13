@@ -29,7 +29,7 @@ export const MuralAvisos = memo(() => {
     }, [avisos]);
 
     return (
-        <div className="w-full space-y-10 pb-20 animate-in fade-in duration-500">
+        <div className="w-full space-y-6 animar-entrada">
             <CabecalhoFuncionalidade
                 titulo="Mural de Avisos"
                 subtitulo="Comunicados importantes para a equipe ou grupos."
@@ -46,7 +46,7 @@ export const MuralAvisos = memo(() => {
                     {podeCriar && (
                         <button
                             onClick={() => setModalAberto(true)}
-                            className="h-11 px-5 rounded-2xl bg-slate-900 text-white font-bold text-xs shadow-lg hover:bg-black transition-all flex items-center gap-2 active:scale-95"
+                            className="h-11 px-5 rounded-2xl bg-primary text-primary-foreground font-bold text-xs shadow-lg hover:bg-primary/90 transition-all flex items-center gap-2 active:scale-95"
                         >
                             <Plus size={18} />
                             <span>Criar Aviso</span>
@@ -71,13 +71,13 @@ export const MuralAvisos = memo(() => {
                         descricao="Nenhum comunicado importante foi publicado recentemente. Aproveite o foco!"
                     />
                 ) : (
-                    avisosOrdenados.map(aviso => {
+                    avisosOrdenados.map((aviso, index) => {
                         // Lideres podem apagar os próprios
                         const podeDeletar = isAdmin || podeRemoverGeral || usuario?.id === aviso.criado_por.id;
                         const IconePrioridade = aviso.prioridade === 'urgente' ? Megaphone : null; // Destaque extra
 
                         return (
-                            <div key={aviso.id} className="bg-card border border-border rounded-2xl p-6 sm:p-8 relative overflow-hidden flex flex-col sm:flex-row gap-6 shadow-sm h-full transition-all group hover:border-primary/30">
+                            <div key={aviso.id} className={`bg-card border border-border rounded-2xl p-6 sm:p-8 relative overflow-hidden flex flex-col sm:flex-row gap-6 shadow-sm h-full transition-all group hover:border-primary/30 animar-entrada atraso-${(index % 5) + 1}`}>
 
                                 {aviso.prioridade === 'urgente' && (
                                     <div className="absolute top-0 left-0 w-1.5 h-full bg-destructive" />

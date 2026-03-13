@@ -47,7 +47,7 @@ const ICONES_COLUNAS: Record<string, any> = {
     concluida: CheckCircle2
 };
 
-const ColunaDropZone = memo(({ id, titulo, tarefas, aoApertarTarefa }: { id: string; titulo: string; tarefas: Tarefa[], aoApertarTarefa: (t: Tarefa) => void }) => {
+const ColunaDropZone = memo(({ id, titulo, tarefas, aoApertarTarefa, delayClass }: { id: string; titulo: string; tarefas: Tarefa[], aoApertarTarefa: (t: Tarefa) => void, delayClass?: string }) => {
     const { setNodeRef, isOver } = useDroppable({
         id: id,
         data: { type: 'Column', coluna: id }
@@ -55,7 +55,7 @@ const ColunaDropZone = memo(({ id, titulo, tarefas, aoApertarTarefa }: { id: str
     const Icone = ICONES_COLUNAS[id] || Circle;
 
     return (
-        <div className="flex flex-col flex-1 min-w-[320px] max-w-[360px] bg-card/60 dark:bg-card/20 backdrop-blur-3xl rounded-b-2xl border border-border/50 shadow-sm overflow-hidden h-full transition-all duration-500 group/column">
+        <div className={`flex flex-col flex-1 min-w-[320px] max-w-[360px] bg-card/60 dark:bg-card/20 backdrop-blur-3xl rounded-b-2xl border border-border/50 shadow-sm overflow-hidden h-full transition-all duration-500 group/column animar-entrada ${delayClass}`}>
             <div className="p-5 border-b border-border/50 bg-muted/30 flex items-center justify-between shrink-0 relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover/column:opacity-100 transition-opacity duration-700" />
                 <h3 className="font-black text-[11px] uppercase tracking-[0.2em] text-muted-foreground/80 flex items-center gap-2.5 relative z-10">
@@ -224,8 +224,15 @@ export const QuadroKanban = memo(() => {
                             <div className="h-full flex flex-col">
                                 <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                                     <div className="h-full flex justify-between gap-6 overflow-x-auto pb-6 custom-scrollbar px-1">
-                                        {COLUNAS_KANBAN.map(coluna => (
-                                            <ColunaDropZone key={coluna} id={coluna} titulo={LABELS_COLUNAS[coluna]} tarefas={tarefasPorStatus[coluna] || []} aoApertarTarefa={setTarefaDetalhes} />
+                                        {COLUNAS_KANBAN.map((coluna, index) => (
+                                            <ColunaDropZone 
+                                                key={coluna} 
+                                                id={coluna} 
+                                                titulo={LABELS_COLUNAS[coluna]} 
+                                                tarefas={tarefasPorStatus[coluna] || []} 
+                                                aoApertarTarefa={setTarefaDetalhes}
+                                                delayClass={`atraso-${index + 1}`}
+                                            />
                                         ))}
                                         <DragOverlay dropAnimation={null}>
                                             {activeTarefa ? (

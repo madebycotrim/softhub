@@ -253,7 +253,7 @@ export const GerenciarMembros = memo(() => {
     const handleSetMembroExcluir = useCallback((m: Membro) => setMembroParaExcluir(m), []);
 
     return (
-        <div className="flex flex-col h-full space-y-6">
+        <div className="flex flex-col h-full space-y-6 animar-entrada">
             <ToastContainer toasts={toasts.length > 0 ? toasts : toastHook} />
             
             <CabecalhoFuncionalidade
@@ -285,12 +285,12 @@ export const GerenciarMembros = memo(() => {
             {/* Stats Rápidos */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {[
-                    { label: 'Membros Ativos', valor: membros.length, cor: 'indigo', icone: UsersIcon },
-                    { label: 'Especialistas', valor: membros.filter(m => m.role !== 'MEMBRO').length, cor: 'emerald', icone: Shield },
-                    { label: 'Sem Equipe', valor: membros.filter(m => !m.equipe_nome).length, cor: 'rose', icone: LayoutGrid },
-                    { label: 'Novos (30d)', valor: membros.filter(m => new Date(m.criado_em) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length, cor: 'blue', icone: History }
+                    { label: 'Membros Ativos', valor: membros.length, cor: 'indigo', icone: UsersIcon, atraso: 'atraso-1' },
+                    { label: 'Especialistas', valor: membros.filter(m => m.role !== 'MEMBRO').length, cor: 'emerald', icone: Shield, atraso: 'atraso-2' },
+                    { label: 'Sem Equipe', valor: membros.filter(m => !m.equipe_nome).length, cor: 'rose', icone: LayoutGrid, atraso: 'atraso-3' },
+                    { label: 'Novos (30d)', valor: membros.filter(m => new Date(m.criado_em) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length, cor: 'blue', icone: History, atraso: 'atraso-4' }
                 ].map(s => (
-                    <div key={s.label} className="bg-card border border-border/60 rounded-2xl p-4 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
+                    <div key={s.label} className={`bg-card border border-border/60 rounded-2xl p-4 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow animar-entrada ${s.atraso}`}>
                         <div className={`p-3 bg-${s.cor}-500/10 text-${s.cor}-500 rounded-xl shadow-sm`}>
                             <s.icone size={20} />
                         </div>
@@ -303,7 +303,7 @@ export const GerenciarMembros = memo(() => {
             </div>
 
             {/* Tabela Principal */}
-            <div className="flex-1 bg-card border border-border rounded-2xl shadow-sm overflow-hidden flex flex-col min-h-0">
+            <div className="flex-1 bg-card border border-border rounded-2xl shadow-sm overflow-hidden flex flex-col min-h-0 animar-entrada atraso-5">
                 <div className="overflow-x-auto custom-scrollbar flex-1">
                     <table className="w-full border-collapse">
                         <thead className="sticky top-0 z-20">

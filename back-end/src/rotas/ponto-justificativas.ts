@@ -2,7 +2,7 @@ import { Hono, Context } from 'hono';
 import { Env } from '../index';
 import { autenticacaoRequerida, verificarPermissao } from '../middleware/auth';
 import { registrarLog } from '../servicos/servico-logs';
-import { criarNotificacoes } from '../servicos/servico-notificacoes';
+import { criarNotificacoes, removerNotificacoesPorEntidade } from '../servicos/servico-notificacoes';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 
@@ -68,7 +68,8 @@ rotasPontoJustificativas.post('/justificativas', autenticacaoRequerida(), verifi
                 tipo: 'sistema',
                 titulo: 'Nova justificativa de ponto',
                 mensagem: `${usuario.nome} enviou uma justificativa para ${data}.`,
-                link: '/app/admin/justificativas'
+                link: '/app/admin/justificativas',
+                entidadeId: justId
             });
         }
 
@@ -154,6 +155,9 @@ rotasPontoJustificativas.delete('/justificativas/:id', autenticacaoRequerida(), 
     try {
         await DB.prepare(`DELETE FROM justificativas_ponto WHERE id = ?`).bind(id).run();
 
+        // Remove notificações vinculadas
+        if (id) await removerNotificacoesPorEntidade(DB, id);
+
         await registrarLog(DB, {
             usuarioId: usuario.id,
             acao: 'PONTO_JUSTIFICATIVA_EXCLUIDA',
@@ -237,7 +241,8 @@ rotasPontoJustificativas.patch('/admin/justificativas/:id/aprovar', autenticacao
             tipo: 'sistema',
             titulo: 'Justificativa aprovada',
             mensagem: `Sua justificativa para ${alvar.data} foi aprovada.`,
-            link: '/app/ponto'
+            link: '/app/ponto',
+            entidadeId: justificativaId
         });
 
         await registrarLog(DB, {
@@ -286,7 +291,8 @@ rotasPontoJustificativas.patch('/admin/justificativas/:id/rejeitar', autenticaca
             tipo: 'sistema',
             titulo: 'Justificativa rejeitada',
             mensagem: `Sua justificativa para ${alvar.data} foi rejeitada. Motivo: ${motivoRejeicao}`,
-            link: '/app/ponto'
+            link: '/app/ponto',
+            entidadeId: justificativaId
         });
 
         await registrarLog(DB, {

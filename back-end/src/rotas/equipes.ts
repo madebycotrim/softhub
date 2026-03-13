@@ -2,7 +2,7 @@ import { Hono, Context } from 'hono';
 import { Env } from '../index';
 import { autenticacaoRequerida, verificarPermissao } from '../middleware/auth';
 import { registrarLog } from '../servicos/servico-logs';
-import { criarNotificacoes } from '../servicos/servico-notificacoes';
+import { criarNotificacoes, removerNotificacoesPorEntidade } from '../servicos/servico-notificacoes';
 
 const rotasEquipes = new Hono<{ Bindings: Env; Variables: { usuario: any } }>();
 
@@ -134,6 +134,9 @@ rotasEquipes.delete('/grupos/:id', autenticacaoRequerida(), verificarPermissao('
         // Hard Delete no grupo (Cascata no schema lidará com vínculos se configurado)
         await DB.prepare('DELETE FROM grupos WHERE id = ?').bind(id).run();
 
+        // Remove notificações vinculadas ao grupo
+        if (id) await removerNotificacoesPorEntidade(DB, id);
+
         await registrarLog(DB, {
             usuarioId: usuarioLogado.id,
             acao: 'GRUPO_REMOVIDO_HARD',
@@ -255,7 +258,8 @@ rotasEquipes.patch('/equipes/:id', autenticacaoRequerida(), verificarPermissao('
                 tipo: 'sistema',
                 titulo: 'Nova Liderança',
                 mensagem: `Você foi designado como Líder da equipe "${nome}".`,
-                link: '/app/admin/equipes'
+                link: '/app/admin/equipes',
+                entidadeId: id
             });
         }
         if (sub_lider_id && sub_lider_id !== atual.sub_lider_id) {
@@ -264,7 +268,8 @@ rotasEquipes.patch('/equipes/:id', autenticacaoRequerida(), verificarPermissao('
                 tipo: 'sistema',
                 titulo: 'Nova Liderança',
                 mensagem: `Você foi designado como Sublíder da equipe "${nome}".`,
-                link: '/app/admin/equipes'
+                link: '/app/admin/equipes',
+                entidadeId: id
             });
         }
 
@@ -297,6 +302,9 @@ rotasEquipes.delete('/equipes/:id', autenticacaoRequerida(), verificarPermissao(
     try {
         // Hard delete na equipe (Cascata lidará com grupos e vínculos)
         await DB.prepare('DELETE FROM equipes WHERE id = ?').bind(id).run();
+
+        // Remove notificações vinculadas à equipe
+        if (id) await removerNotificacoesPorEntidade(DB, id);
 
         await registrarLog(DB, {
             usuarioId: usuarioLogado.id,
@@ -353,7 +361,8 @@ rotasEquipes.patch('/membros/:id/alocar', autenticacaoRequerida(), verificarPerm
                 tipo: 'sistema',
                 titulo: 'Nova alocação',
                 mensagem: `Você foi alocado à equipe ${info?.e_nome ?? 'da organização'} no grupo ${info?.g_nome ?? ''}.`,
-                link: '/app/membros'
+                link: '/app/membros',
+                entidadeId: equipe_id
             });
 
         } else if (equipe_id && !grupo_id) {
@@ -424,7 +433,8 @@ rotasEquipes.patch('/membros/:id/mover', autenticacaoRequerida(), verificarPermi
             tipo: 'sistema',
             titulo: 'Mudança de grupo',
             mensagem: `Sua alocação foi alterada para o grupo ${info?.nome ?? 'selecionado'}.`,
-            link: '/app/membros'
+            link: '/app/membros',
+            entidadeId: grupo_id
         });
 
         // Buscar estado atual antes de mover

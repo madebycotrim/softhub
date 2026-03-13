@@ -172,15 +172,6 @@
 }
 
 @layer utilities {
-  .animate-scan-line {
-    animation: scan-line 8s linear infinite;
-  }
-
-  .animate-glitch {
-    animation: glitch 1s linear infinite alternate;
-  }
-
-
   @keyframes scan-line {
     0% { transform: translateY(-100%); opacity: 0; }
     10% { opacity: 0.5; }
@@ -196,4 +187,28 @@
     80% { transform: translate(2px, -2px); text-shadow: -2px 0 #00fff2, 2px 0 #ff00c1; }
     100% { transform: translate(0); text-shadow: none; }
   }
-}
+
+  @keyframes entrar-suave {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes entrar-escala {
+    from { opacity: 0; transform: scale(0.98); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .animar-entrada {
+    animation: entrar-suave 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .animar-escala {
+    animation: entrar-escala 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .atraso-1 { animation-delay: 100ms; }
+  .atraso-2 { animation-delay: 200ms; }
+  .atraso-3 { animation-delay: 300ms; }
+  .atraso-4 { animation-delay: 400ms; }
+  .atraso-5 { animation-delay: 500ms; }
+}

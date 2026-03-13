@@ -68,7 +68,7 @@ const PaginaRelatorios = memo(() => {
     ], []);
 
     return (
-        <div className="w-full space-y-8 pb-20 animate-in fade-in duration-700 max-w-[1600px] mx-auto px-4 sm:px-6">
+        <div className="w-full space-y-8 pb-20 animar-entrada max-w-[1600px] mx-auto px-4 sm:px-6">
             {/* Cabeçalho Original (Não Alterar conforme Regra) */}
             <CabecalhoFuncionalidade 
                 titulo="Central de Relatórios Essenciais"
@@ -81,11 +81,11 @@ const PaginaRelatorios = memo(() => {
                 {/* Seletor de Relatórios (Esquerda) */}
                 <div className="lg:col-span-1 space-y-3">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4 mb-2">Relatórios Disponíveis</p>
-                    {ABAS_ESSENCIAIS.map((aba) => (
+                    {ABAS_ESSENCIAIS.map((aba, index) => (
                         <button
                             key={aba.id}
                             onClick={() => setAbaAtiva(aba.id as any)}
-                            className={`w-full flex items-center gap-4 p-5 rounded-[2rem] border transition-all text-left group ${
+                            className={`w-full flex items-center gap-4 p-5 rounded-[2rem] border transition-all text-left group animar-entrada atraso-${index + 1} ${
                                 abaAtiva === aba.id 
                                 ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100' 
                                 : 'bg-white border-slate-100 hover:border-slate-200 text-slate-600'
@@ -153,7 +153,7 @@ const PaginaRelatorios = memo(() => {
                             <p className="mt-8 text-[11px] font-black uppercase tracking-[0.4em] text-slate-400 animate-pulse">Sincronizando Banco de Dados D1</p>
                         </div>
                     ) : (
-                        <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+                        <div className="animar-entrada atraso-1">
                             
                             {/* ── RELATÓRIO: CONSOLIDADO DE PRESENÇAS ── */}
                             {abaAtiva === 'presenca' && frequenciaGeral && (

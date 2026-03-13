@@ -169,7 +169,7 @@ export default function TelaLogin() {
 
     return (
         <div className="light min-h-screen bg-slate-50 flex items-center justify-center p-0 sm:p-6 lg:p-8 selection:bg-red-500/20 transition-colors duration-500">
-            <div className="w-full max-w-7xl bg-white sm:rounded-2xl shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] overflow-hidden flex flex-col lg:flex-row min-h-screen sm:min-h-[750px] border-none sm:border border-border animate-in fade-in zoom-in-95 duration-700">
+            <div className="w-full max-w-7xl bg-white sm:rounded-2xl shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] overflow-hidden flex flex-col lg:flex-row min-h-screen sm:min-h-[750px] border-none sm:border border-border animar-entrada">
 
                     {/* Lado Esquerdo Institucional */}
                     <div className="lg:w-[42%] bg-[#001a33] p-8 pt-12 pb-14 lg:p-16 flex flex-col justify-between text-white relative overflow-hidden group shrink-0">
@@ -179,7 +179,7 @@ export default function TelaLogin() {
 
 
 
-                    <div className="relative z-10 space-y-12 lg:space-y-16">
+                    <div className="relative z-10 space-y-12 lg:space-y-16 animar-entrada atraso-1">
                         <div className="flex items-center gap-5">
                             <img src={logoUnieuro} alt="Logo Unieuro" className="w-10 h-10 lg:w-12 lg:h-12 object-contain" />
                             <div className="space-y-1.5">
@@ -224,7 +224,7 @@ export default function TelaLogin() {
                 <div className="flex-1 flex flex-col lg:flex-row items-stretch bg-white -mt-8 lg:mt-0 rounded-t-[32px] lg:rounded-2xl relative z-20">
 
                     {/* Lado Central: Acesso Microsoft */}
-                    <div className="flex-1 p-8 lg:p-12 flex flex-col items-center justify-center">
+                    <div className="flex-1 p-8 lg:p-12 flex flex-col items-center justify-center animar-entrada atraso-2">
                         <div className="space-y-8 lg:space-y-12 w-full max-w-sm">
                             <div className="space-y-4 text-center lg:text-left">
                                 <div className="inline-flex py-1 px-3 bg-red-500/5 text-red-600 text-[10px] font-black uppercase tracking-widest rounded-full leading-none border border-red-500/10">
@@ -308,7 +308,7 @@ export default function TelaLogin() {
 
                      {/* Lado Direito: Accesso Integrado (QR Code) */}
                      {!isMobile && (
-                         <div className="flex-1 flex flex-col items-center justify-center bg-transparent p-12 relative animate-in fade-in duration-1000">
+                         <div className="flex-1 flex flex-col items-center justify-center bg-transparent p-12 relative animar-entrada atraso-3">
                             <div className="w-full flex flex-col items-center space-y-12">
                                 <PainelQRCode />
 

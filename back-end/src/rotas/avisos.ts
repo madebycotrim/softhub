@@ -4,7 +4,7 @@ import { zValidator } from '@hono/zod-validator';
 import { Env } from '../index';
 import { autenticacaoRequerida, verificarPermissao } from '../middleware/auth';
 import { registrarLog } from '../servicos/servico-logs';
-import { criarNotificacoes } from '../servicos/servico-notificacoes';
+import { criarNotificacoes, removerNotificacoesPorEntidade } from '../servicos/servico-notificacoes';
 const rotasAvisos = new Hono<{ Bindings: Env, Variables: { usuario: any } }>();
 
 // Listar avisos ativos
@@ -82,7 +82,8 @@ rotasAvisos.post('/', autenticacaoRequerida(), verificarPermissao('avisos:criar'
             titulo: `Novo Aviso: ${titulo}`,
             mensagem: conteudo,
             tipo: 'aviso',
-            link: '/app/avisos' // Exemplo 
+            link: '/app/avisos',
+            entidadeId: novoId
         });
 
         await registrarLog(DB, {
@@ -142,6 +143,9 @@ rotasAvisos.delete('/:id', autenticacaoRequerida(), async (c: Context) => {
         }
 
         await DB.prepare('DELETE FROM avisos WHERE id = ?').bind(id).run();
+        
+        // Remove notificações vinculadas
+        if (id) await removerNotificacoesPorEntidade(DB, id);
         await registrarLog(DB, {
             usuarioId: usuario.id,
             acao: 'AVISO_REMOVIDO',
