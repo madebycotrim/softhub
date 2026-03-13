@@ -8,6 +8,9 @@ export interface ProjetoPublico {
     id: string;
     nome: string;
     descricao: string;
+    github_repo?: string;
+    documentacao_url?: string;
+    figma_url?: string;
     criado_em: string;
 }
 

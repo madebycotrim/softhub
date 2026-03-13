@@ -75,4 +75,59 @@ rotasDashboard.get('/', autenticacaoRequerida(), verificarPermissao('dashboard:v
     }
 });
 
+// Obter dados para o gráfico de BurnDown (Fase 3)
+rotasDashboard.get('/burndown', autenticacaoRequerida(), verificarPermissao('dashboard:visualizar'), async (c: Context) => {
+    const { DB } = c.env;
+    const projetoId = c.req.query('projetoId');
+    if (!projetoId) return c.json({ erro: 'ProjetoID é obrigatório' }, 400);
+
+    try {
+        // Busca as tarefas do projeto para calcular os pontos
+        const { results: tarefas } = await DB.prepare(`
+            SELECT pontos, status, criado_em, data_conclusao 
+            FROM tarefas 
+            WHERE projeto_id = ?
+        `).bind(projetoId).all() as { results: any[] };
+
+        const totalPontos = tarefas.reduce((acc: number, t: any) => acc + (t.pontos || 0), 0);
+        
+        // Vamos gerar os últimos 15 dias
+        const hoje = new Date();
+        const dias = [];
+        for (let i = 14; i >= 0; i--) {
+            const d = new Date(hoje);
+            d.setDate(d.getDate() - i);
+            dias.push(d.toISOString().split('T')[0]);
+        }
+
+        const dataBurndown = dias.map((dia, index) => {
+            // Pontos restantes no final deste dia
+            const pontosRestantes = tarefas.reduce((acc: number, t: any) => {
+                const criadoEm = t.criado_em.split('T')[0];
+                const concluidoEm = t.data_conclusao ? t.data_conclusao.split('T')[0] : null;
+
+                // Se a tarefa existia neste dia e não estava concluída (ou foi concluída depois)
+                if (criadoEm <= dia && (!concluidoEm || concluidoEm > dia)) {
+                    return acc + (t.pontos || 0);
+                }
+                return acc;
+            }, 0);
+
+            // Linha Ideal (simples regressão linear do total até zero)
+            const ideal = Math.max(0, totalPontos - (totalPontos / 14) * index);
+
+            return {
+                dia: dia.split('-').reverse().slice(0, 2).reverse().join('/'), // DD/MM
+                real: pontosRestantes,
+                ideal: Math.round(ideal)
+            };
+        });
+
+        return c.json(dataBurndown);
+    } catch (e) {
+        console.error('[ERRO Burndown]', e);
+        return c.json({ erro: 'Falha ao gerar burndown' }, 500);
+    }
+});
+
 export default rotasDashboard;

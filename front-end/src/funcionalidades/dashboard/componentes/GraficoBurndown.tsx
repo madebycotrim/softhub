@@ -1,0 +1,119 @@
+import { memo } from 'react';
+import { 
+    LineChart, 
+    Line, 
+    XAxis, 
+    YAxis, 
+    CartesianGrid, 
+    Tooltip, 
+    ResponsiveContainer,
+    Area,
+    AreaChart
+} from 'recharts';
+import { Flame, Info } from 'lucide-react';
+import { usarBurndown } from '../hooks/usarDashboard';
+import { Carregando } from '@/compartilhado/componentes/Carregando';
+
+interface GraficoBurndownProps {
+    projetoId?: string;
+}
+
+export const GraficoBurndown = memo(({ projetoId }: GraficoBurndownProps) => {
+    const { burndown, carregando } = usarBurndown(projetoId);
+
+    if (carregando) return (
+        <div className="h-[300px] flex items-center justify-center bg-card/30 border border-border rounded-3xl">
+            <Carregando tamanho="md" />
+        </div>
+    );
+
+    if (burndown.length === 0) return null;
+
+    return (
+        <div className="bg-card border border-border rounded-3xl p-6 shadow-sm overflow-hidden relative group">
+            <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-orange-500/10 text-orange-500 rounded-xl">
+                        <Flame size={18} />
+                    </div>
+                    <div>
+                        <h4 className="text-sm font-bold text-foreground">Burndown do Projeto</h4>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Progresso nos últimos 15 dias</p>
+                    </div>
+                </div>
+                <div className="hidden sm:flex items-center gap-4">
+                    <div className="flex items-center gap-1.5">
+                        <div className="w-2 h-2 rounded-full bg-primary" />
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase">Real</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <div className="w-2 h-2 rounded-full bg-border" />
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase">Ideal</span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="h-[250px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={burndown}>
+                        <defs>
+                            <linearGradient id="colorReal" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                            </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.1} />
+                        <XAxis 
+                            dataKey="dia" 
+                            axisLine={false} 
+                            tickLine={false} 
+                            tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 'bold' }}
+                            dy={10}
+                        />
+                        <YAxis 
+                            axisLine={false} 
+                            tickLine={false} 
+                            tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 'bold' }}
+                        />
+                        <Tooltip 
+                            contentStyle={{ 
+                                backgroundColor: '#0f172a', 
+                                border: '1px solid #1e293b', 
+                                borderRadius: '12px',
+                                fontSize: '12px',
+                                fontWeight: 'bold'
+                            }}
+                            itemStyle={{ padding: '2px 0' }}
+                        />
+                        <Area 
+                            type="monotone" 
+                            dataKey="real" 
+                            stroke="#3b82f6" 
+                            strokeWidth={3}
+                            fillOpacity={1} 
+                            fill="url(#colorReal)" 
+                            animationDuration={1500}
+                        />
+                        <Line 
+                            type="monotone" 
+                            dataKey="ideal" 
+                            stroke="#475569" 
+                            strokeWidth={2} 
+                            strokeDasharray="5 5" 
+                            dot={false}
+                            animationDuration={1000}
+                        />
+                    </AreaChart>
+                </ResponsiveContainer>
+            </div>
+
+            <div className="mt-4 flex items-start gap-2 p-3 bg-muted/30 rounded-xl border border-border/50">
+                <Info size={14} className="text-muted-foreground mt-0.5" />
+                <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    O <b>Ideal</b> representa a velocidade esperada de queima de pontos. <br/> 
+                    Mantenha a linha <b>Real</b> abaixo da pontilhada para garantir a saúde das entregas.
+                </p>
+            </div>
+        </div>
+    );
+});

@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { ExternalLink, Github, Code2, Rocket, Globe, Boxes, ChevronRight } from 'lucide-react';
+import { ExternalLink, Github, Code2, Rocket, Globe, Boxes, ChevronRight, Figma, BookText } from 'lucide-react';
 import { usarPortfolio } from '../hooks/usarPortfolio';
 import { Skeleton } from '@/compartilhado/componentes/Skeleton';
 
@@ -121,8 +121,22 @@ export const PaginaPortfolio = memo(() => {
                                             {p.descricao || 'Este projeto demonstra excelência em arquitetura e escalabilidade técnica.'}
                                         </p>
                                         <div className="flex items-center justify-between pt-4 border-t border-border/5">
-                                            <div className="flex items-center gap-2">
-                                                <Github size={16} className="text-slate-500 hover:text-white cursor-pointer transition-colors" />
+                                            <div className="flex items-center gap-3">
+                                                {p.github_repo && (
+                                                    <a href={`https://github.com/madebycotrim/${p.github_repo}`} target="_blank" rel="noreferrer" className="text-slate-500 hover:text-white transition-colors" title="Ver código no GitHub">
+                                                        <Github size={18} />
+                                                    </a>
+                                                )}
+                                                {p.figma_url && (
+                                                    <a href={p.figma_url} target="_blank" rel="noreferrer" className="text-slate-500 hover:text-indigo-400 transition-colors" title="Visualizar Design">
+                                                        <Figma size={18} />
+                                                    </a>
+                                                )}
+                                                {p.documentacao_url && (
+                                                    <a href={p.documentacao_url} target="_blank" rel="noreferrer" className="text-slate-500 hover:text-sky-400 transition-colors" title="Abrir Documentação">
+                                                        <BookText size={18} />
+                                                    </a>
+                                                )}
                                             </div>
                                             <button className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-1.5 group/btn">
                                                 Explorar Case <ExternalLink size={12} className="group-hover/btn:-translate-y-0.5 group-hover/btn:translate-x-0.5 transition-transform" />

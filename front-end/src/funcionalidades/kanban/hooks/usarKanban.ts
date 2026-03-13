@@ -9,6 +9,9 @@ export interface Tarefa {
     status: 'backlog' | 'todo' | 'in_progress' | 'em_revisao' | 'concluida';
     prioridade: 'urgente' | 'alta' | 'media' | 'baixa';
     pontos: number | null;
+    feedback_lider?: string | null;
+    nota_aprendizado?: number | null;
+    data_conclusao?: string | null;
     responsaveis: Array<{
         id: string;
         nome: string;

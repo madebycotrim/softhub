@@ -13,6 +13,9 @@ const ProjetoSchema = z.object({
     descricao: z.string().optional(),
     publico: z.boolean().default(false),
     github_repo: z.string().optional(),
+    documentacao_url: z.string().optional(),
+    figma_url: z.string().optional(),
+    setup_url: z.string().optional(),
     equipes: z.array(z.object({
         equipe_id: z.string(),
         acesso: z.enum(['LEITURA', 'EDICAO', 'GESTAO'])
@@ -27,7 +30,7 @@ rotasProjetos.get('/publicos', async (c) => {
     const { DB } = c.env;
     try {
         const { results } = await DB.prepare(`
-            SELECT id, nome, descricao, criado_em 
+            SELECT id, nome, descricao, github_repo, documentacao_url, figma_url, criado_em 
             FROM projetos 
             WHERE publico = 1 
             ORDER BY criado_em DESC
@@ -90,9 +93,18 @@ rotasProjetos.post('/',
 
     try {
         await DB.prepare(`
-            INSERT INTO projetos (id, nome, descricao, publico, github_repo)
-            VALUES (?, ?, ?, ?, ?)
-        `).bind(id, body.nome, body.descricao || null, body.publico ? 1 : 0, body.github_repo || null).run();
+            INSERT INTO projetos (id, nome, descricao, publico, github_repo, documentacao_url, figma_url, setup_url)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+            id, 
+            body.nome, 
+            body.descricao || null, 
+            body.publico ? 1 : 0, 
+            body.github_repo || null,
+            body.documentacao_url || null,
+            body.figma_url || null,
+            body.setup_url || null
+        ).run();
 
         // Salva as equipes vinculadas, se houver
         if (body.equipes && Array.isArray(body.equipes)) {
@@ -144,6 +156,9 @@ rotasProjetos.patch('/:id',
         if (body.descricao !== undefined) { campos.push('descricao = ?'); valores.push(body.descricao); }
         if (body.publico !== undefined) { campos.push('publico = ?'); valores.push(body.publico ? 1 : 0); }
         if (body.github_repo !== undefined) { campos.push('github_repo = ?'); valores.push(body.github_repo); }
+        if (body.documentacao_url !== undefined) { campos.push('documentacao_url = ?'); valores.push(body.documentacao_url); }
+        if (body.figma_url !== undefined) { campos.push('figma_url = ?'); valores.push(body.figma_url); }
+        if (body.setup_url !== undefined) { campos.push('setup_url = ?'); valores.push(body.setup_url); }
 
         if (campos.length > 0) {
             valores.push(id);

@@ -551,6 +551,7 @@ export const GerenciarMembros = memo(() => {
                     aoCadastrarLote={cadastrarMembroLote}
                     aoSucesso={handleFecharModal} 
                     roles={rolesDisponiveis} 
+                    autoCadastroAtivado={configuracoes?.auto_cadastro}
                 />
             </Modal>
 

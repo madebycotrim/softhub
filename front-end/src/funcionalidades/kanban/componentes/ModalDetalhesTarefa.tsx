@@ -4,6 +4,8 @@ import { CORES_PRIORIDADE, LABELS_PRIORIDADE } from '@/utilitarios/constantes';
 import type { Tarefa } from '@/funcionalidades/kanban/hooks/usarKanban';
 import { SecaoChecklist } from './SecaoChecklist';
 import { JornalTarefa } from './JornalTarefa';
+import { SecaoFeedbackMentoria } from './SecaoFeedbackMentoria';
+import { usarKanban } from '../hooks/usarKanban';
 
 interface ModalDetalhesTarefaProps {
     tarefa: Tarefa | null;
@@ -12,6 +14,7 @@ interface ModalDetalhesTarefaProps {
 }
 
 export function ModalDetalhesTarefa({ tarefa, aberto, aoFechar }: ModalDetalhesTarefaProps) {
+    const { recarregar } = usarKanban();
     if (!tarefa) return null;
 
     return (
@@ -74,6 +77,15 @@ export function ModalDetalhesTarefa({ tarefa, aberto, aoFechar }: ModalDetalhesT
                         </div>
                     )}
                 </div>
+
+                {/* FASE 2: Feedback de Mentoria (Apenas em Concluídas) */}
+                <SecaoFeedbackMentoria 
+                    tarefaId={tarefa.id}
+                    feedbackAtual={tarefa.feedback_lider}
+                    notaAtual={tarefa.nota_aprendizado}
+                    status={tarefa.status}
+                    aoFeedbackEnviado={recarregar}
+                />
 
                 {/* Divisor Visual */}
                 <div className="h-px bg-border/40 w-full" />

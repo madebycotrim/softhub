@@ -31,9 +31,12 @@ import { ModalCriarTarefa } from '@/funcionalidades/backlog/componentes/ModalCri
 import { Carregando } from '@/compartilhado/componentes/Carregando';
 import { EstadoVazio } from '@/compartilhado/componentes/EstadoVazio';
 import { EstadoErro } from '@/compartilhado/componentes/EstadoErro';
+import { ModalEdicaoPerfil } from '@/funcionalidades/perfil/componentes/ModalEdicaoPerfil';
+import { PerfilProvider } from '@/funcionalidades/perfil/contexto/PerfilContexto';
 
 const LABELS_COLUNAS: Record<string, string> = {
-    todo: 'A Fazer',
+    backlog: 'Backlog',
+    todo: 'À Fazer',
     in_progress: 'Em Andamento',
     em_revisao: 'Em Revisão',
     concluida: 'Concluído'
@@ -52,6 +55,7 @@ export const QuadroKanban = memo(() => {
     const [activeTarefa, setActiveTarefa] = useState<Tarefa | null>(null);
     const [tarefaDetalhes, setTarefaDetalhes] = useState<Tarefa | null>(null);
     const [modalCriarAberto, setModalCriarAberto] = useState(false);
+    const [idPerfilParaVer, setIdPerfilParaVer] = useState<string | null>(null);
 
     const podeMover = usarPermissaoAcesso('tarefas:mover');
     const podeCriar = usarPermissaoAcesso('tarefas:criar');
@@ -60,7 +64,7 @@ export const QuadroKanban = memo(() => {
     const { criarTarefa } = usarBacklog(projetoAtivoId);
 
     const tarefasPorStatus = useMemo(() => {
-        const agrupado: Record<string, Tarefa[]> = { todo: [], in_progress: [], em_revisao: [], concluida: [] };
+        const agrupado: Record<string, Tarefa[]> = { backlog: [], todo: [], in_progress: [], em_revisao: [], concluida: [] };
         tarefas.forEach((t: Tarefa) => {
             if (agrupado[t.status]) agrupado[t.status].push(t);
         });
@@ -103,6 +107,9 @@ export const QuadroKanban = memo(() => {
         await criarTarefa({ ...dados, status: 'todo' });
         setModalCriarAberto(false);
     }, [criarTarefa]);
+
+    const handleVerPerfil = useCallback((id: string) => setIdPerfilParaVer(id), []);
+    const handleFecharPerfil = useCallback(() => setIdPerfilParaVer(null), []);
 
     if (carregandoProjetos) {
         return (
@@ -194,6 +201,7 @@ export const QuadroKanban = memo(() => {
                                                 titulo={LABELS_COLUNAS[coluna]} 
                                                 tarefas={tarefasPorStatus[coluna] || []} 
                                                 aoApertarTarefa={setTarefaDetalhes}
+                                                aoVerPerfil={handleVerPerfil}
                                                 delayClass={`atraso-${index + 1}`}
                                             />
                                         ))}
@@ -214,6 +222,16 @@ export const QuadroKanban = memo(() => {
 
             <ModalDetalhesTarefa tarefa={tarefaDetalhes} aberto={!!tarefaDetalhes} aoFechar={handleFecharDetalhes} />
             <ModalCriarTarefa aberto={modalCriarAberto} aoFechar={handleFecharCriar} aoCriar={handleCriarTarefa} />
+
+            {/* Modal de Detalhes do Perfil (Fase 4) */}
+            {idPerfilParaVer && (
+                <PerfilProvider customUsuarioId={idPerfilParaVer}>
+                    <ModalEdicaoPerfil 
+                        aberto={!!idPerfilParaVer} 
+                        aoFechar={handleFecharPerfil} 
+                    />
+                </PerfilProvider>
+            )}
         </div>
     );
 });

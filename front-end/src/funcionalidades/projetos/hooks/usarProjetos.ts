@@ -13,6 +13,9 @@ export interface Projeto {
     descricao: string | null;
     publico: boolean;
     github_repo?: string | null;
+    documentacao_url?: string | null;
+    figma_url?: string | null;
+    setup_url?: string | null;
     total_tarefas?: number;
     equipes?: ProjetoEquipe[];
     criado_em: string;

@@ -35,12 +35,24 @@ export default function GerenciarProjetos() {
         descricao: '',
         publico: false,
         github_repo: '',
+        documentacao_url: '',
+        figma_url: '',
+        setup_url: '',
         equipes: []
     });
 
     const handleAbrirCriar = () => {
         setProjetoEditando(null);
-        setProjetoNoFormulario({ nome: '', descricao: '', publico: false, github_repo: '', equipes: [] });
+        setProjetoNoFormulario({ 
+            nome: '', 
+            descricao: '', 
+            publico: false, 
+            github_repo: '', 
+            documentacao_url: '',
+            figma_url: '',
+            setup_url: '',
+            equipes: [] 
+        });
         setModalAberto(true);
     };
 
@@ -51,6 +63,9 @@ export default function GerenciarProjetos() {
             descricao: p.descricao || '', 
             publico: Boolean(p.publico),
             github_repo: p.github_repo || '',
+            documentacao_url: p.documentacao_url || '',
+            figma_url: p.figma_url || '',
+            setup_url: p.setup_url || '',
             equipes: p.equipes || []
         });
         setModalAberto(true);

@@ -2,7 +2,7 @@ import { memo, useEffect } from 'react';
 import { useForm, SubmitHandler, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, Trash2, CheckCircle2, Github } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, Github, BookText, Figma, Link2 } from 'lucide-react';
 import { Carregando } from '@/compartilhado/componentes/Carregando';
 import { Modal } from '@/compartilhado/componentes/Modal';
 import type { Projeto } from '@/funcionalidades/projetos/hooks/usarProjetos';
@@ -13,6 +13,9 @@ export const esquemaProjeto = z.object({
     descricao: z.string(),
     publico: z.boolean(),
     github_repo: z.string().optional(),
+    documentacao_url: z.string().optional(),
+    figma_url: z.string().optional(),
+    setup_url: z.string().optional(),
     equipes: z.array(z.object({
         equipe_id: z.string().min(1, 'Selecione uma equipe'),
         acesso: z.enum(['LEITURA', 'EDICAO', 'GESTAO'])
@@ -100,7 +103,49 @@ export const ModalFormularioProjeto = memo(({
                            placeholder="Ex: meu-projeto-api"
                        />
                     </div>
-                    <p className="text-[10px] text-muted-foreground mt-1">Apenas o nome do repositório. O dono será {import.meta.env.VITE_GITHUB_STORAGE_OWNER || '(configurado no .env)'}.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Figma (URL)</label>
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <Figma size={14} className="text-muted-foreground" />
+                            </div>
+                            <input
+                                {...register('figma_url')}
+                                className="w-full h-11 bg-background border border-border rounded-2xl pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                placeholder="https://figma.com/..."
+                            />
+                        </div>
+                    </div>
+                    <div>
+                        <label className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Documentação (URL)</label>
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <BookText size={14} className="text-muted-foreground" />
+                            </div>
+                            <input
+                                {...register('documentacao_url')}
+                                className="w-full h-11 bg-background border border-border rounded-2xl pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                placeholder="https://docs.google.com/..."
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Setup / Wiki (URL)</label>
+                    <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Link2 size={14} className="text-muted-foreground" />
+                        </div>
+                        <input
+                            {...register('setup_url')}
+                            className="w-full h-11 bg-background border border-border rounded-2xl pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                            placeholder="Link para guia de instalação ou Notion..."
+                        />
+                    </div>
                 </div>
 
                 <div className="pt-2 border-t border-border">

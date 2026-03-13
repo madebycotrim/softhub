@@ -12,6 +12,7 @@ import { MetricasProgresso } from './MetricasProgresso';
 import { MinhasTarefasLista } from './MinhasTarefasLista';
 import { ResumoPessoalDashboard } from './ResumoPessoalDashboard';
 import { Skeleton, SkeletonCard, SkeletonRow } from '@/compartilhado/componentes/Skeleton';
+import { GraficoBurndown } from './GraficoBurndown';
 
 /**
  * Dashboard principal (Página inicial logada).
@@ -81,8 +82,9 @@ export const PaginaDashboard = memo(() => {
                     </div>
                     
                     <div className={`grid grid-cols-1 lg:grid-cols-12 gap-8 transition-opacity duration-500 ${carregando ? 'opacity-70' : 'opacity-100'}`}>
-                        {/* Coluna da Esquerda: Avisos e Métricas */}
+                        {/* Coluna da Esquerda: Gráfico, Avisos e Métricas */}
                         <div className="lg:col-span-8 space-y-8">
+                            <GraficoBurndown projetoId={projetoAtivoId} />
                             <ComunicadosPrioritarios avisos={avisos} />
                             <MetricasProgresso metricas={metricas} />
                         </div>

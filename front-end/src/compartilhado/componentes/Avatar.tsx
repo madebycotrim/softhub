@@ -6,12 +6,13 @@ interface AvatarProps {
     tamanho?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
     className?: string;
     coroa?: boolean;
+    onClick?: (e: React.MouseEvent) => void;
 }
 
 /**
  * Avatar do usuário. Exibe a foto externa ou as iniciais baseadas no nome.
  */
-export function Avatar({ nome, fotoPerfil, tamanho = 'md', className = '', coroa = false }: AvatarProps) {
+export function Avatar({ nome, fotoPerfil, tamanho = 'md', className = '', coroa = false, onClick }: AvatarProps) {
     // Tamanhos mapeados por pixels
     const medidas = {
         sm: { box: 'w-6 h-6 text-[10px]', corona: 'w-2.5 h-2.5 -top-1 -left-1' },
@@ -56,7 +57,10 @@ export function Avatar({ nome, fotoPerfil, tamanho = 'md', className = '', coroa
 
     if (fotoPerfil && fotoPerfil.trim() !== '') {
         return (
-            <div className={`relative rounded-2xl overflow-hidden flex-shrink-0 border border-white/10 ${tamanhoAtual} ${className}`}>
+            <div 
+                onClick={onClick}
+                className={`relative rounded-2xl overflow-hidden flex-shrink-0 border border-white/10 ${tamanhoAtual} ${className}`}
+            >
                 <img
                     src={fotoPerfil}
                     alt={`Foto de ${nome}`}
@@ -72,9 +76,9 @@ export function Avatar({ nome, fotoPerfil, tamanho = 'md', className = '', coroa
         );
     }
 
-    // Fallback para Iniciais
     return (
         <div
+            onClick={onClick}
             className={`relative rounded-2xl flex items-center justify-center flex-shrink-0 text-white font-medium border border-white/5 ${tamanhoAtual} ${corBg} ${className}`}
             title={nome}
         >

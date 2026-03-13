@@ -52,3 +52,24 @@ export function usarDashboard(projetoId?: string) {
     };
 }
 
+export interface DadoBurndown {
+    dia: string;
+    real: number;
+    ideal: number;
+}
+
+export function usarBurndown(projetoId?: string) {
+    const { data: burndown = [], isLoading: carregando } = useQuery<DadoBurndown[]>({
+        queryKey: ['burndown', projetoId],
+        queryFn: async () => {
+            if (!projetoId) return [];
+            const res = await api.get('/api/dashboard/burndown', { params: { projetoId } });
+            return res.data;
+        },
+        enabled: !!projetoId,
+        staleTime: 1800000, 
+    });
+
+    return { burndown, carregando };
+}
+

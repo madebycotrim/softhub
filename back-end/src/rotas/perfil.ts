@@ -206,4 +206,47 @@ rotasPerfil.get('/:id', autenticacaoRequerida(), async (c: Context) => {
     }
 });
 
+// ─── GET /:id/radar ──────────────────────────────────────────────────────────── (Fase 3)
+rotasPerfil.get('/:id/radar', autenticacaoRequerida(), async (c: Context) => {
+    const { DB } = c.env;
+    const usuarioLogado = c.get('usuario');
+    let id = c.req.param('id');
+
+    // Se o ID for 'me', usamos o ID do usuário autenticado
+    if (id === 'me') {
+        id = usuarioLogado.id;
+    }
+
+    try {
+        const query = `
+            SELECT 
+                COALESCE(t.modulo, 'Geral') as area,
+                AVG(t.nota_aprendizado) as nota,
+                COUNT(*) as entregas
+            FROM tarefas t
+            JOIN tarefas_responsaveis tr ON tr.tarefa_id = t.id
+            WHERE tr.usuario_id = ? AND t.status = 'concluida' AND t.nota_aprendizado > 0
+            GROUP BY t.modulo
+            ORDER BY nota DESC
+        `;
+        const { results } = await DB.prepare(query).bind(id).all();
+
+        // Se não houver dados, retorna um radar vazio padrão para não quebrar a UI
+        if (!results || results.length === 0) {
+            return c.json([
+                { area: 'Back-end', nota: 0, entregas: 0 },
+                { area: 'Front-end', nota: 0, entregas: 0 },
+                { area: 'DevOps', nota: 0, entregas: 0 },
+                { area: 'UX/UI', nota: 0, entregas: 0 },
+                { area: 'Lógica', nota: 0, entregas: 0 }
+            ]);
+        }
+
+        return c.json(results);
+    } catch (e) {
+        console.error('[ERRO Radar]', e);
+        return c.json({ erro: 'Falha ao gerar radar de competências' }, 500);
+    }
+});
+
 export default rotasPerfil;

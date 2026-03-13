@@ -16,10 +16,11 @@ interface ColunaDropZoneProps {
     titulo: string;
     tarefas: Tarefa[];
     aoApertarTarefa: (t: Tarefa) => void;
+    aoVerPerfil?: (id: string) => void;
     delayClass?: string;
 }
 
-export const ColunaDropZone = memo(({ id, titulo, tarefas, aoApertarTarefa, delayClass }: ColunaDropZoneProps) => {
+export const ColunaDropZone = memo(({ id, titulo, tarefas, aoApertarTarefa, aoVerPerfil, delayClass }: ColunaDropZoneProps) => {
     const { setNodeRef, isOver } = useDroppable({
         id: id,
         data: { type: 'Column', coluna: id }
@@ -45,7 +46,7 @@ export const ColunaDropZone = memo(({ id, titulo, tarefas, aoApertarTarefa, dela
                 className={`flex-1 p-4 overflow-y-auto overflow-x-hidden flex flex-col gap-4 scrollbar-none transition-all duration-300 ${isOver ? 'bg-primary/5 ring-2 ring-inset ring-primary/30 rounded-2xl' : ''}`}
             >
                 {tarefas.map(tarefa => (
-                    <CartaoTarefa key={tarefa.id} tarefa={tarefa} aoClicar={aoApertarTarefa} />
+                    <CartaoTarefa key={tarefa.id} tarefa={tarefa} aoClicar={aoApertarTarefa} aoVerPerfil={aoVerPerfil} />
                 ))}
             </div>
         </div>

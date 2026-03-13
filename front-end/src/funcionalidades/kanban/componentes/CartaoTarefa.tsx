@@ -11,13 +11,14 @@ import { CheckCircle2, ChevronDown, ChevronUp, Maximize2 } from 'lucide-react';
 interface CartaoTarefaProps {
     tarefa: Tarefa;
     aoClicar?: (tarefa: Tarefa) => void;
+    aoVerPerfil?: (id: string) => void;
 }
 
 /**
  * Representa uma única tarefa visualmente dentro da coluna.
  * Agora com comportamento de expansão: discreto por padrão, detalhado ao clicar.
  */
-export function CartaoTarefa({ tarefa, aoClicar }: CartaoTarefaProps) {
+export function CartaoTarefa({ tarefa, aoClicar, aoVerPerfil }: CartaoTarefaProps) {
     const [expandido, setExpandido] = useState(false);
     const isUrgente = tarefa.prioridade === 'urgente';
     const { totalConcluidos, totalItens } = usarChecklist(tarefa.id);
@@ -137,7 +138,11 @@ export function CartaoTarefa({ tarefa, aoClicar }: CartaoTarefaProps) {
                                         nome={resp.nome}
                                         fotoPerfil={resp.foto || null}
                                         tamanho="sm"
-                                        className="ring-2 ring-card shadow-sm group-hover/avatar:ring-primary/40 group-hover/avatar:scale-110 transition-all z-0 hover:z-10"
+                                        className="ring-2 ring-card shadow-sm group-hover/avatar:ring-primary/40 group-hover/avatar:scale-110 transition-all z-0 hover:z-10 cursor-pointer"
+                                        onClick={(e: React.MouseEvent) => {
+                                            e.stopPropagation();
+                                            aoVerPerfil?.(resp.id);
+                                        }}
                                     />
                                 </div>
                             ))}

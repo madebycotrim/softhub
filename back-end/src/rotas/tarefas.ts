@@ -214,8 +214,10 @@ rotasTarefas.patch('/:id/mover',
         }
 
         if (tarefa.status !== colunaDestino) {
-            await DB.prepare('UPDATE tarefas SET status = ?, atualizado_em = ? WHERE id = ?')
-                .bind(colunaDestino, new Date().toISOString(), id).run();
+            const dataConclusao = colunaDestino === 'concluida' ? new Date().toISOString() : null;
+            
+            await DB.prepare('UPDATE tarefas SET status = ?, data_conclusao = ?, atualizado_em = ? WHERE id = ?')
+                .bind(colunaDestino, dataConclusao, new Date().toISOString(), id).run();
 
             // Histórico
             await DB.prepare('INSERT INTO tarefa_historico (id, tarefa_id, usuario_id, campo_alterado, valor_antigo, valor_novo) VALUES (?, ?, ?, ?, ?, ?)')

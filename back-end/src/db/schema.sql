@@ -82,6 +82,9 @@ CREATE TABLE IF NOT EXISTS projetos (
     descricao TEXT,
     publico INTEGER NOT NULL DEFAULT 0,
     github_repo TEXT,
+    documentacao_url TEXT,
+    figma_url TEXT,
+    setup_url TEXT,
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 
@@ -94,6 +97,9 @@ CREATE TABLE IF NOT EXISTS tarefas (
     prioridade TEXT NOT NULL DEFAULT 'media',
     pontos INTEGER DEFAULT 1,
     modulo TEXT,
+    feedback_lider TEXT,
+    nota_aprendizado INTEGER DEFAULT 0,
+    data_conclusao TEXT,
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
     atualizado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );

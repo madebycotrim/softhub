@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { FolderKanban, Globe, Lock, Github, FileText, Edit, Trash2, BarChart3 } from 'lucide-react';
+import { FolderKanban, Globe, Lock, Github, FileText, Edit, Trash2, BarChart3, Figma, BookText, Link2 } from 'lucide-react';
 import { formatarDataHora } from '@/utilitarios/formatadores';
 import type { Projeto } from '@/funcionalidades/projetos/hooks/usarProjetos';
 
@@ -62,12 +62,56 @@ export const CardProjeto = memo(({
                 )}
             </h3>
             
-            {p.github_repo && (
-                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
-                    <Github size={12} />
-                    <a href={`https://github.com/${import.meta.env.VITE_GITHUB_STORAGE_OWNER}/${p.github_repo}`} target="_blank" rel="noreferrer" className="hover:text-primary hover:underline transition-colors">
-                        {p.github_repo}
-                    </a>
+            {(p.github_repo || p.documentacao_url || p.figma_url || p.setup_url) && (
+                <div className="flex flex-wrap gap-3 mb-3">
+                    {p.github_repo && (
+                        <a 
+                            href={`https://github.com/${import.meta.env.VITE_GITHUB_STORAGE_OWNER}/${p.github_repo}`} 
+                            target="_blank" 
+                            rel="noreferrer" 
+                            className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground hover:text-primary transition-colors"
+                            title="Repositório no GitHub"
+                        >
+                            <Github size={12} />
+                            Code
+                        </a>
+                    )}
+                    {p.figma_url && (
+                        <a 
+                            href={p.figma_url} 
+                            target="_blank" 
+                            rel="noreferrer" 
+                            className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground hover:text-indigo-500 transition-colors"
+                            title="Design no Figma"
+                        >
+                            <Figma size={12} />
+                            Design
+                        </a>
+                    )}
+                    {p.documentacao_url && (
+                        <a 
+                            href={p.documentacao_url} 
+                            target="_blank" 
+                            rel="noreferrer" 
+                            className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground hover:text-sky-500 transition-colors"
+                            title="Documentação do Projeto"
+                        >
+                            <BookText size={12} />
+                            Docs
+                        </a>
+                    )}
+                    {p.setup_url && (
+                        <a 
+                            href={p.setup_url} 
+                            target="_blank" 
+                            rel="noreferrer" 
+                            className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground hover:text-amber-500 transition-colors"
+                            title="Setup / Wiki"
+                        >
+                            <Link2 size={12} />
+                            Wiki
+                        </a>
+                    )}
                 </div>
             )}
 

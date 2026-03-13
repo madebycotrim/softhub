@@ -251,4 +251,56 @@ rotasTarefasDetalhes.delete('/:tarefaId/checklist/:itemId', autenticacaoRequerid
     }
 });
 
+// === FASE 2: Feedback de Mentoria ===
+
+const FeedbackSchema = z.object({
+    feedback_lider: z.string().max(2000),
+    nota_aprendizado: z.number().int().min(1).max(5)
+});
+
+rotasTarefasDetalhes.patch('/:id/feedback', 
+    autenticacaoRequerida(), 
+    verificarPermissao(['projetos:editar', 'tarefas:editar']), 
+    zValidator('json', FeedbackSchema), 
+    async (c: Context) => {
+    
+    const { DB } = c.env;
+    const id = c.req.param('id');
+    const { feedback_lider, nota_aprendizado } = (c.req as any).valid('json');
+    const usuario = c.get('usuario') as any;
+
+    try {
+        const tarefa = await DB.prepare('SELECT status, titulo FROM tarefas WHERE id = ?').bind(id).first() as any;
+        if (!tarefa) return c.json({ erro: 'Tarefa não encontrada' }, 404);
+
+        if (tarefa.status !== 'concluida') {
+            return c.json({ erro: 'Feedback só pode ser deixado em tarefas concluídas.' }, 400);
+        }
+
+        // Apenas Liderança ou Admin pode deixar feedback
+        const ehLider = ['ADMIN', 'COORDENADOR', 'GESTOR', 'LIDER', 'SUBLIDER'].includes(usuario.role);
+        if (!ehLider) {
+            return c.json({ erro: 'Apenas a liderança pode avaliar o aprendizado.' }, 403);
+        }
+
+        await DB.prepare('UPDATE tarefas SET feedback_lider = ?, nota_aprendizado = ? WHERE id = ?')
+            .bind(feedback_lider, nota_aprendizado, id).run();
+
+        await registrarLog(DB, {
+            usuarioId: usuario.id,
+            acao: 'TAREFA_FEEDBACK_REGISTRADO',
+            modulo: 'kanban',
+            descricao: `Feedback de mentoria registrado para a tarefa "${tarefa.titulo}"`,
+            ip: c.req.header('CF-Connecting-IP') ?? '',
+            entidadeTipo: 'tarefas',
+            entidadeId: id
+        });
+
+        return c.json({ sucesso: true });
+    } catch (e) {
+        console.error('[ERRO DB] PATCH /tarefas/:id/feedback', e);
+        return c.json({ erro: 'Falha ao registrar feedback' }, 500);
+    }
+});
+
 export default rotasTarefasDetalhes;

@@ -12,6 +12,7 @@ export interface PerfilContextType {
     atualizarPerfil: (dados: any) => Promise<any>;
     salvando: boolean;
     refetch: () => void;
+    radar: Array<{ area: string, nota: number, entregas: number }> | undefined;
 }
 
 const PerfilContext = createContext<PerfilContextType | undefined>(undefined);
@@ -29,6 +30,15 @@ export function PerfilProvider({ children, customUsuarioId }: { children: ReactN
         queryKey,
         queryFn: async () => {
             const url = customUsuarioId ? `/api/perfil/${customUsuarioId}` : '/api/perfil/me';
+            const res = await api.get(url);
+            return res.data;
+        }
+    });
+
+    const { data: radar = [], isLoading: carregandoRadar } = useQuery({
+        queryKey: [...queryKey, 'radar'],
+        queryFn: async () => {
+            const url = customUsuarioId ? `/api/perfil/${customUsuarioId}/radar` : '/api/perfil/me/radar';
             const res = await api.get(url);
             return res.data;
         }
@@ -57,7 +67,8 @@ export function PerfilProvider({ children, customUsuarioId }: { children: ReactN
         erro,
         atualizarPerfil: mutacao.mutateAsync,
         salvando: mutacao.isPending,
-        refetch
+        refetch,
+        radar
     };
 
     return <PerfilContext.Provider value={value}>{children}</PerfilContext.Provider>;

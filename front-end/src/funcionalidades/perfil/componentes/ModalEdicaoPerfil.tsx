@@ -21,6 +21,7 @@ import { Avatar } from '@/compartilhado/componentes/Avatar';
 import { Modal } from '@/compartilhado/componentes/Modal';
 import { Emblema } from '@/compartilhado/componentes/Emblema';
 import { formatarDataHora } from '@/utilitarios/formatadores';
+import { RadarCompetencias } from './RadarCompetencias';
 
 interface ModalEdicaoPerfilProps {
     aberto: boolean;
@@ -33,7 +34,7 @@ interface ModalEdicaoPerfilProps {
  * Exibe informações organizacionais (Equipe, Grupo, Cargo) e mural limpo.
  */
 export const ModalEdicaoPerfil = memo(({ aberto, aoFechar }: ModalEdicaoPerfilProps) => {
-    const { perfil, atualizarPerfil, salvando } = usarPerfil();
+    const { perfil, atualizarPerfil, salvando, radar } = usarPerfil();
     const [editando, setEditando] = useState(false);
     
     // Estados para Edição
@@ -318,14 +319,9 @@ export const ModalEdicaoPerfil = memo(({ aberto, aoFechar }: ModalEdicaoPerfilPr
                                         </p>
                                     </div>
 
-                                    {/* Espaço Vazio para Futuros Widgets */}
+                                    {/* Radar de Competências (Fase 3) */}
                                     <div className="grid grid-cols-1 gap-6 pt-4">
-                                        <div className="h-48 border-2 border-dashed border-slate-100 rounded-[32px] flex flex-col items-center justify-center text-slate-300 gap-3 group hover:border-slate-200 transition-colors">
-                                           <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                                <Trophy size={20} />
-                                           </div>
-                                           <p className="text-[10px] font-black uppercase tracking-widest">Em breve: Conquistas e Projetos</p>
-                                        </div>
+                                        <RadarCompetencias dados={radar || []} />
                                     </div>
 
                                     {/* Link de Portfólio Externo */}

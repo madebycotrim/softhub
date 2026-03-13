@@ -1,5 +1,5 @@
 import { memo, useState, FormEvent } from 'react';
-import { Mail, Shield, ChevronDown, Loader2 } from 'lucide-react';
+import { Mail, Shield, ChevronDown, Loader2, Lock, Unlock } from 'lucide-react';
 
 interface FormularioCadastroProps {
     modoInicial?: 'individual' | 'lote';
@@ -7,9 +7,10 @@ interface FormularioCadastroProps {
     aoCadastrarLote?: (emails: string[], role: string) => Promise<any>;
     aoSucesso: () => void;
     roles: string[];
+    autoCadastroAtivado?: boolean;
 }
 
-export const FormularioCadastroMembro = memo(({ modoInicial = 'individual', aoCadastrar, aoCadastrarLote, aoSucesso, roles }: FormularioCadastroProps) => {
+export const FormularioCadastroMembro = memo(({ modoInicial = 'individual', aoCadastrar, aoCadastrarLote, aoSucesso, roles, autoCadastroAtivado = false }: FormularioCadastroProps) => {
     const [modo, setModo] = useState<'individual' | 'lote'>(modoInicial);
     const [email, setEmail] = useState('');
     const [listaEmails, setListaEmails] = useState('');
@@ -86,7 +87,22 @@ export const FormularioCadastroMembro = memo(({ modoInicial = 'individual', aoCa
                             onChange={e => setListaEmails(e.target.value)}
                             className="w-full h-32 bg-muted/40 border border-border/40 rounded-xl p-4 text-[11px] font-medium outline-none focus:bg-background focus:border-primary/30 transition-all resize-none custom-scrollbar"
                         />
-                        <p className="text-[9px] text-muted-foreground/40 ml-1 font-medium">Ex: joao@unieuro.com.br; maria@unieuro.com.br</p>
+                        <div className={`mt-4 p-4 rounded-2xl border flex items-center gap-4 group/lock transition-all ${autoCadastroAtivado ? 'bg-emerald-500/5 border-emerald-500/10' : 'bg-rose-500/5 border-rose-500/10'}`}>
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover/lock:scale-110 ${autoCadastroAtivado ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`}>
+                                {autoCadastroAtivado ? <Unlock size={18} strokeWidth={2.5} /> : <Lock size={18} strokeWidth={2.5} />}
+                            </div>
+                            <div className="flex flex-col">
+                                <p className={`text-[10px] font-black uppercase tracking-widest ${autoCadastroAtivado ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                    {autoCadastroAtivado ? 'Auto-cadastro Ativado' : 'Auto-cadastro Bloqueado'}
+                                </p>
+                                <p className={`text-[9px] font-bold leading-tight ${autoCadastroAtivado ? 'text-emerald-500/60' : 'text-rose-500/60'}`}>
+                                    {autoCadastroAtivado 
+                                        ? "Qualquer pessoa com e-mail institucional pode entrar. Use esta lista apenas para definir cargos superiores."
+                                        : "Acesso Restrito. Apenas e-mails autorizados manualmente nesta lista poderão se conectar à Fábrica."
+                                    }
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 )}
 
