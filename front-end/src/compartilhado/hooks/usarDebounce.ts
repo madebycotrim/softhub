@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 
+/**
+ * Hook para debouncing de valores (evita múltiplas execuções rápidas).
+ */
 export function usarDebounce<T>(valor: T, delay = 300): T {
     const [valorDebounced, setValorDebounced] = useState(valor);
 

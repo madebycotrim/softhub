@@ -11,24 +11,6 @@ export function formatarDataHora(data: string | Date): string {
     return format(d, "dd/MM/yy 'às' HH:mm", { locale: ptBR });
 }
 
-/**
- * Formata data de forma mais amigável (relativa se perto).
- * @param {string | Date} data ISO 8601 com Z ou objeto Date
- * @returns {string} hoje | ontem | 5 de março
- */
-export function formatarDataRelativa(data: string | Date): string {
-    const d = typeof data === 'string' ? new Date(data) : data;
-
-    if (isToday(d)) {
-        return 'hoje';
-    }
-
-    if (isYesterday(d)) {
-        return 'ontem';
-    }
-
-    return format(d, "d 'de' MMMM", { locale: ptBR });
-}
 
 /**
  * Retorna o tempo decorrido desde a data informada.

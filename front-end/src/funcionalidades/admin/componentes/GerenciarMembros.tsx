@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, memo, FormEvent } from 'react';
-import { UserCog, X, Shield, Mail, Trash2, Loader2, ListPlus, Download, ChevronDown, Users as UsersIcon, Plus, CheckSquare, Square, History, Search, Filter, Pencil, Check, LayoutGrid } from 'lucide-react';
+import { UserCog, Shield, Users as UsersIcon, Plus, History, Search, LayoutGrid } from 'lucide-react';
 import { Tooltip } from '@/compartilhado/componentes/Tooltip';
 
 import { api } from '@/compartilhado/servicos/api';

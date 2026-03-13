@@ -12,7 +12,6 @@ export interface Membro {
     foto_perfil: string | null;
     bio: string | null;
     criado_em: string;
-    funcoes: string[]; // Lista de funções (ex: Frontend, Backend, UX)
     grupos_ids?: string | null;
     equipe_nome?: string | null;
 }
@@ -34,11 +33,6 @@ function normalizarMembro(m: unknown): Membro {
         foto_perfil: (raw.foto_perfil as string | null) ?? null,
         bio: (raw.bio as string | null) ?? null,
         criado_em: String(raw.criado_em ?? ''),
-        funcoes: Array.isArray(raw.funcoes)
-            ? raw.funcoes
-            : typeof raw.funcoes === 'string'
-                ? JSON.parse(raw.funcoes || '[]')
-                : [],
         grupos_ids: (raw.grupos_ids as string | null) ?? null,
         equipe_nome: (raw.equipe_nome as string | null) ?? null,
     };
@@ -74,7 +68,7 @@ export function usarMembros() {
 
     // 2. Mutations
     const mutationAdicionar = useMutation({
-        mutationFn: async (dados: { email: string; role: string; funcoes?: string[] }) => {
+        mutationFn: async (dados: { email: string; role: string }) => {
             const res = await api.post('/api/usuarios', dados);
             return res.data?.usuario ?? res.data;
         },
@@ -114,7 +108,7 @@ export function usarMembros() {
         await queryClient.invalidateQueries({ queryKey: ['membros'] });
     }, [queryClient]);
 
-    const adicionarMembro = useCallback(async (dados: { email: string; role: string; funcoes?: string[] }): Promise<ResultadoOperacao> => {
+    const adicionarMembro = useCallback(async (dados: { email: string; role: string }): Promise<ResultadoOperacao> => {
         try {
             await mutationAdicionar.mutateAsync(dados);
             return { sucesso: true };

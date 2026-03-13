@@ -15,7 +15,6 @@ export interface PerfilData {
         foto_perfil: string | null;
         foto_banner: string | null;
         bio: string | null;
-        funcoes: string[];
         criado_em: string;
         equipe_nome: string | null;
         grupo_nome: string | null;

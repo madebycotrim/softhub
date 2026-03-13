@@ -2,7 +2,6 @@ import { useState, useCallback, useEffect } from 'react';
 import { api } from '@/compartilhado/servicos/api';
 
 export interface ConfiguracoesSistema {
-    funcoes_tecnicas: string[];
     nome_sistema: string;
     permissoes_roles: Record<string, Record<string, boolean>>;
     dominios_autorizados: string[];
@@ -23,10 +22,6 @@ export function usarConfiguracoes() {
         try {
             const res = await api.get('/api/configuracoes');
             const dados = res.data.configuracoes || {};
-
-            if (!Array.isArray(dados.funcoes_tecnicas)) {
-                dados.funcoes_tecnicas = [];
-            }
 
             if (!dados.permissoes_roles || typeof dados.permissoes_roles !== 'object') {
                 dados.permissoes_roles = {};

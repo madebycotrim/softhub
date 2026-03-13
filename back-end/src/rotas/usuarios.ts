@@ -32,7 +32,7 @@ rotasUsuarios.get('/', autenticacaoRequerida(), verificarPermissao('membros:gere
     try {
         const query = `
             SELECT
-                u.id, u.nome, u.email, u.role, u.foto_perfil, u.bio, u.funcoes, u.criado_em,
+                u.id, u.nome, u.email, u.role, u.foto_perfil, u.bio, u.criado_em,
                 (SELECT GROUP_CONCAT(grupo_id) FROM usuarios_organizacao WHERE usuario_id = u.id) as grupos_ids,
                 (SELECT GROUP_CONCAT(e.nome) FROM usuarios_organizacao uo JOIN equipes e ON e.id = uo.equipe_id WHERE uo.usuario_id = u.id) as equipe_nome
             FROM usuarios u
@@ -150,14 +150,13 @@ rotasUsuarios.delete('/:id', autenticacaoRequerida(), verificarPermissao('membro
 
 const PreCadastroSchema = z.object({
     email: z.string().email(),
-    role: z.enum(['ADMIN', 'COORDENADOR', 'GESTOR', 'LIDER', 'SUBLIDER', 'MEMBRO']),
-    funcoes: z.array(z.string()).optional()
+    role: z.enum(['ADMIN', 'COORDENADOR', 'GESTOR', 'LIDER', 'SUBLIDER', 'MEMBRO'])
 });
 
 rotasUsuarios.post('/', autenticacaoRequerida(), verificarPermissao('membros:gerenciar'), zValidator('json', PreCadastroSchema), async (c: Context) => {
     const { DB } = c.env;
     const usuarioLogado = c.get('usuario') as any;
-    const { email, role, funcoes } = (c.req as any).valid('json');
+    const { email, role } = (c.req as any).valid('json');
 
     const emailLimpo = email.toLowerCase().trim();
 
@@ -201,9 +200,9 @@ rotasUsuarios.post('/', autenticacaoRequerida(), verificarPermissao('membros:ger
         const nomePadrao = emailLimpo.split('@')[0];
 
         const insertResult = await DB.prepare(
-            'INSERT INTO usuarios (id, nome, email, role, funcoes) VALUES (?, ?, ?, ?, ?)'
+            'INSERT INTO usuarios (id, nome, email, role) VALUES (?, ?, ?, ?)'
         )
-            .bind(novoId, nomePadrao, emailLimpo, roleFinal, JSON.stringify(funcoes || []))
+            .bind(novoId, nomePadrao, emailLimpo, roleFinal)
             .run();
 
 
@@ -243,8 +242,7 @@ rotasUsuarios.post('/', autenticacaoRequerida(), verificarPermissao('membros:ger
                 role: roleFinal,
                 foto_perfil: null,
                 bio: null,
-                criado_em: new Date().toISOString(),
-                funcoes: [],
+                criado_em: new Date().toISOString()
             },
         }, 201);
     } catch (erro) {
@@ -253,44 +251,5 @@ rotasUsuarios.post('/', autenticacaoRequerida(), verificarPermissao('membros:ger
     }
 });
 
-// ─── PATCH /:id/funcoes — Alterar Funções ─────────────────────
-
-const FuncoesSchema = z.object({
-    funcoes: z.array(z.string())
-});
-
-rotasUsuarios.patch('/:id/funcoes', autenticacaoRequerida(), verificarPermissao('membros:gerenciar'), zValidator('json', FuncoesSchema), async (c: Context) => {
-    const { DB } = c.env;
-    const usuarioLogado = c.get('usuario') as any;
-    const id = c.req.param('id');
-    const { funcoes } = (c.req as any).valid('json');
-
-    try {
-        // Buscar estado atual para o log "Antes/Depois"
-        const atual = await DB.prepare('SELECT funcoes FROM usuarios WHERE id = ?').bind(id).first() as any;
-        if (!atual) return c.json({ erro: 'Usuário não encontrado.' }, 404);
-        const funcoesAtuais = JSON.parse(atual.funcoes || '[]');
-
-        const funcoesJson = JSON.stringify(funcoes);
-        await DB.prepare('UPDATE usuarios SET funcoes = ? WHERE id = ?').bind(funcoesJson, id).run();
-
-        await registrarLog(DB, {
-            usuarioId: usuarioLogado.id,
-            acao: 'MEMBRO_FUNCOES_ALTERADAS',
-            modulo: 'admin',
-            descricao: `Funções do membro ${id} atualizadas: ${funcoes.join(', ')}`,
-            ip: c.req.header('CF-Connecting-IP') ?? '',
-            entidadeTipo: 'usuarios',
-            entidadeId: id,
-            dadosAnteriores: { funcoes: funcoesAtuais },
-            dadosNovos: { funcoes },
-        });
-
-        return c.json({ sucesso: true });
-    } catch (erro) {
-        console.error('[ERRO DB] PATCH /api/usuarios/:id/funcoes', erro);
-        return c.json({ erro: 'Não foi possível alterar as funções.' }, 500);
-    }
-});
 
 export default rotasUsuarios;

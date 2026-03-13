@@ -16,7 +16,7 @@ rotasPerfil.get('/me', autenticacaoRequerida(), async (c: Context) => {
         // 1. Dados Básicos do Usuário (Query simplificada para evitar falhas em JOINS)
         const usuario = await DB.prepare(`
             SELECT 
-                id, nome, email, role, foto_perfil, foto_banner, bio, funcoes, criado_em,
+                id, nome, email, role, foto_perfil, foto_banner, bio, criado_em,
                 github_url, linkedin_url, website_url
             FROM usuarios 
             WHERE id = ?
@@ -62,8 +62,7 @@ rotasPerfil.get('/me', autenticacaoRequerida(), async (c: Context) => {
             perfil: {
                 ...usuario,
                 equipe_nome: organizacao?.equipe_nome || null,
-                grupo_nome: organizacao?.grupo_nome || null,
-                funcoes: JSON.parse(usuario.funcoes || '[]')
+                grupo_nome: organizacao?.grupo_nome || null
             },
             stats: {
                 tarefas: {

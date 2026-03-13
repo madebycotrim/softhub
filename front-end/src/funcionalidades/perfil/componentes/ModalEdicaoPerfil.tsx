@@ -2,14 +2,8 @@ import { memo, useState, useEffect } from 'react';
 import { 
     Camera, 
     Save, 
-    User, 
-    FileText, 
-    Briefcase, 
-    Shield, 
-    Calendar, 
     Mail, 
-    Target, 
-    Clock, 
+    Shield,
     Trophy,
     Pencil,
     X,
@@ -18,8 +12,6 @@ import {
     Github,
     Linkedin,
     Globe,
-    ChevronRight,
-    Award,
     Image as ImageIcon,
     Users,
     Layers
@@ -41,7 +33,7 @@ interface ModalEdicaoPerfilProps {
  * Exibe informações organizacionais (Equipe, Grupo, Cargo) e mural limpo.
  */
 export const ModalEdicaoPerfil = memo(({ aberto, aoFechar }: ModalEdicaoPerfilProps) => {
-    const { perfil, stats, atualizarPerfil, salvando } = usarPerfil();
+    const { perfil, atualizarPerfil, salvando } = usarPerfil();
     const [editando, setEditando] = useState(false);
     
     // Estados para Edição
