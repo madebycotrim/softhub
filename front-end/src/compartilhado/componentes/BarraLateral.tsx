@@ -1,4 +1,4 @@
-import { FolderKanban, Clock, Users, Megaphone, LayoutDashboard, Database, Settings, LogOut, Sun, Moon, QrCode, FileText, LayoutGrid, Bell, Trash2, CheckCircle2, ListTodo } from 'lucide-react';
+import { FolderKanban, Clock, Users, Megaphone, LayoutDashboard, Database, Settings, LogOut, Sun, Moon, QrCode, FileText, LayoutGrid, Bell, Trash2, CheckCircle2, ListTodo, Layers } from 'lucide-react';
 import { useLocation, Link } from 'react-router';
 import { Tooltip } from './Tooltip';
 import { usarAutenticacao } from '@/contexto/ContextoAutenticacao';
@@ -57,6 +57,7 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
         {
             label: 'Equipe',
             links: [
+                { label: 'Projeto', path: '/app/projeto', icon: Layers, visivel: true },
                 { label: 'Kanban', path: '/app/kanban', icon: FolderKanban, visivel: podeVerKanban },
 
                 { label: 'Ponto Eletrônico', path: '/app/ponto', icon: Clock, visivel: podeVerPonto || podeVerJustificativas },

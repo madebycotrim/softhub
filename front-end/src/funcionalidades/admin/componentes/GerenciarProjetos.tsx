@@ -10,6 +10,7 @@ import { Modal } from '@/compartilhado/componentes/Modal';
 import { ConfirmacaoExclusao } from '@/compartilhado/componentes/ConfirmacaoExclusao';
 import { usarPermissaoAcesso } from '@/compartilhado/hooks/usarPermissao';
 import { DocumentosProjetoModal } from '@/funcionalidades/projetos/componentes/DocumentosProjetoModal';
+import { githubStorage } from '@/funcionalidades/projetos/servicos/github-storage';
 import { 
     FolderKanban, 
     Plus, 
@@ -41,8 +42,10 @@ export default function GerenciarProjetos() {
     const podeExcluir = usarPermissaoAcesso('projetos:excluir');
     const [modalAberto, setModalAberto] = useState(false);
     const [projetoEditando, setProjetoEditando] = useState<string | null>(null);
-    const [idExcluindo, setIdExcluindo] = useState<string | null>(null);
+    const [projetoExcluindo, setProjetoExcluindo] = useState<Projeto | null>(null);
+    const [excluirRepoGithub, setExcluirRepoGithub] = useState(false);
     const [projetoDocs, setProjetoDocs] = useState<Projeto | null>(null);
+    const [processando, setProcessando] = useState(false);
 
     const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<FormProjeto>({
         resolver: zodResolver(esquemaProjeto),
@@ -74,7 +77,19 @@ export default function GerenciarProjetos() {
     };
 
     const onSubmit: SubmitHandler<FormProjeto> = async (dados) => {
+        setProcessando(true);
         try {
+            if (dados.github_repo) {
+                try {
+                    await githubStorage.garantirRepositorio(
+                        dados.github_repo, 
+                        dados.descricao || 'Repositório criado via SoftHub'
+                    );
+                } catch (e) {
+                    console.warn('[GitHub Storage] Não foi possível garantir o repositório.', e);
+                }
+            }
+
             if (projetoEditando) {
                 await editarProjeto(projetoEditando, dados);
             } else {
@@ -83,15 +98,28 @@ export default function GerenciarProjetos() {
             setModalAberto(false);
         } catch (e) {
             // Logger já trata o erro
+        } finally {
+            setProcessando(false);
         }
     };
 
     const confirmarExclusao = async () => {
-        if (!idExcluindo) return;
+        if (!projetoExcluindo) return;
+        setProcessando(true);
         try {
-            await excluirProjeto(idExcluindo);
-            setIdExcluindo(null);
-        } catch (e) {}
+            if (projetoExcluindo.github_repo && excluirRepoGithub) {
+                try {
+                    await githubStorage.deletarRepositorio(projetoExcluindo.github_repo);
+                } catch (e) {
+                    console.warn('[GitHub Storage] Erro ao deletar repositório', e);
+                }
+            }
+            await excluirProjeto(projetoExcluindo.id);
+            setProjetoExcluindo(null);
+            setExcluirRepoGithub(false);
+        } catch (e) {} finally {
+            setProcessando(false);
+        }
     };
 
     return (
@@ -148,7 +176,7 @@ export default function GerenciarProjetos() {
                                             </button>
                                         )}
                                         {podeExcluir && (
-                                            <button onClick={() => setIdExcluindo(p.id)} className="p-2 hover:bg-destructive/10 rounded-xl text-muted-foreground hover:text-destructive transition-colors">
+                                            <button onClick={() => setProjetoExcluindo(p)} className="p-2 hover:bg-destructive/10 rounded-xl text-muted-foreground hover:text-destructive transition-colors">
                                                 <Trash2 size={14} />
                                             </button>
                                         )}
@@ -263,23 +291,40 @@ export default function GerenciarProjetos() {
                         </button>
                         <button
                             type="submit"
-                            disabled={carregando}
+                            disabled={carregando || processando}
                             className="flex-[2] h-12 bg-primary text-primary-foreground rounded-2xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 shadow-lg shadow-primary/20 transition-all flex items-center justify-center"
                         >
-                            {carregando ? <Carregando tamanho="sm" Centralizar={false} /> : (projetoEditando ? 'Salvar Alterações' : 'Criar Projeto')}
+                            {carregando || processando ? <Carregando tamanho="sm" Centralizar={false} /> : (projetoEditando ? 'Salvar Alterações' : 'Criar Projeto')}
                         </button>
                     </div>
                 </form>
             </Modal>
 
             <ConfirmacaoExclusao
-                aberto={!!idExcluindo}
-                aoFechar={() => setIdExcluindo(null)}
+                aberto={!!projetoExcluindo}
+                aoFechar={() => { setProjetoExcluindo(null); setExcluirRepoGithub(false); }}
                 aoConfirmar={confirmarExclusao}
                 titulo="Excluir Projeto Permanentemente"
                 descricao="Esta ação excluirá o projeto e TODAS as tarefas vinculadas a ele. Não há como desfazer."
-                carregando={carregando}
-            />
+                carregando={carregando || processando}
+            >
+                {projetoExcluindo?.github_repo && (
+                    <div className="flex items-start gap-3 mt-2">
+                        <input
+                            type="checkbox"
+                            disabled={carregando || processando}
+                            id="check-excluir-repo"
+                            checked={excluirRepoGithub}
+                            onChange={(e) => setExcluirRepoGithub(e.target.checked)}
+                            className="mt-1 flex-shrink-0 cursor-pointer w-4 h-4 rounded border-border"
+                        />
+                        <label htmlFor="check-excluir-repo" className="text-xs text-foreground cursor-pointer font-medium leading-relaxed">
+                            Excluir permanentemente o repositório GitHub vinculado (<span className="font-bold text-primary">{projetoExcluindo.github_repo}</span>). <br/>
+                            <span className="text-destructive font-bold">Aviso:</span> Esta ação apagará todo o código e não pode ser desfeita.
+                        </label>
+                    </div>
+                )}
+            </ConfirmacaoExclusao>
 
             <DocumentosProjetoModal
                 projeto={projetoDocs}

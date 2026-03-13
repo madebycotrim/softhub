@@ -42,6 +42,7 @@ export function usarProjetos() {
             const res = await api.post('/api/projetos', dados);
             await buscarProjetos();
             logger.sucesso('Projetos', `Projeto "${dados.nome}" criado com sucesso`);
+            window.dispatchEvent(new Event('projetos_atualizados'));
             return res.data;
         } catch (e: any) {
             const msg = e.response?.data?.erro || 'Erro ao criar projeto';
@@ -58,6 +59,7 @@ export function usarProjetos() {
         try {
             await api.patch(`/api/projetos/${id}`, dados);
             await buscarProjetos();
+            window.dispatchEvent(new Event('projetos_atualizados'));
             logger.sucesso('Projetos', 'Projeto atualizado com sucesso');
         } catch (e: any) {
             const msg = e.response?.data?.erro || 'Erro ao atualizar projeto';
@@ -74,6 +76,7 @@ export function usarProjetos() {
         try {
             await api.delete(`/api/projetos/${id}`);
             await buscarProjetos();
+            window.dispatchEvent(new Event('projetos_atualizados'));
             logger.sucesso('Projetos', 'Projeto excluído permanentemente');
         } catch (e: any) {
             const msg = e.response?.data?.erro || 'Erro ao excluir projeto';
@@ -87,6 +90,11 @@ export function usarProjetos() {
 
     useEffect(() => {
         buscarProjetos();
+
+        const onAtualizacaoGlobal = () => buscarProjetos();
+        window.addEventListener('projetos_atualizados', onAtualizacaoGlobal);
+
+        return () => window.removeEventListener('projetos_atualizados', onAtualizacaoGlobal);
     }, [buscarProjetos]);
 
     return {

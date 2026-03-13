@@ -12,12 +12,17 @@ export const SeletorProjetoGlobal = memo(() => {
     const { projetos, carregando } = usarProjetos();
     const { projetoAtivoId, setProjetoAtivoId } = usarAutenticacao();
 
-    // Sincroniza o projeto inicial se houver projetos mas nenhum selecionado
+    // Sincroniza o projeto inicial se houver projetos mas nenhum selecionado ou se o selecionado sumir
     useEffect(() => {
-        if (!projetoAtivoId && projetos.length > 0) {
-            // Tenta o principal, se não existir pega o primeiro da lista
-            const padrao = projetos.find(p => p.id === PROJETO_PADRAO_ID) || projetos[0];
-            setProjetoAtivoId(padrao.id);
+        if (projetos.length > 0) {
+            const projetoExiste = projetos.some(p => p.id === projetoAtivoId);
+            if (!projetoAtivoId || !projetoExiste) {
+                // Tenta o principal, se não existir pega o primeiro da lista
+                const padrao = projetos.find(p => p.id === PROJETO_PADRAO_ID) || projetos[0];
+                setProjetoAtivoId(padrao.id);
+            }
+        } else if (projetos.length === 0 && projetoAtivoId) {
+            setProjetoAtivoId('');
         }
     }, [projetos, projetoAtivoId, setProjetoAtivoId]);
 

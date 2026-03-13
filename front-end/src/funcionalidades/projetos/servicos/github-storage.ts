@@ -91,5 +91,52 @@ export const githubStorage = {
             console.error('[GitHub Storage] Erro ao deletar:', error);
             throw new Error('Falha ao deletar arquivo do GitHub.');
         }
+    },
+
+    /**
+     * Verifica se o repositório existe e, se não existir, tenta criar automaticamente no GitHub.
+     */
+    async garantirRepositorio(nomeRepo: string, descricao: string): Promise<boolean> {
+        if (!octokit || !nomeRepo || !OWNER) return false;
+        try {
+            await octokit.repos.get({
+                owner: OWNER,
+                repo: nomeRepo,
+            });
+            return true; // Já existe
+        } catch (error: any) {
+            // Conta não encontrou o repositório, tenta criar
+            if (error.status === 404) {
+                try {
+                    await octokit.repos.createForAuthenticatedUser({
+                        name: nomeRepo,
+                        description: descricao,
+                        private: false, // Público ou privado dependendo do seu token
+                        auto_init: true // Adicionar um README inicial ajuda no workflow do conteúdo
+                    });
+                    return true;
+                } catch (createError: any) {
+                    console.error('[GitHub Storage] Erro ao criar repo:', createError);
+                    throw new Error('Falha ao criar o repositório no GitHub automaticamente.');
+                }
+            }
+            throw new Error('Falha ao verificar repositório no GitHub.');
+        }
+    },
+
+    /**
+     * Deleta o repositório inteiro permanentemente.
+     */
+    async deletarRepositorio(nomeRepo: string): Promise<void> {
+        if (!octokit || !nomeRepo || !OWNER) return;
+        try {
+            await octokit.repos.delete({
+                owner: OWNER,
+                repo: nomeRepo,
+            });
+        } catch (error: any) {
+            console.error('[GitHub Storage] Erro ao deletar repo:', error);
+            throw new Error(`Falha ao deletar o repositório: ${error.message}`);
+        }
     }
 };
