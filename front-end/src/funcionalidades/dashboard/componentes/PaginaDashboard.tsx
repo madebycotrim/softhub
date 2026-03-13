@@ -12,6 +12,7 @@ import { DashboardVazio } from './DashboardVazio';
 import { ComunicadosPrioritarios } from './ComunicadosPrioritarios';
 import { MetricasProgresso } from './MetricasProgresso';
 import { MinhasTarefasLista } from './MinhasTarefasLista';
+import { Skeleton, SkeletonCard, SkeletonRow } from '@/compartilhado/componentes/Skeleton';
 
 /**
  * Dashboard principal (Página inicial logada).
@@ -55,9 +56,24 @@ export const PaginaDashboard = memo(() => {
             </CabecalhoFuncionalidade>
 
             {carregando && !metricas ? (
-                <div className="py-24 flex flex-col items-center justify-center gap-4">
-                    <Carregando Centralizar={false} tamanho="lg" />
-                    <span className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Consolidando Métricas</span>
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <div className="lg:col-span-8 space-y-8">
+                        <Skeleton className="h-[200px] w-full rounded-2xl" />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <SkeletonCard />
+                            <SkeletonCard />
+                        </div>
+                    </div>
+                    <div className="lg:col-span-4">
+                        <div className="bg-card border border-border/60 rounded-2xl p-6 space-y-6">
+                            <Skeleton className="h-4 w-1/2" />
+                            <div className="space-y-4">
+                                <SkeletonRow />
+                                <SkeletonRow />
+                                <SkeletonRow />
+                            </div>
+                        </div>
+                    </div>
                 </div>
             ) : erro ? (
                 <div className="py-24 max-w-lg mx-auto">

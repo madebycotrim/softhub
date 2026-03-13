@@ -128,12 +128,19 @@ const PaginaBacklog = memo(() => {
 
             {/* Listagem */}
             {carregando ? (
-                <div className="flex flex-col items-center justify-center py-40 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-2xl">
-                    <div className="relative">
-                        <div className="absolute inset-0 bg-primary/20 blur-3xl animate-pulse rounded-full" />
-                        <Carregando Centralizar={false} tamanho="lg" />
+                <div className="bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-2xl overflow-hidden animate-pulse">
+                    <div className="h-16 w-full bg-white/5 border-b border-white/5" />
+                    <div className="p-8 space-y-6">
+                        {[1, 2, 3, 4, 5].map(i => (
+                            <div key={i} className="flex items-center gap-8">
+                                <div className="h-6 w-1/3 bg-white/5 rounded-lg" />
+                                <div className="h-6 w-20 bg-white/5 rounded-lg mx-auto" />
+                                <div className="h-6 w-24 bg-white/5 rounded-lg mx-auto" />
+                                <div className="h-6 w-10 bg-white/5 rounded-lg mx-auto" />
+                                <div className="h-6 w-8 bg-white/5 rounded-lg ml-auto" />
+                            </div>
+                        ))}
                     </div>
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/60 mt-8 animate-pulse">Sincronizando Ecossistema</span>
                 </div>
             ) : erro ? (
                 <div className="py-12 max-w-lg mx-auto w-full animate-in slide-in-from-bottom-4 duration-500">

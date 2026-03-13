@@ -133,9 +133,11 @@ export const PainelLogs = memo(() => {
                             <EstadoErro titulo="Falha na Sincronização" mensagem={erro} />
                         </div>
                     ) : carregando && logs.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center gap-6 animate-in fade-in duration-500">
-                             <Carregando Centralizar={false} tamanho="lg" />
-                             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Indexando Registros de Auditoria</span>
+                        <div className="flex-1 p-6 space-y-4 animate-pulse">
+                            <div className="h-10 w-full bg-muted/20 rounded-xl" />
+                            {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                                <div key={i} className="h-12 w-full bg-muted/10 rounded-xl" />
+                            ))}
                         </div>
                     ) : logs.length === 0 ? (
                         <EstadoVazio 

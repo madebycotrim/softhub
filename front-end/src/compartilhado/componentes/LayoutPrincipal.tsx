@@ -7,6 +7,7 @@ import { usarAutenticacao } from '@/contexto/ContextoAutenticacao';
 import { usarProjetos } from '@/funcionalidades/projetos/hooks/usarProjetos';
 import { Modal } from './Modal';
 import ScannerQR from '@/funcionalidades/autenticacao/componentes/ScannerQR';
+import { ErrorBoundary } from './ErrorBoundary';
 
 
 interface LayoutPrincipalProps {
@@ -113,7 +114,9 @@ export function LayoutPrincipal({ children }: LayoutPrincipalProps) {
                 </header>
 
                 <main className="flex-1 p-6 overflow-y-auto relative z-10 transition-all overflow-x-hidden animar-entrada">
-                    {children}
+                    <ErrorBoundary modulo="Módulo Selecionado">
+                        {children}
+                    </ErrorBoundary>
                 </main>
             </div>
 

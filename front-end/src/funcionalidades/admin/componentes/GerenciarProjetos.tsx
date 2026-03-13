@@ -123,7 +123,11 @@ export default function GerenciarProjetos() {
                 {erro && <Alerta tipo="erro" mensagem={erro} />}
 
                 {carregando && projetos.length === 0 ? (
-                    <div className="flex justify-center py-20"><Carregando /></div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-pulse">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="h-[200px] bg-card/60 border border-border/40 rounded-3xl" />
+                        ))}
+                    </div>
                 ) : projetos.length === 0 ? (
                     <div className="bg-card border border-border rounded-3xl p-12 text-center">
                         <FolderKanban className="w-12 h-12 mx-auto mb-4 text-muted-foreground/20" />

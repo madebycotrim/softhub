@@ -18,7 +18,6 @@ import { ambiente } from '@/configuracoes/ambiente';
 import { usarConfiguracoes } from '@/funcionalidades/admin/hooks/usarConfiguracoes';
 import { usarDebounce } from '@/compartilhado/hooks/usarDebounce';
 import { usarToast } from '@/compartilhado/hooks/usarToast';
-import { ToastContainer } from '@/compartilhado/componentes/ToastContainer';
 import { Paginacao } from '@/compartilhado/componentes/Paginacao';
 import { FormularioCadastroMembro } from './membros/FormularioCadastroMembro';
 
@@ -37,7 +36,7 @@ function useGerenciarMembros() {
     } = usarMembros();
 
     const [salvandoIds, setSalvandoIds] = useState<Set<string>>(new Set());
-    const { toasts, exibirToast } = usarToast();
+    const { exibirToast } = usarToast();
     const { usuario: usuarioAutenticado, atualizarUsuarioLocalmente } = usarAutenticacao();
 
     const marcarSalvando = useCallback((id: string) => {
@@ -84,7 +83,7 @@ function useGerenciarMembros() {
         return res;
     }, [adicionarMembro, recarregar, exibirToast]);
 
-    return { membros, carregando, erro, recarregar, salvandoIds, toasts, alterarRole, cadastrarMembro, removerMembro: useCallback(async (m: Membro) => { marcarSalvando(m.id); const res = await deletarMembro(m.id); if (res.sucesso) { await recarregar(); exibirToast(`Acesso de ${m.nome} removido.`); } else { exibirToast(res.erro ?? 'Erro ao remover.', 'erro'); } desmarcarSalvando(m.id); return res; }, [deletarMembro, recarregar, exibirToast, marcarSalvando, desmarcarSalvando]) };
+    return { membros, carregando, erro, recarregar, salvandoIds, alterarRole, cadastrarMembro, removerMembro: useCallback(async (m: Membro) => { marcarSalvando(m.id); const res = await deletarMembro(m.id); if (res.sucesso) { await recarregar(); exibirToast(`Acesso de ${m.nome} removido.`); } else { exibirToast(res.erro ?? 'Erro ao remover.', 'erro'); } desmarcarSalvando(m.id); return res; }, [deletarMembro, recarregar, exibirToast, marcarSalvando, desmarcarSalvando]) };
 }
 
 import { LinhaMembro } from './membros/LinhaMembro';
@@ -93,11 +92,11 @@ import { LinhaMembro } from './membros/LinhaMembro';
 
 export const GerenciarMembros = memo(() => {
     const { 
-        membros, carregando, erro, recarregar, salvandoIds, toasts, 
+        membros, carregando, erro, recarregar, salvandoIds, 
         alterarRole, cadastrarMembro, removerMembro 
     } = useGerenciarMembros();
     const { configuracoes } = usarConfiguracoes();
-    const { toasts: toastHook, exibirToast } = usarToast();
+    const { exibirToast } = usarToast();
 
     const rolesDisponiveis = useMemo(() => {
         const base = configuracoes?.permissoes_roles ? Object.keys(configuracoes.permissoes_roles) : ['MEMBRO', 'LIDER', 'ADMIN'];
@@ -160,7 +159,6 @@ export const GerenciarMembros = memo(() => {
 
     return (
         <div className="flex flex-col h-full space-y-6 animar-entrada">
-            <ToastContainer toasts={toasts.length > 0 ? toasts : toastHook} />
             
             <CabecalhoFuncionalidade
                 titulo="Administrar Time"

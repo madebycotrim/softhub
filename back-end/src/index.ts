@@ -18,6 +18,7 @@ import rotasRelatorios from './rotas/relatorios';
 import rotasEquipes from './rotas/equipes';
 import rotasNotificacoes from './rotas/notificacoes';
 import rotasIA from './rotas/ia';
+import rotasPerfil from './rotas/perfil';
 import { lidarExcecao } from './middleware/erros';
 
 export type Env = {
@@ -140,6 +141,7 @@ app.route('/api/relatorios', rotasRelatorios);
 app.route('/api/equipes', rotasEquipes);
 app.route('/api/notificacoes', rotasNotificacoes);
 app.route('/api/ia', rotasIA);
+app.route('/api/perfil', rotasPerfil);
 
 // ─── Health check (Rota pública) ──────────────────────────────────────────────
 app.get('/', (c) => c.json({

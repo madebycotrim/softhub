@@ -41,6 +41,7 @@ const LABELS_COLUNAS: Record<string, string> = {
 
 import { ColunaDropZone } from './ColunaDropZone';
 import { KanbanVazioProjetos } from './KanbanVazioProjetos';
+import { Skeleton, SkeletonCard } from '@/compartilhado/componentes/Skeleton';
 
 export const QuadroKanban = memo(() => {
     const { projetoAtivoId } = usarAutenticacao();
@@ -147,11 +148,15 @@ export const QuadroKanban = memo(() => {
                     </div>
                     <div className={`flex-1 min-h-0 transition-opacity duration-300 ${carregando && tarefas.length > 0 ? 'opacity-70' : 'opacity-100'}`}>
                         {carregando && tarefas.length === 0 ? (
-                            <div className="h-full bg-card/10 border border-border/30 rounded-2xl flex items-center justify-center animate-in fade-in duration-500">
-                                <div className="flex flex-col items-center gap-4">
-                                    <Carregando Centralizar={false} tamanho="lg" />
-                                    <span className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Buscando Tarefas</span>
-                                </div>
+                            <div className="h-full grid grid-cols-1 md:grid-cols-4 gap-6">
+                                {[1, 2, 3, 4].map(i => (
+                                    <div key={i} className="space-y-4">
+                                        <Skeleton className="h-6 w-1/2 mx-auto" />
+                                        <SkeletonCard />
+                                        <SkeletonCard />
+                                        <SkeletonCard />
+                                    </div>
+                                ))}
                             </div>
                         ) : erro ? (
                             <div className="h-full flex items-center justify-center p-12">

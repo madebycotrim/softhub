@@ -149,9 +149,13 @@ const PaginaRelatorios = memo(() => {
                     {erro && <Alerta tipo="erro" mensagem={erro} />}
 
                     {carregando && frequenciaMembros.length === 0 ? (
-                        <div className="py-40 flex flex-col items-center justify-center bg-white border border-slate-100 rounded-[3rem] shadow-sm">
-                            <Carregando tamanho="lg" />
-                            <p className="mt-8 text-[11px] font-black uppercase tracking-[0.4em] text-slate-400 animate-pulse">Sincronizando Banco de Dados D1</p>
+                        <div className="space-y-6 animate-pulse">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                {[1, 2, 3, 4].map(i => (
+                                    <div key={i} className="h-32 bg-card/60 border border-border/40 rounded-3xl" />
+                                ))}
+                            </div>
+                            <div className="h-[400px] bg-card/60 border border-border/40 rounded-3xl" />
                         </div>
                     ) : (
                         <div className="animar-entrada atraso-1">

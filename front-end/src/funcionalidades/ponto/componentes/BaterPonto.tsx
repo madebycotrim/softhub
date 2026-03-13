@@ -223,14 +223,15 @@ export const BaterPonto = memo(() => {
         }));
     }, [historico, diasSemana]);
 
-    // Interface de Carregamento Inicial (Sempre depois dos hooks)
+    // Interface de Carregamento Inicial (Skeleton)
     if (carregando && historico.length === 0) return (
-        <div className="flex flex-col items-center justify-center min-h-[500px] w-full bg-white/50 backdrop-blur-xl rounded-2xl border border-slate-200/50 shadow-xl animate-in fade-in zoom-in duration-500">
-            <Carregando Centralizar={true} />
-            <div className="flex flex-col items-center gap-2 mt-6">
-                <p className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-500 animate-pulse">Sincronizando registros</p>
-                <div className="w-12 h-1 bg-primary/20 rounded-full overflow-hidden">
-                    <div className="w-full h-full bg-primary animate-progress-scan" />
+        <div className="w-full space-y-6 animate-in fade-in duration-500">
+            <div className="h-20 w-full bg-card/60 border border-border/40 rounded-3xl animate-pulse" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="h-[400px] bg-card/60 border border-border/40 rounded-3xl animate-pulse" />
+                <div className="space-y-6">
+                    <div className="h-32 bg-card/60 border border-border/40 rounded-3xl animate-pulse" />
+                    <div className="h-[250px] bg-card/60 border border-border/40 rounded-3xl animate-pulse" />
                 </div>
             </div>
         </div>

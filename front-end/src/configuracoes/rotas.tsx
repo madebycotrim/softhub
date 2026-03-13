@@ -6,8 +6,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { msalInstance } from './msal';
 import { ProvedorAutenticacao } from '../contexto/ContextoAutenticacao';
 import { ProvedorTema } from '../contexto/ContextoTema';
+import { ProvedorToast } from '../contexto/ContextoToast';
 import { RotaProtegida } from './RotaProtegida';
 import { LayoutPrincipal } from '../compartilhado/componentes/LayoutPrincipal';
+import { ErrorBoundary } from '../compartilhado/componentes/ErrorBoundary';
 import { Carregando } from '../compartilhado/componentes/Carregando';
 
 // Configuração do React Query
@@ -28,6 +30,8 @@ const PaginaDashboard = lazy(() => import('../funcionalidades/dashboard/componen
 const PaginaBacklog = lazy(() => import('../funcionalidades/backlog/componentes/PaginaBacklog'));
 const QuadroKanban = lazy(() => import('../funcionalidades/kanban/componentes/QuadroKanban'));
 const PaginaVisaoProjeto = lazy(() => import('../funcionalidades/projetos/componentes/PaginaVisaoProjeto'));
+const PaginaPerfil = lazy(() => import('../funcionalidades/perfil/componentes/PaginaPerfil'));
+const PaginaPortfolio = lazy(() => import('../funcionalidades/portfolio/componentes/PaginaPortfolio'));
 const BaterPonto = lazy(() => import('../funcionalidades/ponto/componentes/BaterPonto'));
 const MuralAvisos = lazy(() => import('../funcionalidades/avisos/componentes/MuralAvisos'));
 
@@ -50,9 +54,13 @@ function LayoutRaiz() {
             <ProvedorTema>
                 <MsalProvider instance={msalInstance}>
                     <ProvedorAutenticacao>
-                        <Suspense fallback={<Carregando Centralizar={true} />}>
-                            <Outlet />
-                        </Suspense>
+                        <ProvedorToast>
+                            <ErrorBoundary modulo="Sistema Geral">
+                                <Suspense fallback={<Carregando Centralizar={true} />}>
+                                    <Outlet />
+                                </Suspense>
+                            </ErrorBoundary>
+                        </ProvedorToast>
                     </ProvedorAutenticacao>
                 </MsalProvider>
             </ProvedorTema>
@@ -66,6 +74,7 @@ export const rotas = createBrowserRouter([
         element: <LayoutRaiz />,
         children: [
             { path: '/login', element: <TelaLogin /> },
+            { path: '/portfolio', element: <PaginaPortfolio /> },
             { path: '/', element: <Navigate to="/app/dashboard" replace /> },
             {
                 path: '/app',
@@ -74,6 +83,7 @@ export const rotas = createBrowserRouter([
             { path: '/app/dashboard', element: <RotaProtegida><LayoutPrincipal><PaginaDashboard /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/backlog', element: <RotaProtegida><LayoutPrincipal><PaginaBacklog /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/projeto', element: <RotaProtegida><LayoutPrincipal><PaginaVisaoProjeto /></LayoutPrincipal></RotaProtegida> },
+            { path: '/app/perfil', element: <RotaProtegida><LayoutPrincipal><PaginaPerfil /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/kanban', element: <RotaProtegida><LayoutPrincipal><QuadroKanban /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/ponto', element: <RotaProtegida><LayoutPrincipal><BaterPonto /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/avisos', element: <RotaProtegida><LayoutPrincipal><MuralAvisos /></LayoutPrincipal></RotaProtegida> },

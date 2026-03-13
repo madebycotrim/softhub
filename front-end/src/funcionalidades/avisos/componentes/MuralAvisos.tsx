@@ -56,9 +56,10 @@ export const MuralAvisos = memo(() => {
 
             <div className={`grid grid-cols-1 gap-4 transition-opacity duration-300 ${carregando && avisos.length > 0 ? 'opacity-70' : 'opacity-100'}`}>
                 {carregando && avisos.length === 0 ? (
-                    <div className="py-24 flex flex-col items-center justify-center gap-4 bg-card/20 border border-border/40 rounded-2xl">
-                        <Carregando Centralizar={false} tamanho="lg" />
-                        <span className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Buscando Comunicados</span>
+                    <div className="space-y-4">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="h-32 w-full bg-card/60 border border-border/40 rounded-3xl animate-pulse" />
+                        ))}
                     </div>
                 ) : erro ? (
                     <div className="py-24 max-w-lg mx-auto w-full">

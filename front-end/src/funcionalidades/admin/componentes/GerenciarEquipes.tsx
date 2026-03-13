@@ -157,7 +157,10 @@ export const GerenciarEquipes = memo(() => {
 
             <div className="flex-1 flex flex-col lg:flex-row gap-8 min-h-0">
                 {carregando && equipesAtivas.length === 0 ? (
-                    <div className="flex-1 flex justify-center items-center h-96"><Carregando /></div>
+                    <div className="flex-1 flex flex-col lg:flex-row gap-8 animate-pulse">
+                        <div className="w-full lg:w-72 h-[500px] bg-card/60 border border-border/40 rounded-3xl" />
+                        <div className="flex-1 h-[500px] bg-card/60 border border-border/40 rounded-3xl" />
+                    </div>
                 ) : (
                     <>
                         {/* Sidebar de Equipes */}
