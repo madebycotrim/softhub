@@ -27,10 +27,11 @@ import { usarRelatorios } from '@/funcionalidades/admin/hooks/usarRelatorios';
 import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
 import { Alerta } from '@/compartilhado/componentes/Alerta';
 import { Carregando } from '@/compartilhado/componentes/Carregando';
-import { formatarDataHora } from '@/utilitarios/formatadores';
-import { 
-    AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer
-} from 'recharts';
+
+import { RelatorioPresenca } from './relatorios/RelatorioPresenca';
+import { RelatorioAusencias } from './relatorios/RelatorioAusencias';
+import { RelatorioMembros } from './relatorios/RelatorioMembros';
+import { RelatorioMapeamento } from './relatorios/RelatorioMapeamento';
 
 /**
  * Pagina de Relatórios - Versão Relatórios Essenciais e Estruturados.
@@ -157,232 +158,22 @@ const PaginaRelatorios = memo(() => {
                             
                             {/* ── RELATÓRIO: CONSOLIDADO DE PRESENÇAS ── */}
                             {abaAtiva === 'presenca' && frequenciaGeral && (
-                                <div className="space-y-6">
-                                    <div className="bg-white border border-slate-100 rounded-[3rem] p-10 shadow-sm">
-                                        <div className="flex items-center justify-between mb-10">
-                                            <div>
-                                                <h3 className="text-xl font-black text-slate-900 uppercase">Tendência de Atividade</h3>
-                                                <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">Gráfico de volume de presenças registradas</p>
-                                            </div>
-                                            <div className="p-4 bg-indigo-50 text-indigo-600 rounded-[1.5rem]"><TrendingUp size={24} /></div>
-                                        </div>
-                                        <div className="h-[380px] w-full">
-                                            <ResponsiveContainer width="100%" height="100%">
-                                                <AreaChart data={frequenciaGeral.tendencia}>
-                                                    <defs>
-                                                        <linearGradient id="gradEssencial" x1="0" y1="0" x2="0" y2="1">
-                                                            <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.15}/>
-                                                            <stop offset="95%" stopColor="#4f46e5" stopOpacity={0}/>
-                                                        </linearGradient>
-                                                    </defs>
-                                                    <CartesianGrid strokeDasharray="5 5" stroke="#f1f5f9" vertical={false} />
-                                                    <XAxis dataKey="data" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 'bold' }} tickFormatter={(v) => v.split('-').reverse().slice(0, 2).join('/')} />
-                                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8' }} />
-                                                    <RechartsTooltip contentStyle={{ border: 'none', borderRadius: '20px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', fontSize: '12px' }} />
-                                                    <Area type="monotone" dataKey="total_presentes" stroke="#4f46e5" strokeWidth={5} fill="url(#gradEssencial)" animationDuration={1500} />
-                                                </AreaChart>
-                                            </ResponsiveContainer>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="bg-slate-900 p-8 rounded-[3rem] text-white shadow-xl shadow-slate-200">
-                                            <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-6">Métricas do Período</h4>
-                                            <div className="grid grid-cols-2 gap-8">
-                                                <div>
-                                                    <p className="text-[32px] font-black leading-none mb-1">{(frequenciaGeral.tendencia || []).reduce((acc, curr) => acc + curr.total_presentes, 0)}</p>
-                                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Total Presentes</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-[32px] font-black leading-none mb-1">{(frequenciaGeral.tendencia?.length || 0)}</p>
-                                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Dias Mapeados</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="bg-white border border-slate-100 p-8 rounded-[3rem] shadow-sm flex items-center gap-6">
-                                            <div className="w-16 h-16 bg-amber-50 text-amber-500 rounded-[1.8rem] flex items-center justify-center"><AlertCircle size={32} /></div>
-                                            <div>
-                                                <p className="text-sm font-black text-slate-900 uppercase leading-none">Justificativas Pendentes</p>
-                                                <p className="text-3xl font-black text-amber-500 mt-2">{(frequenciaGeral.justificativasLista || []).filter(j => j.status === 'pendente').length}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <RelatorioPresenca frequenciaGeral={frequenciaGeral} />
                             )}
 
                             {/* ── RELATÓRIO: CONTROLE DE AUSÊNCIAS ── */}
                             {abaAtiva === 'justificativas' && frequenciaGeral && (
-                                <div className="space-y-6">
-                                    <div className="bg-white border border-slate-100 rounded-[3rem] overflow-hidden shadow-sm">
-                                        <div className="p-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/20">
-                                            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Painel de Auditoria de Justificativas</h3>
-                                            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl"><ClipboardList size={18} /></div>
-                                        </div>
-                                        <div className="overflow-x-auto">
-                                            <table className="w-full text-left">
-                                                <thead>
-                                                    <tr className="bg-slate-50/50">
-                                                        <th className="px-10 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Membro</th>
-                                                        <th className="px-10 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Motivo Técnico</th>
-                                                        <th className="px-10 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Status Atual</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-slate-50">
-                                                    {(frequenciaGeral.justificativasLista || []).map((j) => (
-                                                        <tr key={j.id} className="hover:bg-slate-50/50 transition-all group">
-                                                            <td className="px-10 py-6">
-                                                                <div className="flex items-center gap-4">
-                                                                    <div className="w-10 h-10 bg-slate-100 flex items-center justify-center rounded-2xl font-black text-slate-500 group-hover:bg-indigo-600 group-hover:text-white transition-all">
-                                                                        {j.usuario_nome.charAt(0)}
-                                                                    </div>
-                                                                    <div className="space-y-0.5">
-                                                                        <p className="text-xs font-black text-slate-800 uppercase">{j.usuario_nome}</p>
-                                                                        <p className="text-[10px] font-bold text-slate-400">{formatarDataHora(j.criado_em)}</p>
-                                                                    </div>
-                                                                </div>
-                                                            </td>
-                                                            <td className="px-10 py-6">
-                                                                <div className="space-y-0.5">
-                                                                    <p className="text-[10px] font-black text-indigo-600 uppercase tracking-tighter">{j.tipo}</p>
-                                                                    <p className="text-[11px] text-slate-500 font-medium italic truncate max-w-[300px]">"{j.descricao || 'Sem declaração técnica'}"</p>
-                                                                </div>
-                                                            </td>
-                                                            <td className="px-10 py-6 text-right">
-                                                                <span className={`text-[9px] font-black uppercase tracking-widest px-4 py-2 rounded-2xl border ${
-                                                                    j.status === 'aprovada' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
-                                                                    j.status === 'rejeitada' ? 'bg-red-50 text-red-600 border-red-100' : 
-                                                                    'bg-amber-50 text-amber-600 border-amber-100'
-                                                                }`}>
-                                                                    {j.status}
-                                                                </span>
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                    {(frequenciaGeral.justificativasLista || []).length === 0 && (
-                                                        <tr>
-                                                            <td colSpan={3} className="py-24 text-center">
-                                                                <div className="text-slate-300 space-y-2">
-                                                                    <ClipboardList size={40} className="mx-auto opacity-20" />
-                                                                    <p className="text-xs font-bold uppercase tracking-widest">Nenhum registro encontrado</p>
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                    )}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
+                                <RelatorioAusencias frequenciaGeral={frequenciaGeral} />
                             )}
 
                             {/* ── RELATÓRIO: AUDITORIA DE MEMBROS ── */}
                             {abaAtiva === 'alunos' && frequenciaMembros && (
-                                <div className="bg-white border border-slate-100 rounded-[3rem] overflow-hidden shadow-sm">
-                                    <div className="p-10 border-b border-slate-50 bg-slate-50/10">
-                                        <h3 className="text-xl font-black text-slate-900 tracking-tight uppercase">Histórico Técnico de Assiduidade</h3>
-                                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1">Conferência individual detalhada de cada membro ativo.</p>
-                                    </div>
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-left">
-                                            <thead>
-                                                <tr className="bg-slate-50/50">
-                                                    <th className="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Membro</th>
-                                                    <th className="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Equipe / Cargo</th>
-                                                    <th className="px-10 py-6 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Sessões</th>
-                                                    <th className="px-10 py-6 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Último Acesso</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-slate-50 text-nowrap">
-                                                {membrosFiltrados.map((m: any) => (
-                                                    <tr key={m.id} className="hover:bg-slate-50/50 transition-all group">
-                                                        <td className="px-10 py-8">
-                                                            <div className="flex items-center gap-4">
-                                                                <div className="w-12 h-12 rounded-[1.2rem] bg-slate-100 flex items-center justify-center font-black text-slate-400 text-lg group-hover:bg-indigo-600 group-hover:text-white transition-all">
-                                                                    {m.nome.charAt(0)}
-                                                                </div>
-                                                                <div>
-                                                                    <p className="text-sm font-black text-slate-800 uppercase leading-none mb-1">{m.nome}</p>
-                                                                    <p className="text-[10px] text-slate-400 font-bold">{m.email}</p>
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-10 py-8">
-                                                            <div className="space-y-1">
-                                                                <p className="text-[10px] font-black text-indigo-600 uppercase tracking-tight">{m.equipe_nome || 'Liderança'}</p>
-                                                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{m.grupo_nome || 'Geral'}</p>
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-10 py-8 text-center">
-                                                            <span className="text-2xl font-black text-slate-900 leading-none">{m.dias_presentes}</span>
-                                                        </td>
-                                                        <td className="px-10 py-8 text-right">
-                                                            <p className="text-[11px] font-black text-slate-600">
-                                                                {m.ultima_batida ? formatarDataHora(m.ultima_batida).split('às')[0] : '--'}
-                                                            </p>
-                                                            <p className="text-[10px] font-bold text-slate-400">{m.ultima_batida ? formatarDataHora(m.ultima_batida).split('às')[1] : ''}</p>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
+                                <RelatorioMembros membrosFiltrados={membrosFiltrados} />
                             )}
 
                             {/* ── RELATÓRIO: MAPEAMENTO ESTRUTURAL ── */}
                             {abaAtiva === 'equipes' && equipesRelatorio && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start px-2">
-                                    <div className="bg-white border border-slate-100 rounded-[3rem] overflow-hidden shadow-sm">
-                                        <div className="p-8 border-b border-slate-50 bg-indigo-50/10 flex items-center justify-between">
-                                            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Mapa de Equipes</h3>
-                                            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl"><Network size={18} /></div>
-                                        </div>
-                                        <div className="p-6 space-y-4">
-                                            {equipesRelatorio.equipes?.map((e) => (
-                                                <div key={e.id} className="p-6 bg-slate-50 border border-slate-100 rounded-[2rem] hover:bg-white hover:shadow-xl transition-all group">
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-4">
-                                                            <div className="w-12 h-12 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
-                                                                <Network size={20} />
-                                                            </div>
-                                                            <div>
-                                                                <p className="text-sm font-black text-slate-800 uppercase tracking-tight leading-none mb-1">{e.nome}</p>
-                                                                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Responsável: {e.lider_nome || 'N/A'}</p>
-                                                            </div>
-                                                        </div>
-                                                        <div className="px-4 py-2 bg-white rounded-xl shadow-sm border border-slate-100">
-                                                            <p className="text-lg font-black text-slate-900 leading-none">{e.total_membros}</p>
-                                                            <p className="text-[8px] font-black text-slate-400 uppercase mt-0.5">Time</p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div className="bg-white border border-slate-100 rounded-[3rem] overflow-hidden shadow-sm">
-                                        <div className="p-8 border-b border-slate-50 bg-emerald-50/10 flex items-center justify-between">
-                                            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Grupos Operativos</h3>
-                                            <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl"><UsersIcon size={18} /></div>
-                                        </div>
-                                        <div className="p-6 space-y-4">
-                                            {equipesRelatorio.grupos?.map((g) => (
-                                                <div key={g.id} className="flex items-center justify-between p-6 bg-slate-50 border border-slate-100 rounded-[2rem] hover:bg-white transition-all group">
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="w-1.5 h-8 bg-emerald-500 rounded-full" />
-                                                        <div>
-                                                            <p className="text-sm font-black text-slate-800 uppercase leading-none mb-1">{g.nome}</p>
-                                                            <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-tight">Vínculo: {g.equipe_nome || '--'}</p>
-                                                        </div>
-                                                    </div>
-                                                    <div className="bg-white px-5 py-2 rounded-xl border border-slate-100 shadow-sm">
-                                                        <p className="text-base font-black text-slate-900">{g.total_membros}</p>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
+                                <RelatorioMapeamento equipesRelatorio={equipesRelatorio} />
                             )}
                         </div>
                     )}
