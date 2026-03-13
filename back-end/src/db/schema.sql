@@ -16,6 +16,7 @@ DROP TABLE IF EXISTS ponto_registros;
 DROP TABLE IF EXISTS projetos_membros;
 DROP TABLE IF EXISTS tarefas_responsaveis;
 DROP TABLE IF EXISTS tarefas;
+DROP TABLE IF EXISTS documentos_projeto;
 DROP TABLE IF EXISTS projetos;
 DROP TABLE IF EXISTS usuarios;
 DROP TABLE IF EXISTS usuarios_organizacao;
@@ -79,6 +80,7 @@ CREATE TABLE IF NOT EXISTS projetos (
     nome TEXT NOT NULL,
     descricao TEXT,
     publico INTEGER NOT NULL DEFAULT 0,
+    github_repo TEXT,
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 
@@ -110,6 +112,17 @@ CREATE TABLE IF NOT EXISTS projetos_membros (
     usuario_id TEXT NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
     papel_no_projeto TEXT DEFAULT 'MEMBRO',
     PRIMARY KEY (projeto_id, usuario_id)
+);
+
+CREATE TABLE IF NOT EXISTS documentos_projeto (
+    id TEXT NOT NULL PRIMARY KEY,
+    projeto_id TEXT NOT NULL REFERENCES projetos(id) ON DELETE CASCADE,
+    nome TEXT NOT NULL,
+    descricao TEXT,
+    link_externo TEXT NOT NULL,
+    tipo TEXT NOT NULL,
+    criado_por TEXT REFERENCES usuarios(id) ON DELETE SET NULL,
+    criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 
 -- 4. Ponto Eletrônico

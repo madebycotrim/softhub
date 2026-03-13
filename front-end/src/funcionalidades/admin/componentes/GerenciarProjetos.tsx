@@ -9,6 +9,7 @@ import { Alerta } from '@/compartilhado/componentes/Alerta';
 import { Modal } from '@/compartilhado/componentes/Modal';
 import { ConfirmacaoExclusao } from '@/compartilhado/componentes/ConfirmacaoExclusao';
 import { usarPermissaoAcesso } from '@/compartilhado/hooks/usarPermissao';
+import { DocumentosProjetoModal } from '@/funcionalidades/projetos/componentes/DocumentosProjetoModal';
 import { 
     FolderKanban, 
     Plus, 
@@ -17,7 +18,9 @@ import {
     Trash2, 
     Edit, 
     CheckCircle2, 
-    BarChart3
+    BarChart3,
+    Github,
+    FileText
 } from 'lucide-react';
 import { formatarDataHora } from '@/utilitarios/formatadores';
 import { usarProjetos, Projeto } from '@/funcionalidades/projetos/hooks/usarProjetos';
@@ -26,6 +29,7 @@ const esquemaProjeto = z.object({
     nome: z.string().min(3, 'Nome deve ter pelo menos 3 letras').max(100),
     descricao: z.string(),
     publico: z.boolean(),
+    github_repo: z.string().optional(),
 });
 
 type FormProjeto = z.infer<typeof esquemaProjeto>;
@@ -38,13 +42,15 @@ export default function GerenciarProjetos() {
     const [modalAberto, setModalAberto] = useState(false);
     const [projetoEditando, setProjetoEditando] = useState<string | null>(null);
     const [idExcluindo, setIdExcluindo] = useState<string | null>(null);
+    const [projetoDocs, setProjetoDocs] = useState<Projeto | null>(null);
 
     const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<FormProjeto>({
         resolver: zodResolver(esquemaProjeto),
         defaultValues: {
             nome: '',
             descricao: '',
-            publico: false
+            publico: false,
+            github_repo: ''
         }
     });
 
@@ -52,7 +58,7 @@ export default function GerenciarProjetos() {
 
     const handleAbrirCriar = () => {
         setProjetoEditando(null);
-        reset({ nome: '', descricao: '', publico: false });
+        reset({ nome: '', descricao: '', publico: false, github_repo: '' });
         setModalAberto(true);
     };
 
@@ -61,7 +67,8 @@ export default function GerenciarProjetos() {
         reset({ 
             nome: p.nome, 
             descricao: p.descricao || '', 
-            publico: Boolean(p.publico) 
+            publico: Boolean(p.publico),
+            github_repo: p.github_repo || ''
         });
         setModalAberto(true);
     };
@@ -132,6 +139,9 @@ export default function GerenciarProjetos() {
                                         <FolderKanban size={20} />
                                     </div>
                                     <div className="flex gap-2">
+                                        <button onClick={() => setProjetoDocs(p)} className="p-2 hover:bg-background rounded-xl text-muted-foreground hover:text-primary transition-colors" title="Documentos (GitHub)">
+                                            <FileText size={14} />
+                                        </button>
                                         {podeEditar && (
                                             <button onClick={() => handleAbrirEditar(p)} className="p-2 hover:bg-background rounded-xl text-muted-foreground hover:text-primary transition-colors">
                                                 <Edit size={14} />
@@ -158,6 +168,15 @@ export default function GerenciarProjetos() {
                                     )}
                                 </h3>
                                 
+                                {p.github_repo && (
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
+                                        <Github size={12} />
+                                        <a href={`https://github.com/${import.meta.env.VITE_GITHUB_STORAGE_OWNER}/${p.github_repo}`} target="_blank" rel="noreferrer" className="hover:text-primary hover:underline transition-colors">
+                                            {p.github_repo}
+                                        </a>
+                                    </div>
+                                )}
+
                                 <p className="text-sm text-muted-foreground line-clamp-2 mb-6 h-10">
                                     {p.descricao || 'Sem descrição definida.'}
                                 </p>
@@ -203,6 +222,21 @@ export default function GerenciarProjetos() {
                         />
                     </div>
 
+                    <div>
+                        <label className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Repositório GitHub (Opcional)</label>
+                        <div className="relative">
+                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                               <Github size={14} className="text-muted-foreground" />
+                           </div>
+                           <input
+                               {...register('github_repo')}
+                               className="w-full h-12 bg-background border border-border rounded-2xl pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                               placeholder="Ex: meu-projeto-api"
+                           />
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-1">Apenas o nome do repositório. O dono será {import.meta.env.VITE_GITHUB_STORAGE_OWNER || '(configurado no .env)'}.</p>
+                    </div>
+
                     <div className="flex items-center gap-3 p-4 bg-muted/30 border border-border rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors"
                          onClick={() => setValue('publico', !publicoAtivo)}>
                         <div className={`w-5 h-5 rounded-lg border flex items-center justify-center transition-all ${publicoAtivo ? 'bg-primary border-primary' : 'bg-background border-border'}`}>
@@ -245,6 +279,12 @@ export default function GerenciarProjetos() {
                 titulo="Excluir Projeto Permanentemente"
                 descricao="Esta ação excluirá o projeto e TODAS as tarefas vinculadas a ele. Não há como desfazer."
                 carregando={carregando}
+            />
+
+            <DocumentosProjetoModal
+                projeto={projetoDocs}
+                aberto={!!projetoDocs}
+                aoFechar={() => setProjetoDocs(null)}
             />
         </>
     );

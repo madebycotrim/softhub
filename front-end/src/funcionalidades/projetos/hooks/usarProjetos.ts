@@ -7,6 +7,7 @@ export interface Projeto {
     nome: string;
     descricao: string | null;
     publico: boolean;
+    github_repo?: string | null;
     total_tarefas?: number;
     criado_em: string;
 }
@@ -35,7 +36,7 @@ export function usarProjetos() {
         }
     }, []);
 
-    const criarProjeto = async (dados: { nome: string; descricao?: string; publico?: boolean }) => {
+    const criarProjeto = async (dados: { nome: string; descricao?: string; publico?: boolean, github_repo?: string }) => {
         setCarregando(true);
         try {
             const res = await api.post('/api/projetos', dados);

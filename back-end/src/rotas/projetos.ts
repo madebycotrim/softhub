@@ -12,6 +12,7 @@ const ProjetoSchema = z.object({
     nome: z.string().min(3).max(100),
     descricao: z.string().optional(),
     publico: z.boolean().default(false),
+    github_repo: z.string().optional(),
 });
 
 /**
@@ -68,9 +69,9 @@ rotasProjetos.post('/',
 
     try {
         await DB.prepare(`
-            INSERT INTO projetos (id, nome, descricao, publico)
-            VALUES (?, ?, ?, ?)
-        `).bind(id, body.nome, body.descricao || null, body.publico ? 1 : 0).run();
+            INSERT INTO projetos (id, nome, descricao, publico, github_repo)
+            VALUES (?, ?, ?, ?, ?)
+        `).bind(id, body.nome, body.descricao || null, body.publico ? 1 : 0, body.github_repo || null).run();
 
         await registrarLog(DB, {
             usuarioId: usuario.id,
@@ -112,6 +113,7 @@ rotasProjetos.patch('/:id',
         if (body.nome !== undefined) { campos.push('nome = ?'); valores.push(body.nome); }
         if (body.descricao !== undefined) { campos.push('descricao = ?'); valores.push(body.descricao); }
         if (body.publico !== undefined) { campos.push('publico = ?'); valores.push(body.publico ? 1 : 0); }
+        if (body.github_repo !== undefined) { campos.push('github_repo = ?'); valores.push(body.github_repo); }
 
         if (campos.length === 0) return c.json({ erro: 'Nenhum campo para atualizar' }, 400);
 
