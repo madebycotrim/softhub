@@ -9,6 +9,32 @@ import { criarNotificacoes, removerNotificacoesPorEntidade } from '../servicos/s
 
 const rotasTarefas = new Hono<{ Bindings: Env, Variables: { usuario: any } }>({ strict: false });
 
+/** Verifica o Nível de Acesso da Equipe do Usuário no Projeto */
+async function obterAcessoEquipeNoProjeto(DB: D1Database, projetoId: string, usuario: any): Promise<'GESTAO' | 'EDICAO' | 'LEITURA' | 'NENHUM'> {
+    if (usuario.role === 'ADMIN') return 'GESTAO';
+    
+    const p = await DB.prepare('SELECT publico FROM projetos WHERE id = ?').bind(projetoId).first();
+    if (!p) return 'NENHUM';
+
+    const { results } = await DB.prepare(`
+        SELECT pe.acesso 
+        FROM projetos_equipes pe
+        JOIN usuarios_organizacao uo ON uo.equipe_id = pe.equipe_id
+        WHERE pe.projeto_id = ? AND uo.usuario_id = ?
+    `).bind(projetoId, usuario.id).all();
+
+    if (!results || results.length === 0) {
+        return p.publico === 1 ? 'LEITURA' : 'NENHUM';
+    }
+
+    const acessos = results.map((r: any) => r.acesso);
+    if (acessos.includes('GESTAO')) return 'GESTAO';
+    if (acessos.includes('EDICAO')) return 'EDICAO';
+    if (acessos.includes('LEITURA')) return 'LEITURA';
+    
+    return 'NENHUM';
+}
+
 // Listar Tarefas do Projeto
 rotasTarefas.get('/', autenticacaoRequerida(), verificarPermissao(['tarefas:visualizar_kanban', 'tarefas:visualizar_backlog', 'tarefas:visualizar_detalhes']), async (c: Context) => {
     const { DB } = c.env;
@@ -99,6 +125,11 @@ rotasTarefas.post('/',
             return c.json({ erro: 'O projeto especificado não existe ou foi removido.' }, 404);
         }
 
+        const acessoEquipe = await obterAcessoEquipeNoProjeto(DB, body.projeto_id, usuario);
+        if (acessoEquipe === 'LEITURA' || acessoEquipe === 'NENHUM') {
+            return c.json({ erro: 'Sua equipe tem apenas permissão de Leitura neste projeto.' }, 403);
+        }
+
         const id = crypto.randomUUID();
         await DB.prepare(`
             INSERT INTO tarefas (id, projeto_id, titulo, descricao, prioridade, status, modulo, pontos)
@@ -157,12 +188,16 @@ rotasTarefas.patch('/:id/mover',
     try {
         const usuario = c.get('usuario') as any; // tipagem simplificada
 
-        // Obter status e prioridade atual da tarefa
-        const { results } = await DB.prepare('SELECT titulo, status, prioridade FROM tarefas WHERE id = ?').bind(id).all();
-        const tarefa = results[0] as { titulo: string, status: string, prioridade: string };
+        const { results } = await DB.prepare('SELECT titulo, status, prioridade, projeto_id FROM tarefas WHERE id = ?').bind(id).all();
+        const tarefa = results[0] as { titulo: string, status: string, prioridade: string, projeto_id: string };
 
         if (!tarefa) {
             return c.json({ erro: 'Tarefa não encontrada' }, 404);
+        }
+
+        const acessoEquipe = await obterAcessoEquipeNoProjeto(DB, tarefa.projeto_id, usuario);
+        if (acessoEquipe === 'LEITURA' || acessoEquipe === 'NENHUM') {
+            return c.json({ erro: 'Sua equipe tem apenas permissão de Leitura neste projeto.' }, 403);
         }
 
         // Workflow 8 - Mover Card (Verificar permissão)
@@ -244,8 +279,15 @@ rotasTarefas.post('/:id/responsaveis', autenticacaoRequerida(), verificarPermiss
     const usuario = c.get('usuario') as any;
 
     try {
-        const ehAdminOuLider = ['ADMIN', 'COORDENADOR', 'GESTOR', 'LIDER', 'SUBLIDER'].includes(usuario.role);
+        const tarefa = await DB.prepare('SELECT titulo, projeto_id FROM tarefas WHERE id = ?').bind(id).first() as any;
+        if (!tarefa) return c.json({ erro: 'Tarefa não encontrada' }, 404);
 
+        const acessoEquipe = await obterAcessoEquipeNoProjeto(DB, tarefa.projeto_id, usuario);
+        if (acessoEquipe === 'LEITURA' || acessoEquipe === 'NENHUM') {
+            return c.json({ erro: 'Sua equipe tem apenas permissão de Leitura neste projeto.' }, 403);
+        }
+
+        const ehAdminOuLider = ['ADMIN', 'COORDENADOR', 'GESTOR', 'LIDER', 'SUBLIDER'].includes(usuario.role);
         let podeAtribuir = ehAdminOuLider;
         if (!podeAtribuir) {
             const resp = await DB.prepare('SELECT usuario_id FROM tarefas_responsaveis WHERE tarefa_id = ? AND usuario_id = ?').bind(id, usuario.id).first();
@@ -255,10 +297,6 @@ rotasTarefas.post('/:id/responsaveis', autenticacaoRequerida(), verificarPermiss
         if (!podeAtribuir) {
             return c.json({ erro: 'Apenas liderança ou os responsáveis atuais da tarefa.' }, 403);
         }
-
-        const resTarefa = await DB.prepare('SELECT titulo FROM tarefas WHERE id = ?').bind(id).first();
-        const tarefa = resTarefa as any;
-        if (!tarefa) return c.json({ erro: 'Tarefa não encontrada' }, 404);
 
         await DB.prepare('INSERT OR IGNORE INTO tarefas_responsaveis (tarefa_id, usuario_id) VALUES (?, ?)').bind(id, usuario_id).run();
 
@@ -298,9 +336,13 @@ rotasTarefas.delete('/:id', autenticacaoRequerida(), verificarPermissao('tarefas
     const usuario = c.get('usuario') as any;
 
     try {
-        const { results } = await DB.prepare('SELECT titulo FROM tarefas WHERE id = ?').bind(id).all();
-        const tarefa = results[0] as { titulo: string };
+        const tarefa = await DB.prepare('SELECT titulo, projeto_id FROM tarefas WHERE id = ?').bind(id).first() as any;
         if (!tarefa) return c.json({ erro: 'Tarefa não encontrada' }, 404);
+
+        const acessoEquipe = await obterAcessoEquipeNoProjeto(DB, tarefa.projeto_id, usuario);
+        if (acessoEquipe === 'LEITURA' || acessoEquipe === 'NENHUM') {
+            return c.json({ erro: 'Sua equipe tem apenas permissão de Leitura neste projeto.' }, 403);
+        }
 
         await DB.prepare('DELETE FROM tarefas WHERE id = ?').bind(id).run();
         

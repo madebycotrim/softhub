@@ -42,7 +42,8 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
     const podeVerRelatorios = usarPermissaoAcesso('relatorios:visualizar');
     const podeVerLogs = usarPermissaoAcesso('logs:visualizar');
     const podeVerEquipes = usarPermissaoAcesso('equipes:visualizar');
-    const podeVerProjetos = usarPermissaoAcesso('projetos:visualizar');
+    const podeVerProjetosAdmin = usarPermissaoAcesso('projetos:visualizar');
+    const podeVerProjetoDetalhes = usarPermissaoAcesso('projetos:visualizar_detalhes');
     const podeVerConfiguracoes = usarPermissaoAcesso('configuracoes:visualizar');
 
     const gruposBrutos = [
@@ -57,7 +58,7 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
         {
             label: 'Equipe',
             links: [
-                { label: 'Projeto', path: '/app/projeto', icon: Layers, visivel: true },
+                { label: 'Projeto', path: '/app/projeto', icon: Layers, visivel: podeVerProjetoDetalhes },
                 { label: 'Kanban', path: '/app/kanban', icon: FolderKanban, visivel: podeVerKanban },
 
                 { label: 'Ponto Eletrônico', path: '/app/ponto', icon: Clock, visivel: podeVerPonto || podeVerJustificativas },
@@ -68,7 +69,7 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
             links: [
                 { label: 'Membros', path: '/app/admin/membros', icon: Users, visivel: podeVerMembrosAdmin },
                 { label: 'Equipes', path: '/app/admin/equipes', icon: LayoutGrid, visivel: podeVerEquipes },
-                { label: 'Projetos', path: '/app/admin/projetos', icon: FolderKanban, visivel: podeVerProjetos },
+                { label: 'Projetos', path: '/app/admin/projetos', icon: FolderKanban, visivel: podeVerProjetosAdmin },
                 { label: 'Relatórios', path: '/app/admin/relatorios', icon: FileText, visivel: podeVerRelatorios },
                 { label: 'Logs', path: '/app/admin/logs', icon: Database, visivel: podeVerLogs },
                 { label: 'Configurações', path: '/app/admin/configuracoes', icon: Settings, visivel: podeVerConfiguracoes },

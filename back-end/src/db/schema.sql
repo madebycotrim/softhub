@@ -17,6 +17,7 @@ DROP TABLE IF EXISTS projetos_membros;
 DROP TABLE IF EXISTS tarefas_responsaveis;
 DROP TABLE IF EXISTS tarefas;
 DROP TABLE IF EXISTS documentos_projeto;
+DROP TABLE IF EXISTS projetos_equipes;
 DROP TABLE IF EXISTS projetos;
 DROP TABLE IF EXISTS usuarios;
 DROP TABLE IF EXISTS usuarios_organizacao;
@@ -112,6 +113,13 @@ CREATE TABLE IF NOT EXISTS projetos_membros (
     usuario_id TEXT NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
     papel_no_projeto TEXT DEFAULT 'MEMBRO',
     PRIMARY KEY (projeto_id, usuario_id)
+);
+
+CREATE TABLE IF NOT EXISTS projetos_equipes (
+    projeto_id TEXT NOT NULL REFERENCES projetos(id) ON DELETE CASCADE,
+    equipe_id TEXT NOT NULL REFERENCES equipes(id) ON DELETE CASCADE,
+    acesso TEXT NOT NULL DEFAULT 'EDICAO', -- 'LEITURA', 'EDICAO', 'GESTAO'
+    PRIMARY KEY (projeto_id, equipe_id)
 );
 
 CREATE TABLE IF NOT EXISTS documentos_projeto (

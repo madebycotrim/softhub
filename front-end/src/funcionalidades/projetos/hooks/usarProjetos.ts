@@ -2,6 +2,11 @@ import { useState, useCallback, useEffect } from 'react';
 import { api } from '@/compartilhado/servicos/api';
 import { logger } from '@/utilitarios/gerenciador-logs';
 
+export interface ProjetoEquipe {
+    equipe_id: string;
+    acesso: 'LEITURA' | 'EDICAO' | 'GESTAO';
+}
+
 export interface Projeto {
     id: string;
     nome: string;
@@ -9,6 +14,7 @@ export interface Projeto {
     publico: boolean;
     github_repo?: string | null;
     total_tarefas?: number;
+    equipes?: ProjetoEquipe[];
     criado_em: string;
 }
 

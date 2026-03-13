@@ -13,6 +13,10 @@ const ProjetoSchema = z.object({
     descricao: z.string().optional(),
     publico: z.boolean().default(false),
     github_repo: z.string().optional(),
+    equipes: z.array(z.object({
+        equipe_id: z.string(),
+        acesso: z.enum(['LEITURA', 'EDICAO', 'GESTAO'])
+    })).optional(),
 });
 
 /**
@@ -36,17 +40,34 @@ rotasProjetos.get('/publicos', async (c) => {
 
 /**
  * GET /api/projetos
- * Listar todos os projetos (Privado - Requer permissão)
+ * Listar todos os projetos (Privado - Requer permissão de Admin ou da Equipe)
  */
-rotasProjetos.get('/', autenticacaoRequerida(), verificarPermissao('projetos:visualizar'), async (c) => {
+rotasProjetos.get('/', autenticacaoRequerida(), verificarPermissao(['projetos:visualizar', 'projetos:visualizar_detalhes']), async (c) => {
     const { DB } = c.env;
+    const usuario = c.get('usuario');
+
     try {
-        const { results } = await DB.prepare(`
+        const query = `
             SELECT p.*, 
                    (SELECT COUNT(*) FROM tarefas WHERE projeto_id = p.id) as total_tarefas
             FROM projetos p 
+            WHERE ? = 'ADMIN' OR p.publico = 1 OR EXISTS (
+                SELECT 1 FROM projetos_equipes pe
+                JOIN usuarios_organizacao uo ON uo.equipe_id = pe.equipe_id
+                WHERE pe.projeto_id = p.id AND uo.usuario_id = ?
+            )
             ORDER BY criado_em DESC
-        `).all();
+        `;
+        const { results } = await DB.prepare(query).bind(usuario.role, usuario.id).all();
+
+        // Buscar equipes de cada projeto
+        for (const projeto of (results as any[])) {
+            const equipesData = await DB.prepare(`
+                SELECT equipe_id, acesso FROM projetos_equipes WHERE projeto_id = ?
+            `).bind(projeto.id).all();
+            projeto.equipes = equipesData.results || [];
+        }
+
         return c.json(results);
     } catch (e: any) {
         return c.json({ erro: 'Falha ao buscar projetos' }, 500);
@@ -72,6 +93,15 @@ rotasProjetos.post('/',
             INSERT INTO projetos (id, nome, descricao, publico, github_repo)
             VALUES (?, ?, ?, ?, ?)
         `).bind(id, body.nome, body.descricao || null, body.publico ? 1 : 0, body.github_repo || null).run();
+
+        // Salva as equipes vinculadas, se houver
+        if (body.equipes && Array.isArray(body.equipes)) {
+            for (const item of body.equipes) {
+                await DB.prepare(`
+                    INSERT INTO projetos_equipes (projeto_id, equipe_id, acesso) VALUES (?, ?, ?)
+                `).bind(id, item.equipe_id, item.acesso).run();
+            }
+        }
 
         await registrarLog(DB, {
             usuarioId: usuario.id,
@@ -115,10 +145,20 @@ rotasProjetos.patch('/:id',
         if (body.publico !== undefined) { campos.push('publico = ?'); valores.push(body.publico ? 1 : 0); }
         if (body.github_repo !== undefined) { campos.push('github_repo = ?'); valores.push(body.github_repo); }
 
-        if (campos.length === 0) return c.json({ erro: 'Nenhum campo para atualizar' }, 400);
+        if (campos.length > 0) {
+            valores.push(id);
+            await DB.prepare(`UPDATE projetos SET ${campos.join(', ')} WHERE id = ?`).bind(...valores).run();
+        }
 
-        valores.push(id);
-        await DB.prepare(`UPDATE projetos SET ${campos.join(', ')} WHERE id = ?`).bind(...valores).run();
+        // Atualizar equipes vinculadas
+        if (body.equipes && Array.isArray(body.equipes)) {
+            await DB.prepare('DELETE FROM projetos_equipes WHERE projeto_id = ?').bind(id).run();
+            for (const item of body.equipes) {
+                await DB.prepare(`
+                    INSERT INTO projetos_equipes (projeto_id, equipe_id, acesso) VALUES (?, ?, ?)
+                `).bind(id, item.equipe_id, item.acesso).run();
+            }
+        }
 
         await registrarLog(DB, {
             usuarioId: usuario.id,

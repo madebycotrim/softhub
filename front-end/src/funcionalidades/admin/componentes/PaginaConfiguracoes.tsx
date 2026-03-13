@@ -41,10 +41,12 @@ const PERMISSOES_SISTEMA = [
         label: 'Projetos & Portfólio',
         icone: Globe,
         permissoes: [
-            { chave: 'projetos:visualizar', label: 'Visualizar Projetos' },
+            { chave: 'projetos:visualizar', label: 'Gerenciar Projetos (Lista Admin)' },
             { chave: 'projetos:criar', label: 'Criar Projetos' },
             { chave: 'projetos:editar', label: 'Editar Projetos' },
             { chave: 'projetos:excluir', label: 'Excluir Projetos' },
+            { chave: 'projetos:visualizar_detalhes', label: 'Ver Visão do Projeto (Equipe)' },
+            { chave: 'projetos:documentos', label: 'Acessar Documentos do Projeto' },
         ],
     },
     {

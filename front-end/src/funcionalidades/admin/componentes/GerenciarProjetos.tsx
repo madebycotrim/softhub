@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useForm, SubmitHandler } from 'react-hook-form';
+import { useForm, SubmitHandler, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { LayoutPrincipal } from '@/compartilhado/componentes/LayoutPrincipal';
@@ -25,21 +25,28 @@ import {
 } from 'lucide-react';
 import { formatarDataHora } from '@/utilitarios/formatadores';
 import { usarProjetos, Projeto } from '@/funcionalidades/projetos/hooks/usarProjetos';
+import { usarEquipes } from '@/funcionalidades/admin/hooks/usarEquipes';
 
 const esquemaProjeto = z.object({
     nome: z.string().min(3, 'Nome deve ter pelo menos 3 letras').max(100),
     descricao: z.string(),
     publico: z.boolean(),
     github_repo: z.string().optional(),
+    equipes: z.array(z.object({
+        equipe_id: z.string().min(1, 'Selecione uma equipe'),
+        acesso: z.enum(['LEITURA', 'EDICAO', 'GESTAO'])
+    })).optional()
 });
 
 type FormProjeto = z.infer<typeof esquemaProjeto>;
 
 export default function GerenciarProjetos() {
     const { projetos, carregando, erro, criarProjeto, editarProjeto, excluirProjeto } = usarProjetos();
+    const { equipes } = usarEquipes();
     const podeCriar = usarPermissaoAcesso('projetos:criar');
     const podeEditar = usarPermissaoAcesso('projetos:editar');
     const podeExcluir = usarPermissaoAcesso('projetos:excluir');
+    const podeVerDocumentos = usarPermissaoAcesso('projetos:documentos');
     const [modalAberto, setModalAberto] = useState(false);
     const [projetoEditando, setProjetoEditando] = useState<string | null>(null);
     const [projetoExcluindo, setProjetoExcluindo] = useState<Projeto | null>(null);
@@ -47,21 +54,27 @@ export default function GerenciarProjetos() {
     const [projetoDocs, setProjetoDocs] = useState<Projeto | null>(null);
     const [processando, setProcessando] = useState(false);
 
-    const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<FormProjeto>({
+    const { register, control, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<FormProjeto>({
         resolver: zodResolver(esquemaProjeto),
         defaultValues: {
             nome: '',
             descricao: '',
             publico: false,
-            github_repo: ''
+            github_repo: '',
+            equipes: []
         }
+    });
+
+    const { fields: camposEquipes, append: adicionarEquipe, remove: removerEquipe } = useFieldArray({
+        control,
+        name: 'equipes'
     });
 
     const publicoAtivo = watch('publico');
 
     const handleAbrirCriar = () => {
         setProjetoEditando(null);
-        reset({ nome: '', descricao: '', publico: false, github_repo: '' });
+        reset({ nome: '', descricao: '', publico: false, github_repo: '', equipes: [] });
         setModalAberto(true);
     };
 
@@ -71,7 +84,8 @@ export default function GerenciarProjetos() {
             nome: p.nome, 
             descricao: p.descricao || '', 
             publico: Boolean(p.publico),
-            github_repo: p.github_repo || ''
+            github_repo: p.github_repo || '',
+            equipes: p.equipes || []
         });
         setModalAberto(true);
     };
@@ -167,9 +181,11 @@ export default function GerenciarProjetos() {
                                         <FolderKanban size={20} />
                                     </div>
                                     <div className="flex gap-2">
-                                        <button onClick={() => setProjetoDocs(p)} className="p-2 hover:bg-background rounded-xl text-muted-foreground hover:text-primary transition-colors" title="Documentos (GitHub)">
-                                            <FileText size={14} />
-                                        </button>
+                                        {podeVerDocumentos && (
+                                            <button onClick={() => setProjetoDocs(p)} className="p-2 hover:bg-background rounded-xl text-muted-foreground hover:text-primary transition-colors" title="Documentos (GitHub)">
+                                                <FileText size={14} />
+                                            </button>
+                                        )}
                                         {podeEditar && (
                                             <button onClick={() => handleAbrirEditar(p)} className="p-2 hover:bg-background rounded-xl text-muted-foreground hover:text-primary transition-colors">
                                                 <Edit size={14} />
@@ -263,6 +279,62 @@ export default function GerenciarProjetos() {
                            />
                         </div>
                         <p className="text-[10px] text-muted-foreground mt-1">Apenas o nome do repositório. O dono será {import.meta.env.VITE_GITHUB_STORAGE_OWNER || '(configurado no .env)'}.</p>
+                    </div>
+
+                    <div className="pt-2 border-t border-border">
+                        <div className="flex justify-between items-center mb-3">
+                            <div>
+                                <h4 className="text-sm font-bold text-foreground">Equipes Envolvidas</h4>
+                                <p className="text-xs text-muted-foreground">Quem tem acesso a este projeto (se não for público)</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => adicionarEquipe({ equipe_id: '', acesso: 'EDICAO' })}
+                                className="h-8 px-3 bg-secondary/30 hover:bg-secondary/50 text-secondary-foreground text-xs font-bold rounded-xl transition-all flex items-center gap-1.5"
+                            >
+                                <Plus size={14} /> Vincular Equipe
+                            </button>
+                        </div>
+                        
+                        <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                            {camposEquipes.length === 0 ? (
+                                <div className="text-center p-4 border border-dashed border-border rounded-2xl bg-muted/20">
+                                    <p className="text-xs text-muted-foreground">Nenhuma equipe vinculada exclusivamente.</p>
+                                </div>
+                            ) : (
+                                camposEquipes.map((campo, index) => (
+                                    <div key={campo.id} className="flex gap-2 items-center p-2 border border-border bg-muted/10 rounded-2xl">
+                                        <select
+                                            {...register(`equipes.${index}.equipe_id`)}
+                                            className="flex-1 h-10 bg-background border border-border rounded-xl px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+                                        >
+                                            <option value="">Selecione uma equipe...</option>
+                                            {equipes.map(eq => (
+                                                <option key={eq.id} value={eq.id}>{eq.nome}</option>
+                                            ))}
+                                        </select>
+                                        
+                                        <select
+                                            {...register(`equipes.${index}.acesso`)}
+                                            className="w-32 h-10 bg-background border border-border rounded-xl px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+                                        >
+                                            <option value="LEITURA">Leitura</option>
+                                            <option value="EDICAO">Edição</option>
+                                            <option value="GESTAO">Gestão</option>
+                                        </select>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => removerEquipe(index)}
+                                            className="p-2.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-colors"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                        {errors.equipes && <p className="text-[10px] text-destructive mt-1">Verifique as equipes duplicadas ou não selecionadas.</p>}
                     </div>
 
                     <div className="flex items-center gap-3 p-4 bg-muted/30 border border-border rounded-2xl cursor-pointer hover:bg-muted/50 transition-colors"

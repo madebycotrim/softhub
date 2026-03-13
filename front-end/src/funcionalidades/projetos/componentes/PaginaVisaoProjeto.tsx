@@ -4,6 +4,7 @@ import { usarAutenticacao } from '@/contexto/ContextoAutenticacao';
 import { usarProjetos } from '@/funcionalidades/projetos/hooks/usarProjetos';
 import { FolderKanban, Globe, Lock, Github, FileText, BarChart3, Layers } from 'lucide-react';
 import { DocumentosProjetoModal } from './DocumentosProjetoModal';
+import { usarPermissaoAcesso } from '@/compartilhado/hooks/usarPermissao';
 import { formatarDataHora } from '@/utilitarios/formatadores';
 import { Carregando } from '@/compartilhado/componentes/Carregando';
 
@@ -11,6 +12,8 @@ export default function PaginaVisaoProjeto() {
     const { projetoAtivoId } = usarAutenticacao();
     const { projetos, carregando } = usarProjetos();
     const [modalDocsAberto, setModalDocsAberto] = useState(false);
+    
+    const podeVerDocumentos = usarPermissaoAcesso('projetos:documentos');
 
     const projeto = projetos.find(p => p.id === projetoAtivoId);
 
@@ -38,12 +41,14 @@ export default function PaginaVisaoProjeto() {
                 icone={FolderKanban}
             >
                 <div className="flex gap-2">
-                    <button 
-                        onClick={() => setModalDocsAberto(true)}
-                        className="h-10 px-4 bg-primary text-primary-foreground rounded-2xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all flex items-center gap-2 shadow-lg shadow-primary/20"
-                    >
-                        <FileText size={14} /> Arquivos e Docs
-                    </button>
+                    {podeVerDocumentos && (
+                        <button 
+                            onClick={() => setModalDocsAberto(true)}
+                            className="h-10 px-4 bg-primary text-primary-foreground rounded-2xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all flex items-center gap-2 shadow-lg shadow-primary/20"
+                        >
+                            <FileText size={14} /> Arquivos e Docs
+                        </button>
+                    )}
                 </div>
             </CabecalhoFuncionalidade>
 
