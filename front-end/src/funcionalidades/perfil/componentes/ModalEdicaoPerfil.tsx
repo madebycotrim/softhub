@@ -16,7 +16,7 @@ import {
     Users,
     Layers
 } from 'lucide-react';
-import { usarPerfil } from '../hooks/usarPerfil';
+import { usarPerfil } from '@/funcionalidades/perfil/hooks/usarPerfil';
 import { Avatar } from '@/compartilhado/componentes/Avatar';
 import { Modal } from '@/compartilhado/componentes/Modal';
 import { Emblema } from '@/compartilhado/componentes/Emblema';

@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Square, CheckSquare, ChevronDown, Trash2, Eye } from 'lucide-react';
+import { Square, CheckSquare, ChevronDown, Trash2, Eye, LayoutGrid } from 'lucide-react';
 import { Avatar } from '@/compartilhado/componentes/Avatar';
 import { usarAutenticacao } from '@/contexto/ContextoAutenticacao';
 import { usarPermissaoAcesso } from '@/compartilhado/hooks/usarPermissao';
@@ -14,10 +14,11 @@ interface LinhaMembroProps {
     onAlterarRole: (membro: Membro, role: string) => void;
     onRemover: (membro: Membro) => void;
     onVerPerfil: (id: string) => void;
+    onAlocar: (membro: Membro) => void;
     rolesDisponiveis: string[];
 }
 
-export const LinhaMembro = memo(({ membro, salvando, selecionado, onToggleSelect, onAlterarRole, onRemover, onVerPerfil, rolesDisponiveis }: LinhaMembroProps) => {
+export const LinhaMembro = memo(({ membro, salvando, selecionado, onToggleSelect, onAlterarRole, onRemover, onVerPerfil, onAlocar, rolesDisponiveis }: LinhaMembroProps) => {
     const { usuario } = usarAutenticacao();
     const ehOMesmoUsuario = usuario?.id === membro.id;
     const podeAlterarRole = usarPermissaoAcesso('membros:alterar_role');
@@ -140,6 +141,16 @@ export const LinhaMembro = memo(({ membro, salvando, selecionado, onToggleSelect
                     >
                         <Eye size={16} />
                     </button>
+
+                    {usarPermissaoAcesso('equipes:editar_equipe') && (
+                        <button
+                            onClick={() => onAlocar(membro)}
+                            className="p-2 rounded-xl text-muted-foreground/30 hover:text-indigo-500 hover:bg-indigo-500/10 transition-all opacity-0 group-hover:opacity-100"
+                            title="Alocação Rápida"
+                        >
+                            <LayoutGrid size={16} />
+                        </button>
+                    )}
 
                     {!ehOMesmoUsuario && podeDesativar && (
                         <button

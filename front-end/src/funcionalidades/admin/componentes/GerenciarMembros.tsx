@@ -151,7 +151,7 @@ const ModalAlocacaoDireta = memo(({ aberto, aoFechar, membro, grupos, equipes, a
         if (!equipe_id || !grupo_id) return;
         setSalvando(true);
         try {
-            await aoAlocar(membro.id, equipe_id, grupo_id);
+            if (membro) await aoAlocar(membro.id, equipe_id, grupo_id);
             aoFechar();
         } catch (e) {
             console.error('Falha ao alocar:', e);
@@ -163,13 +163,15 @@ const ModalAlocacaoDireta = memo(({ aberto, aoFechar, membro, grupos, equipes, a
     return (
         <Modal aberto={aberto} aoFechar={aoFechar} titulo="Alocação Rápida" largura="sm">
             <div className="space-y-6">
-                <div className="flex items-center gap-4 p-4 bg-muted/20 rounded-2xl border border-border/40">
-                    <Avatar nome={membro.nome} fotoPerfil={membro.foto_perfil} />
-                    <div>
-                        <p className="text-xs font-black uppercase tracking-widest text-foreground">{membro.nome}</p>
-                        <p className="text-[10px] text-muted-foreground">{membro.email}</p>
+                {membro && (
+                    <div className="flex items-center gap-4 p-4 bg-muted/20 rounded-2xl border border-border/40">
+                        <Avatar nome={membro.nome} fotoPerfil={membro.foto_perfil} />
+                        <div>
+                            <p className="text-xs font-black uppercase tracking-widest text-foreground">{membro.nome}</p>
+                            <p className="text-[10px] text-muted-foreground">{membro.email}</p>
+                        </div>
                     </div>
-                </div>
+                )}
 
                 <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">Equipe Destino</label>
@@ -348,13 +350,14 @@ export const GerenciarMembros = memo(() => {
                         <span>Novo Membro</span>
                     </button>
 
-                    <button
-                        onClick={() => { setModoModal('lote'); setModalAberto(true); }}
-                        className="h-11 px-6 bg-muted text-muted-foreground rounded-full flex items-center gap-2 text-[11px] font-black uppercase tracking-widest hover:bg-muted/80 hover:-translate-y-0.5 active:scale-95 transition-all border border-border/40"
-                    >
-                        <History size={18} strokeWidth={3} />
-                        <span>Em Lote</span>
-                    </button>
+                    <Tooltip texto="Cadastro em Lote">
+                        <button
+                            onClick={() => { setModoModal('lote'); setModalAberto(true); }}
+                            className="h-11 w-11 bg-muted text-muted-foreground rounded-full flex items-center justify-center hover:bg-muted/80 hover:-translate-y-0.5 active:scale-95 transition-all border border-border/40"
+                        >
+                            <History size={18} strokeWidth={3} />
+                        </button>
+                    </Tooltip>
                 </div>
             </CabecalhoFuncionalidade>
 
@@ -475,6 +478,7 @@ export const GerenciarMembros = memo(() => {
                                     onAlterarRole={alterarRole}
                                     onRemover={handleSetMembroExcluir}
                                     onVerPerfil={handleVerPerfil}
+                                    onAlocar={(m: Membro) => setMembroAlocacao(m)}
                                     rolesDisponiveis={rolesDisponiveis}
                                 />
                             ))}

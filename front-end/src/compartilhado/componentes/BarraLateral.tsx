@@ -84,8 +84,8 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
             links: g.links.filter(l => l.visivel)
         }))
         .filter(g => {
-            // Regra especial: O grupo 'Gestão' aparece se houver links visíveis ou for ADMIN
-            if (g.label === 'Gestão') {
+            // Regra especial: O grupo 'Administração' aparece se houver links visíveis ou for ADMIN
+            if (g.label === 'Administração') {
                 return (usuario?.role === 'ADMIN') || g.links.length > 0;
             }
             return g.links.length > 0;

@@ -1,4 +1,4 @@
-import { usarPerfilContexto } from '../contexto/PerfilContexto';
+import { usarPerfilContexto } from '@/funcionalidades/perfil/contexto/PerfilContexto';
 
 /**
  * Hook para gerenciar os dados do perfil do usuário logado e suas estatísticas.
