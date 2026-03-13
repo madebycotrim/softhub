@@ -1,0 +1,68 @@
+import { useEffect, memo } from 'react';
+import { Layers, ChevronDown } from 'lucide-react';
+import { usarProjetos } from '@/funcionalidades/projetos/hooks/usarProjetos';
+import { usarAutenticacao } from '@/contexto/ContextoAutenticacao';
+import { PROJETO_PADRAO_ID } from '@/utilitarios/constantes';
+
+/**
+ * Seletor de Projeto Global.
+ * Gerencia o contexto do projeto ativo para toda a aplicação.
+ */
+export const SeletorProjetoGlobal = memo(() => {
+    const { projetos, carregando } = usarProjetos();
+    const { projetoAtivoId, setProjetoAtivoId } = usarAutenticacao();
+
+    // Sincroniza o projeto inicial se houver projetos mas nenhum selecionado
+    useEffect(() => {
+        if (!projetoAtivoId && projetos.length > 0) {
+            // Tenta o principal, se não existir pega o primeiro da lista
+            const padrao = projetos.find(p => p.id === PROJETO_PADRAO_ID) || projetos[0];
+            setProjetoAtivoId(padrao.id);
+        }
+    }, [projetos, projetoAtivoId, setProjetoAtivoId]);
+
+    const projetoAtual = projetos.find(p => p.id === projetoAtivoId);
+
+    if (carregando && !projetoAtual) {
+        return (
+            <div className="h-11 w-full bg-sidebar-accent/10 border border-sidebar-border/20 rounded-2xl animate-pulse" />
+        );
+    }
+
+    if (projetos.length === 0 && !carregando) {
+        return (
+            <div className="h-11 w-full flex items-center gap-3 px-3 bg-destructive/5 border border-destructive/10 rounded-2xl">
+                <Layers size={14} className="text-destructive/40" />
+                <span className="text-[10px] font-black text-destructive/60 uppercase tracking-widest">
+                    Sem Projetos
+                </span>
+            </div>
+        );
+    }
+
+    return (
+        <div className="relative group/seletor">
+            <div className="absolute inset-0 bg-primary/5 rounded-2xl opacity-0 group-hover/seletor:opacity-100 transition-opacity duration-300 pointer-events-none" />
+            
+            <select
+                value={projetoAtivoId}
+                onChange={(e) => setProjetoAtivoId(e.target.value)}
+                className="w-full h-11 pl-11 pr-10 bg-sidebar-accent/5 hover:bg-sidebar-accent/10 border border-sidebar-border/30 rounded-2xl text-[11px] font-bold text-sidebar-foreground/80 focus:ring-2 focus:ring-primary/20 outline-none transition-all appearance-none cursor-pointer relative z-10"
+            >
+                {projetos.map(projeto => (
+                    <option key={projeto.id} value={projeto.id} className="bg-sidebar text-sidebar-foreground py-2">
+                        {projeto.nome}
+                    </option>
+                ))}
+            </select>
+
+            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-sidebar-foreground/30 group-hover/seletor:text-primary transition-colors z-20">
+                <Layers size={15} />
+            </div>
+
+            <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-sidebar-foreground/20 group-hover/seletor:text-sidebar-foreground/40 transition-colors z-20">
+                <ChevronDown size={14} />
+            </div>
+        </div>
+    );
+});

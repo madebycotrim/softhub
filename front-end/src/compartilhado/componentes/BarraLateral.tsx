@@ -11,6 +11,8 @@ import { formatarTempoAtras } from '@/utilitarios/formatadores';
 import logoUnieuro from '@/assets/logo-unieuro.png';
 import { Emblema } from './Emblema';
 import { useState } from 'react';
+import { SeletorProjetoGlobal } from './SeletorProjetoGlobal';
+
 
 interface BarraLateralProps {
     aoNavegar?: () => void;
@@ -40,6 +42,7 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
     const podeVerRelatorios = usarPermissaoAcesso('relatorios:visualizar');
     const podeVerLogs = usarPermissaoAcesso('logs:visualizar');
     const podeVerEquipes = usarPermissaoAcesso('equipes:visualizar');
+    const podeVerProjetos = usarPermissaoAcesso('projetos:visualizar');
     const podeVerConfiguracoes = usarPermissaoAcesso('configuracoes:visualizar');
 
     const gruposBrutos = [
@@ -64,6 +67,7 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
             links: [
                 { label: 'Membros', path: '/app/admin/membros', icon: Users, visivel: podeVerMembrosAdmin },
                 { label: 'Equipes', path: '/app/admin/equipes', icon: LayoutGrid, visivel: podeVerEquipes },
+                { label: 'Projetos', path: '/app/admin/projetos', icon: FolderKanban, visivel: podeVerProjetos },
                 { label: 'Relatórios', path: '/app/admin/relatorios', icon: FileText, visivel: podeVerRelatorios },
                 { label: 'Logs', path: '/app/admin/logs', icon: Database, visivel: podeVerLogs },
                 { label: 'Configurações', path: '/app/admin/configuracoes', icon: Settings, visivel: podeVerConfiguracoes },
@@ -147,6 +151,11 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {/* ── Seletor de Projeto Global ── */}
+            <div className="px-3 pb-3 shrink-0 relative z-10">
+                 <SeletorProjetoGlobal />
             </div>
 
             {/* ── Navegação ── */}

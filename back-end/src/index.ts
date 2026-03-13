@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { rateLimiter } from 'hono-rate-limiter';
 import rotasUsuarios from './rotas/usuarios';
+import rotasProjetos from './rotas/projetos';
 import rotasTarefas from './rotas/tarefas';
 import rotasTarefasDetalhes from './rotas/tarefas-detalhes';
 import rotasPonto from './rotas/ponto';
@@ -29,7 +30,7 @@ export type Env = {
     AI: any;
 };
 
-const app = new Hono<{ Bindings: Env }>();
+const app = new Hono<{ Bindings: Env }>({ strict: false });
 
 // ─── Middlewares Globais ───────────────────────────────────────────────────
 
@@ -126,6 +127,7 @@ app.onError(lidarExcecao);
 app.route('/api/auth', rotasAuth);
 app.route('/api/auth', rotasAuthQr);
 app.route('/api/usuarios', rotasUsuarios);
+app.route('/api/projetos', rotasProjetos);
 app.route('/api/tarefas', rotasTarefas);
 app.route('/api/tarefas', rotasTarefasDetalhes);
 app.route('/api/ponto', rotasPonto);

@@ -22,6 +22,8 @@ interface ContextoAutenticacaoContrato {
     estaAutenticado: boolean;
     carregando: boolean;
     configuracoes: IConfiguracoesUX;
+    projetoAtivoId: string;
+    setProjetoAtivoId: (id: string) => void;
     entrar: (usuario: Usuario, token: string) => void;
     sair: () => void;
     atualizarUsuarioLocalmente: (usuario: Usuario) => void;
@@ -41,6 +43,7 @@ export function usarAutenticacao() {
 
 const CHAVE_TOKEN = 'softhub_token';
 const CHAVE_USUARIO = 'softhub_usuario';
+const CHAVE_PROJETO = 'softhub_projeto_ativo';
 
 /**
  * ProvedorAutenticacao NÃO usa useNavigate — ele vive fora do RouterProvider.
@@ -69,6 +72,19 @@ export function ProvedorAutenticacao({ children }: { children: ReactNode }) {
     });
 
     const [carregando, setCarregando] = useState(true);
+
+    const [projetoAtivoId, setProjetoAtivoIdInterno] = useState<string>(() => {
+        return localStorage.getItem(CHAVE_PROJETO) || '';
+    });
+
+    const setProjetoAtivoId = useCallback((id: string) => {
+        setProjetoAtivoIdInterno(id);
+        if (id) {
+            localStorage.setItem(CHAVE_PROJETO, id);
+        } else {
+            localStorage.removeItem(CHAVE_PROJETO);
+        }
+    }, []);
 
     const buscarConfiguracoesPublicas = useCallback(async () => {
         try {
@@ -128,6 +144,8 @@ export function ProvedorAutenticacao({ children }: { children: ReactNode }) {
             estaAutenticado: !!token && !!usuario,
             carregando,
             configuracoes,
+            projetoAtivoId,
+            setProjetoAtivoId,
             entrar, sair,
             atualizarUsuarioLocalmente,
         }}>

@@ -1,10 +1,13 @@
-import { useState, type ReactNode } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { BarraLateral } from './BarraLateral';
 import { Menu, X, QrCode, Sun, Moon } from 'lucide-react';
 import { Tooltip } from './Tooltip';
 import { usarTema } from '@/contexto/ContextoTema';
+import { usarAutenticacao } from '@/contexto/ContextoAutenticacao';
+import { usarProjetos } from '@/funcionalidades/projetos/hooks/usarProjetos';
 import { Modal } from './Modal';
 import ScannerQR from '@/funcionalidades/autenticacao/componentes/ScannerQR';
+
 
 interface LayoutPrincipalProps {
     children: ReactNode;
@@ -18,6 +21,18 @@ export function LayoutPrincipal({ children }: LayoutPrincipalProps) {
     const [sidebarAberta, setSidebarAberta] = useState(false);
     const [scannerAberto, setScannerAberto] = useState(false);
     const { tema, setTema } = usarTema();
+    const { projetoAtivoId } = usarAutenticacao();
+    const { projetos } = usarProjetos();
+
+    // Dinamismo Inteligente: Atualiza o título da aba com o nome do projeto ativo
+    useEffect(() => {
+        const projeto = projetos.find(p => p.id === projetoAtivoId);
+        if (projeto) {
+            document.title = `${projeto.nome} | SoftHub`;
+        } else {
+            document.title = 'Fábrica de Software | SoftHub';
+        }
+    }, [projetoAtivoId, projetos]);
 
     return (
         <div className="flex h-screen bg-background text-foreground overflow-hidden transition-colors duration-300 font-sans">

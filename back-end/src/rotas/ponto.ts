@@ -7,7 +7,7 @@ import { validarRedeLocal } from '../middleware/rede'; // Importando o middlewar
 import { registrarLog } from '../servicos/servico-logs';
 import { criarNotificacoes } from '../servicos/servico-notificacoes';
 
-const rotasPonto = new Hono<{ Bindings: Env, Variables: { usuario: any } }>();
+const rotasPonto = new Hono<{ Bindings: Env, Variables: { usuario: any } }>({ strict: false });
 
 // Listar registros do usuário (Hoje e Histórico)
 rotasPonto.get('/', autenticacaoRequerida(), verificarPermissao('ponto:visualizar'), async (c: Context) => {

@@ -2,10 +2,13 @@ import {
     ListTodo,
     Plus,
     ChevronRight,
-    User
+    User,
+    FolderKanban
 } from 'lucide-react';
 import { usarBacklog } from '../hooks/usarBacklog';
 import { usarPermissaoAcesso } from '@/compartilhado/hooks/usarPermissao';
+import { usarAutenticacao } from '@/contexto/ContextoAutenticacao';
+import { usarProjetos } from '@/funcionalidades/projetos/hooks/usarProjetos';
 import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
 import { Carregando } from '@/compartilhado/componentes/Carregando';
 import { EstadoErro } from '@/compartilhado/componentes/EstadoErro';
@@ -13,12 +16,15 @@ import { EstadoVazio } from '@/compartilhado/componentes/EstadoVazio';
 import { Emblema } from '@/compartilhado/componentes/Emblema';
 import { LABELS_PRIORIDADE, LABELS_STATUS } from '@/utilitarios/constantes';
 import { Avatar } from '@/compartilhado/componentes/Avatar';
-import { PROJETO_PADRAO_ID } from '@/utilitarios/constantes';
 import { useState, useCallback, memo } from 'react';
 import { ModalCriarTarefa } from './ModalCriarTarefa';
 import { BarraFiltros, FiltroPills } from '@/compartilhado/componentes/BarraFiltros';
 
 const PaginaBacklog = memo(() => {
+    const { projetoAtivoId } = usarAutenticacao();
+    const { projetos, carregando: carregandoProjetos } = usarProjetos();
+    const podeGerenciarProjetos = usarPermissaoAcesso('projetos:visualizar');
+
     const [modalCriarAberto, setModalCriarAberto] = useState(false);
     const [busca, setBusca] = useState('');
     const [statusFiltro, setStatusFiltro] = useState<string[]>([]);
@@ -29,7 +35,7 @@ const PaginaBacklog = memo(() => {
         carregando,
         erro,
         criarTarefa
-    } = usarBacklog(PROJETO_PADRAO_ID, {
+    } = usarBacklog(projetoAtivoId, {
         busca,
         status: statusFiltro.length > 0 ? statusFiltro : undefined,
         prioridades: prioridadeFiltro.length > 0 ? prioridadeFiltro : undefined
@@ -45,6 +51,44 @@ const PaginaBacklog = memo(() => {
 
     const podeCriar = usarPermissaoAcesso('tarefas:criar');
 
+    if (carregandoProjetos) {
+        return (
+            <div className="flex-1 py-40 flex items-center justify-center">
+                <Carregando Centralizar={false} tamanho="lg" />
+            </div>
+        );
+    }
+
+    if (!carregandoProjetos && projetos.length === 0) {
+        return (
+            <div className="flex flex-col gap-10">
+                <CabecalhoFuncionalidade
+                    titulo="Backlog de Demandas"
+                    subtitulo="Visão detalhada e gestão completa de todas as tarefas."
+                    icone={ListTodo}
+                />
+                <div className="flex-1 flex flex-col items-center justify-center py-20 text-center animate-in fade-in zoom-in duration-700">
+                    <div className="w-24 h-24 rounded-[32px] bg-muted/30 border border-border flex items-center justify-center mb-8 shadow-2xl shadow-primary/5">
+                        <FolderKanban className="w-10 h-10 text-muted-foreground/20" />
+                    </div>
+                    <h2 className="text-xl font-bold text-foreground mb-3">Fábrica Vazia</h2>
+                    <p className="text-muted-foreground text-sm max-w-sm mb-8 leading-relaxed">
+                        Ainda não existem projetos cadastrados. Você precisa de um projeto para gerenciar o backlog.
+                    </p>
+                    {podeGerenciarProjetos ? (
+                        <a href="/app/admin/projetos" className="h-12 px-8 bg-primary text-primary-foreground rounded-2xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 shadow-lg shadow-primary/20 transition-all flex items-center">
+                            Criar Primeiro Projeto
+                        </a>
+                    ) : (
+                        <p className="text-[10px] font-black uppercase tracking-widest text-destructive/60 bg-destructive/5 px-4 py-2 rounded-xl border border-destructive/10">
+                            Contate um administrador para criar projetos
+                        </p>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="w-full space-y-6 animate-in fade-in duration-700 pb-20">
             <CabecalhoFuncionalidade
@@ -52,14 +96,16 @@ const PaginaBacklog = memo(() => {
                 subtitulo="Visão detalhada e gestão completa de todas as tarefas do projeto."
                 icone={ListTodo}
             >
-                {podeCriar && (
-                    <button
-                        onClick={() => setModalCriarAberto(true)}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
-                    >
-                        <Plus className="w-4 h-4" /> Nova Tarefa
-                    </button>
-                )}
+                <div className="flex items-center gap-4">
+                    {projetoAtivoId && podeCriar && (
+                        <button
+                            onClick={() => setModalCriarAberto(true)}
+                            className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+                        >
+                            <Plus className="w-4 h-4" /> Nova Tarefa
+                        </button>
+                    )}
+                </div>
             </CabecalhoFuncionalidade>
 
             <BarraFiltros

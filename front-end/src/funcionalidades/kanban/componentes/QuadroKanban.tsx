@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, memo } from 'react';
+import { useState, useMemo, useCallback, memo, useEffect } from 'react';
 import {
     DndContext,
     DragOverlay,
@@ -12,13 +12,15 @@ import {
     useDroppable
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { FolderKanban, Circle, Zap, Search, CheckCircle2, Plus, Info } from 'lucide-react';
+import { FolderKanban, Circle, Zap, Search, CheckCircle2, Plus } from 'lucide-react';
 
 import { usarKanban } from '@/funcionalidades/kanban/hooks/usarKanban';
 import type { Tarefa } from '@/funcionalidades/kanban/hooks/usarKanban';
 import { usarBacklog } from '@/funcionalidades/backlog/hooks/usarBacklog';
 import { usarPermissaoAcesso } from '@/compartilhado/hooks/usarPermissao';
-import { COLUNAS_KANBAN, PROJETO_PADRAO_ID } from '@/utilitarios/constantes';
+import { usarAutenticacao } from '@/contexto/ContextoAutenticacao';
+import { usarProjetos } from '@/funcionalidades/projetos/hooks/usarProjetos';
+import { COLUNAS_KANBAN } from '@/utilitarios/constantes';
 import type { ColunaKanban as ColunaTipo } from '@/utilitarios/constantes';
 
 import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
@@ -45,16 +47,11 @@ const ICONES_COLUNAS: Record<string, any> = {
     concluida: CheckCircle2
 };
 
-/** Coluna Drop Zone interna */
 const ColunaDropZone = memo(({ id, titulo, tarefas, aoApertarTarefa }: { id: string; titulo: string; tarefas: Tarefa[], aoApertarTarefa: (t: Tarefa) => void }) => {
     const { setNodeRef, isOver } = useDroppable({
         id: id,
-        data: {
-            type: 'Column',
-            coluna: id
-        }
+        data: { type: 'Column', coluna: id }
     });
-
     const Icone = ICONES_COLUNAS[id] || Circle;
 
     return (
@@ -71,11 +68,9 @@ const ColunaDropZone = memo(({ id, titulo, tarefas, aoApertarTarefa }: { id: str
                     {tarefas.length}
                 </span>
             </div>
-
             <div
                 ref={setNodeRef}
-                className={`flex-1 p-4 overflow-y-auto overflow-x-hidden flex flex-col gap-4 scrollbar-none transition-all duration-300 ${isOver ? 'bg-primary/5 ring-2 ring-inset ring-primary/30 rounded-2xl' : ''
-                    }`}
+                className={`flex-1 p-4 overflow-y-auto overflow-x-hidden flex flex-col gap-4 scrollbar-none transition-all duration-300 ${isOver ? 'bg-primary/5 ring-2 ring-inset ring-primary/30 rounded-2xl' : ''}`}
             >
                 {tarefas.map(tarefa => (
                     <CartaoTarefa key={tarefa.id} tarefa={tarefa} aoClicar={aoApertarTarefa} />
@@ -85,28 +80,24 @@ const ColunaDropZone = memo(({ id, titulo, tarefas, aoApertarTarefa }: { id: str
     );
 });
 
-/**
- * O Quadro Kanban que exibe as colunas com Drag and Drop funcional.
- */
-export const QuadroKanban = memo(({ projetoId = PROJETO_PADRAO_ID }: { projetoId?: string }) => {
+export const QuadroKanban = memo(() => {
+    const { projetoAtivoId } = usarAutenticacao();
+    const { projetos, carregando: carregandoProjetos } = usarProjetos();
+    
     const [filtros, setFiltros] = useState<any>({});
-    const { tarefas, carregando, erro, moverCard } = usarKanban(projetoId, filtros);
+    const { tarefas, carregando, erro, moverCard } = usarKanban(projetoAtivoId, filtros);
     const [activeTarefa, setActiveTarefa] = useState<Tarefa | null>(null);
     const [tarefaDetalhes, setTarefaDetalhes] = useState<Tarefa | null>(null);
     const [modalCriarAberto, setModalCriarAberto] = useState(false);
 
     const podeMover = usarPermissaoAcesso('tarefas:mover');
     const podeCriar = usarPermissaoAcesso('tarefas:criar');
+    const podeGerenciarProjetos = usarPermissaoAcesso('projetos:visualizar');
 
-    const { criarTarefa } = usarBacklog(projetoId);
+    const { criarTarefa } = usarBacklog(projetoAtivoId);
 
     const tarefasPorStatus = useMemo(() => {
-        const agrupado: Record<string, Tarefa[]> = {
-            todo: [],
-            in_progress: [],
-            em_revisao: [],
-            concluida: []
-        };
+        const agrupado: Record<string, Tarefa[]> = { todo: [], in_progress: [], em_revisao: [], concluida: [] };
         tarefas.forEach((t: Tarefa) => {
             if (agrupado[t.status]) agrupado[t.status].push(t);
         });
@@ -131,13 +122,10 @@ export const QuadroKanban = memo(({ projetoId = PROJETO_PADRAO_ID }: { projetoId
         if (!podeMover) return;
         const { active, over } = event;
         setActiveTarefa(null);
-
         if (!over) return;
-
         const tarefaId = active.id as string;
         const colDestino = over.id as string;
         const t = tarefas.find((item: Tarefa) => item.id === tarefaId);
-
         if (t && t.status !== colDestino) {
             moverCard(tarefaId, colDestino as any);
         }
@@ -153,6 +141,14 @@ export const QuadroKanban = memo(({ projetoId = PROJETO_PADRAO_ID }: { projetoId
         setModalCriarAberto(false);
     }, [criarTarefa]);
 
+    if (carregandoProjetos) {
+        return (
+            <div className="flex-1 flex items-center justify-center">
+                <Carregando Centralizar={false} tamanho="lg" />
+            </div>
+        );
+    }
+
     return (
         <div className="flex flex-col h-full w-full overflow-hidden bg-background/50">
             <div className="shrink-0">
@@ -162,7 +158,7 @@ export const QuadroKanban = memo(({ projetoId = PROJETO_PADRAO_ID }: { projetoId
                     icone={FolderKanban}
                 >
                     <div className="flex items-center gap-4">
-                        {podeCriar && (
+                        {projetoAtivoId && podeCriar && (
                             <button
                                 onClick={handleAbrirCriar}
                                 className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.03] active:scale-[0.98] transition-all"
@@ -180,87 +176,76 @@ export const QuadroKanban = memo(({ projetoId = PROJETO_PADRAO_ID }: { projetoId
                 </CabecalhoFuncionalidade>
             </div>
 
-            <div className="shrink-0 px-0.5">
-                <PainelFiltrosKanban filtros={filtros} aoFiltrar={handleFiltrar} />
-            </div>
-
-            <div className={`flex-1 min-h-0 transition-opacity duration-300 ${carregando && tarefas.length > 0 ? 'opacity-70' : 'opacity-100'}`}>
-                {carregando && tarefas.length === 0 ? (
-                    <div className="h-full bg-card/10 border border-border/30 rounded-2xl flex items-center justify-center animate-in fade-in duration-500">
-                        <div className="flex flex-col items-center gap-4">
-                            <Carregando Centralizar={false} tamanho="lg" />
-                            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Buscando Tarefas</span>
-                        </div>
+            {!carregandoProjetos && projetos.length === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center p-12 text-center animate-in fade-in zoom-in duration-700">
+                    <div className="w-24 h-24 rounded-[32px] bg-muted/30 border border-border flex items-center justify-center mb-8 shadow-2xl shadow-primary/5">
+                        <FolderKanban className="w-10 h-10 text-muted-foreground/20" />
                     </div>
-                ) : erro ? (
-                    <div className="h-full flex items-center justify-center p-12">
-                        <EstadoErro titulo="Erro no Kanban" mensagem={erro} />
+                    <h2 className="text-xl font-bold text-foreground mb-3">Fábrica Vazia</h2>
+                    <p className="text-muted-foreground text-sm max-w-sm mb-8 leading-relaxed">
+                        Parece que ainda não existem projetos cadastrados. Você precisa criar um projeto antes de gerenciar tarefas.
+                    </p>
+                    {podeGerenciarProjetos ? (
+                        <a href="/app/admin/projetos" className="h-12 px-8 bg-primary text-primary-foreground rounded-2xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 shadow-lg shadow-primary/20 transition-all flex items-center">
+                            Criar Primeiro Projeto
+                        </a>
+                    ) : (
+                        <p className="text-[10px] font-black uppercase tracking-widest text-destructive/60 bg-destructive/5 px-4 py-2 rounded-xl border border-destructive/10">
+                            Contate um administrador para criar projetos
+                        </p>
+                    )}
+                </div>
+            ) : (
+                <>
+                    <div className="shrink-0 px-0.5">
+                        <PainelFiltrosKanban filtros={filtros} aoFiltrar={handleFiltrar} />
                     </div>
-                ) : tarefas.length === 0 ? (
-                    <div className="h-full bg-card/20 border border-border/50 rounded-2xl flex items-center justify-center">
-                        {temFiltroAtivo ? (
-                            <EstadoVazio
-                                tipo="pesquisa"
-                                titulo="Nenhuma tarefa encontrada"
-                                descricao="Não há tarefas que correspondam aos filtros ou termo de busca aplicados."
-                                compacto={true}
-                                acao={{
-                                    rotulo: "Limpar todos os filtros",
-                                    aoClicar: handleLimparFiltros
-                                }}
-                            />
+                    <div className={`flex-1 min-h-0 transition-opacity duration-300 ${carregando && tarefas.length > 0 ? 'opacity-70' : 'opacity-100'}`}>
+                        {carregando && tarefas.length === 0 ? (
+                            <div className="h-full bg-card/10 border border-border/30 rounded-2xl flex items-center justify-center animate-in fade-in duration-500">
+                                <div className="flex flex-col items-center gap-4">
+                                    <Carregando Centralizar={false} tamanho="lg" />
+                                    <span className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Buscando Tarefas</span>
+                                </div>
+                            </div>
+                        ) : erro ? (
+                            <div className="h-full flex items-center justify-center p-12">
+                                <EstadoErro titulo="Erro no Kanban" mensagem={erro} />
+                            </div>
+                        ) : tarefas.length === 0 ? (
+                            <div className="h-full bg-card/20 border border-border/50 rounded-2xl flex items-center justify-center">
+                                {temFiltroAtivo ? (
+                                    <EstadoVazio tipo="pesquisa" titulo="Nenhuma tarefa encontrada" descricao="Não há tarefas que correspondam aos filtros ou termo de busca aplicados." compacto={true} acao={{ rotulo: "Limpar todos os filtros", aoClicar: handleLimparFiltros }} />
+                                ) : (
+                                    <EstadoVazio titulo="Quadro Vazio" descricao="Ainda não há tarefas cadastradas para este projeto. Comece adicionando novas demandas no Backlog." />
+                                )}
+                            </div>
                         ) : (
-                            <EstadoVazio
-                                titulo="Quadro Vazio"
-                                descricao="Ainda não há tarefas cadastradas para este projeto. Comece adicionando novas demandas no Backlog."
-                            />
+                            <div className="h-full flex flex-col">
+                                <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+                                    <div className="h-full flex justify-between gap-6 overflow-x-auto pb-6 custom-scrollbar px-1">
+                                        {COLUNAS_KANBAN.map(coluna => (
+                                            <ColunaDropZone key={coluna} id={coluna} titulo={LABELS_COLUNAS[coluna]} tarefas={tarefasPorStatus[coluna] || []} aoApertarTarefa={setTarefaDetalhes} />
+                                        ))}
+                                        <DragOverlay dropAnimation={null}>
+                                            {activeTarefa ? (
+                                                <div className="rotate-[3deg] scale-[1.03] shadow-2xl opacity-90 transition-transform">
+                                                    <CartaoTarefa tarefa={activeTarefa} />
+                                                </div>
+                                            ) : null}
+                                        </DragOverlay>
+                                    </div>
+                                </DndContext>
+                            </div>
                         )}
                     </div>
-                ) : (
-                    <div className="h-full flex flex-col">
-                        <DndContext
-                            sensors={sensors}
-                            collisionDetection={closestCorners}
-                            onDragStart={handleDragStart}
-                            onDragEnd={handleDragEnd}
-                        >
-                            <div className="h-full flex justify-between gap-6 overflow-x-auto pb-6 custom-scrollbar px-1">
-                                {COLUNAS_KANBAN.map(coluna => (
-                                    <ColunaDropZone
-                                        key={coluna}
-                                        id={coluna}
-                                        titulo={LABELS_COLUNAS[coluna]}
-                                        tarefas={tarefasPorStatus[coluna] || []}
-                                        aoApertarTarefa={setTarefaDetalhes}
-                                    />
-                                ))}
+                </>
+            )}
 
-                                <DragOverlay dropAnimation={null}>
-                                    {activeTarefa ? (
-                                        <div className="rotate-[3deg] scale-[1.03] shadow-2xl opacity-90 transition-transform">
-                                            <CartaoTarefa tarefa={activeTarefa} />
-                                        </div>
-                                    ) : null}
-                                </DragOverlay>
-                            </div>
-                        </DndContext>
-                    </div>
-                )}
-            </div>
-
-            <ModalDetalhesTarefa
-                tarefa={tarefaDetalhes}
-                aberto={!!tarefaDetalhes}
-                aoFechar={handleFecharDetalhes}
-            />
-
-            <ModalCriarTarefa
-                aberto={modalCriarAberto}
-                aoFechar={handleFecharCriar}
-                aoCriar={handleCriarTarefa}
-            />
+            <ModalDetalhesTarefa tarefa={tarefaDetalhes} aberto={!!tarefaDetalhes} aoFechar={handleFecharDetalhes} />
+            <ModalCriarTarefa aberto={modalCriarAberto} aoFechar={handleFecharCriar} aoCriar={handleCriarTarefa} />
         </div>
     );
 });
- 
+
 export default QuadroKanban;

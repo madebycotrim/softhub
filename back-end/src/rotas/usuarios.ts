@@ -6,7 +6,7 @@ import { criarNotificacoes } from '../servicos/servico-notificacoes';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 
-const rotasUsuarios = new Hono<{ Bindings: Env; Variables: { usuario: any } }>();
+const rotasUsuarios = new Hono<{ Bindings: Env; Variables: { usuario: any } }>({ strict: false });
 
 // ─── Health Check ─────────────────────────────────────────────────────────────
 

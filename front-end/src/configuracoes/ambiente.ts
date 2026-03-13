@@ -12,7 +12,6 @@ if (!url) {
 interface ConfiguracoesAmbiente {
     apiUrl: string;
     VITE_API: string; // Mantido para compatibilidade se necessário
-    VITE_DOMINIOS_INSTITUCIONAIS: string[];
     msalClientId: string;
     msalTenantId: string;
     IS_DEV: boolean;
@@ -23,7 +22,6 @@ interface ConfiguracoesAmbiente {
 export const ambiente: ConfiguracoesAmbiente = {
     apiUrl: url,
     VITE_API: url,
-    VITE_DOMINIOS_INSTITUCIONAIS: (import.meta.env.VITE_DOMINIOS_INSTITUCIONAIS || 'unieuro.com.br,unieuro.edu.br').split(','),
     msalClientId: import.meta.env.VITE_MSAL_CLIENT_ID || '',
     msalTenantId: import.meta.env.VITE_MSAL_TENANT_ID || '',
     IS_DEV: !!import.meta.env.DEV,

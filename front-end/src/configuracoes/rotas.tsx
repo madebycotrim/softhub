@@ -36,6 +36,7 @@ const GerenciarMembros = lazy(() => import('../funcionalidades/admin/componentes
 const PainelJustificativas = lazy(() => import('../funcionalidades/admin/componentes/PainelJustificativas'));
 const PaginaRelatorios = lazy(() => import('../funcionalidades/admin/componentes/PaginaRelatorios'));
 const GerenciarEquipes = lazy(() => import('../funcionalidades/admin/componentes/GerenciarEquipes'));
+const GerenciarProjetos = lazy(() => import('../funcionalidades/admin/componentes/GerenciarProjetos'));
 const PaginaConfiguracoes = lazy(() => import('../funcionalidades/admin/componentes/PaginaConfiguracoes'));
 
 /**
@@ -80,6 +81,7 @@ export const rotas = createBrowserRouter([
             { path: '/app/admin/justificativas', element: <RotaProtegida roleMinimo="SUBLIDER"><LayoutPrincipal><PainelJustificativas /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/admin/relatorios', element: <RotaProtegida roleMinimo="SUBLIDER"><LayoutPrincipal><PaginaRelatorios /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/admin/equipes', element: <RotaProtegida roleMinimo="LIDER"><LayoutPrincipal><GerenciarEquipes /></LayoutPrincipal></RotaProtegida> },
+            { path: '/app/admin/projetos', element: <RotaProtegida roleMinimo="GESTOR"><LayoutPrincipal><GerenciarProjetos /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/admin/configuracoes', element: <RotaProtegida roleMinimo="ADMIN"><LayoutPrincipal><PaginaConfiguracoes /></LayoutPrincipal></RotaProtegida> },
             // Rota de fallback
             { path: '*', element: <div className="p-6 text-destructive text-center text-xl font-bold">404 - Página não encontrada</div> },

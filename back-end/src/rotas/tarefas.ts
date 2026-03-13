@@ -7,7 +7,7 @@ import { registrarLog } from '../servicos/servico-logs';
 import { D1Database } from '@cloudflare/workers-types';
 import { criarNotificacoes } from '../servicos/servico-notificacoes';
 
-const rotasTarefas = new Hono<{ Bindings: Env, Variables: { usuario: any } }>();
+const rotasTarefas = new Hono<{ Bindings: Env, Variables: { usuario: any } }>({ strict: false });
 
 // Listar Tarefas do Projeto
 rotasTarefas.get('/', autenticacaoRequerida(), verificarPermissao(['tarefas:visualizar_kanban', 'tarefas:visualizar_backlog', 'tarefas:visualizar_detalhes']), async (c: Context) => {
@@ -93,6 +93,12 @@ rotasTarefas.post('/',
     const usuario = c.get('usuario') as any;
 
     try {
+        // Validação de existência do projeto (evita 500 por FK failure)
+        const projeto = await DB.prepare('SELECT id FROM projetos WHERE id = ?').bind(body.projeto_id).first();
+        if (!projeto) {
+            return c.json({ erro: 'O projeto especificado não existe ou foi removido.' }, 404);
+        }
+
         const id = crypto.randomUUID();
         await DB.prepare(`
             INSERT INTO tarefas (id, projeto_id, titulo, descricao, prioridade, status, modulo, pontos)
@@ -105,7 +111,7 @@ rotasTarefas.post('/',
             body.prioridade, 
             body.status, 
             body.modulo || null, 
-            body.pontos || 1
+            body.pontos ?? 1
         ).run();
 
         await registrarLog(DB, {
@@ -120,8 +126,16 @@ rotasTarefas.post('/',
 
         return c.json({ id, sucesso: true }, 201);
     } catch (erro: any) {
-        console.error('[ERRO DB] POST /tarefas', erro);
-        return c.json({ erro: 'Falha ao criar tarefa', detalhe: erro.message }, 500);
+        console.error('[ERRO DB] POST /tarefas', {
+            mensagem: erro.message,
+            stack: erro.stack,
+            body
+        });
+        return c.json({ 
+            erro: 'Falha ao criar tarefa', 
+            detalhe: erro.message,
+            codigo: 'DB_INSERT_ERROR'
+        }, 500);
     }
 });
 
