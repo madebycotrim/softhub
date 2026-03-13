@@ -35,40 +35,9 @@ export const ResumoPessoalDashboard = memo(() => {
 
     return (
         <div className="space-y-6">
-            {/* Saudação Personalizada + Ações */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                <div>
-                    <h2 className="text-2xl font-black text-foreground tracking-tight">
-                        Olá, <span className="text-primary">{perfil.nome.split(' ')[0]}</span>! 👋
-                    </h2>
-                    <p className="text-muted-foreground text-sm font-medium">
-                        Seu desempenho na Fábrica de Software está <span className="text-primary font-bold">{stats?.tarefas.aproveitamento || 0}%</span> acima da média.
-                    </p>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                    <button 
-                        onClick={() => setModalAberto(true)}
-                        className="group flex items-center gap-2 px-5 py-2.5 bg-card/40 hover:bg-card border border-border/40 rounded-2xl transition-all active:scale-95 shadow-sm"
-                    >
-                        <User className="w-4 h-4 text-primary group-hover:scale-110 transition-transform duration-300" />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-foreground/80">Ver Perfil</span>
-                    </button>
-
-                    <div className="flex items-center gap-2 px-4 py-2 bg-primary/5 border border-primary/10 rounded-2xl">
-                        <Briefcase className="w-4 h-4 text-primary" />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-primary">
-                            {perfil.equipe_nome || 'Sem Equipe'} • {perfil.role}
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            {/* Modal de Perfil Unificado */}
-            <ModalEdicaoPerfil aberto={modalAberto} aoFechar={() => setModalAberto(false)} />
-
             {/* Grid de Métricas Pessoais */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
                 {/* Card: Tarefas Concluídas */}
                 <div className="group bg-card hover:bg-muted/30 border border-border/60 p-5 rounded-[32px] transition-all duration-300 relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">

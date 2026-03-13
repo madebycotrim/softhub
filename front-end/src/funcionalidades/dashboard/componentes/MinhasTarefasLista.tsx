@@ -25,14 +25,21 @@ export const MinhasTarefasLista = memo(({ minhasTarefas }: MinhasTarefasListaPro
                 </span>
             </div>
 
-            <div className="p-3 space-y-2 relative z-10 min-h-[200px]">
+            <div className="p-3 space-y-2 relative z-10 min-h-[220px]">
                 {minhasTarefas.slice(0, 5).map(tarefa => (
-                    <button 
+                    <Link 
                         key={tarefa.id} 
-                        className="w-full flex items-center justify-between p-4 rounded-[24px] hover:bg-accent/40 hover:shadow-sm border border-transparent hover:border-border/40 transition-all text-left group/item"
+                        to={`/app/kanban?tarefa=${tarefa.id}`}
+                        className="w-full flex items-center justify-between p-4 rounded-[28px] hover:bg-primary/5 border border-transparent hover:border-border/30 transition-all text-left group/item"
                     >
-                        <div className="flex flex-col gap-1.5">
-                            <p className="text-sm font-bold text-foreground group-hover/item:text-primary transition-colors line-clamp-1">{tarefa.titulo}</p>
+
+                        <div className="flex flex-col gap-1.5 min-w-0">
+                            <span className="text-[9px] font-black uppercase tracking-widest text-primary/60 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                                {tarefa.projeto_nome}
+                            </span>
+                            <p className="text-sm font-bold text-foreground group-hover/item:text-primary transition-colors truncate">
+                                {tarefa.titulo}
+                            </p>
                             <div className="flex items-center gap-2">
                                 <div className={`px-2 py-0.5 rounded-full flex items-center gap-1.5 ${
                                     tarefa.prioridade === 'urgente' ? 'bg-destructive/10 text-destructive' : 
@@ -44,23 +51,34 @@ export const MinhasTarefasLista = memo(({ minhasTarefas }: MinhasTarefasListaPro
                                         tarefa.prioridade === 'alta' ? 'bg-orange-500' : 
                                         tarefa.prioridade === 'media' ? 'bg-amber-500' : 'bg-emerald-500'
                                     }`} />
-                                    <p className="text-[8px] font-black uppercase tracking-widest">{tarefa.prioridade}</p>
+                                    <p className="text-[8px] font-black uppercase tracking-widest leading-none">{tarefa.prioridade}</p>
                                 </div>
+                                <span className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest">
+                                    {tarefa.status.replace('_', ' ')}
+                                </span>
                             </div>
                         </div>
-                        <ChevronRight size={16} className="text-muted-foreground/20 group-hover/item:text-primary group-hover/item:translate-x-1 transition-all" />
-                    </button>
+                        <div className="flex items-center gap-2 shrink-0">
+                            <div className="w-8 h-8 rounded-full bg-primary/0 group-hover/item:bg-primary/5 flex items-center justify-center transition-all">
+                                <ChevronRight size={16} className="text-muted-foreground/30 group-hover/item:text-primary group-hover/item:translate-x-0.5 transition-all" />
+                            </div>
+                        </div>
+                    </Link>
                 ))}
 
                 {minhasTarefas.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-12 px-6 text-center space-y-3">
-                        <div className="w-12 h-12 rounded-2xl bg-muted/20 flex items-center justify-center text-muted-foreground/40">
-                            <ListTodo className="w-6 h-6" />
+                    <div className="flex flex-col items-center justify-center py-16 px-6 text-center space-y-4">
+                        <div className="w-16 h-16 rounded-3xl bg-muted/10 flex items-center justify-center text-muted-foreground/20 border border-border/10 rotate-3 group-hover:rotate-0 transition-transform duration-700">
+                            <ListTodo size={32} />
                         </div>
-                        <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider italic">Nenhuma tarefa pendente para hoje.</p>
+                        <div className="space-y-1">
+                            <p className="text-xs font-black text-foreground uppercase tracking-widest">Nenhuma tarefa pendente</p>
+                            <p className="text-[10px] text-muted-foreground leading-relaxed">Você está em dia com suas entregas. <br/> Aproveite para revisar o backlog.</p>
+                        </div>
                     </div>
                 )}
             </div>
+
 
             <Link 
                 to="/app/kanban" 

@@ -21,6 +21,7 @@ export interface DadosDashboard {
     metricas: MetricaDashboard;
     avisos: Aviso[];
     minhasTarefas: TarefaDashboard[];
+    projetosAtivos: string[];
 }
 
 /**
@@ -33,12 +34,14 @@ export function usarDashboard(projetoId?: string) {
         isLoading: carregando, 
         error 
     } = useQuery<DadosDashboard>({
-        queryKey: ['dashboard', projetoId],
+        queryKey: ['dashboard', projetoId || 'global'],
         queryFn: async () => {
-            const res = await api.get('/api/dashboard', { params: { projetoId } });
+            const res = await api.get('/api/dashboard', { 
+                params: { projetoId: projetoId || 'global' } 
+            });
             return res.data;
         },
-        staleTime: 300000, // 5 minutos de cache para o Dashboard
+        staleTime: 60000, 
     });
 
     const erro = error ? (error as any).response?.data?.erro || 'Erro ao carregar dashboard' : null;
@@ -47,6 +50,7 @@ export function usarDashboard(projetoId?: string) {
         metricas: data?.metricas || null, 
         avisos: data?.avisos || [], 
         minhasTarefas: data?.minhasTarefas || [], 
+        projetosAtivos: data?.projetosAtivos || [],
         carregando, 
         erro 
     };
@@ -60,16 +64,17 @@ export interface DadoBurndown {
 
 export function usarBurndown(projetoId?: string) {
     const { data: burndown = [], isLoading: carregando } = useQuery<DadoBurndown[]>({
-        queryKey: ['burndown', projetoId],
+        queryKey: ['burndown', projetoId || 'global'],
         queryFn: async () => {
-            if (!projetoId) return [];
-            const res = await api.get('/api/dashboard/burndown', { params: { projetoId } });
+            const res = await api.get('/api/dashboard/burndown', { 
+                params: { projetoId: projetoId || 'global' } 
+            });
             return res.data;
         },
-        enabled: !!projetoId,
-        staleTime: 1800000, 
+        staleTime: 600000, // 10 minutos para burndown
     });
 
     return { burndown, carregando };
 }
+
 

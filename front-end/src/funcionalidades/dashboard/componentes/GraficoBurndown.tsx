@@ -62,28 +62,63 @@ export const GraficoBurndown = memo(({ projetoId }: GraficoBurndownProps) => {
                                 <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
                             </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.1} />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" opacity={0.1} />
                         <XAxis 
                             dataKey="dia" 
                             axisLine={false} 
                             tickLine={false} 
-                            tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 'bold' }}
                             dy={10}
+                            tick={(props) => {
+                                const { x, y, payload } = props;
+                                const hoje = new Date();
+                                const d = hoje.getDate().toString().padStart(2, '0');
+                                const m = (hoje.getMonth() + 1).toString().padStart(2, '0');
+                                const hojeFormatado = `${d}/${m}`;
+                                
+                                // Aceita 13/03 ou 03/13 (por segurança), mas prioriza o formato brasileiro
+                                const ehHoje = payload.value === hojeFormatado || payload.value === `${m}/${d}`;
+
+                                return (
+                                    <g transform={`translate(${x},${y})`}>
+                                        <text
+                                            x={0}
+                                            y={0}
+                                            dy={16}
+                                            textAnchor="middle"
+                                            fill={ehHoje ? 'hsl(var(--primary))' : 'currentColor'}
+                                            style={{ 
+                                                fontSize: ehHoje ? '11px' : '10px', 
+                                                fontWeight: ehHoje ? '900' : 'black',
+                                                opacity: ehHoje ? 1 : 0.4
+                                            }}
+                                        >
+                                            {ehHoje ? 'HOJE' : payload.value}
+                                        </text>
+                                        {ehHoje && (
+                                            <circle cx={0} cy={24} r={2.5} fill="hsl(var(--primary))" className="animate-pulse" />
+                                        )}
+                                    </g>
+                                );
+                            }}
                         />
                         <YAxis 
                             axisLine={false} 
                             tickLine={false} 
-                            tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 'bold' }}
+                            tick={{ fontSize: 10, fill: 'currentColor', opacity: 0.5, fontWeight: 'black' }}
                         />
                         <Tooltip 
                             contentStyle={{ 
-                                backgroundColor: '#0f172a', 
-                                border: '1px solid #1e293b', 
-                                borderRadius: '12px',
-                                fontSize: '12px',
-                                fontWeight: 'bold'
+                                backgroundColor: 'hsl(var(--card))', 
+                                border: '1px solid hsl(var(--border))', 
+                                borderRadius: '16px',
+                                fontSize: '11px',
+                                fontWeight: '900',
+                                boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.05em'
                             }}
                             itemStyle={{ padding: '2px 0' }}
+                            cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1, strokeDasharray: '4 4' }}
                         />
                         <Area 
                             type="monotone" 

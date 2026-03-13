@@ -20,11 +20,12 @@ interface ProvedorTemaProps {
 
 export function ProvedorTema({
     children,
-    temaPadrao = "system",
+    temaPadrao = "light",
 }: ProvedorTemaProps) {
     const [tema, setTemaState] = useState<Tema>(
         () => (localStorage.getItem(ChaveTemaStorage) as Tema) || temaPadrao
     );
+
 
     const [temaReal, setTemaReal] = useState<"dark" | "light">(() => {
         if (tema !== "system") return tema;
