@@ -134,4 +134,76 @@ rotasPerfil.patch('/me', autenticacaoRequerida(), zValidator('json', UpdatePerfi
     }
 });
 
+// ─── GET /:id ──────────────────────────────────────────────────────────────────
+rotasPerfil.get('/:id', autenticacaoRequerida(), async (c: Context) => {
+    const { DB } = c.env;
+    const id = c.req.param('id');
+
+    try {
+        // 1. Dados Básicos
+        const usuario = await DB.prepare(`
+            SELECT 
+                id, nome, email, role, foto_perfil, foto_banner, bio, criado_em,
+                github_url, linkedin_url, website_url
+            FROM usuarios 
+            WHERE id = ?
+        `).bind(id).first() as any;
+
+        if (!usuario) return c.json({ erro: 'Usuário não encontrado.' }, 404);
+
+        // 2. Dados de Organização
+        const organizacao = await DB.prepare(`
+            SELECT 
+                e.nome as equipe_nome,
+                g.nome as grupo_nome
+            FROM usuarios_organizacao uo
+            LEFT JOIN equipes e ON e.id = uo.equipe_id
+            LEFT JOIN grupos g ON g.id = uo.grupo_id
+            WHERE uo.usuario_id = ?
+        `).bind(id).first() as any;
+
+        // 3. Estatísticas de Tarefas
+        const statsTarefas = await DB.prepare(`
+            SELECT 
+                COUNT(*) as total,
+                SUM(CASE WHEN t.status = 'concluida' THEN 1 ELSE 0 END) as concluidas
+            FROM tarefas t
+            JOIN tarefas_responsaveis tr ON tr.tarefa_id = t.id
+            WHERE tr.usuario_id = ?
+        `).bind(id).first() as any;
+
+        // 4. Estatísticas de Ponto
+        const statsPonto = await DB.prepare(`
+            SELECT COUNT(*) as batidas
+            FROM ponto_registros
+            WHERE usuario_id = ? AND strftime('%m', registrado_em) = strftime('%m', 'now')
+        `).bind(id).first() as any;
+
+        const total = Number(statsTarefas?.total || 0);
+        const concluidas = Number(statsTarefas?.concluidas || 0);
+
+        return c.json({
+            perfil: {
+                ...usuario,
+                equipe_nome: organizacao?.equipe_nome || null,
+                grupo_nome: organizacao?.grupo_nome || null
+            },
+            stats: {
+                tarefas: {
+                    total,
+                    concluidas,
+                    pendentes: total - concluidas,
+                    aproveitamento: total > 0 ? Math.round((concluidas / total) * 100) : 0
+                },
+                ponto: {
+                    batidasMes: Number(statsPonto?.batidas || 0),
+                    estimativaHoras: Math.floor(Number(statsPonto?.batidas || 0) * 4)
+                }
+            }
+        });
+    } catch (e: any) {
+        return c.json({ erro: 'Erro ao carregar perfil.' }, 500);
+    }
+});
+
 export default rotasPerfil;

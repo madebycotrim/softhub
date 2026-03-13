@@ -11,6 +11,8 @@ import { RotaProtegida } from './RotaProtegida';
 import { LayoutPrincipal } from '../compartilhado/componentes/LayoutPrincipal';
 import { ErrorBoundary } from '../compartilhado/componentes/ErrorBoundary';
 import { Carregando } from '../compartilhado/componentes/Carregando';
+import { PerfilProvider } from '../funcionalidades/perfil/contexto/PerfilContexto';
+
 
 // Configuração do React Query
 const queryClient = new QueryClient({
@@ -54,11 +56,13 @@ function LayoutRaiz() {
                 <MsalProvider instance={msalInstance}>
                     <ProvedorAutenticacao>
                         <ProvedorToast>
-                            <ErrorBoundary modulo="Sistema Geral">
-                                <Suspense fallback={<Carregando Centralizar={true} />}>
-                                    <Outlet />
-                                </Suspense>
-                            </ErrorBoundary>
+                            <PerfilProvider>
+                                <ErrorBoundary modulo="Sistema Geral">
+                                    <Suspense fallback={<Carregando Centralizar={true} />}>
+                                        <Outlet />
+                                    </Suspense>
+                                </ErrorBoundary>
+                            </PerfilProvider>
                         </ProvedorToast>
                     </ProvedorAutenticacao>
                 </MsalProvider>

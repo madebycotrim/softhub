@@ -51,16 +51,54 @@ export const LinhaMembro = memo(({ membro, salvando, selecionado, onToggleSelect
 
             {/* Role / Cargo */}
             <td className="px-6 py-4 border-b border-border/40">
-                <div className="relative group/sel">
+                <div className="inline-flex relative group/sel">
+                    {/* Background Dinâmico do Badge/Select */}
+                    <div className={`
+                        absolute inset-0 rounded-full transition-all duration-300
+                        ${membro.role === 'ADMIN' ? 'bg-rose-500/5 group-hover/sel:bg-rose-500/10' : 
+                          membro.role === 'COORDENADOR' || membro.role === 'GESTOR' ? 'bg-blue-500/5 group-hover/sel:bg-blue-500/10' :
+                          membro.role === 'LIDER' ? 'bg-indigo-500/5 group-hover/sel:bg-indigo-500/10' :
+                          membro.role === 'SUBLIDER' ? 'bg-amber-500/5 group-hover/sel:bg-amber-500/10' :
+                          'bg-emerald-500/5 group-hover/sel:bg-emerald-500/10'}
+                    `} />
+                    
                     <select
-                        className={`appearance-none bg-muted/20 border border-transparent rounded-xl px-3 py-1.5 pr-8 text-[10px] font-black uppercase tracking-widest text-foreground outline-none transition-all ${podeAlterarRole ? 'hover:bg-muted/40 hover:border-border cursor-pointer focus:ring-4 focus:ring-primary/5' : 'cursor-not-allowed opacity-50'}`}
+                        className={`
+                            relative appearance-none bg-transparent border-none 
+                            rounded-full px-4 py-1.5 pr-8 text-[9px] font-black uppercase tracking-[0.1em] 
+                            outline-none transition-all z-10
+                            ${membro.role === 'ADMIN' ? 'text-rose-600' : 
+                              membro.role === 'COORDENADOR' || membro.role === 'GESTOR' ? 'text-blue-600' :
+                              membro.role === 'LIDER' ? 'text-indigo-600' :
+                              membro.role === 'SUBLIDER' ? 'text-amber-600' :
+                              'text-emerald-600'}
+                            ${podeAlterarRole ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}
+                        `}
                         value={membro.role}
                         onChange={e => onAlterarRole(membro, e.target.value)}
                         disabled={!podeAlterarRole}
                     >
-                        {rolesDisponiveis.map(r => <option key={r} value={r} className="bg-card">{r}</option>)}
+                        {rolesDisponiveis.map(r => (
+                            <option key={r} value={r} className="bg-white text-slate-900 font-bold">
+                                {r}
+                            </option>
+                        ))}
                     </select>
-                    {podeAlterarRole && <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-40 group-hover/sel:opacity-100 transition-opacity" />}
+
+                    {podeAlterarRole && (
+                        <ChevronDown 
+                            size={12} 
+                            className={`
+                                absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none z-20 transition-all duration-300
+                                ${membro.role === 'ADMIN' ? 'text-rose-400' : 
+                                  membro.role === 'COORDENADOR' || membro.role === 'GESTOR' ? 'text-blue-400' :
+                                  membro.role === 'LIDER' ? 'text-indigo-400' :
+                                  membro.role === 'SUBLIDER' ? 'text-amber-400' :
+                                  'text-emerald-400'}
+                                group-hover/sel:translate-y-[-40%]
+                            `} 
+                        />
+                    )}
                 </div>
             </td>
 
