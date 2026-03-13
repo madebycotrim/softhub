@@ -1,5 +1,4 @@
 import { memo } from 'react';
-import { LayoutDashboard, Folders } from 'lucide-react';
 import { usarDashboard } from '@/funcionalidades/dashboard/hooks/usarDashboard';
 import { usarProjetos } from '@/funcionalidades/projetos/hooks/usarProjetos';
 import { usarAutenticacao } from '@/contexto/ContextoAutenticacao';
@@ -7,7 +6,6 @@ import { usarPermissaoAcesso } from '@/compartilhado/hooks/usarPermissao';
 import { Carregando } from '@/compartilhado/componentes/Carregando';
 import { EstadoVazio } from '@/compartilhado/componentes/EstadoVazio';
 import { EstadoErro } from '@/compartilhado/componentes/EstadoErro';
-import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
 import { DashboardVazio } from './DashboardVazio';
 import { ComunicadosPrioritarios } from './ComunicadosPrioritarios';
 import { MetricasProgresso } from './MetricasProgresso';
