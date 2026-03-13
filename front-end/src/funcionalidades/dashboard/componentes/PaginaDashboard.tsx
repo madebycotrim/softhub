@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { LayoutDashboard } from 'lucide-react';
+import { LayoutDashboard, Folders } from 'lucide-react';
 import { usarDashboard } from '@/funcionalidades/dashboard/hooks/usarDashboard';
 import { usarProjetos } from '@/funcionalidades/projetos/hooks/usarProjetos';
 import { usarAutenticacao } from '@/contexto/ContextoAutenticacao';
@@ -12,6 +12,7 @@ import { DashboardVazio } from './DashboardVazio';
 import { ComunicadosPrioritarios } from './ComunicadosPrioritarios';
 import { MetricasProgresso } from './MetricasProgresso';
 import { MinhasTarefasLista } from './MinhasTarefasLista';
+import { ResumoPessoalDashboard } from './ResumoPessoalDashboard';
 import { Skeleton, SkeletonCard, SkeletonRow } from '@/compartilhado/componentes/Skeleton';
 
 /**
@@ -33,15 +34,11 @@ export const PaginaDashboard = memo(() => {
         );
     }
 
-    if (!carregandoProjetos && projetos.length === 0) {
-        return <DashboardVazio podeGerenciarProjetos={podeGerenciarProjetos} />;
-    }
-
     return (
         <div className="w-full space-y-10 pb-20 animate-in fade-in duration-500">
             <CabecalhoFuncionalidade
-                titulo="Centro de Operações"
-                subtitulo="Visão geral e status em tempo real do projeto."
+                titulo="Painel de Controle"
+                subtitulo="Suas métricas pessoais e status operacional da Fábrica."
                 icone={LayoutDashboard}
                 variante="destaque"
             >
@@ -55,7 +52,25 @@ export const PaginaDashboard = memo(() => {
                 </div>
             </CabecalhoFuncionalidade>
 
-            {carregando && !metricas ? (
+            {/* Seção Exclusiva e Pessoal do Usuário */}
+            <ResumoPessoalDashboard />
+
+            {!carregandoProjetos && projetos.length === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center py-20 text-center animate-in fade-in zoom-in duration-700">
+                    <div className="w-24 h-24 rounded-[32px] bg-muted/30 border border-border flex items-center justify-center mb-8 shadow-2xl shadow-primary/5">
+                        <Folders size={40} className="text-muted-foreground/20" />
+                    </div>
+                    <h2 className="text-xl font-bold text-foreground mb-3">Nenhum Projeto Ativo</h2>
+                    <p className="text-muted-foreground text-sm max-w-sm mb-8 leading-relaxed">
+                        A Fábrica está pronta, mas ainda não há projetos cadastrados no seu radar.
+                    </p>
+                    {podeGerenciarProjetos && (
+                        <a href="/app/admin/projetos" className="h-12 px-8 bg-primary text-primary-foreground rounded-2xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 shadow-lg shadow-primary/20 transition-all flex items-center">
+                            Gerenciar Projetos
+                        </a>
+                    )}
+                </div>
+            ) : carregando && !metricas ? (
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     <div className="lg:col-span-8 space-y-8">
                         <Skeleton className="h-[200px] w-full rounded-2xl" />
