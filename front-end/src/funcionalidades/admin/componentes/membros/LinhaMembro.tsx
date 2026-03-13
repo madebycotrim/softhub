@@ -1,9 +1,10 @@
 import { memo } from 'react';
-import { Square, CheckSquare, ChevronDown, Trash2 } from 'lucide-react';
+import { Square, CheckSquare, ChevronDown, Trash2, Eye } from 'lucide-react';
 import { Avatar } from '@/compartilhado/componentes/Avatar';
 import { usarAutenticacao } from '@/contexto/ContextoAutenticacao';
 import { usarPermissaoAcesso } from '@/compartilhado/hooks/usarPermissao';
 import type { Membro } from '@/funcionalidades/membros/hooks/usarMembros';
+
 
 interface LinhaMembroProps {
     membro: Membro;
@@ -12,10 +13,11 @@ interface LinhaMembroProps {
     onToggleSelect: (id: string, isShift?: boolean) => void;
     onAlterarRole: (membro: Membro, role: string) => void;
     onRemover: (membro: Membro) => void;
+    onVerPerfil: (id: string) => void;
     rolesDisponiveis: string[];
 }
 
-export const LinhaMembro = memo(({ membro, salvando, selecionado, onToggleSelect, onAlterarRole, onRemover, rolesDisponiveis }: LinhaMembroProps) => {
+export const LinhaMembro = memo(({ membro, salvando, selecionado, onToggleSelect, onAlterarRole, onRemover, onVerPerfil, rolesDisponiveis }: LinhaMembroProps) => {
     const { usuario } = usarAutenticacao();
     const ehOMesmoUsuario = usuario?.id === membro.id;
     const podeAlterarRole = usarPermissaoAcesso('membros:alterar_role');
@@ -86,15 +88,25 @@ export const LinhaMembro = memo(({ membro, salvando, selecionado, onToggleSelect
 
             {/* Ações */}
             <td className="px-6 py-4 border-b border-border/40 text-right">
-                {!ehOMesmoUsuario && podeDesativar && (
+                <div className="flex items-center justify-end gap-1">
                     <button
-                        onClick={() => onRemover(membro)}
-                        className="p-2 rounded-xl text-muted-foreground/30 hover:text-rose-500 hover:bg-rose-500/10 transition-all opacity-0 group-hover:opacity-100"
-                        title="Remover acesso"
+                        onClick={() => onVerPerfil(membro.id)}
+                        className="p-2 rounded-xl text-muted-foreground/30 hover:text-primary hover:bg-primary/10 transition-all opacity-0 group-hover:opacity-100"
+                        title="Ver Perfil"
                     >
-                        <Trash2 size={16} />
+                        <Eye size={16} />
                     </button>
-                )}
+
+                    {!ehOMesmoUsuario && podeDesativar && (
+                        <button
+                            onClick={() => onRemover(membro)}
+                            className="p-2 rounded-xl text-muted-foreground/30 hover:text-rose-500 hover:bg-rose-500/10 transition-all opacity-0 group-hover:opacity-100"
+                            title="Remover acesso"
+                        >
+                            <Trash2 size={16} />
+                        </button>
+                    )}
+                </div>
             </td>
         </tr>
     );

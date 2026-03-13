@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, memo, FormEvent } from 'react';
-import { UserCog, Shield, Users as UsersIcon, Plus, History, Search, LayoutGrid, Wifi, Clock } from 'lucide-react';
+import { UserCog, Shield, Users as UsersIcon, Plus, History, Search, LayoutGrid, Wifi, Clock, ChevronRight, AlertCircle, Eye } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Tooltip } from '@/compartilhado/componentes/Tooltip';
 
@@ -21,6 +21,8 @@ import { usarDebounce } from '@/compartilhado/hooks/usarDebounce';
 import { usarToast } from '@/compartilhado/hooks/usarToast';
 import { Paginacao } from '@/compartilhado/componentes/Paginacao';
 import { FormularioCadastroMembro } from './membros/FormularioCadastroMembro';
+import { ModalEdicaoPerfil } from '@/funcionalidades/perfil/componentes/ModalEdicaoPerfil';
+import { PerfilProvider } from '@/funcionalidades/perfil/contexto/PerfilContexto';
 
 /**
  * Hook customizado para gerenciar a lógica de administração de membros.
@@ -111,6 +113,19 @@ export const GerenciarMembros = memo(() => {
 
     const [modalOnlineAberto, setModalOnlineAberto] = useState(false);
 
+    // Busca de Justificativas Pendentes
+    const { data: justificativas = [] } = useQuery({
+        queryKey: ['admin-justificativas-contagem'],
+        queryFn: async () => {
+            const res = await api.get('/api/ponto/admin/justificativas');
+            return res.data || [];
+        },
+        refetchInterval: 60000 
+    });
+
+    const pendenciasPonto = useMemo(() => justificativas.filter((j: any) => j.status === 'pendente').length, [justificativas]);
+
+
     const rolesDisponiveis = useMemo(() => {
         const base = configuracoes?.permissoes_roles ? Object.keys(configuracoes.permissoes_roles) : ['MEMBRO', 'LIDER', 'ADMIN'];
         return base.filter(r => r !== 'ADMIN');
@@ -123,6 +138,8 @@ export const GerenciarMembros = memo(() => {
     const [membroParaExcluir, setMembroParaExcluir] = useState<Membro | null>(null);
     const [pagina, setPagina] = useState(1);
     const [itensPorPagina, setItensPorPagina] = useState(15);
+    const [idPerfilParaVer, setIdPerfilParaVer] = useState<string | null>(null);
+
 
     const handleMudarItensPorPagina = useCallback((n: number) => {
         setItensPorPagina(n);
@@ -169,6 +186,9 @@ export const GerenciarMembros = memo(() => {
     const handleFecharModal = useCallback(() => setModalAberto(false), []);
     const handleAbrirModal = useCallback(() => setModalAberto(true), []);
     const handleSetMembroExcluir = useCallback((m: Membro) => setMembroParaExcluir(m), []);
+    const handleVerPerfil = useCallback((id: string) => setIdPerfilParaVer(id), []);
+    const handleFecharPerfil = useCallback(() => setIdPerfilParaVer(null), []);
+
 
     return (
         <div className="flex flex-col h-full space-y-6 animar-entrada">
@@ -202,29 +222,56 @@ export const GerenciarMembros = memo(() => {
             {/* Stats Rápidos */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {[
-                    { label: 'Membros Ativos', valor: membros.length, cor: 'indigo', icone: UsersIcon, atraso: 'atraso-1' },
                     { 
                         label: 'Membros Online', 
                         valor: membrosOnline.length, 
                         cor: 'emerald', 
                         icone: Wifi, 
-                        atraso: 'atraso-2',
+                        atraso: 'atraso-1',
+                        clicavel: true,
                         onClick: () => setModalOnlineAberto(true) 
                     },
-                    { label: 'Sem Equipe', valor: membros.filter(m => !m.equipe_nome).length, cor: 'rose', icone: LayoutGrid, atraso: 'atraso-3' },
-                    { label: 'Novos (30d)', valor: membros.filter(m => new Date(m.criado_em) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length, cor: 'blue', icone: History, atraso: 'atraso-4' }
+                    { label: 'Membros Ativos', valor: membros.length, cor: 'indigo', icone: UsersIcon, atraso: 'atraso-2' },
+                    { 
+                        label: 'Pendências Ponto', 
+                        valor: pendenciasPonto, 
+                        cor: 'amber', 
+                        icone: AlertCircle, 
+                        atraso: 'atraso-3',
+                        clicavel: true,
+                        onClick: () => window.location.href = '/app/admin/justificativas'
+                    },
+                    { label: 'Sem Equipe', valor: membros.filter(m => !m.equipe_nome).length, cor: 'rose', icone: LayoutGrid, atraso: 'atraso-4' }
                 ].map(s => (
                     <div 
                         key={s.label} 
                         onClick={s.onClick}
-                        className={`bg-card border border-border/60 rounded-2xl p-4 flex items-center gap-4 shadow-sm hover:shadow-md transition-all animar-entrada ${s.atraso} ${s.onClick ? 'cursor-pointer hover:border-primary/30 active:scale-[0.98]' : ''}`}
+                        className={`group relative bg-card border border-border/60 rounded-2xl p-4 flex items-center gap-4 shadow-sm transition-all animar-entrada ${s.atraso} ${s.clicavel ? 'cursor-pointer hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/5 hover:-translate-y-0.5 active:scale-[0.98]' : ''}`}
                     >
-                        <div className={`p-3 bg-${s.cor}-500/10 text-${s.cor}-500 rounded-xl shadow-sm`}>
+                        {s.clicavel && (
+                            <>
+                                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-500 rounded-md text-[8px] font-black uppercase tracking-tighter border border-emerald-500/10">
+                                        Ver Lista
+                                    </div>
+                                </div>
+                                <div className="absolute bottom-3 right-3 text-muted-foreground/20 group-hover:text-emerald-500/50 transition-colors">
+                                    <ChevronRight size={14} />
+                                </div>
+                            </>
+                        )}
+
+                        <div className={`p-3 bg-${s.cor}-500/10 text-${s.cor}-500 rounded-xl shadow-sm group-hover:scale-110 transition-transform duration-300`}>
                             <s.icone size={20} className={s.label === 'Membros Online' && membrosOnline.length > 0 ? 'animate-pulse' : ''} />
                         </div>
                         <div className="flex flex-col">
                             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 leading-tight">{s.label}</span>
-                            <span className="text-xl font-black text-foreground">{s.valor}</span>
+                            <div className="flex items-baseline gap-1.5">
+                                <span className="text-xl font-black text-foreground">{s.valor}</span>
+                                {s.label === 'Membros Online' && s.valor > 0 && (
+                                    <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                                )}
+                            </div>
                         </div>
                     </div>
                 ))}
@@ -253,6 +300,7 @@ export const GerenciarMembros = memo(() => {
                                     onToggleSelect={toggleSelect}
                                     onAlterarRole={alterarRole}
                                     onRemover={handleSetMembroExcluir}
+                                    onVerPerfil={handleVerPerfil}
                                     rolesDisponiveis={rolesDisponiveis}
                                 />
                             ))}
@@ -332,38 +380,76 @@ export const GerenciarMembros = memo(() => {
 
             {/* Modal de Membros Online */}
             <Modal aberto={modalOnlineAberto} aoFechar={() => setModalOnlineAberto(false)} titulo="Membros Online Agora" largura="md">
-                <div className="space-y-4">
-                    <p className="text-[11px] text-muted-foreground font-medium px-1">
-                        Listagem de membros que registraram entrada hoje e ainda não registraram saída.
-                    </p>
+                <div className="space-y-6">
+                    <div className="flex items-center gap-3 px-1 py-3 border-b border-border/10">
+                        <div className="flex -space-x-2">
+                            {membrosOnline.slice(0, 3).map((m: any) => (
+                                <div key={m.id} className="w-8 h-8 rounded-full border-2 border-background ring-2 ring-emerald-500/20 overflow-hidden">
+                                    <Avatar nome={m.nome} fotoPerfil={m.foto_perfil} />
+                                </div>
+                            ))}
+                        </div>
+                        <p className="text-[11px] text-muted-foreground font-medium">
+                            {membrosOnline.length === 0 
+                                ? "Nenhum membro ativo no momento." 
+                                : `${membrosOnline.length} ${membrosOnline.length === 1 ? 'membro está' : 'membros estão'} operando agora.`}
+                        </p>
+                    </div>
                     
-                    <div className="max-h-[400px] overflow-y-auto custom-scrollbar space-y-2 pr-1">
+                    <div className="max-h-[450px] overflow-y-auto custom-scrollbar space-y-3 pr-2">
                         {membrosOnline.length === 0 ? (
-                            <div className="py-12 text-center text-muted-foreground/40 font-medium text-xs italic">
-                                Nenhum membro online no momento.
+                            <div className="py-16 flex flex-col items-center justify-center gap-4 text-muted-foreground/30">
+                                <Wifi size={48} strokeWidth={1} className="opacity-20 translate-y-2 animate-bounce" />
+                                <p className="text-[11px] font-black uppercase tracking-[0.2em]">Pista Vazia</p>
                             </div>
                         ) : (
                             membrosOnline.map((m: any) => (
-                                <div key={m.id} className="flex items-center justify-between p-4 bg-muted/20 border border-border/40 rounded-2xl hover:bg-muted/30 transition-colors">
+                                <div key={m.id} className="group flex items-center justify-between p-4 bg-white/50 border border-slate-100/80 rounded-[24px] hover:bg-white hover:border-emerald-500/20 hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-500">
                                     <div className="flex items-center gap-4">
-                                        <Avatar nome={m.nome} fotoPerfil={m.foto_perfil} tamanho="md" />
+                                        <div className="relative">
+                                            <Avatar nome={m.nome} fotoPerfil={m.foto_perfil} tamanho="md" />
+                                            <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></span>
+                                        </div>
                                         <div className="flex flex-col">
-                                            <span className="text-sm font-bold text-foreground leading-none">{m.nome}</span>
-                                            <span className="text-[10px] font-medium text-muted-foreground mt-1">{m.email}</span>
+                                            <span className="text-sm font-black text-slate-800 tracking-tight group-hover:text-emerald-600 transition-colors uppercase leading-none">{m.nome}</span>
+                                            <div className="flex items-center gap-1.5 mt-1.5">
+                                                <div className="w-3.5 h-3.5 rounded-full bg-slate-100 flex items-center justify-center text-[8px] font-bold text-slate-400">@</div>
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{m.email.split('@')[0]}</span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 text-emerald-500 rounded-xl border border-emerald-500/10">
-                                        <Clock size={12} className="opacity-70" />
-                                        <span className="text-[10px] font-black uppercase tracking-widest">
-                                            Entrou às {new Date(m.entrada_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                                        </span>
+                                    
+                                    <div className="flex flex-col items-end gap-1.5">
+                                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/5 text-emerald-600 rounded-full border border-emerald-500/10">
+                                            <Clock size={11} className="opacity-70" />
+                                            <span className="text-[9px] font-black uppercase tracking-widest">
+                                                Dês das {new Date(m.entrada_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        </div>
+                                        <div className="px-2 py-0.5 bg-slate-50 border border-slate-100 rounded-md">
+                                            <span className="text-[8px] font-black uppercase tracking-tighter text-slate-300">Status: Operacional</span>
+                                        </div>
                                     </div>
                                 </div>
                             ))
                         )}
                     </div>
+
+                    <div className="pt-4 border-t border-slate-50 flex justify-center">
+                         <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-300">Hub em Tempo Real</p>
+                    </div>
                 </div>
             </Modal>
+
+            {/* Modal de Detalhes do Perfil (Diferente conforme ID de entrada) */}
+            {idPerfilParaVer && (
+                <PerfilProvider customUsuarioId={idPerfilParaVer}>
+                    <ModalEdicaoPerfil 
+                        aberto={!!idPerfilParaVer} 
+                        aoFechar={handleFecharPerfil} 
+                    />
+                </PerfilProvider>
+            )}
         </div>
     );
 });
