@@ -12,7 +12,7 @@ import {
     useDroppable
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { FolderKanban, Circle, Zap, Search, CheckCircle2, Plus } from 'lucide-react';
+import { FolderKanban, Circle, Zap, Search, CheckCircle2, Plus, Layers } from 'lucide-react';
 
 import { usarKanban } from '@/funcionalidades/kanban/hooks/usarKanban';
 import type { Tarefa } from '@/funcionalidades/kanban/hooks/usarKanban';
@@ -112,6 +112,18 @@ export const QuadroKanban = memo(() => {
         );
     }
 
+    if (!projetoAtivoId) {
+        return (
+            <div className="flex flex-col items-center justify-center py-20 text-center opacity-60">
+                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                    <Layers size={24} className="text-muted-foreground" />
+                </div>
+                <h3 className="text-foreground font-black uppercase tracking-widest mb-2">Nenhum Projeto Selecionado</h3>
+                <p className="text-muted-foreground text-sm">Selecione um projeto na barra lateral para ver o Quadro Kanban.</p>
+            </div>
+        );
+    }
+
     return (
         <div className="flex flex-col h-full w-full overflow-hidden bg-background/50">
             <div className="shrink-0">
@@ -121,7 +133,7 @@ export const QuadroKanban = memo(() => {
                     icone={FolderKanban}
                 >
                     <div className="flex items-center gap-4">
-                        {projetoAtivoId && podeCriar && (
+                        {podeCriar && (
                             <button
                                 onClick={handleAbrirCriar}
                                 className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.03] active:scale-[0.98] transition-all"

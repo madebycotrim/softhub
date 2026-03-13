@@ -3,7 +3,8 @@ import {
     Plus,
     ChevronRight,
     User,
-    FolderKanban
+    FolderKanban,
+    Layers
 } from 'lucide-react';
 import { usarBacklog } from '../hooks/usarBacklog';
 import { usarPermissaoAcesso } from '@/compartilhado/hooks/usarPermissao';
@@ -61,16 +62,21 @@ const PaginaBacklog = memo(() => {
         );
     }
 
+    if (!projetoAtivoId) {
+        return (
+            <div className="flex flex-col items-center justify-center py-20 text-center opacity-60">
+                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                    <Layers size={24} className="text-muted-foreground" />
+                </div>
+                <h3 className="text-foreground font-black uppercase tracking-widest mb-2">Nenhum Projeto Selecionado</h3>
+                <p className="text-muted-foreground text-sm">Selecione um projeto na barra lateral para ver o Backlog de Demandas.</p>
+            </div>
+        );
+    }
+
     if (!carregandoProjetos && projetos.length === 0) {
         return (
-            <div className="flex flex-col gap-10">
-                <CabecalhoFuncionalidade
-                    titulo="Backlog de Demandas"
-                    subtitulo="Visão detalhada e gestão completa de todas as tarefas."
-                    icone={ListTodo}
-                />
-                <BacklogVazioProjetos podeGerenciarProjetos={podeGerenciarProjetos} />
-            </div>
+            <BacklogVazioProjetos podeGerenciarProjetos={podeGerenciarProjetos} />
         );
     }
 
@@ -82,7 +88,7 @@ const PaginaBacklog = memo(() => {
                 icone={ListTodo}
             >
                 <div className="flex items-center gap-4">
-                    {projetoAtivoId && podeCriar && (
+                    {podeCriar && (
                         <button
                             onClick={() => setModalCriarAberto(true)}
                             className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
