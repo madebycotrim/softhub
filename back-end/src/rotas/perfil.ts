@@ -16,14 +16,15 @@ rotasPerfil.get('/me', autenticacaoRequerida(), async (c: Context) => {
         // 1. Dados Básicos do Usuário (Query simplificada para evitar falhas em JOINS)
         const usuario = await DB.prepare(`
             SELECT 
-                id, nome, email, role, foto_perfil, bio, funcoes, criado_em
+                id, nome, email, role, foto_perfil, foto_banner, bio, funcoes, criado_em,
+                github_url, linkedin_url, website_url
             FROM usuarios 
             WHERE id = ?
         `).bind(usuarioLogado.id).first() as any;
 
         if (!usuario) {
             console.error(`[PERFIL] Usuário não encontrado no banco: ${usuarioLogado.id}`);
-            return c.json({ erro: 'Usuário não localizado no sistema.' }, 404);
+            return c.json({ erro: 'Perfil não mapeado no sistema (ERR_D1_NOT_FOUND).' }, 404);
         }
 
         // 2. Dados de Organização (Separados para evitar quebras)
@@ -87,7 +88,11 @@ rotasPerfil.get('/me', autenticacaoRequerida(), async (c: Context) => {
 const UpdatePerfilSchema = z.object({
     nome: z.string().min(3).optional(),
     bio: z.string().max(500).optional(),
-    foto_perfil: z.string().url().optional().or(z.literal(''))
+    foto_perfil: z.string().url().optional().or(z.literal('')),
+    foto_banner: z.string().url().optional().or(z.literal('')),
+    github_url: z.string().url().optional().or(z.literal('')),
+    linkedin_url: z.string().url().optional().or(z.literal('')),
+    website_url: z.string().url().optional().or(z.literal(''))
 });
 
 rotasPerfil.patch('/me', autenticacaoRequerida(), zValidator('json', UpdatePerfilSchema), async (c: Context) => {
@@ -102,6 +107,10 @@ rotasPerfil.patch('/me', autenticacaoRequerida(), zValidator('json', UpdatePerfi
         if (dados.nome) { sets.push('nome = ?'); values.push(dados.nome); }
         if (dados.bio !== undefined) { sets.push('bio = ?'); values.push(dados.bio); }
         if (dados.foto_perfil !== undefined) { sets.push('foto_perfil = ?'); values.push(dados.foto_perfil || null); }
+        if (dados.foto_banner !== undefined) { sets.push('foto_banner = ?'); values.push(dados.foto_banner || null); }
+        if (dados.github_url !== undefined) { sets.push('github_url = ?'); values.push(dados.github_url || null); }
+        if (dados.linkedin_url !== undefined) { sets.push('linkedin_url = ?'); values.push(dados.linkedin_url || null); }
+        if (dados.website_url !== undefined) { sets.push('website_url = ?'); values.push(dados.website_url || null); }
 
         if (sets.length === 0) return c.json({ erro: 'Nenhum dado para atualizar.' }, 400);
 

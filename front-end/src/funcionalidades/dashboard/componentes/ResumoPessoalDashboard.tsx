@@ -1,21 +1,25 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { 
     CheckCircle2, 
     Clock, 
     Trophy, 
     Target,
     ArrowUpRight,
-    Briefcase
+    Briefcase,
+    User
 } from 'lucide-react';
 import { usarPerfil } from '@/funcionalidades/perfil/hooks/usarPerfil';
 import { Skeleton } from '@/compartilhado/componentes/Skeleton';
+import { ModalEdicaoPerfil } from '@/funcionalidades/perfil/componentes/ModalEdicaoPerfil';
 
 /**
  * Componente de resumo pessoal para o Dashboard.
  * Exibe métricas individuais do usuário, independente do projeto selecionado.
+ * Agora integrado com Modal de Ajustes de Perfil.
  */
 export const ResumoPessoalDashboard = memo(() => {
     const { perfil, stats, carregando } = usarPerfil();
+    const [modalAberto, setModalAberto] = useState(false);
 
     if (carregando) {
         return (
@@ -31,7 +35,7 @@ export const ResumoPessoalDashboard = memo(() => {
 
     return (
         <div className="space-y-6">
-            {/* Saudação Personalizada */}
+            {/* Saudação Personalizada + Ações */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
                     <h2 className="text-2xl font-black text-foreground tracking-tight">
@@ -42,13 +46,26 @@ export const ResumoPessoalDashboard = memo(() => {
                     </p>
                 </div>
                 
-                <div className="flex items-center gap-2 px-4 py-2 bg-primary/5 border border-primary/10 rounded-2xl">
-                    <Briefcase className="w-4 h-4 text-primary" />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-primary">
-                        {perfil.equipe_nome || 'Sem Equipe'} • {perfil.role}
-                    </span>
+                <div className="flex items-center gap-2">
+                    <button 
+                        onClick={() => setModalAberto(true)}
+                        className="group flex items-center gap-2 px-5 py-2.5 bg-card/40 hover:bg-card border border-border/40 rounded-2xl transition-all active:scale-95 shadow-sm"
+                    >
+                        <User className="w-4 h-4 text-primary group-hover:scale-110 transition-transform duration-300" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-foreground/80">Ver Perfil</span>
+                    </button>
+
+                    <div className="flex items-center gap-2 px-4 py-2 bg-primary/5 border border-primary/10 rounded-2xl">
+                        <Briefcase className="w-4 h-4 text-primary" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-primary">
+                            {perfil.equipe_nome || 'Sem Equipe'} • {perfil.role}
+                        </span>
+                    </div>
                 </div>
             </div>
+
+            {/* Modal de Perfil Unificado */}
+            <ModalEdicaoPerfil aberto={modalAberto} aoFechar={() => setModalAberto(false)} />
 
             {/* Grid de Métricas Pessoais */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

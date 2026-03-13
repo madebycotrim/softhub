@@ -51,7 +51,6 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
             label: 'Visão Geral',
             links: [
                 { label: 'Dashboard', path: '/app/dashboard', icon: LayoutDashboard, visivel: podeVerDashboard },
-                { label: 'Meu Perfil', path: '/app/perfil', icon: Users, visivel: true },
                 { label: 'Backlog', path: '/app/backlog', icon: ListTodo, visivel: podeVerBacklog },
                 { label: 'Avisos', path: '/app/avisos', icon: Megaphone, visivel: podeVerAvisos },
             ],

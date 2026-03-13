@@ -30,7 +30,6 @@ const PaginaDashboard = lazy(() => import('../funcionalidades/dashboard/componen
 const PaginaBacklog = lazy(() => import('../funcionalidades/backlog/componentes/PaginaBacklog'));
 const QuadroKanban = lazy(() => import('../funcionalidades/kanban/componentes/QuadroKanban'));
 const PaginaVisaoProjeto = lazy(() => import('../funcionalidades/projetos/componentes/PaginaVisaoProjeto'));
-const PaginaPerfil = lazy(() => import('../funcionalidades/perfil/componentes/PaginaPerfil'));
 const PaginaPortfolio = lazy(() => import('../funcionalidades/portfolio/componentes/PaginaPortfolio'));
 const BaterPonto = lazy(() => import('../funcionalidades/ponto/componentes/BaterPonto'));
 const MuralAvisos = lazy(() => import('../funcionalidades/avisos/componentes/MuralAvisos'));
@@ -83,7 +82,6 @@ export const rotas = createBrowserRouter([
             { path: '/app/dashboard', element: <RotaProtegida><LayoutPrincipal><PaginaDashboard /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/backlog', element: <RotaProtegida><LayoutPrincipal><PaginaBacklog /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/projeto', element: <RotaProtegida><LayoutPrincipal><PaginaVisaoProjeto /></LayoutPrincipal></RotaProtegida> },
-            { path: '/app/perfil', element: <RotaProtegida><LayoutPrincipal><PaginaPerfil /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/kanban', element: <RotaProtegida><LayoutPrincipal><QuadroKanban /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/ponto', element: <RotaProtegida><LayoutPrincipal><BaterPonto /></LayoutPrincipal></RotaProtegida> },
             { path: '/app/avisos', element: <RotaProtegida><LayoutPrincipal><MuralAvisos /></LayoutPrincipal></RotaProtegida> },

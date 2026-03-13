@@ -13,11 +13,15 @@ export interface PerfilData {
         email: string;
         role: string;
         foto_perfil: string | null;
+        foto_banner: string | null;
         bio: string | null;
         funcoes: string[];
         criado_em: string;
         equipe_nome: string | null;
         grupo_nome: string | null;
+        github_url: string | null;
+        linkedin_url: string | null;
+        website_url: string | null;
     };
     stats: {
         tarefas: {
@@ -46,7 +50,15 @@ export function usarPerfil() {
     });
 
     const mutacao = useMutation({
-        mutationFn: async (dados: { nome?: string; bio?: string; foto_perfil?: string }) => {
+        mutationFn: async (dados: { 
+            nome?: string; 
+            bio?: string; 
+            foto_perfil?: string;
+            foto_banner?: string;
+            github_url?: string;
+            linkedin_url?: string;
+            website_url?: string;
+        }) => {
             return api.patch('/api/perfil/me', dados);
         },
         onSuccess: () => {
@@ -58,11 +70,20 @@ export function usarPerfil() {
         }
     });
 
+    const erro = error ? (error as any).response?.data?.erro || 'Falha ao carregar perfil' : null;
+
+    if (error) {
+        console.error('[PERFIL_HOOK] Erro ao buscar perfil:', {
+            status: (error as any).response?.status,
+            dados: (error as any).response?.data
+        });
+    }
+
     return {
         perfil: data?.perfil,
         stats: data?.stats,
         carregando,
-        erro: error ? (error as any).response?.data?.erro || 'Falha ao carregar perfil' : null,
+        erro,
         atualizarPerfil: mutacao.mutateAsync,
         salvando: mutacao.isPending,
         refetch

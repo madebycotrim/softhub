@@ -9,13 +9,14 @@ interface ModalProps {
     titulo: string;
     children: ReactNode;
     largura?: 'sm' | 'md' | 'lg' | 'xl' | 'auto';
+    semHeader?: boolean;
 }
 
 /**
  * Modal genérico usado em toda a aplicação.
  * Renderizado no Root (document.body) via Portal para evitar problemas de z-index
  */
-export function Modal({ aberto, aoFechar, titulo, children, largura = 'md' }: ModalProps) {
+export function Modal({ aberto, aoFechar, titulo, children, largura = 'md', semHeader = false }: ModalProps) {
     const [montado, setMontado] = useState(false);
 
     useEffect(() => {
@@ -75,21 +76,23 @@ export function Modal({ aberto, aoFechar, titulo, children, largura = 'md' }: Mo
                 <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
 
                 {/* Header: Clean & Modern */}
-                <div className="flex items-center justify-between px-8 py-5 shrink-0 border-b border-slate-100 relative bg-gradient-to-b from-slate-50/80 to-white">
-                    <div className="flex items-center gap-3">
-                        <div className="w-1.5 h-6 bg-blue-600 rounded-full shadow-[0_0_10px_rgba(37,99,235,0.4)]" />
-                        <h2 id="modal-titulo" className="text-[13px] font-black text-slate-900 tracking-[0.15em] leading-none uppercase">
-                            {titulo}
-                        </h2>
+                {!semHeader && (
+                    <div className="flex items-center justify-between px-8 py-5 shrink-0 border-b border-slate-100 relative bg-gradient-to-b from-slate-50/80 to-white">
+                        <div className="flex items-center gap-3">
+                            <div className="w-1.5 h-6 bg-blue-600 rounded-full shadow-[0_0_10px_rgba(37,99,235,0.4)]" />
+                            <h2 id="modal-titulo" className="text-[13px] font-black text-slate-900 tracking-[0.15em] leading-none uppercase">
+                                {titulo}
+                            </h2>
+                        </div>
+                        <button
+                            onClick={aoFechar}
+                            className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-2xl transition-all duration-300 focus:outline-none group border border-transparent hover:border-slate-200"
+                            aria-label="Fechar modal"
+                        >
+                            <X className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
+                        </button>
                     </div>
-                    <button
-                        onClick={aoFechar}
-                        className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-2xl transition-all duration-300 focus:outline-none group border border-transparent hover:border-slate-200"
-                        aria-label="Fechar modal"
-                    >
-                        <X className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
-                    </button>
-                </div>
+                )}
 
                 {/* Conteúdo com scroll refinado */}
                 <div className="flex-1 overflow-y-auto overflow-x-hidden px-8 py-6 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent flex flex-col">

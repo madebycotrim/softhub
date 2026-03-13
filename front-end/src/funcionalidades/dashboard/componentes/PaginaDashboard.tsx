@@ -35,22 +35,15 @@ export const PaginaDashboard = memo(() => {
     }
 
     return (
-        <div className="w-full space-y-10 pb-20 animate-in fade-in duration-500">
-            <CabecalhoFuncionalidade
-                titulo="Painel de Controle"
-                subtitulo="Suas métricas pessoais e status operacional da Fábrica."
-                icone={LayoutDashboard}
-                variante="destaque"
-            >
-                <div className="flex items-center gap-4">
-                    {carregando && metricas && (
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/5 rounded-full border border-primary/10 animate-pulse transition-all">
-                            <Carregando Centralizar={false} tamanho="sm" />
-                            <span className="text-[9px] font-black uppercase tracking-widest text-primary">Atualizando...</span>
-                        </div>
-                    )}
+        <div className="w-full animate-in fade-in duration-500">
+            {carregando && metricas && (
+                <div className="fixed top-6 right-6 z-50">
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/5 rounded-full border border-primary/10 animate-pulse transition-all backdrop-blur-sm">
+                        <Carregando Centralizar={false} tamanho="sm" />
+                        <span className="text-[9px] font-black uppercase tracking-widest text-primary">Atualizando...</span>
+                    </div>
                 </div>
-            </CabecalhoFuncionalidade>
+            )}
 
             {/* Seção Exclusiva e Pessoal do Usuário */}
             <ResumoPessoalDashboard />
