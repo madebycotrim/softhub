@@ -40,6 +40,8 @@ export const PaginaDashboard = memo(() => {
             {/* Seção Exclusiva e Pessoal do Usuário */}
             <ResumoPessoalDashboard />
 
+            <div className="h-px w-full bg-gradient-to-r from-transparent via-border/40 to-transparent my-10" />
+
             {!carregandoProjetos && projetos.length === 0 ? (
                 <DashboardVazio podeGerenciarProjetos={podeGerenciarProjetos} />
             ) : carregando && !metricas ? (
@@ -72,16 +74,23 @@ export const PaginaDashboard = memo(() => {
                     descricao="Ainda não temos dados suficientes para gerar as métricas de performance. Comece a movimentar tarefas no Kanban!"
                 />
             ) : (
-                <div className={`grid grid-cols-1 lg:grid-cols-12 gap-8 transition-opacity duration-500 ${carregando ? 'opacity-70' : 'opacity-100'}`}>
-                    {/* Coluna da Esquerda: Avisos e Métricas */}
-                    <div className="lg:col-span-8 space-y-8">
-                        <ComunicadosPrioritarios avisos={avisos} />
-                        <MetricasProgresso metricas={metricas} />
+                <div className="space-y-6">
+                    <div className="flex items-center gap-3 px-1">
+                        <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                        <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-muted-foreground/60">Operação em Tempo Real</h3>
                     </div>
+                    
+                    <div className={`grid grid-cols-1 lg:grid-cols-12 gap-8 transition-opacity duration-500 ${carregando ? 'opacity-70' : 'opacity-100'}`}>
+                        {/* Coluna da Esquerda: Avisos e Métricas */}
+                        <div className="lg:col-span-8 space-y-8">
+                            <ComunicadosPrioritarios avisos={avisos} />
+                            <MetricasProgresso metricas={metricas} />
+                        </div>
 
-                    {/* Coluna da Direita: Minhas Tarefas */}
-                    <div className="lg:col-span-4 space-y-8">
-                        <MinhasTarefasLista minhasTarefas={minhasTarefas} />
+                        {/* Coluna da Direita: Minhas Tarefas */}
+                        <div className="lg:col-span-4 space-y-8">
+                            <MinhasTarefasLista minhasTarefas={minhasTarefas} />
+                        </div>
                     </div>
                 </div>
             )}

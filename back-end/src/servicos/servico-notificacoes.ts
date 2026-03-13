@@ -35,7 +35,12 @@ export async function criarNotificacoes(db: any, params: ParamsNotificacao): Pro
     }
 
     if (params.todosDoProjetoId) {
-        const { results } = await db.prepare('SELECT usuario_id FROM projetos_membros WHERE projeto_id = ?').bind(params.todosDoProjetoId).all();
+        const { results } = await db.prepare(`
+            SELECT DISTINCT uo.usuario_id 
+            FROM projetos_equipes pe
+            JOIN usuarios_organizacao uo ON uo.equipe_id = pe.equipe_id
+            WHERE pe.projeto_id = ?
+        `).bind(params.todosDoProjetoId).all();
         results?.forEach((u: any) => idsToNotify.add(u.usuario_id));
     }
 

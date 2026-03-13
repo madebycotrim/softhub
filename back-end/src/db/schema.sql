@@ -13,10 +13,8 @@ DROP TABLE IF EXISTS checklist_tarefa;
 DROP TABLE IF EXISTS comentarios_tarefa;
 DROP TABLE IF EXISTS justificativas_ponto;
 DROP TABLE IF EXISTS ponto_registros;
-DROP TABLE IF EXISTS projetos_membros;
 DROP TABLE IF EXISTS tarefas_responsaveis;
 DROP TABLE IF EXISTS tarefas;
-DROP TABLE IF EXISTS documentos_projeto;
 DROP TABLE IF EXISTS projetos_equipes;
 DROP TABLE IF EXISTS projetos;
 DROP TABLE IF EXISTS usuarios;
@@ -35,9 +33,11 @@ CREATE TABLE IF NOT EXISTS usuarios (
     email TEXT NOT NULL UNIQUE,
     role TEXT NOT NULL DEFAULT 'MEMBRO',
     foto_perfil TEXT,
+    foto_banner TEXT,
     bio TEXT,
-    funcoes TEXT DEFAULT '[]',
-    visivel INTEGER NOT NULL DEFAULT 1,
+    github_url TEXT,
+    linkedin_url TEXT,
+    website_url TEXT,
     versao_token INTEGER NOT NULL DEFAULT 1,
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
@@ -108,29 +108,11 @@ CREATE TABLE IF NOT EXISTS tarefas_responsaveis (
     PRIMARY KEY (tarefa_id, usuario_id)
 );
 
-CREATE TABLE IF NOT EXISTS projetos_membros (
-    projeto_id TEXT NOT NULL REFERENCES projetos(id) ON DELETE CASCADE,
-    usuario_id TEXT NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
-    papel_no_projeto TEXT DEFAULT 'MEMBRO',
-    PRIMARY KEY (projeto_id, usuario_id)
-);
-
 CREATE TABLE IF NOT EXISTS projetos_equipes (
     projeto_id TEXT NOT NULL REFERENCES projetos(id) ON DELETE CASCADE,
     equipe_id TEXT NOT NULL REFERENCES equipes(id) ON DELETE CASCADE,
     acesso TEXT NOT NULL DEFAULT 'EDICAO', -- 'LEITURA', 'EDICAO', 'GESTAO'
     PRIMARY KEY (projeto_id, equipe_id)
-);
-
-CREATE TABLE IF NOT EXISTS documentos_projeto (
-    id TEXT NOT NULL PRIMARY KEY,
-    projeto_id TEXT NOT NULL REFERENCES projetos(id) ON DELETE CASCADE,
-    nome TEXT NOT NULL,
-    descricao TEXT,
-    link_externo TEXT NOT NULL,
-    tipo TEXT NOT NULL,
-    criado_por TEXT REFERENCES usuarios(id) ON DELETE SET NULL,
-    criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
 
 -- 4. Ponto Eletrônico
@@ -239,6 +221,103 @@ CREATE TABLE IF NOT EXISTS configuracoes_sistema (
     valor TEXT NOT NULL
 );
 
--- 9. Seed
+-- 9. Seed Inicial
+INSERT OR IGNORE INTO projetos (id, nome, descricao) 
+VALUES ('d62657e4-230b-4680-a292-06b291d2f62b', 'Projeto Principal', 'Fábrica de Software - Backlog Geral');
+
 INSERT OR IGNORE INTO configuracoes_sistema (id, chave, valor) VALUES
-('9f8e7d6c-5b4a-3f2e-1d0c-9b8a7d6c5b4a', 'permissoes_roles', '{"ADMIN":{"*":true},"COORDENADOR":{"ponto:visualizar":true,"ponto:aprovar_justificativa":true,"tarefas:visualizar":true,"organizacao:visualizar":true},"GESTOR":{"ponto:visualizar":true,"ponto:aprovar_justificativa":true,"tarefas:visualizar":true,"organizacao:visualizar":true},"LIDER":{"ponto:visualizar":true,"ponto:aprovar_justificativa":true,"tarefas:visualizar":true,"tarefas:editar":true,"tarefas:mover":true,"organizacao:visualizar":true,"organizacao:editar_equipe":true},"SUBLIDER":{"ponto:visualizar":true,"ponto:aprovar_justificativa":true,"tarefas:visualizar":true,"tarefas:mover":true,"organizacao:visualizar":true},"MEMBRO":{"ponto:visualizar":true,"ponto:justificar":true,"tarefas:visualizar":true,"tarefas:comentar":true}}');
+('9f8e7d6c-5b4a-3f2e-1d0c-9b8a7d6c5b4a', 'permissoes_roles', '{
+    "ADMIN": {"*": true},
+    "COORDENADOR": {
+        "dashboard:visualizar": true,
+        "tarefas:visualizar_kanban": true,
+        "tarefas:visualizar_backlog": true,
+        "tarefas:visualizar_detalhes": true,
+        "tarefas:visualizar_historico": true,
+        "tarefas:criar": true,
+        "tarefas:editar": true,
+        "tarefas:mover": true,
+        "ponto:visualizar": true,
+        "ponto:aprovar_justificativa": true,
+        "ponto:exportar": true,
+        "membros:gerenciar": true,
+        "equipes:visualizar": true,
+        "relatorios:visualizar": true,
+        "relatorios:imprimir": true,
+        "avisos:visualizar": true,
+        "logs:visualizar": true,
+        "configuracoes:visualizar": true
+    },
+    "GESTOR": {
+        "dashboard:visualizar": true,
+        "tarefas:visualizar_kanban": true,
+        "tarefas:visualizar_backlog": true,
+        "tarefas:visualizar_detalhes": true,
+        "tarefas:visualizar_historico": true,
+        "tarefas:criar": true,
+        "tarefas:editar": true,
+        "tarefas:mover": true,
+        "ponto:visualizar": true,
+        "ponto:aprovar_justificativa": true,
+        "ponto:exportar": true,
+        "membros:gerenciar": true,
+        "equipes:visualizar": true,
+        "relatorios:visualizar": true,
+        "relatorios:imprimir": true,
+        "avisos:visualizar": true,
+        "logs:visualizar": true,
+        "configuracoes:visualizar": true
+    },
+    "LIDER": {
+        "dashboard:visualizar": true,
+        "tarefas:visualizar_kanban": true,
+        "tarefas:visualizar_backlog": true,
+        "tarefas:visualizar_detalhes": true,
+        "tarefas:visualizar_historico": true,
+        "tarefas:criar": true,
+        "tarefas:editar": true,
+        "tarefas:mover": true,
+        "tarefas:checklist": true,
+        "ponto:visualizar": true,
+        "ponto:aprovar_justificativa": true,
+        "equipes:visualizar": true,
+        "equipes:editar_equipe": true,
+        "equipes:alocar_membro": true,
+        "avisos:visualizar": true,
+        "avisos:criar": true,
+        "sistema:notificacoes": true
+    },
+    "SUBLIDER": {
+        "dashboard:visualizar": true,
+        "tarefas:visualizar_kanban": true,
+        "tarefas:visualizar_backlog": true,
+        "tarefas:visualizar_detalhes": true,
+        "tarefas:mover": true,
+        "tarefas:checklist": true,
+        "ponto:visualizar": true,
+        "ponto:aprovar_justificativa": true,
+        "equipes:visualizar": true,
+        "avisos:visualizar": true,
+        "avisos:criar": true
+    },
+    "MEMBRO": {
+        "dashboard:visualizar": true,
+        "tarefas:visualizar_kanban": true,
+        "tarefas:visualizar_backlog": true,
+        "tarefas:visualizar_detalhes": true,
+        "tarefas:comentar": true,
+        "ponto:registrar": true,
+        "ponto:visualizar": true,
+        "ponto:justificar": true,
+        "avisos:visualizar": true
+    },
+    "TODOS": {
+        "avisos:visualizar": true
+    }
+}'),
+('b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e', 'dominios_autorizados', '["unieuro.com.br", "unieuro.edu.br"]'),
+('c3d4e5f6-a7b8-4c9d-d0e1-2f3a4b5c6d7e', 'auto_cadastro', 'false'),
+('d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a', 'hierarquia_roles', '["ADMIN", "COORDENADOR", "GESTOR", "LIDER", "SUBLIDER", "MEMBRO"]'),
+('e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b', 'hora_inicio_ponto', '"13:00"'),
+('f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c', 'hora_fim_ponto', '"17:00"'),
+('a7b8c9d0-e1f2-4a3b-b4c5-d6e7f8a9b0c1', 'modo_manutencao', 'false');

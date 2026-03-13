@@ -32,7 +32,8 @@ rotasUsuarios.get('/', autenticacaoRequerida(), verificarPermissao('membros:gere
     try {
         const query = `
             SELECT
-                u.id, u.nome, u.email, u.role, u.foto_perfil, u.bio, u.criado_em,
+                u.id, u.nome, u.email, u.role, u.foto_perfil, u.foto_banner, u.bio, u.criado_em,
+                u.github_url, u.linkedin_url, u.website_url,
                 (SELECT GROUP_CONCAT(grupo_id) FROM usuarios_organizacao WHERE usuario_id = u.id) as grupos_ids,
                 (SELECT GROUP_CONCAT(e.nome) FROM usuarios_organizacao uo JOIN equipes e ON e.id = uo.equipe_id WHERE uo.usuario_id = u.id) as equipe_nome
             FROM usuarios u

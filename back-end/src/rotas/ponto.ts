@@ -15,13 +15,46 @@ rotasPonto.get('/', autenticacaoRequerida(), verificarPermissao('ponto:visualiza
     const usuario = c.get('usuario') as any;
 
     try {
-        // ... (código para buscar registros)
         const { results: hoje } = await DB.prepare(`SELECT id, tipo, registrado_em, ip_origem FROM ponto_registros WHERE usuario_id = ? AND DATE(registrado_em, '-3 hours') = DATE('now', '-3 hours') ORDER BY registrado_em DESC`).bind(usuario.id).all();
         const { results: historico } = await DB.prepare(`SELECT id, tipo, registrado_em, ip_origem FROM ponto_registros WHERE usuario_id = ? ORDER BY registrado_em DESC LIMIT 50`).bind(usuario.id).all();
         return c.json({ hoje, historico });
     } catch (erro: any) {
         console.error('[ERRO] GET /api/ponto:', erro);
         return c.json({ erro: 'Falha ao buscar registros de ponto', detalhe: erro.message }, 500);
+    }
+});
+
+// Listar todos os membros online (que deram entrada hoje e não saíram)
+rotasPonto.get('/online', autenticacaoRequerida('ADMIN'), async (c: Context) => {
+    const { DB } = c.env;
+
+    try {
+        // Busca o último registro de hoje para cada usuário e filtra os que são 'entrada'
+        const query = `
+            SELECT 
+                u.id, 
+                u.nome, 
+                u.email, 
+                u.foto_perfil, 
+                p.registrado_em as entrada_em
+            FROM usuarios u
+            JOIN ponto_registros p ON u.id = p.usuario_id
+            WHERE p.id IN (
+                SELECT id FROM (
+                    SELECT id, ROW_NUMBER() OVER(PARTITION BY usuario_id ORDER BY registrado_em DESC) as rn
+                    FROM ponto_registros
+                    WHERE DATE(registrado_em, '-3 hours') = DATE('now', '-3 hours')
+                ) WHERE rn = 1
+            )
+            AND p.tipo = 'entrada'
+            ORDER BY p.registrado_em ASC
+        `;
+
+        const { results: online } = await DB.prepare(query).all();
+        return c.json({ online });
+    } catch (erro: any) {
+        console.error('[ERRO] GET /api/ponto/online:', erro);
+        return c.json({ erro: 'Falha ao buscar membros online', detalhe: erro.message }, 500);
     }
 });
 

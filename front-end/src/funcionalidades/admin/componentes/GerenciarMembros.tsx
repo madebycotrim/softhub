@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, useEffect, memo, FormEvent } from 'react';
-import { UserCog, Shield, Users as UsersIcon, Plus, History, Search, LayoutGrid } from 'lucide-react';
+import { UserCog, Shield, Users as UsersIcon, Plus, History, Search, LayoutGrid, Wifi, Clock } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { Tooltip } from '@/compartilhado/componentes/Tooltip';
 
 import { api } from '@/compartilhado/servicos/api';
@@ -98,6 +99,18 @@ export const GerenciarMembros = memo(() => {
     const { configuracoes } = usarConfiguracoes();
     const { exibirToast } = usarToast();
 
+    // Busca de Membros Online
+    const { data: membrosOnline = [] } = useQuery({
+        queryKey: ['membros-online'],
+        queryFn: async () => {
+            const res = await api.get('/api/ponto/online');
+            return res.data.online || [];
+        },
+        refetchInterval: 30000 // Polling a cada 30s
+    });
+
+    const [modalOnlineAberto, setModalOnlineAberto] = useState(false);
+
     const rolesDisponiveis = useMemo(() => {
         const base = configuracoes?.permissoes_roles ? Object.keys(configuracoes.permissoes_roles) : ['MEMBRO', 'LIDER', 'ADMIN'];
         return base.filter(r => r !== 'ADMIN');
@@ -190,13 +203,24 @@ export const GerenciarMembros = memo(() => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {[
                     { label: 'Membros Ativos', valor: membros.length, cor: 'indigo', icone: UsersIcon, atraso: 'atraso-1' },
-                    { label: 'Especialistas', valor: membros.filter(m => m.role !== 'MEMBRO').length, cor: 'emerald', icone: Shield, atraso: 'atraso-2' },
+                    { 
+                        label: 'Membros Online', 
+                        valor: membrosOnline.length, 
+                        cor: 'emerald', 
+                        icone: Wifi, 
+                        atraso: 'atraso-2',
+                        onClick: () => setModalOnlineAberto(true) 
+                    },
                     { label: 'Sem Equipe', valor: membros.filter(m => !m.equipe_nome).length, cor: 'rose', icone: LayoutGrid, atraso: 'atraso-3' },
                     { label: 'Novos (30d)', valor: membros.filter(m => new Date(m.criado_em) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length, cor: 'blue', icone: History, atraso: 'atraso-4' }
                 ].map(s => (
-                    <div key={s.label} className={`bg-card border border-border/60 rounded-2xl p-4 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow animar-entrada ${s.atraso}`}>
+                    <div 
+                        key={s.label} 
+                        onClick={s.onClick}
+                        className={`bg-card border border-border/60 rounded-2xl p-4 flex items-center gap-4 shadow-sm hover:shadow-md transition-all animar-entrada ${s.atraso} ${s.onClick ? 'cursor-pointer hover:border-primary/30 active:scale-[0.98]' : ''}`}
+                    >
                         <div className={`p-3 bg-${s.cor}-500/10 text-${s.cor}-500 rounded-xl shadow-sm`}>
-                            <s.icone size={20} />
+                            <s.icone size={20} className={s.label === 'Membros Online' && membrosOnline.length > 0 ? 'animate-pulse' : ''} />
                         </div>
                         <div className="flex flex-col">
                             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 leading-tight">{s.label}</span>
@@ -305,6 +329,41 @@ export const GerenciarMembros = memo(() => {
                 titulo="Remover Acesso?"
                 descricao={`Esta ação removerá permanentemente o acesso de ${membroParaExcluir?.nome || membroParaExcluir?.email}.`}
             />
+
+            {/* Modal de Membros Online */}
+            <Modal aberto={modalOnlineAberto} aoFechar={() => setModalOnlineAberto(false)} titulo="Membros Online Agora" largura="md">
+                <div className="space-y-4">
+                    <p className="text-[11px] text-muted-foreground font-medium px-1">
+                        Listagem de membros que registraram entrada hoje e ainda não registraram saída.
+                    </p>
+                    
+                    <div className="max-h-[400px] overflow-y-auto custom-scrollbar space-y-2 pr-1">
+                        {membrosOnline.length === 0 ? (
+                            <div className="py-12 text-center text-muted-foreground/40 font-medium text-xs italic">
+                                Nenhum membro online no momento.
+                            </div>
+                        ) : (
+                            membrosOnline.map((m: any) => (
+                                <div key={m.id} className="flex items-center justify-between p-4 bg-muted/20 border border-border/40 rounded-2xl hover:bg-muted/30 transition-colors">
+                                    <div className="flex items-center gap-4">
+                                        <Avatar nome={m.nome} fotoPerfil={m.foto_perfil} tamanho="md" />
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-bold text-foreground leading-none">{m.nome}</span>
+                                            <span className="text-[10px] font-medium text-muted-foreground mt-1">{m.email}</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 text-emerald-500 rounded-xl border border-emerald-500/10">
+                                        <Clock size={12} className="opacity-70" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest">
+                                            Entrou às {new Date(m.entrada_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 });
