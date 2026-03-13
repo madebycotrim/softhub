@@ -1,17 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useMsal } from '@azure/msal-react';
 import { useSearchParams, useNavigate } from 'react-router';
-import { Globe, Code, Info, Download } from 'lucide-react';
 import { ambiente } from '../../../configuracoes/ambiente';
 import { api } from '../../../compartilhado/servicos/api';
 import { usarAutenticacao } from '../../../contexto/ContextoAutenticacao';
-import logoUnieuro from '../../../assets/logo-unieuro-branca.png';
 import { loginRequest } from '../../../configuracoes/msal';
 import PainelQRCode from './PainelQRCode';
 import { usarDispositivo } from '../../../compartilhado/hooks/usarDispositivo';
 import { logger } from '@/utilitarios/gerenciador-logs';
-
-import { Alerta } from '../../../compartilhado/componentes/Alerta';
+import { LadoEsquerdoInstitucional } from './LadoEsquerdoInstitucional';
+import { SecaoLoginMicrosoft } from './SecaoLoginMicrosoft';
 
 /**
  * Tela de login com estética Discord-Style (Minimalista e Funcional).
@@ -171,137 +169,21 @@ export default function TelaLogin() {
         <div className="light min-h-screen bg-slate-50 flex items-center justify-center p-0 sm:p-6 lg:p-8 selection:bg-red-500/20 transition-colors duration-500">
             <div className="w-full max-w-7xl bg-white sm:rounded-2xl shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] overflow-hidden flex flex-col lg:flex-row min-h-screen sm:min-h-[750px] border-none sm:border border-border animar-entrada">
 
-                    {/* Lado Esquerdo Institucional */}
-                    <div className="lg:w-[42%] bg-[#001a33] p-8 pt-12 pb-14 lg:p-16 flex flex-col justify-between text-white relative overflow-hidden group shrink-0">
-                        {/* Background Sólido para Minimalismo */}
-                        <div className="absolute inset-0 z-0 bg-[#001a33]" />
-
-
-
-
-                    <div className="relative z-10 space-y-12 lg:space-y-16 animar-entrada atraso-1">
-                        <div className="flex items-center gap-5">
-                            <img src={logoUnieuro} alt="Logo Unieuro" className="w-10 h-10 lg:w-12 lg:h-12 object-contain" />
-                            <div className="space-y-1.5">
-                                <h1 className="text-xl lg:text-[24px] font-[900] leading-none tracking-tight">FÁBRICA DE SOFTWARE</h1>
-                                <div className="inline-flex items-center px-2 py-0.5 bg-red-600/20 rounded-2xl border border-red-500/20">
-                                    <span className="text-[10px] lg:text-[11px] tracking-[0.3em] text-red-500 font-black uppercase">SoftHub</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="space-y-6 lg:space-y-10">
-                            <h2 className="text-[42px] lg:text-[72px] font-[900] leading-[0.95] lg:leading-[0.9] tracking-tighter mix-blend-difference">
-                                Sua Ideia, <br />
-                                <span className="text-white/30 group-hover:text-white/50 transition-colors duration-1000">Nosso Código.</span>
-                            </h2>
-                            <p className="text-white/60 text-sm lg:text-[18px] leading-relaxed max-w-xs lg:max-w-md font-medium">
-                                Transformamos o conhecimento acadêmico em soluções tecnológicas de alto impacto.
-                            </p>
-                            <div className="flex items-center gap-3">
-                                <div className="h-1.5 w-16 lg:w-24 bg-red-600 rounded-full" />
-                                <div className="h-1.5 w-6 bg-white/20 rounded-full" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="mt-8 lg:mt-0 relative z-10 hidden sm:block">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <div className="p-2 bg-white/5 rounded-2xl border border-white/10">
-                                    <Globe size={14} className="opacity-40" />
-                                </div>
-                                <span className="text-[11px] font-black uppercase tracking-[0.2em] opacity-30">Campus Águas Claras</span>
-                            </div>
-                            <div className="p-2 bg-white/5 rounded-2xl border border-white/10">
-                                <Code size={16} className="text-red-100/20" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <LadoEsquerdoInstitucional />
 
                 {/* Área de Acesso (Login Microsoft + Prompt PWA) */}
                 <div className="flex-1 flex flex-col lg:flex-row items-stretch bg-white -mt-8 lg:mt-0 rounded-t-[32px] lg:rounded-2xl relative z-20">
 
                     {/* Lado Central: Acesso Microsoft */}
-                    <div className="flex-1 p-8 lg:p-12 flex flex-col items-center justify-center animar-entrada atraso-2">
-                        <div className="space-y-8 lg:space-y-12 w-full max-w-sm">
-                            <div className="space-y-4 text-center lg:text-left">
-                                <div className="inline-flex py-1 px-3 bg-red-500/5 text-red-600 text-[10px] font-black uppercase tracking-widest rounded-full leading-none border border-red-500/10">
-                                    Bem-vindo de volta
-                                </div>
-                                <h3 className="text-[28px] lg:text-4xl font-black text-slate-900 tracking-tight leading-tight">Inicie agora.</h3>
-                                <p className="text-slate-600 font-bold text-xs lg:text-sm leading-relaxed max-w-[280px] lg:max-w-none mx-auto lg:mx-0 pr-0 lg:pr-8">
-                                    Acesse a plataforma da Fábrica de Software com seu login institucional.
-                                </p>
-                            </div>
-
-                            {configPublica?.modo_manutencao && (
-                                <Alerta tipo="info" mensagem="O sistema está em manutenção. Apenas administradores podem entrar." flutuante />
-                            )}
-
-                            {erro && (
-                                <Alerta tipo="erro" mensagem={erro} flutuante />
-                            )}
-
-                            <div className="space-y-6 lg:space-y-8">
-                                {/* ─────────────────────────────────────────────────────────────────
-                                    BOTÃO OFICIAL MICROSOFT — NÃO ALTERAR
-                                    Segue exatamente as diretrizes de branding da Microsoft:
-                                    - Background: #2F2F2F
-                                    - Altura: 41px
-                                    - Padding: 12px (todos os lados)
-                                    - Fonte: Segoe UI, 15px, weight 600, cor #FFFFFF
-                                    - Ícone: 21x21px, 4 quadrantes coloridos
-                                    - Gap entre ícone e texto: 12px
-                                    - Border-radius: mínimo (padrão Microsoft)
-                                    Ref: https://learn.microsoft.com/en-us/entra/identity-platform/howto-add-branding-in-apps
-                                    ───────────────────────────────────────────────────────────────── */}
-                                <button
-                                    onClick={handleLogin}
-                                    disabled={carregando}
-                                    className="w-full flex items-center h-[41px] bg-[#2F2F2F] disabled:opacity-50 px-[12px] gap-[12px] border border-[#2F2F2F]"
-                                    style={{ 
-                                        fontFamily: "'Segoe UI', 'Segoe UI Web (West European)', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif",
-                                        borderRadius: '2px',
-                                    }}
-                                >
-                                    <div className="flex shrink-0">
-                                        <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <rect x="0" y="0" width="10" height="10" fill="#F25022" />
-                                            <rect x="11" y="0" width="10" height="10" fill="#7FBA00" />
-                                            <rect x="0" y="11" width="10" height="10" fill="#00A4EF" />
-                                            <rect x="11" y="11" width="10" height="10" fill="#FFB900" />
-                                        </svg>
-                                    </div>
-                                    <span className="text-[15px] text-white leading-none whitespace-nowrap" style={{ fontWeight: 600 }}>Sign in with Microsoft</span>
-                                </button>
-
-                                <div className="flex items-center justify-center lg:justify-start gap-1.5 text-slate-500 text-[11px] lg:text-[11.5px] font-medium">
-                                    <Info size={11} className="shrink-0" />
-                                    <span>
-                                        Use seu e-mail institucional ({ (configPublica?.dominios_autorizados || ['unieuro.com.br']).map(d => `@${d}`).join(' ou ') })
-                                    </span>
-                                </div>
-
-                                {isMobile && deferredPrompt && (
-                                    <div className="pt-8 border-t border-border/10">
-                                        <button
-                                            onClick={handleInstallClick}
-                                            className="w-full flex items-center justify-center h-14 bg-accent/5 hover:bg-accent/10 rounded-2xl transition-all active:scale-[0.98] group"
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className="p-2 bg-primary/10 rounded-2xl text-primary opacity-60 group-hover:opacity-100 transition-opacity">
-                                                    <Download size={18} />
-                                                </div>
-                                                <span className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground">Instalar Aplicativo</span>
-                                            </div>
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
+                    <SecaoLoginMicrosoft
+                        configPublica={configPublica}
+                        erro={erro}
+                        carregando={carregando}
+                        handleLogin={handleLogin}
+                        isMobile={isMobile}
+                        deferredPrompt={deferredPrompt}
+                        handleInstallClick={handleInstallClick}
+                    />
 
                     {/* Divisor Vertical Ultra Sutil */}
                     <div className="hidden lg:block w-[1px] bg-border self-stretch my-24 opacity-50" />

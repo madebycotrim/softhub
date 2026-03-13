@@ -1,0 +1,83 @@
+import { memo } from 'react';
+import { Trash2, Megaphone } from 'lucide-react';
+import { Avatar } from '@/compartilhado/componentes/Avatar';
+import { formatarDataHora } from '@/utilitarios/formatadores';
+
+interface CardAvisoProps {
+    aviso: any;
+    podeDeletar: boolean;
+    aoRemover: (id: string) => void;
+    index: number;
+}
+
+export const CardAviso = memo(({ aviso, podeDeletar, aoRemover, index }: CardAvisoProps) => {
+    const IconePrioridade = aviso.prioridade === 'urgente' ? Megaphone : null;
+
+    return (
+        <div className={`bg-card border border-border rounded-2xl p-6 sm:p-8 relative overflow-hidden flex flex-col sm:flex-row gap-6 shadow-sm h-full transition-all group hover:border-primary/30 animar-entrada atraso-${(index % 5) + 1}`}>
+            {aviso.prioridade === 'urgente' && (
+                <div className="absolute top-0 left-0 w-1.5 h-full bg-destructive" />
+            )}
+
+            {/* Lado Esquerdo - Conteúdo Principal */}
+            <div className="flex-1 flex flex-col">
+                <div className="flex flex-wrap items-center gap-2 mb-4">
+                    <span className={`px-2.5 py-1 text-[9px] font-black uppercase tracking-widest rounded-2xl ${
+                        aviso.prioridade === 'urgente' ? 'bg-rose-50 text-rose-600 border border-rose-200/50' :
+                        aviso.prioridade === 'importante' ? 'bg-amber-50 text-amber-600 border border-amber-200/50' :
+                        'bg-blue-50 text-blue-600 border border-blue-200/50'
+                    }`}>
+                        {aviso.prioridade === 'urgente' ? 'Urgente' : aviso.prioridade === 'importante' ? 'Importante' : 'Normal'}
+                    </span>
+                    <span className="text-muted-foreground/60 text-[10px] font-bold uppercase tracking-wider pl-2">
+                        {formatarDataHora(aviso.criado_em)}
+                    </span>
+                    {aviso.expira_em && (
+                        <span className="text-muted-foreground/50 text-[10px] uppercase font-bold tracking-wider border-l border-border pl-3 ml-1">
+                            Exp. {formatarDataHora(aviso.expira_em)}
+                        </span>
+                    )}
+                </div>
+
+                <h3 className={`text-[17px] font-bold text-foreground tracking-tight ${aviso.conteudo ? 'mb-2' : 'mb-0'}`}>
+                    {IconePrioridade && <IconePrioridade className="inline w-5 h-5 text-destructive mr-2 -mt-1" />}
+                    {aviso.titulo}
+                </h3>
+
+                {aviso.conteudo && (
+                    <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed text-[15px]">
+                        {aviso.conteudo}
+                    </p>
+                )}
+            </div>
+
+            {/* Lado Direito - Autor e Ações */}
+            <div className="sm:w-56 shrink-0 flex flex-row sm:flex-col justify-between items-center sm:items-stretch border-t sm:border-t-0 sm:border-l border-border pt-5 sm:pt-0 sm:pl-6 relative">
+                
+                {/* Lixeira */}
+                <div className="order-2 sm:order-1 flex justify-end min-h-[32px]">
+                    {podeDeletar && (
+                        <button 
+                            onClick={() => aoRemover(aviso.id)}
+                            className="p-2 sm:-mt-2 sm:-mr-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-2xl transition-colors sm:opacity-0 group-hover:opacity-100 focus:opacity-100 outline-none"
+                            title="Apagar Aviso"
+                        >
+                            <Trash2 className="w-5 h-5 sm:w-4 sm:h-4" />
+                        </button>
+                    )}
+                </div>
+
+                {/* Autor */}
+                <div className="order-1 sm:order-2 flex items-center justify-start sm:justify-end gap-3 mt-auto flex-1 sm:flex-initial min-w-0">
+                    <div className="text-left sm:text-right min-w-0">
+                        <p className="text-[9px] font-black text-muted-foreground/50 uppercase tracking-[0.2em] mb-0.5">Publicado por</p>
+                        <p className="text-[13px] font-bold text-foreground leading-tight sm:line-clamp-2">{aviso.criado_por.nome || 'Sistema'}</p>
+                    </div>
+                    <div className="shrink-0">
+                        <Avatar nome={aviso.criado_por.nome || 'S'} fotoPerfil={aviso.criado_por.foto} tamanho="md" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+});

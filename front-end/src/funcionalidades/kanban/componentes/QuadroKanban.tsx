@@ -32,7 +32,6 @@ import { Carregando } from '@/compartilhado/componentes/Carregando';
 import { EstadoVazio } from '@/compartilhado/componentes/EstadoVazio';
 import { EstadoErro } from '@/compartilhado/componentes/EstadoErro';
 
-/** Mapeamento amigável das colunas */
 const LABELS_COLUNAS: Record<string, string> = {
     todo: 'A Fazer',
     in_progress: 'Em Andamento',
@@ -40,45 +39,8 @@ const LABELS_COLUNAS: Record<string, string> = {
     concluida: 'Concluído'
 };
 
-const ICONES_COLUNAS: Record<string, any> = {
-    todo: Circle,
-    in_progress: Zap,
-    em_revisao: Search,
-    concluida: CheckCircle2
-};
-
-const ColunaDropZone = memo(({ id, titulo, tarefas, aoApertarTarefa, delayClass }: { id: string; titulo: string; tarefas: Tarefa[], aoApertarTarefa: (t: Tarefa) => void, delayClass?: string }) => {
-    const { setNodeRef, isOver } = useDroppable({
-        id: id,
-        data: { type: 'Column', coluna: id }
-    });
-    const Icone = ICONES_COLUNAS[id] || Circle;
-
-    return (
-        <div className={`flex flex-col flex-1 min-w-[320px] max-w-[360px] bg-card/60 dark:bg-card/20 backdrop-blur-3xl rounded-b-2xl border border-border/50 shadow-sm overflow-hidden h-full transition-all duration-500 group/column animar-entrada ${delayClass}`}>
-            <div className="p-5 border-b border-border/50 bg-muted/30 flex items-center justify-between shrink-0 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover/column:opacity-100 transition-opacity duration-700" />
-                <h3 className="font-black text-[11px] uppercase tracking-[0.2em] text-muted-foreground/80 flex items-center gap-2.5 relative z-10">
-                    <div className="w-8 h-8 rounded-2xl bg-background border border-border/60 flex items-center justify-center text-primary/60 shadow-sm">
-                        <Icone size={14} />
-                    </div>
-                    {titulo}
-                </h3>
-                <span className="px-3 py-1 rounded-2xl bg-primary/10 text-[10px] font-black text-primary border border-primary/20 shadow-[0_0_15px_rgba(37,99,235,0.1)]">
-                    {tarefas.length}
-                </span>
-            </div>
-            <div
-                ref={setNodeRef}
-                className={`flex-1 p-4 overflow-y-auto overflow-x-hidden flex flex-col gap-4 scrollbar-none transition-all duration-300 ${isOver ? 'bg-primary/5 ring-2 ring-inset ring-primary/30 rounded-2xl' : ''}`}
-            >
-                {tarefas.map(tarefa => (
-                    <CartaoTarefa key={tarefa.id} tarefa={tarefa} aoClicar={aoApertarTarefa} />
-                ))}
-            </div>
-        </div>
-    );
-});
+import { ColunaDropZone } from './ColunaDropZone';
+import { KanbanVazioProjetos } from './KanbanVazioProjetos';
 
 export const QuadroKanban = memo(() => {
     const { projetoAtivoId } = usarAutenticacao();
@@ -177,24 +139,7 @@ export const QuadroKanban = memo(() => {
             </div>
 
             {!carregandoProjetos && projetos.length === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center p-12 text-center animate-in fade-in zoom-in duration-700">
-                    <div className="w-24 h-24 rounded-[32px] bg-muted/30 border border-border flex items-center justify-center mb-8 shadow-2xl shadow-primary/5">
-                        <FolderKanban className="w-10 h-10 text-muted-foreground/20" />
-                    </div>
-                    <h2 className="text-xl font-bold text-foreground mb-3">Fábrica Vazia</h2>
-                    <p className="text-muted-foreground text-sm max-w-sm mb-8 leading-relaxed">
-                        Parece que ainda não existem projetos cadastrados. Você precisa criar um projeto antes de gerenciar tarefas.
-                    </p>
-                    {podeGerenciarProjetos ? (
-                        <a href="/app/admin/projetos" className="h-12 px-8 bg-primary text-primary-foreground rounded-2xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 shadow-lg shadow-primary/20 transition-all flex items-center">
-                            Criar Primeiro Projeto
-                        </a>
-                    ) : (
-                        <p className="text-[10px] font-black uppercase tracking-widest text-destructive/60 bg-destructive/5 px-4 py-2 rounded-xl border border-destructive/10">
-                            Contate um administrador para criar projetos
-                        </p>
-                    )}
-                </div>
+                <KanbanVazioProjetos podeGerenciarProjetos={podeGerenciarProjetos} />
             ) : (
                 <>
                     <div className="shrink-0 px-0.5">
