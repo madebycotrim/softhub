@@ -1,6 +1,7 @@
 import { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { api } from '@/compartilhado/servicos/api';
+import { logger } from '@/utilitarios/gerenciador-logs';
 
 export interface Usuario {
     id: string;
@@ -50,7 +51,7 @@ export function ProvedorAutenticacao({ children }: { children: ReactNode }) {
     // Restaura sessão do localStorage de forma SÍNCRONA no estado inicial
     const [token, setToken] = useState<string | null>(() => {
         const salvo = localStorage.getItem(CHAVE_TOKEN);
-        if (salvo) console.log('[Auth] Token restaurado do cache');
+        if (salvo) logger.info('Auth', 'Token pesquisado no cache local');
         return salvo;
     });
 
@@ -92,6 +93,11 @@ export function ProvedorAutenticacao({ children }: { children: ReactNode }) {
     }, [token, buscarConfiguracoesPublicas]);
 
     const entrar = useCallback((novoUsuario: Usuario, novoToken: string) => {
+        logger.sucesso('Sessão', `Usuário conectado: ${novoUsuario?.email}`);
+        if (!novoUsuario || !novoToken) {
+            logger.erro('Auth', 'Tentativa de login com dados incompletos');
+            return;
+        }
         setUsuario(novoUsuario);
         setToken(novoToken);
         localStorage.setItem(CHAVE_TOKEN, novoToken);
@@ -113,7 +119,8 @@ export function ProvedorAutenticacao({ children }: { children: ReactNode }) {
         localStorage.setItem(CHAVE_USUARIO, JSON.stringify(atualizado));
     }, []);
 
-    if (carregando) return null;
+    // Nunca retorne null aqui para evitar que o Outlet em rotas.tsx suma.
+    // O RotaProtegida já cuida do estado de carregamento visual se necessário.
 
     return (
         <ContextoAutenticacao.Provider value={{

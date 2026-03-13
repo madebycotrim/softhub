@@ -9,6 +9,7 @@ import logoUnieuro from '../../../assets/logo-unieuro-branca.png';
 import { loginRequest } from '../../../configuracoes/msal';
 import PainelQRCode from './PainelQRCode';
 import { usarDispositivo } from '../../../compartilhado/hooks/usarDispositivo';
+import { logger } from '@/utilitarios/gerenciador-logs';
 
 import { Alerta } from '../../../compartilhado/componentes/Alerta';
 
@@ -41,7 +42,7 @@ export default function TelaLogin() {
                 const res = await api.get('/api/configuracoes/publico');
                 setConfigPublica(res.data);
             } catch (e) {
-                console.error('[Login] Falha ao carregar configurações públicas:', e);
+                logger.erro('Login', 'Falha ao carregar configurações públicas', e);
                 // Fallback de segurança em caso de falha na API
                 setConfigPublica({ dominios_autorizados: ['unieuro.com.br'], modo_manutencao: false });
             }
@@ -92,7 +93,7 @@ export default function TelaLogin() {
         const dominiosValidos = config.dominios_autorizados || ['unieuro.com.br'];
         
         if (!dominiosValidos.some((d: string) => email.endsWith(`@${d.toLowerCase()}`))) {
-            console.warn('[Login] ❌ Domínio não autorizado:', email);
+            logger.aviso('Login', `Domínio não autorizado: ${email}`);
             setErroLocal(`Use o e-mail institucional (${dominiosValidos.map((d: string) => `@${d}`).join(' ou ')}).`);
             setCarregando(false);
             travaAuthGlobal = false;
@@ -111,11 +112,11 @@ export default function TelaLogin() {
                 idToken: tokenResponse.idToken
             });
 
-            console.log('[Login] ✅ Autorizado como:', email);
+
             entrar(response.data.usuario, response.data.token);
             navigate('/app/dashboard', { replace: true });
         } catch (error: any) {
-            console.error('[Login] ❌ Erro autenticação:', error);
+            logger.erro('Login', 'Erro crítico na autenticação MSAL/Backend', error);
             const dataErro = error.response?.data;
             const msgUser = dataErro?.erro || 'Tente logar manualmente clicando no botão.';
             const detalhe = dataErro?.detalhe ? ` (${dataErro.detalhe})` : '';

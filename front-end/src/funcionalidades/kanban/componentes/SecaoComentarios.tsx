@@ -31,7 +31,7 @@ export function SecaoComentarios({ tarefaId }: SecaoComentariosProps) {
             await enviarComentario(novoComentario);
             setNovoComentario('');
         } catch (error) {
-            console.error(error);
+            console.error('[Comentários] Falha ao enviar comentário:', error);
         } finally {
             setEnviando(false);
         }

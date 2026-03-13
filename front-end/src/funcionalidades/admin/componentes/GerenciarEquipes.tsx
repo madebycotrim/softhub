@@ -211,7 +211,7 @@ const ModalAlocacao = memo(({ aberto, aoFechar, grupos, membros, aoAlocar, grupo
             setSelecionados([]);
             aoFechar();
         } catch (error) {
-            console.error(error);
+            console.error('[Equipes] Falha na alocação em lote:', error);
             setErro('Não foi possível realizar a alocação de alguns membros.');
         } finally {
             setSalvando(false);

@@ -1,4 +1,5 @@
 import { ambiente } from '@/configuracoes/ambiente';
+import { logger } from '@/utilitarios/gerenciador-logs';
 
 class ApiError extends Error {
     response?: { data: any, status: number };
@@ -41,6 +42,7 @@ async function doFetch(method: string, url: string, data?: any, config?: any) {
     const isNoLogin = typeof window !== 'undefined' && window.location.pathname === '/login';
 
     if (res.status === 401 && !isAuthRoute && !isNoLogin) {
+        logger.aviso('API', 'Sessão expirada (401). Redirecionando para login.');
         localStorage.removeItem('softhub_token');
         localStorage.removeItem('softhub_usuario');
         if (typeof window !== 'undefined') {

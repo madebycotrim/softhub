@@ -34,7 +34,7 @@ export function CartaoComentario({ comentario, usuarioLogadoId, ehLider, aoExclu
             await aoEditar(comentario.id, novoConteudo);
             setEditando(false);
         } catch (error) {
-            console.error(error);
+            console.error('[Comentário] Falha ao editar:', error);
         } finally {
             setSalvando(false);
         }
@@ -46,7 +46,7 @@ export function CartaoComentario({ comentario, usuarioLogadoId, ehLider, aoExclu
             await aoExcluir(comentario.id);
             setModalExclusao(false);
         } catch (error) {
-            console.error(error);
+            console.error('[Comentário] Falha ao excluir:', error);
         } finally {
             setSalvando(false);
         }

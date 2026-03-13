@@ -42,7 +42,7 @@ rotasUsuarios.get('/', autenticacaoRequerida(), verificarPermissao('membros:gere
         const res = await DB.prepare(query).all();
         const results = res.results as any[];
 
-        console.log(`[AUDITORIA] GET /api/usuarios - Membros encontrados: ${results?.length ?? 0}`);
+
         
         return c.json({
             membros: results || [],
@@ -206,14 +206,13 @@ rotasUsuarios.post('/', autenticacaoRequerida(), verificarPermissao('membros:ger
             .bind(novoId, nomePadrao, emailLimpo, roleFinal, JSON.stringify(funcoes || []))
             .run();
 
-        console.log('[POST /usuarios] INSERT meta:', JSON.stringify(insertResult.meta));
 
         // Confirma que o registro foi gravado
         const confirmacao = await DB.prepare('SELECT id, email FROM usuarios WHERE id = ?')
             .bind(novoId)
             .first();
 
-        console.log('[POST /usuarios] SELECT confirmação:', JSON.stringify(confirmacao));
+
 
         if (!confirmacao) {
             console.error('[POST /usuarios] CRÍTICO: INSERT não persistiu o registro!');

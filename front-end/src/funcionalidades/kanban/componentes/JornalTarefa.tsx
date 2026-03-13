@@ -33,7 +33,7 @@ export function JornalTarefa({ tarefaId }: JornalTarefaProps) {
             setNovoComentario('');
             recarregar(); // Recarrega o jornal para mostrar o novo comentário
         } catch (error) {
-            console.error(error);
+            console.error('[Jornal] Falha ao registrar atividade:', error);
         } finally {
             setEnviando(false);
         }

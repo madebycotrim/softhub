@@ -55,10 +55,14 @@ export default function PainelQRCode() {
                     setStatus('autorizado');
                     clearInterval(polling);
 
-                    setTimeout(() => {
+                    // Apenas chama entrar. A TelaLogin (pai) ou RotaProtegida
+                    // reagirá ao novo estado de autenticação e fará o redirecionamento.
+                    if (res.data.usuario && res.data.token) {
                         entrar(res.data.usuario, res.data.token);
-                        navigate('/app/dashboard', { replace: true });
-                    }, 300); 
+                    } else {
+                        console.error('[QR] Erro: Dados de autorização incompletos.');
+                        setStatus('erro');
+                    }
                 } else if (res.data.status === 'expirado' || res.data.status === 'erro' || res.data.status === 'consumido') {
                     setStatus(res.data.status === 'expirado' ? 'expirado' : 'erro');
                     clearInterval(polling);
@@ -78,10 +82,12 @@ export default function PainelQRCode() {
     return (
         <div className="flex flex-col items-center text-center animate-in fade-in slide-in-from-bottom-8 duration-1000">
             {/* Label discreta mas legível acima do QR */}
-            <div className="mb-10">
+            <div className="mb-10 flex items-center gap-6">
+                <div className="h-[1px] w-10 bg-slate-200" />
                 <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] whitespace-nowrap">
                     ACESSO INSTANTÂNEO
                 </span>
+                <div className="h-[1px] w-10 bg-slate-200" />
             </div>
 
             {/* Container QR - Ultra Minimalist & Large */}
@@ -96,47 +102,22 @@ export default function PainelQRCode() {
                     )}
 
                     {status === 'pendente' && sessao?.id && (
-                        <div className="relative animate-in zoom-in duration-1000 flex items-center justify-center group/qr p-6 bg-white rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100">
-                            <div className="relative overflow-hidden rounded-xl">
-                                <QRCodeSVG
-                                    value={sessao.id}
-                                    size={210}
-                                    level="H"
-                                    fgColor="#0f172a"
-                                    marginSize={0}
-                                    includeMargin={false}
-                                />
-                                
-                                {/* 🎇 Efeito High-Tech de Scanner */}
-                                <div className="absolute inset-x-0 h-[3px] bg-gradient-to-r from-transparent via-red-500 to-transparent shadow-[0_0_15px_rgba(239,68,68,0.8)] opacity-0 group-hover/qr:opacity-100 transition-opacity duration-500 animate-[scan_3s_linear_infinite]" 
-                                     style={{ 
-                                         animation: 'scan 2.5s ease-in-out infinite',
-                                         top: '0%' 
-                                     }} 
-                                />
-                                
-                                <style>{`
-                                    @keyframes scan {
-                                        0% { top: 0%; opacity: 0; }
-                                        20% { opacity: 1; }
-                                        80% { opacity: 1; }
-                                        100% { top: 100%; opacity: 0; }
-                                    }
-                                `}</style>
-                            </div>
-
-                            {/* Detalhes de canto decorativos */}
-                            <div className="absolute top-4 left-4 w-4 h-4 border-t-2 border-l-2 border-slate-200 rounded-tl-lg" />
-                            <div className="absolute top-4 right-4 w-4 h-4 border-t-2 border-r-2 border-slate-200 rounded-tr-lg" />
-                            <div className="absolute bottom-4 left-4 w-4 h-4 border-b-2 border-l-2 border-slate-200 rounded-bl-lg" />
-                            <div className="absolute bottom-4 right-4 w-4 h-4 border-b-2 border-r-2 border-slate-200 rounded-br-lg" />
+                        <div className="relative animate-in zoom-in duration-1000 flex items-center justify-center">
+                            <QRCodeSVG
+                                value={sessao.id}
+                                size={220}
+                                level="H"
+                                fgColor="#0f172a"
+                                marginSize={0}
+                                includeMargin={false}
+                            />
                         </div>
                     )}
 
                     {(status === 'expirado' || status === 'erro') && sessao && (
                         <div className="w-[280px] h-[280px] relative z-10 flex flex-col items-center justify-center animate-in fade-in zoom-in duration-500">
                             {/* Background Overlay Premium */}
-                            <div className="absolute inset-0 bg-white/80 backdrop-blur-md rounded-[2.5rem] border border-slate-200 shadow-xl" />
+                            <div className="absolute inset-0 bg-white/80 backdrop-blur-md rounded-[2.5rem] border border-slate-200" />
 
                             {/* Blurred QR Background */}
                             <div className="absolute inset-0 flex items-center justify-center blur-[4px] grayscale opacity-5 pointer-events-none">
@@ -149,7 +130,7 @@ export default function PainelQRCode() {
                                     onClick={gerarNovoQR}
                                     className="group/btn flex flex-col items-center justify-center gap-3 p-6 bg-red-500/10 text-red-600 rounded-[2rem] hover:bg-red-500/20 active:scale-95 transition-all duration-300 border border-red-500/20 mb-4"
                                 >
-                                    <div className="p-4 bg-red-600 rounded-full text-white shadow-lg shadow-red-200 dark:shadow-red-900/40 group-hover:rotate-180 transition-transform duration-700 flex items-center justify-center">
+                                    <div className="p-4 bg-red-600 rounded-full text-white group-hover:rotate-180 transition-transform duration-700 flex items-center justify-center">
                                         <RefreshCw className="w-6 h-6" />
                                     </div>
                                     <span className="text-[11px] font-black uppercase tracking-widest text-center mt-1">
