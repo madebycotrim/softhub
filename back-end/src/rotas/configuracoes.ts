@@ -33,13 +33,15 @@ rotasConfiguracoes.get('/publico', autenticacaoRequerida(), async (c: Context) =
     const { DB } = c.env;
 
     try {
-        const { results } = await DB.prepare('SELECT chave, valor FROM configuracoes_sistema WHERE chave IN (?, ?)')
-            .bind('permissoes_roles', 'hierarquia_roles')
+        const { results } = await DB.prepare('SELECT chave, valor FROM configuracoes_sistema WHERE chave IN (?, ?, ?, ?)')
+            .bind('permissoes_roles', 'hierarquia_roles', 'dominios_autorizados', 'modo_manutencao')
             .all();
 
         const config: Record<string, any> = {
             permissoes_roles: {},
-            hierarquia_roles: [] // Garante que a resposta seja sempre um array, mesmo que vazio.
+            hierarquia_roles: [],
+            dominios_autorizados: ['unieuro.com.br'],
+            modo_manutencao: false
         };
 
         if (results) {
@@ -47,7 +49,7 @@ rotasConfiguracoes.get('/publico', autenticacaoRequerida(), async (c: Context) =
                 try {
                     config[row.chave] = JSON.parse(row.valor);
                 } catch {
-                    // Mantém o valor padrão (array vazio ou objeto vazio)
+                    config[row.chave] = row.valor === 'true' ? true : row.valor === 'false' ? false : row.valor;
                 }
             });
         }

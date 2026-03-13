@@ -11,7 +11,8 @@ import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFu
 import { BarraFiltros, FiltroSelect, FiltroDataRange, FiltroToggle } from '@/compartilhado/componentes/BarraFiltros';
 
 /** Painel de auditoria com tabela semântica padronizada. */
-export function PainelLogs() {    const {
+export function PainelLogs() {
+    const {
         logs, carregando, erro, pagina, setPagina, totalPaginas, totalRegistros,
         itensPorPagina, setItensPorPagina,
         filtroModulo, setFiltroModulo, filtroAcao, setFiltroAcao,
@@ -42,17 +43,16 @@ export function PainelLogs() {    const {
     };
 
     return (
-        <div className="flex flex-col h-full bg-background animate-in fade-in duration-500">
+        <div className="flex flex-col h-full space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-10">
             <CabecalhoFuncionalidade
                 titulo="Logs de Auditoria"
-                subtitulo="Registros imutáveis de todas as ações realizadas no sistema."
+                subtitulo="Registros imutáveis de todas as operações críticas do ecossistema."
                 icone={ShieldAlert}
-                variante="perigo"
             >
                 {carregando && logs.length > 0 && (
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/5 rounded-full border border-primary/10 animate-pulse">
                         <Carregando Centralizar={false} tamanho="sm" />
-                        <span className="text-[9px] font-black uppercase tracking-widest text-primary">Sincronizando...</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-primary">Sincronizando Auditoria</span>
                     </div>
                 )}
             </CabecalhoFuncionalidade>
@@ -60,7 +60,7 @@ export function PainelLogs() {    const {
             <BarraFiltros
                 busca={busca}
                 aoMudarBusca={(v: string) => { setBusca(v); setPagina(1); }}
-                placeholderBusca="Pesquisa global em logs..."
+                placeholderBusca="Localizar registro..."
                 temFiltrosAtivos={!!(busca || filtroModulo || filtroAcao || dataInicio || dataFim)}
                 aoLimparFiltros={() => {
                     setBusca('');
@@ -71,30 +71,30 @@ export function PainelLogs() {    const {
                     setPagina(1);
                 }}
             >
-                <div className="flex flex-wrap items-center gap-4">
+                <div className="flex flex-wrap items-center gap-3">
                     <FiltroSelect 
                         valor={filtroModulo} 
                         aoMudar={(v: string) => { setFiltroModulo(v); setPagina(1); }}
-                        rotuloPadrao="Módulos"
+                        rotuloPadrao="Todos os Módulos"
                         opcoes={[
-                            { valor: "kanban", rotulo: "Kanban" },
-                            { valor: "ponto", rotulo: "Ponto" },
-                            { valor: "membros", rotulo: "Membros" },
-                            { valor: "autenticacao", rotulo: "Auth" },
-                            { valor: "admin", rotulo: "Admin" }
+                            { valor: "kanban", rotulo: "Quadro Kanban" },
+                            { valor: "ponto", rotulo: "Ponto Eletrônico" },
+                            { valor: "membros", rotulo: "Gestão de Membros" },
+                            { valor: "autenticacao", rotulo: "Segurança & Auth" },
+                            { valor: "admin", rotulo: "Administração" }
                         ]}
                     />
 
                     <FiltroSelect 
                         valor={filtroAcao} 
                         aoMudar={(v: string) => { setFiltroAcao(v); setPagina(1); }}
-                        rotuloPadrao="Ações"
+                        rotuloPadrao="Todas as Ações"
                         opcoes={[
-                            { valor: "LOGIN", rotulo: "Acesso" },
-                            { valor: "CRIAR", rotulo: "Criação" },
-                            { valor: "ATUALIZAR", rotulo: "Edição" },
-                            { valor: "DELETAR", rotulo: "Exclusão" },
-                            { valor: "ROLE", rotulo: "Permissões" }
+                            { valor: "LOGIN", rotulo: "Autenticação" },
+                            { valor: "CRIAR", rotulo: "Criação de Dados" },
+                            { valor: "ATUALIZAR", rotulo: "Edição / Update" },
+                            { valor: "DELETAR", rotulo: "Exclusão / Destruição" },
+                            { valor: "ROLE", rotulo: "Controle de Acesso" }
                         ]}
                     />
 
@@ -110,147 +110,144 @@ export function PainelLogs() {    const {
                         valorAtivo={modoVisualizacao}
                         aoMudar={(v: 'otimizada' | 'historico') => setModoVisualizacao(v)}
                         opcoes={[
-                            { valor: 'otimizada', rotulo: 'Otimizada' },
-                            { valor: 'historico', rotulo: 'Histórico' }
+                            { valor: 'otimizada', rotulo: 'Recentes' },
+                            { valor: 'historico', rotulo: 'Arquivo' }
                         ]}
                     />
                 </div>
             </BarraFiltros>
 
-            {/* Tabela Semântica */}
-            <div className="flex-1 min-h-0 bg-card border border-border rounded-2xl flex flex-col shadow-sm overflow-hidden">
-                <div className="flex-1 overflow-auto relative">
+            {/* Tabela de Auditoria */}
+            <div className="flex-1 min-h-0 bg-card border border-border rounded-2xl flex flex-col shadow-sm shadow-black/5 overflow-hidden">
+                <div className="flex-1 overflow-auto relative custom-scrollbar">
                     {erro ? (
-                        <div className="h-full flex items-center justify-center p-6">
-                            <EstadoErro titulo="Erro ao carregar auditoria" mensagem={erro} />
+                        <div className="h-full flex items-center justify-center p-12">
+                            <EstadoErro titulo="Falha na Sincronização" mensagem={erro} />
                         </div>
                     ) : carregando && logs.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center gap-4 bg-muted/5 animate-in fade-in duration-500">
+                        <div className="h-full flex flex-col items-center justify-center gap-6 animate-in fade-in duration-500">
                              <Carregando Centralizar={false} tamanho="lg" />
-                             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Sincronizando Auditoria</span>
+                             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Indexando Registros de Auditoria</span>
                         </div>
                     ) : logs.length === 0 ? (
-                        (busca || filtroModulo || filtroAcao || dataInicio || dataFim || modoVisualizacao === 'otimizada') ? (
-                            <EstadoVazio 
-                                tipo="pesquisa"
-                                titulo="Nenhum resultado filtrado"
-                                descricao={modoVisualizacao === 'otimizada' ? "Não há registros nos últimos 3 meses para os filtros atuais. Tente mudar para 'Histórico'." : "Não encontramos registros para os filtros aplicados."}
-                                compacto={true}
-                                acao={{
-                                    rotulo: "Ver histórico completo",
-                                    aoClicar: () => {
-                                        setModoVisualizacao('historico');
-                                        setBusca('');
-                                        setPagina(1);
-                                    }
-                                }}
-                            />
-                        ) : (
-                            <EstadoVazio 
-                                titulo="Deserto de Auditoria"
-                                descricao="Surpreendentemente, ainda não há nenhuma ação registrada no sistema. Tudo parece estar em paz absoluta."
-                            />
-                        )
+                        <EstadoVazio 
+                            tipo="pesquisa"
+                            titulo="Nenhum registro localizado"
+                            descricao="Refine seus filtros ou busque em períodos anteriores."
+                        />
                     ) : (
                         <table className="w-full border-collapse">
-                            <thead className="bg-muted border-b border-border sticky top-0 z-10 shadow-sm">
+                            <thead className="bg-muted/10 border-b border-border sticky top-0 z-10 backdrop-blur-md">
                                 <tr>
-                                    <th className="px-4 py-3 text-left text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Timestamp</th>
-                                    <th className="px-3 py-3 text-left text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Ação</th>
-                                    <th className="px-3 py-3 text-left text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Usuário</th>
-                                    <th className="px-3 py-3 text-left text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Histórico / Descrição</th>
-                                    <th className="px-3 py-3 text-left text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Módulo / Tabela</th>
+                                    <th className="px-5 py-4 text-left text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 w-[180px]">CRONÔMETRO (UTC)</th>
+                                    <th className="px-3 py-4 text-left text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 w-[120px]">OPERAÇÃO</th>
+                                    <th className="px-3 py-4 text-left text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 w-[200px]">AGENTE RESPONSÁVEL</th>
+                                    <th className="px-3 py-4 text-left text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">DESCRIÇÃO DO EVENTO</th>
+                                    <th className="px-5 py-4 text-left text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 w-[220px]">MÓDULO DE ORIGEM</th>
                                 </tr>
                             </thead>
-                            <tbody className={`divide-y divide-border/40 transition-opacity duration-300 ${carregando ? 'opacity-50' : 'opacity-100'}`}>
+                            <tbody className={`divide-y divide-border/20 transition-opacity duration-300 ${carregando ? 'opacity-50' : 'opacity-100'}`}>
                                 {logs.map(log => (
                                     <Fragment key={log.id}>
                                         <tr 
-                                            className={`hover:bg-muted/20 cursor-pointer transition-all ${expandidoId === log.id ? 'bg-primary/5' : ''}`}
+                                            className={`hover:bg-muted/5 cursor-pointer transition-all border-b border-border/10 last:border-none ${expandidoId === log.id ? 'bg-primary/5' : ''}`}
                                             onClick={() => setExpandidoId(expandidoId === log.id ? null : log.id)}
                                         >
-                                            <td className="px-4 py-4 text-muted-foreground font-mono text-[11px]">
+                                            <td className="px-5 py-5 text-muted-foreground/80 font-mono text-[10px] font-bold">
                                                 {formatarDataHora(log.criado_em)}
                                             </td>
-                                            <td className="px-3 py-4">
+                                            <td className="px-3 py-5">
                                                 <Emblema texto={log.acao} variante={getVarianteAcao(log.acao)} className="scale-90 origin-left" />
                                             </td>
-                                            <td className="px-3 py-4">
+                                            <td className="px-3 py-5 min-w-0">
                                                 {log.usuario_id || log.email ? (
-                                                    <div>
-                                                        <p className="text-xs font-bold text-foreground truncate max-w-[180px]">
-                                                            {log.nome || 'Usuário Deletado'}
+                                                    <div className="min-w-0">
+                                                        <p className="font-black text-foreground text-[11px] uppercase tracking-wide truncate">
+                                                            {log.nome || 'USUÁRIO EXCLUÍDO'}
                                                         </p>
-                                                        <p className="text-[10px] text-muted-foreground tracking-tight truncate max-w-[180px]">
+                                                        <p className="text-[10px] font-bold text-muted-foreground/40 truncate tracking-tighter">
                                                             {log.email}
                                                         </p>
                                                     </div>
                                                 ) : (
-                                                    <span className="text-muted-foreground italic text-[11px]">Sistema/Anônimo</span>
+                                                    <span className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-widest italic">SISTEMA CORE</span>
                                                 )}
                                             </td>
-                                            <td className="px-3 py-4 text-[13px] text-muted-foreground/80 font-medium truncate max-w-[280px]" title={log.descricao}>
-                                                {log.descricao}
+                                            <td className="px-3 py-5">
+                                                <p className="text-[12px] text-muted-foreground/80 font-medium truncate max-w-[400px]" title={log.descricao}>
+                                                    {log.descricao}
+                                                </p>
                                             </td>
-                                            <td className="px-3 py-4">
+                                            <td className="px-5 py-5">
                                                 <div className="flex items-center justify-between gap-3">
                                                     {(() => {
                                                         const info = getModuloInfo(log.modulo);
                                                         const Icone = info.icone;
                                                         return (
-                                                            <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-2xl border ${info.bg} ${info.borda} ${info.cor}`}>
-                                                                <Icone size={12} strokeWidth={2.5} />
-                                                                <span className="text-[10px] font-black uppercase tracking-widest">{info.label}</span>
+                                                            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border-2 ${info.bg} ${info.borda} ${info.cor}`}>
+                                                                <Icone size={12} strokeWidth={3} />
+                                                                <span className="text-[9px] font-black uppercase tracking-[0.15em]">{info.label}</span>
                                                             </div>
                                                         );
                                                     })()}
                                                     
-                                                    <div className="flex-1 flex flex-col items-end">
-                                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight truncate max-w-[80px]">
-                                                            {log.entidade_tipo || '—'}
-                                                        </span>
-                                                        <div className={`mt-1 p-1 rounded-2xl transition-transform ${expandidoId === log.id ? 'rotate-180 bg-primary/10 text-primary' : 'text-slate-300'}`}>
-                                                            <Activity size={12} />
-                                                        </div>
+                                                    <div className={`p-1.5 rounded-lg transition-all ${expandidoId === log.id ? 'rotate-180 bg-primary/20 text-primary' : 'text-muted-foreground/30 hover:bg-muted/40'}`}>
+                                                        <Activity size={12} strokeWidth={3} />
                                                     </div>
                                                 </div>
                                             </td>
                                         </tr>
                                         {expandidoId === log.id && (
-                                            <tr className="bg-slate-950/20 animate-in slide-in-from-top-2 duration-300">
-                                                <td colSpan={5} className="px-6 py-6 border-x border-border/20">
-                                                    <div className="flex flex-col gap-6">
+                                            <tr className="bg-muted/5 animate-in slide-in-from-top-2 duration-300">
+                                                <td colSpan={5} className="px-8 py-8">
+                                                    <div className="flex flex-col gap-8 max-w-6xl">
                                                         {/* Comparação De/Para (Visual) */}
                                                         {(log.dados_anteriores || log.dados_novos) && (
-                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                                <div className="space-y-3">
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                                <div className="space-y-4">
                                                                     <div className="flex items-center gap-2 px-1">
-                                                                        <div className="w-1.5 h-3 bg-slate-400 rounded-full" />
-                                                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Estado Anterior</span>
+                                                                        <div className="w-1.5 h-3 bg-muted-foreground/20 rounded-full" />
+                                                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">ESTADO ANTERIOR</span>
                                                                     </div>
-                                                                    <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-4 min-h-[80px]">
+                                                                    <div className="bg-background border border-border rounded-2xl p-5 min-h-[100px] shadow-inner font-mono">
                                                                         {log.dados_anteriores ? (
-                                                                            <pre className="text-[11px] text-slate-400 font-mono whitespace-pre-wrap">
-                                                                                {JSON.stringify(JSON.parse(log.dados_anteriores), null, 2)}
+                                                                            <pre className="text-[11px] text-muted-foreground font-mono whitespace-pre-wrap leading-relaxed">
+                                                                                {(() => {
+                                                                                    try {
+                                                                                        return JSON.stringify(JSON.parse(log.dados_anteriores), null, 2);
+                                                                                    } catch {
+                                                                                        return log.dados_anteriores;
+                                                                                    }
+                                                                                })()}
                                                                             </pre>
                                                                         ) : (
-                                                                            <span className="text-[11px] italic text-slate-600">Nenhum dado anterior (Criação)</span>
+                                                                            <div className="h-full flex items-center justify-center italic text-muted-foreground/20 text-[11px]">
+                                                                                Nenhum dado prévio registrado (Seed/Create)
+                                                                            </div>
                                                                         )}
                                                                     </div>
                                                                 </div>
 
-                                                                <div className="space-y-3">
+                                                                <div className="space-y-4">
                                                                     <div className="flex items-center gap-2 px-1">
                                                                         <div className="w-1.5 h-3 bg-primary rounded-full" />
-                                                                        <span className="text-[10px] font-black uppercase tracking-widest text-primary/80">Novos Dados</span>
+                                                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">ESTADO ATUALIZADO</span>
                                                                     </div>
-                                                                    <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 min-h-[80px]">
+                                                                    <div className="bg-primary/[0.03] border border-primary/20 rounded-2xl p-5 min-h-[100px] shadow-sm font-mono">
                                                                         {log.dados_novos ? (
-                                                                            <pre className="text-[11px] text-primary/90 font-mono whitespace-pre-wrap">
-                                                                                {JSON.stringify(JSON.parse(log.dados_novos), null, 2)}
+                                                                            <pre className="text-[11px] text-foreground font-mono whitespace-pre-wrap leading-relaxed font-semibold">
+                                                                                {(() => {
+                                                                                    try {
+                                                                                        return JSON.stringify(JSON.parse(log.dados_novos), null, 2);
+                                                                                    } catch {
+                                                                                        return log.dados_novos;
+                                                                                    }
+                                                                                })()}
                                                                             </pre>
                                                                         ) : (
-                                                                            <span className="text-[11px] italic text-slate-600">Nenhum dado novo (Exclusão)</span>
+                                                                            <div className="h-full flex items-center justify-center italic text-muted-foreground/20 text-[11px]">
+                                                                                Registro removido da base de dados (Delete)
+                                                                            </div>
                                                                         )}
                                                                     </div>
                                                                 </div>
@@ -258,23 +255,23 @@ export function PainelLogs() {    const {
                                                         )}
 
                                                         {/* JSON Completo (Debug) */}
-                                                        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
-                                                            <div className="px-5 py-3 border-b border-slate-800 bg-slate-900/50 flex items-center justify-between">
-                                                                <div className="flex items-center gap-2">
-                                                                    <Activity size={12} className="text-slate-500" />
-                                                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Payload Completo da Auditoria</span>
-                                                                </div>
+                                                        <div className="bg-slate-950 rounded-2xl overflow-hidden shadow-2xl border border-white/5">
+                                                            <div className="px-6 py-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
                                                                 <div className="flex items-center gap-3">
+                                                                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                                                    <span className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/60">DATA_PAYLOAD_TERMINAL</span>
+                                                                </div>
+                                                                <div className="flex items-center gap-4">
                                                                     <button 
                                                                         onClick={() => navigator.clipboard.writeText(JSON.stringify(log, null, 4))}
-                                                                        className="text-[9px] font-bold text-slate-500 hover:text-primary transition-colors uppercase tracking-widest"
+                                                                        className="text-[10px] font-black text-muted-foreground/40 hover:text-white transition-all uppercase tracking-tighter bg-white/5 px-3 py-1 rounded-lg"
                                                                     >
-                                                                        Copiar JSON
+                                                                        COPIAR OBJETO
                                                                     </button>
-                                                                    <span className="text-[10px] font-mono text-slate-700">ID: {log.id}</span>
+                                                                    <span className="text-[10px] font-mono text-muted-foreground/20 select-all">LOG_UUID: {log.id}</span>
                                                                 </div>
                                                             </div>
-                                                            <div className="p-5 max-h-[300px] overflow-auto scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
+                                                            <div className="p-6 max-h-[350px] overflow-auto custom-scrollbar">
                                                                 <pre className="text-emerald-400 font-mono text-[12px] leading-relaxed selection:bg-emerald-500/20">
                                                                     {JSON.stringify(log, null, 4)}
                                                                 </pre>
@@ -302,7 +299,6 @@ export function PainelLogs() {    const {
                     desabilitado={carregando}
                 />
             </div>
-
         </div>
     );
 }

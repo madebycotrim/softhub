@@ -61,17 +61,61 @@ app.use("*", (c, next) => {
     return _limiteGlobal(c, next);
 });
 
-// 3. Modo de Manutenção
+// 3. Modo de Manutenção (Regra de Governança)
 app.use('*', async (c, next) => {
-    const { softhub_kv } = c.env;
-    const emManutencao = await softhub_kv.get('MODO_MANUTENCAO');
-    
-    if (emManutencao === 'true' && !c.req.path.includes('/auth') && !c.req.path.includes('/configuracoes')) {
-        return c.json({ 
-            erro: 'Sistema em manutenção programada.',
-            detalhe: 'Estamos realizando melhorias. Voltamos em breve!' 
-        }, 503);
+    const { DB, softhub_kv } = c.env;
+    const path = c.req.path;
+
+    // Ignora checks para rotas essenciais
+    if (path === '/' || path.includes('/auth') || path.includes('/configuracoes/publico')) {
+        return await next();
     }
+
+    try {
+        const chave = 'modo_manutencao';
+        let v = await softhub_kv?.get(chave);
+
+        if (v === null) {
+            const row = await DB.prepare('SELECT valor FROM configuracoes_sistema WHERE chave = ?').bind(chave).first() as any;
+            if (row) {
+                v = row.valor;
+                if (softhub_kv) await softhub_kv.put(chave, v!, { expirationTtl: 3600 });
+            }
+        }
+
+        const emManutencao = v === 'true' || v === '"true"'; // Lida com formatos de string/JSON do KV
+
+        if (emManutencao) {
+            // Se estiver em manutenção, precisamos checar se é ADMIN antes de barrar
+            // Mas o middleware de auth ainda não rodou... 
+            // Vamos deixar o auth rodar e barrar depois? 
+            // Ou checar o token aqui manualmente?
+            
+            const authHeader = c.req.header('Authorization');
+            if (authHeader?.startsWith('Bearer ')) {
+                try {
+                    const { verify } = await import('hono/jwt');
+                    const token = authHeader.slice(7);
+                    const payload = await verify(token, c.env.JWT_SECRET, 'HS256') as any;
+                    
+                    if (payload.role === 'ADMIN') {
+                        return await next(); // Admin passa
+                    }
+                } catch {
+                    // Token inválido, segue para o bloqueio
+                }
+            }
+
+            // Se não é admin ou não está logado, bloqueia
+            return c.json({ 
+                erro: 'Sistema em manutenção programada.',
+                detalhe: 'Estamos realizando melhorias técnicas para sua melhor experiência. Administradores ainda possuem acesso.' 
+            }, 503);
+        }
+    } catch (e) {
+        console.error('[MAINTENANCE] Falha ao verificar status:', e);
+    }
+
     await next();
 });
 

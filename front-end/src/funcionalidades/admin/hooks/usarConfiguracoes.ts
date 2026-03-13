@@ -7,6 +7,8 @@ export interface ConfiguracoesSistema {
     permissoes_roles: Record<string, Record<string, boolean>>;
     dominios_autorizados: string[];
     auto_cadastro: boolean;
+    ips_autorizados_ponto: string[];
+    modo_manutencao: boolean;
 }
 
 export function usarConfiguracoes() {
@@ -32,8 +34,16 @@ export function usarConfiguracoes() {
                 dados.dominios_autorizados = ['unieuro.com.br', 'unieuro.edu.br'];
             }
 
+            if (!Array.isArray(dados.ips_autorizados_ponto)) {
+                dados.ips_autorizados_ponto = [];
+            }
+
             if (typeof dados.auto_cadastro !== 'boolean') {
                 dados.auto_cadastro = false;
+            }
+
+            if (typeof dados.modo_manutencao !== 'boolean') {
+                dados.modo_manutencao = false;
             }
 
             setConfiguracoes(dados);

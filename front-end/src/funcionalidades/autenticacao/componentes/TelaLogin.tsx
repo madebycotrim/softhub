@@ -28,6 +28,22 @@ export default function TelaLogin() {
     const [carregando, setCarregando] = useState(false);
     const [erroLocal, setErroLocal] = useState<string | null>(null);
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+    const [configPublica, setConfigPublica] = useState<{ dominios_autorizados: string[], modo_manutencao: boolean } | null>(null);
+
+    // ─── Buscar Governança Pública (Domínios e Manutenção) ──────────────────────
+    useEffect(() => {
+        const carregarConfig = async () => {
+            try {
+                const res = await api.get('/api/configuracoes/publico');
+                setConfigPublica(res.data);
+            } catch (e) {
+                console.error('[Login] Falha ao carregar configurações públicas:', e);
+                // Fallback de segurança em caso de falha na API
+                setConfigPublica({ dominios_autorizados: ['unieuro.com.br'], modo_manutencao: false });
+            }
+        };
+        carregarConfig();
+    }, []);
 
     useEffect(() => {
         const handleBeforeInstallPrompt = (e: any) => {
@@ -72,9 +88,9 @@ export default function TelaLogin() {
             travaAuthGlobal = true;
 
             const email = (conta.username || '').toLowerCase();
-            const dominiosValidos = ambiente.VITE_DOMINIOS_INSTITUCIONAIS;
+            const dominiosValidos = configPublica?.dominios_autorizados || ['unieuro.com.br'];
             
-            if (!dominiosValidos.some(d => email.endsWith(`@${d}`))) {
+            if (!dominiosValidos.some(d => email.endsWith(`@${d.toLowerCase()}`))) {
                 console.warn('[Login] ❌ Domínio não autorizado:', email);
                 setErroLocal(`Use o e-mail institucional (${dominiosValidos.map(d => `@${d}`).join(' ou ')}).`);
                 setCarregando(false);
@@ -129,7 +145,7 @@ export default function TelaLogin() {
         return () => {
             if (callbackId) instance.removeEventCallback(callbackId);
         };
-    }, [instance, navigate, entrar, estaAutenticado, erroLocal]);
+    }, [instance, navigate, entrar, estaAutenticado, erroLocal, configPublica]);
 
     const handleLogin = async () => {
         setCarregando(true);
@@ -214,6 +230,10 @@ export default function TelaLogin() {
                                 </p>
                             </div>
 
+                            {configPublica?.modo_manutencao && (
+                                <Alerta tipo="info" mensagem="O sistema está em manutenção. Apenas administradores podem entrar." flutuante />
+                            )}
+
                             {erro && (
                                 <Alerta tipo="erro" mensagem={erro} flutuante />
                             )}
@@ -254,7 +274,7 @@ export default function TelaLogin() {
                                 <div className="flex items-center justify-center lg:justify-start gap-1.5 text-slate-500 text-[11px] lg:text-[11.5px] font-medium">
                                     <Info size={11} className="shrink-0" />
                                     <span>
-                                        Use seu e-mail institucional ({ambiente.VITE_DOMINIOS_INSTITUCIONAIS.map(d => `@${d}`).join(' ou ')})
+                                        Use seu e-mail institucional ({ (configPublica?.dominios_autorizados || ['unieuro.com.br']).map(d => `@${d}`).join(' ou ') })
                                     </span>
                                 </div>
 

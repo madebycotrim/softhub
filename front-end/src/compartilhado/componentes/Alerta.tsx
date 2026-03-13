@@ -1,7 +1,7 @@
-import { CheckCircle2, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, Info } from 'lucide-react';
 
 interface AlertaProps {
-    tipo: 'erro' | 'sucesso';
+    tipo: 'erro' | 'sucesso' | 'info';
     mensagem: string;
     className?: string;
     flutuante?: boolean;
@@ -14,6 +14,18 @@ interface AlertaProps {
 export function Alerta({ tipo, mensagem, className = '', flutuante = false }: AlertaProps) {
     if (!mensagem) return null;
 
+    const cores = {
+        sucesso: 'bg-emerald-600/90 backdrop-blur-xl text-white border border-white/20',
+        erro: 'bg-[#e1003d]/90 backdrop-blur-xl text-white border border-white/20',
+        info: 'bg-slate-800/90 backdrop-blur-xl text-white border border-white/20'
+    };
+
+    const brilhos = {
+        sucesso: 'bg-emerald-400',
+        erro: 'bg-red-400',
+        info: 'bg-blue-400'
+    };
+
     return (
         <div className={`flex justify-center w-full pointer-events-none ${flutuante ? 'fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] px-4' : ''} ${className}`}>
             <div className={`
@@ -23,13 +35,10 @@ export function Alerta({ tipo, mensagem, className = '', flutuante = false }: Al
                 text-[11px] font-black uppercase tracking-[0.2em] leading-tight
                 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]
                 animate-in slide-in-from-bottom-8 zoom-in-95 fade-in duration-700
-                ${tipo === 'sucesso'
-                    ? 'bg-emerald-600/90 backdrop-blur-xl text-white border border-white/20'
-                    : 'bg-[#e1003d]/90 backdrop-blur-xl text-white border border-white/20'
-                }
+                ${cores[tipo]}
             `}>
                 {/* 🎇 Efeito de Brilho Dinâmico de Fundo */}
-                <div className={`absolute -inset-4 opacity-30 blur-3xl animate-pulse -z-10 ${tipo === 'sucesso' ? 'bg-emerald-400' : 'bg-red-400'}`} />
+                <div className={`absolute -inset-4 opacity-30 blur-3xl animate-pulse -z-10 ${brilhos[tipo]}`} />
                 
                 {/* 🌊 Gradiente de Profundidade */}
                 <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-transparent pointer-events-none" />
@@ -40,10 +49,9 @@ export function Alerta({ tipo, mensagem, className = '', flutuante = false }: Al
                         flex items-center justify-center w-10 h-10 rounded-2xl shrink-0
                         bg-white/10 shadow-inner border border-white/10
                     `}>
-                        {tipo === 'sucesso'
-                            ? <CheckCircle2 className="w-5 h-5" />
-                            : <AlertTriangle className="w-5 h-5" />
-                        }
+                        {tipo === 'sucesso' && <CheckCircle2 className="w-5 h-5" />}
+                        {tipo === 'erro' && <AlertTriangle className="w-5 h-5" />}
+                        {tipo === 'info' && <Info className="w-5 h-5" />}
                     </div>
                     
                     {/* Mensagem centralizada e sem corte */}

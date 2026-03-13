@@ -511,30 +511,30 @@ function CardMembroFino({ membro, aoRemover, aoMover }: { membro: MembroSimples,
     const podeEditar = usarPermissaoAcesso('equipes:editar_equipe');
 
     return (
-        <div className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-2xl hover:border-slate-300 transition-all group">
-            <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between p-2.5 bg-muted/10 border border-transparent hover:border-border hover:bg-card rounded-xl transition-all group">
+            <div className="flex items-center gap-2.5 min-w-0">
                 <Avatar nome={membro.nome} fotoPerfil={membro.foto_perfil} tamanho="sm" />
-                <div>
-                    <p className="text-[11px] font-bold text-slate-900">{membro.nome}</p>
-                    <p className="text-[9px] text-slate-400 font-medium truncate max-w-[120px]">{membro.email}</p>
+                <div className="min-w-0">
+                    <p className="text-[10px] font-black uppercase tracking-tight text-foreground truncate">{membro.nome}</p>
+                    <p className="text-[9px] text-muted-foreground/60 font-bold truncate tracking-tight">{membro.email}</p>
                 </div>
             </div>
             {podeEditar && (
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                    <Tooltip texto="Mover para outro grupo">
+                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-all shrink-0">
+                    <Tooltip texto="Transferir Membro">
                         <button
                             onClick={aoMover}
-                            className="p-1.5 text-slate-300 hover:text-blue-500 transition-all"
+                            className="p-1.5 text-muted-foreground hover:text-primary transition-all active:scale-90"
                         >
-                            <ArrowRightLeft size={14} />
+                            <ArrowRightLeft size={12} strokeWidth={2.5} />
                         </button>
                     </Tooltip>
-                    <Tooltip texto="Remover deste grupo">
+                    <Tooltip texto="Remover da Equipe">
                         <button
                             onClick={aoRemover}
-                            className="p-1.5 text-slate-300 hover:text-red-500 transition-all"
+                            className="p-1.5 text-muted-foreground hover:text-rose-500 transition-all active:scale-90"
                         >
-                            <Plus size={14} className="rotate-45" />
+                            <Trash2 size={12} strokeWidth={2.5} />
                         </button>
                     </Tooltip>
                 </div>
@@ -750,7 +750,7 @@ function DetalheEquipe({
             <div className="flex-1 overflow-y-auto min-h-0 pr-2 -mr-2 custom-scrollbar">
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 {grupos.length === 0 ? (
-                    <div className="col-span-full py-12 bg-white/50 border-2 border-dashed border-slate-100 rounded-2xl">
+                    <div className="col-span-full py-16 bg-muted/5 border-2 border-dashed border-border rounded-2xl flex flex-col items-center justify-center">
                         <EstadoVazio 
                             titulo="Equipe sem Grupos"
                             descricao="Esta equipe ainda não possui grupos de trabalho definidos."
@@ -767,45 +767,40 @@ function DetalheEquipe({
                         const inicial = devePularPrimeira ? partes[1].charAt(0).toUpperCase() : partes[0].charAt(0).toUpperCase();
 
                         return (
-                            <div key={g.id} className="bg-slate-50/50 border border-slate-200 rounded-2xl p-5 flex flex-col h-full min-h-[400px] shadow-sm hover:shadow-md transition-all overflow-hidden">
-                                <div className="flex items-center justify-between mb-5">
+                            <div key={g.id} className="bg-card border border-border rounded-2xl p-6 flex flex-col h-full min-h-[400px] shadow-sm hover:shadow-md transition-all overflow-hidden group/gcard">
+                                <div className="flex items-center justify-between mb-6">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-2xl bg-white shadow-sm border border-slate-100 text-slate-400 flex items-center justify-center font-bold text-lg">
+                                        <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-xl border border-primary/20">
                                             {inicial}
                                         </div>
                                         <div className="flex-1">
                                             {editandoId === g.id ? (
-                                                <input
-                                                    autoFocus
-                                                    value={nomeTemp}
-                                                    onChange={e => setNomeTemp(e.target.value)}
-                                                    onKeyDown={e => {
-                                                        if (e.key === 'Enter') handleSalvarInline(g.id);
-                                                        if (e.key === 'Escape') setEditandoId(null);
-                                                    }}
-                                                    onBlur={(e) => {
-                                                        if (!e.currentTarget.parentElement?.parentElement?.parentElement?.contains(e.relatedTarget as Node)) {
-                                                            setEditandoId(null);
-                                                        }
-                                                    }}
-                                                    className="flex-1 max-w-[200px] bg-transparent border-b border-slate-200 outline-none text-lg font-bold text-slate-900 p-0 tracking-tight focus:border-slate-400 transition-colors"
-                                                    disabled={salvandoInline}
-                                                />
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        autoFocus
+                                                        value={nomeTemp}
+                                                        onChange={e => setNomeTemp(e.target.value)}
+                                                        onKeyDown={e => {
+                                                            if (e.key === 'Enter') handleSalvarInline(g.id);
+                                                            if (e.key === 'Escape') setEditandoId(null);
+                                                        }}
+                                                        className="bg-transparent border-b-2 border-primary/30 outline-none text-lg font-black text-foreground p-0 tracking-tight focus:border-primary transition-all uppercase"
+                                                        disabled={salvandoInline}
+                                                    />
+                                                </div>
                                             ) : (
                                                 <div className="flex items-center gap-2 group/title">
-                                                    <h5 className="text-lg font-bold text-slate-900 tracking-tight">{g.nome}</h5>
+                                                    <h5 className="text-lg font-black text-foreground tracking-tight uppercase">{g.nome}</h5>
                                                     {podeEditarGrupo && (
-                                                        <Tooltip texto="Renomear grupo">
-                                                            <button 
-                                                                onClick={() => {
-                                                                    setEditandoId(g.id);
-                                                                    setNomeTemp(g.nome);
-                                                                }}
-                                                                className="opacity-0 group-hover/title:opacity-100 p-1 text-slate-300 hover:text-slate-600 transition-all"
-                                                            >
-                                                                <Pencil size={14} />
-                                                            </button>
-                                                        </Tooltip>
+                                                        <button 
+                                                            onClick={() => {
+                                                                setEditandoId(g.id);
+                                                                setNomeTemp(g.nome);
+                                                            }}
+                                                            className="opacity-0 group-hover/title:opacity-100 p-1 text-muted-foreground hover:text-primary transition-all"
+                                                        >
+                                                            <Pencil size={14} />
+                                                        </button>
                                                     )}
                                                 </div>
                                             )}
@@ -813,30 +808,28 @@ function DetalheEquipe({
                                     </div>
                                     <div className="flex items-center gap-1">
                                         {editandoId === g.id ? (
-                                            <div className="flex items-center">
-                                                <Tooltip texto="Confirmar">
-                                                    <button 
-                                                        onClick={() => handleSalvarInline(g.id)} 
-                                                        disabled={salvandoInline}
-                                                        className="p-2 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-2xl transition-all disabled:opacity-30" 
-                                                    >
-                                                        {salvandoInline ? <Carregando Centralizar={false} tamanho="sm" className="border-t-emerald-500 border-emerald-500/30" /> : <Check size={18} strokeWidth={2.5} />}
-                                                    </button>
-                                                </Tooltip>
+                                            <div className="flex items-center gap-1">
+                                                <button 
+                                                    onClick={() => handleSalvarInline(g.id)} 
+                                                    disabled={salvandoInline}
+                                                    className="p-2 text-emerald-500 hover:bg-emerald-500/10 rounded-xl transition-all disabled:opacity-30" 
+                                                >
+                                                    {salvandoInline ? <Carregando Centralizar={false} tamanho="sm" /> : <Check size={18} strokeWidth={3} />}
+                                                </button>
                                                 <button
                                                     onClick={() => setEditandoId(null)}
                                                     disabled={salvandoInline}
-                                                    className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-2xl transition-all disabled:opacity-30"
+                                                    className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all disabled:opacity-30"
                                                 >
-                                                    <X size={18} strokeWidth={2.5} />
+                                                    <X size={18} strokeWidth={3} />
                                                 </button>
                                             </div>
                                         ) : podeEditarGrupo && (
-                                            <Tooltip texto="Excluir grupo">
+                                            <Tooltip texto="Remover Grupo">
                                                 <button 
                                                     onClick={() => aoExcluirGrupo(g)} 
                                                     disabled={salvandoInline}
-                                                    className="p-2 text-slate-300 hover:text-red-500 transition-colors disabled:opacity-30"
+                                                    className="p-2 text-muted-foreground/30 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all opacity-0 group-hover/gcard:opacity-100"
                                                 >
                                                     <Trash2 size={18} />
                                                 </button>
@@ -853,19 +846,20 @@ function DetalheEquipe({
                                         });
                                         return (
                                             <>
-                                                <div className="flex items-center justify-between mb-3 px-1">
-                                                    <h6 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
-                                                        Pessoas ({membrosDoGrupo.length})
+                                                <div className="flex items-center justify-between mb-4">
+                                                    <h6 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">
+                                                        OPERADORES ({membrosDoGrupo.length})
                                                     </h6>
                                                     {podeEditarEquipe && (
-                                                        <Tooltip texto="Alocar membro">
-                                                            <button onClick={() => aoAlocar(g.id, equipe.id)} className="w-8 h-8 rounded-2xl bg-white border border-slate-100 text-slate-400 flex items-center justify-center hover:bg-slate-50 hover:text-blue-600 transition-all shadow-sm">
-                                                                <Plus size={16} />
-                                                            </button>
-                                                        </Tooltip>
+                                                        <button 
+                                                            onClick={() => aoAlocar(g.id, equipe.id)} 
+                                                            className="p-1.5 bg-muted/20 hover:bg-primary/10 text-muted-foreground hover:text-primary rounded-lg text-[10px] font-black flex items-center gap-1 transition-all border border-border/50"
+                                                        >
+                                                            <Plus size={12} strokeWidth={3} /> ALOCAR
+                                                        </button>
                                                     )}
                                                 </div>
-                                                <div className="flex-1 overflow-y-auto min-h-0 space-y-2.5 pr-2 custom-scrollbar">
+                                                <div className="flex-1 overflow-y-auto min-h-0 space-y-2 pr-1 custom-scrollbar">
                                                     {membrosDoGrupo.map(membro => (
                                                         <CardMembroFino 
                                                             key={membro.id} 
@@ -875,8 +869,8 @@ function DetalheEquipe({
                                                         />
                                                     ))}
                                                     {membrosDoGrupo.length === 0 && (
-                                                        <div className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200/40 rounded-2xl bg-white/50 my-2 py-8">
-                                                            <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Vazio</p>
+                                                        <div className="flex flex-col items-center justify-center border-2 border-dashed border-border/40 rounded-xl bg-muted/5 py-10">
+                                                            <p className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-widest">Base de Dados Vazia</p>
                                                         </div>
                                                     )}
                                                 </div>
@@ -1012,207 +1006,115 @@ export function GerenciarEquipes() {
     }, [modalLider, idEquipeAtiva, equipeAtiva, editarEquipe]);
 
     return (
-        <div className="h-[calc(100vh-80px)] lg:h-[calc(100vh-48px)] flex flex-col overflow-hidden px-0">
+        <div className="flex flex-col h-full space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-10">
             <CabecalhoFuncionalidade
-                titulo="Gestão de Equipes"
-                subtitulo="Organize a estrutura de comando e os grupos de participação da equipe."
+                titulo="Estrutura Organizacional"
+                subtitulo="Gestão de equipes, grupos de trabalho e alocação de lideranças."
                 icone={LayoutGrid}
-                variante="destaque"
             >
-                {podeCriarEquipe && (
+                <div className="flex items-center gap-3">
                     <button
                         onClick={() => setModalOrg({ aberto: true, tipo: 'equipe' })}
-                        className="h-11 px-5 rounded-2xl bg-blue-600 text-white font-bold text-xs shadow-md hover:bg-blue-700 transition-all flex items-center gap-2 active:scale-95 uppercase tracking-widest"
+                        className="h-11 px-5 bg-primary text-primary-foreground rounded-xl flex items-center gap-2 text-[11px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 active:scale-95 transition-all hover:bg-primary/90"
                     >
-                        <Plus size={18} />
+                        <Plus size={18} strokeWidth={3} />
                         <span>Nova Equipe</span>
                     </button>
-                )}
+                </div>
             </CabecalhoFuncionalidade>
 
-            <div className="flex-1 flex overflow-hidden pt-6 gap-6 relative">
+            <div className="flex-1 flex flex-col lg:flex-row gap-8 min-h-0">
                 {carregando && equipesAtivas.length === 0 ? (
-                    <div className="flex-1 flex flex-col items-center justify-center gap-4 bg-white border border-slate-100 rounded-2xl animate-in fade-in duration-500">
-                        <Carregando Centralizar={false} tamanho="lg" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Sincronizando Estrutura</span>
-                    </div>
-                ) : erro && equipesAtivas.length === 0 ? (
-                    <EstadoErro titulo="Erro ao carregar estrutura" mensagem={erro} />
+                    <div className="flex-1 flex justify-center items-center h-96"><Carregando /></div>
                 ) : (
                     <>
-                        {/* Sidebar: Lista de Equipes */}
-                        <aside className="w-72 hidden lg:flex flex-col shrink-0">
-                    <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm overflow-hidden flex flex-col flex-1">
-                        <div className="flex items-center justify-between mb-3 px-1">
-                            <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400">EQUIPES ({equipesFiltradas.length})</h3>
-                        </div>
-
-                        <BarraFiltros
-                            busca={buscaEquipe}
-                            aoMudarBusca={setBuscaEquipe}
-                            placeholderBusca="Buscar equipe..."
-                            className="!p-1 !rounded-2xl !bg-slate-50 border-slate-100 shadow-none mb-4"
-                        />
-
-                        <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
-                            {equipesFiltradas.map((e: Equipe) => (
-                                <div key={e.id} className="relative group/card">
-                                    <div
-                                        onClick={() => setIdEquipeAtiva(e.id)}
-                                        className={`w-full text-left p-4 rounded-2xl transition-all duration-300 border group/btn relative cursor-pointer ${
-                                            idEquipeAtiva === e.id 
-                                            ? 'bg-white border-slate-200/80 shadow-sm' 
-                                            : 'bg-white/40 border-slate-100/60 hover:bg-white hover:border-slate-200 hover:shadow-sm'
-                                        }`}
-                                    >
-                                        <div className="flex items-center flex-1 min-w-0">
-                                            {/* Indicador de interação discreto */}
-                                            <div className={`w-1 h-1 rounded-full transition-all shadow-sm mr-3 ${
-                                                idEquipeAtiva === e.id 
-                                                ? 'bg-blue-500 scale-125' 
-                                                : 'bg-slate-200 group-hover/card:bg-blue-500 group-hover/card:scale-125'
-                                            }`} />
-
-                                            <div className="flex flex-col flex-1 min-w-0">
-                                                {editandoSidebarId === e.id ? (
-                                                    <div className="flex items-center gap-2 w-full">
-                                                        <input
-                                                            autoFocus
-                                                            value={nomeSidebarTemp}
-                                                            onChange={ev => setNomeSidebarTemp(ev.target.value)}
-                                                            onKeyDown={async (ev) => {
-                                                                if (ev.key === 'Enter') {
-                                                                    if (nomeSidebarTemp.trim() && !salvandoSidebarInline) {
-                                                                        setSalvandoSidebarInline(true);
-                                                                        await editarEquipe(e.id, { nome: nomeSidebarTemp });
-                                                                        setSalvandoSidebarInline(false);
-                                                                        setEditandoSidebarId(null);
-                                                                    }
-                                                                }
-                                                                if (ev.key === 'Escape') setEditandoSidebarId(null);
-                                                            }}
-                                                            onBlur={(ev) => {
-                                                                if (!ev.currentTarget.parentElement?.contains(ev.relatedTarget as Node)) {
-                                                                    setEditandoSidebarId(null);
-                                                                }
-                                                            }}
-                                                            onClick={ev => ev.stopPropagation()}
-                                                            className="flex-1 min-w-0 bg-transparent border-b border-slate-200 outline-none text-sm font-bold text-foreground py-0.5 focus:border-slate-400 transition-all"
-                                                        />
-                                                        <div className="flex items-center">
-                                                            <Tooltip texto="Confirmar">
-                                                                <button 
-                                                                    onClick={async (ev) => {
-                                                                        ev.stopPropagation();
-                                                                        if (nomeSidebarTemp.trim() && !salvandoSidebarInline) {
-                                                                            setSalvandoSidebarInline(true);
-                                                                            await editarEquipe(e.id, { nome: nomeSidebarTemp });
-                                                                            setSalvandoSidebarInline(false);
-                                                                            setEditandoSidebarId(null);
-                                                                        }
-                                                                    }}
-                                                                    className="p-1 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-2xl transition-all"
-                                                                >
-                                                                    {salvandoSidebarInline ? <Carregando Centralizar={false} tamanho="sm" className="w-3.5 h-3.5" /> : <Check size={14} strokeWidth={3} />}
-                                                                </button>
-                                                            </Tooltip>
-                                                            <Tooltip texto="Cancelar">
-                                                                <button 
-                                                                    onClick={(ev) => {
-                                                                        ev.stopPropagation();
-                                                                        setEditandoSidebarId(null);
-                                                                    }}
-                                                                    className="p-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-2xl transition-all"
-                                                                >
-                                                                    <X size={14} strokeWidth={3} />
-                                                                </button>
-                                                            </Tooltip>
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <>
-                                                        <div className="flex items-center gap-2 group/title w-fit max-w-full">
-                                                            <p className={`font-black text-sm tracking-tight transition-colors ${idEquipeAtiva === e.id ? 'text-slate-900' : 'text-slate-500 group-hover/btn:text-slate-900'}`}>{e.nome}</p>
-                                                            {podeEditarEquipe && (
-                                                                <Tooltip texto="Renomear equipe">
-                                                                    <button
-                                                                        onClick={(ev) => {
-                                                                            ev.stopPropagation();
-                                                                            setEditandoSidebarId(e.id);
-                                                                            setNomeSidebarTemp(e.nome);
-                                                                        }}
-                                                                        className="opacity-0 group-hover/title:opacity-100 p-1 text-slate-300 hover:text-blue-500 transition-all"
-                                                                    >
-                                                                        <Pencil size={11} />
-                                                                    </button>
-                                                                </Tooltip>
-                                                            )}
-                                                        </div>
-                                                        <div className="flex items-center gap-2 mt-0.5">
-                                                            <p className="text-[9px] font-black text-slate-400/60 uppercase tracking-[0.15em] truncate">
-                                                                {e.total_membros || 0} Membros
-                                                            </p>
-                                                        </div>
-                                                    </>
-                                                )}
-                                            </div>
+                        {/* Sidebar de Equipes */}
+                        <aside className="w-full lg:w-72 xl:w-80 flex flex-col shrink-0">
+                            <div className="bg-card border border-border rounded-2xl shadow-sm flex flex-col h-full overflow-hidden">
+                                <div className="p-5 border-b border-border bg-muted/10 flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <div className="p-2 bg-primary/10 rounded-lg text-primary shadow-sm shadow-primary/5">
+                                            <Users size={14} strokeWidth={2.5} />
                                         </div>
+                                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground leading-none">Equipes Ativas</h3>
                                     </div>
-                                    
-                                    {!editandoSidebarId && podeEditarEquipe && (
-                                        <Tooltip texto="Excluir equipe">
-                                            <button
-                                                onClick={(ev) => {
-                                                    ev.stopPropagation();
-                                                    setConfirmacaoExclusao({ id: e.id, nome: e.nome, tipo: 'equipe' });
-                                                }}
-                                                className="absolute top-4 right-3 p-1.5 text-slate-300/40 hover:text-rose-500 opacity-0 group-hover/card:opacity-100 transition-all active:scale-90"
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
-                                        </Tooltip>
+                                    <span className="text-[9px] font-black text-muted-foreground/60">{equipesAtivas.length}</span>
+                                </div>
+
+                                <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+                                    {equipesAtivas.map(e => (
+                                        <div
+                                            key={e.id}
+                                            onClick={() => setIdEquipeAtiva(e.id)}
+                                            className={`group/card relative flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer ${
+                                                idEquipeAtiva === e.id
+                                                    ? 'bg-primary/10 border-primary text-primary shadow-sm'
+                                                    : 'bg-muted/10 border-transparent hover:bg-muted/30 hover:border-border/50 text-muted-foreground'
+                                            }`}
+                                        >
+                                            <div className="flex flex-col min-w-0 pr-6">
+                                                <span className={`text-[11px] font-black uppercase tracking-wider truncate mb-1 ${idEquipeAtiva === e.id ? 'text-primary' : 'text-foreground/80'}`}>
+                                                    {e.nome}
+                                                </span>
+                                                <div className="flex items-center gap-1.5 opacity-60">
+                                                    <Users size={10} />
+                                                    <span className="text-[9px] font-bold uppercase tracking-tight">{e.total_membros || 0} Membros</span>
+                                                </div>
+                                            </div>
+
+                                            {podeEditarEquipe && (
+                                                <button
+                                                    onClick={(ev) => {
+                                                        ev.stopPropagation();
+                                                        setConfirmacaoExclusao({ id: e.id, nome: e.nome, tipo: 'equipe' });
+                                                    }}
+                                                    className="opacity-0 group-hover/card:opacity-100 p-2 rounded-lg text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-all active:scale-95"
+                                                >
+                                                    <Trash2 size={12} />
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+
+                                    {equipesAtivas.length === 0 && (
+                                        <div className="py-20 text-center border border-dashed border-border rounded-xl">
+                                            <p className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-widest">Nenhuma equipe</p>
+                                        </div>
                                     )}
                                 </div>
-                            ))}
-                            {equipesAtivas.length === 0 && (
-                                <div className="py-20 text-center border-2 border-dashed border-slate-100 rounded-2xl">
-                                    <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Nenhuma equipe</p>
+                            </div>
+                        </aside>
+
+                        {/* Detalhe da Equipe Selecionada */}
+                        <main className="flex-1 flex flex-col min-w-0 min-h-0">
+                            {equipeAtiva ? (
+                                <DetalheEquipe
+                                    key={equipeAtiva.id}
+                                    equipe={equipeAtiva}
+                                    grupos={gruposDaEquipe}
+                                    membros={membros}
+                                    aoAdicionarGrupo={() => setModalOrg({ aberto: true, tipo: 'grupo', dados: { equipe_id: idEquipeAtiva } })}
+                                    aoExcluirGrupo={(g) => setConfirmacaoExclusao({ id: g.id, nome: g.nome, tipo: 'grupo' })}
+                                    aoAlocar={(gId, eId) => setModalAlocacao({ grupoId: gId, equipeId: eId })}
+                                    aoRemoverMembro={(mId) => alocarMembro(mId, null, null)}
+                                    aoMoverMembro={(mId, gOrigemId) => setModalMover({ membroId: mId, grupoOrigemId: gOrigemId, equipeId: idEquipeAtiva! })}
+                                    aoSelecionarLider={(tipo) => setModalLider({ aberto: true, tipo })}
+                                    aoSalvarNomeGrupo={(id, nome) => editarGrupo(id, { nome })}
+                                    aoSalvarNomeEquipe={(id, nome) => editarEquipe(id, { nome })}
+                                />
+                            ) : (
+                                <div className="flex-1 flex flex-col items-center justify-center bg-card border border-border rounded-2xl border-dashed">
+                                    <div className="p-6 bg-muted/20 rounded-full text-muted-foreground/30 mb-4 animate-pulse">
+                                        <LayoutGrid size={48} strokeWidth={1} />
+                                    </div>
+                                    <h3 className="text-[12px] font-black uppercase tracking-widest text-foreground/40">Selecione uma Equipe</h3>
+                                    <p className="text-[10px] text-muted-foreground/40 mt-2">Escolha na lista lateral para gerenciar as equipes</p>
                                 </div>
                             )}
-                        </div>
-                    </div>
-                </aside>
-
-                {/* Detalhe da Equipe Selecionada */}
-                <main className="flex-1 flex flex-col min-w-0">
-                    {equipeAtiva ? (
-                        <DetalheEquipe
-                            key={equipeAtiva.id}
-                            equipe={equipeAtiva}
-                            grupos={gruposDaEquipe}
-                            membros={membros}
-                            aoAdicionarGrupo={() => setModalOrg({ aberto: true, tipo: 'grupo', dados: { equipe_id: idEquipeAtiva } })}
-                            aoExcluirGrupo={(g) => setConfirmacaoExclusao({ id: g.id, nome: g.nome, tipo: 'grupo' })}
-                            aoAlocar={(gId, eId) => setModalAlocacao({ grupoId: gId, equipeId: eId })}
-                            aoRemoverMembro={(mId) => alocarMembro(mId, null, null)}
-                            aoMoverMembro={(mId, gOrigemId) => setModalMover({ membroId: mId, grupoOrigemId: gOrigemId, equipeId: idEquipeAtiva! })}
-                            aoSelecionarLider={(tipo) => setModalLider({ aberto: true, tipo })}
-                            aoSalvarNomeGrupo={(id, nome) => editarGrupo(id, { nome })}
-                            aoSalvarNomeEquipe={(id, nome) => editarEquipe(id, { nome })}
-                        />
-                    ) : (
-                        <div className="flex-1 flex items-center justify-center bg-white border border-slate-100 rounded-2xl">
-                            <EstadoVazio 
-                                titulo="Selecione uma Equipe"
-                                descricao="Escolha uma equipe na lateral para gerenciar lideranças, grupos e membros alocados."
-                                iconeCustom={<LayoutGrid size={48} className="text-blue-500/30" />}
-                            />
-                        </div>
-                    )}
-                </main>
-            </>
-        )}
-    </div>
+                        </main>
+                    </>
+                )}
+            </div>
 
             {/* Modais */}
             {modalOrg && (
@@ -1310,42 +1212,46 @@ function FormGrupoEquipe({ titulo, tipo, equipes, equipeAtivaId, aoSalvar, aoFec
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-4">
-                <div>
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Nome {tipo === 'equipe' ? 'da Equipe' : 'do Grupo'}</label>
+        <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-5">
+                <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">Nome {tipo === 'equipe' ? 'da Equipe' : 'do Grupo'}</label>
                     <input
                         required
+                        autoFocus
                         value={nome}
                         onChange={e => setNome(e.target.value)}
                         placeholder={tipo === 'equipe' ? "Ex: Desenvolvimento, Comercial..." : "Ex: Squad Alpha, Operações..."}
-                        className="w-full h-12 bg-slate-50 border border-slate-200 rounded-2xl px-4 text-sm focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+                        className="w-full h-12 bg-muted/10 border border-border rounded-xl px-4 text-sm font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-muted-foreground/30"
                     />
                 </div>
 
                 {tipo === 'grupo' && equipes && !equipeAtivaId && (
                     <SeletorBuscavel
-                        label="Equipe (Comando Superior)"
+                        label="Equipe Responsável"
                         valor={equipeId}
                         aoAlterar={setEquipeId}
                         opcoes={equipes}
-                        placeholderVazio="Selecione a equipe..."
+                        placeholderVazio="Selecione a equipe de comando..."
                         icone={Users}
                     />
                 )}
-
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 pt-6 mt-6 border-t border-slate-100">
-                <button type="button" onClick={aoFechar} className="w-full sm:flex-1 h-12 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-2xl transition-all">
-                    Cancelar
+            <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-border">
+                <button 
+                    type="button" 
+                    onClick={aoFechar} 
+                    className="h-12 px-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground hover:bg-muted/20 rounded-xl transition-all"
+                >
+                    Descartar
                 </button>
                 <button
                     type="submit"
                     disabled={salvando || !nome.trim()}
-                    className="w-full sm:flex-[2] h-12 bg-blue-600 text-white rounded-2xl text-[10px] font-black shadow-md hover:bg-blue-700 transition-all disabled:opacity-30 flex items-center justify-center uppercase tracking-widest"
+                    className="flex-1 h-12 bg-primary text-primary-foreground rounded-xl text-[10px] font-black shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all disabled:opacity-30 flex items-center justify-center uppercase tracking-widest"
                 >
-                    {salvando ? <Carregando /> : `Criar ${titulo}`}
+                    {salvando ? <Carregando /> : `Confirmar Cadastro`}
                 </button>
             </div>
         </form>

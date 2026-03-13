@@ -22,8 +22,8 @@ rotasAuth.post('/msal', async (c) => {
             return c.json({ erro: 'idToken ausente.' }, 400);
         }
 
-        // 0. Buscar Governança (Domínios e Auto-cadastro)
-        let dominiosAutorizados = ['unieuro.com.br', 'unieuro.edu.br'];
+        // 0. Buscar Governança (Domínios e Auto-cadastro) - PRIORIDADE PARA CONFIG DO BANCO
+        let dominiosAutorizados: string[] = ['unieuro.com.br']; // Fallback mínimo de segurança
         let autoCadastroPermitido = false;
 
         try {
@@ -37,21 +37,28 @@ rotasAuth.post('/msal', async (c) => {
                 if (!v) {
                     const row = await DB.prepare('SELECT valor FROM configuracoes_sistema WHERE chave = ?').bind(k).first() as any;
                     if (row && typeof row.valor === 'string') {
-                        const valorBD = row.valor;
-                        if (softhub_kv) await softhub_kv.put(k, valorBD);
-                        v = valorBD;
+                        v = row.valor;
+                        if (softhub_kv) await softhub_kv.put(k, v!, { expirationTtl: 3600 });
                     }
                 }
                 
-                if (v && typeof v === 'string') {
-                    configs[k] = JSON.parse(v);
+                if (v) {
+                    try {
+                        configs[k] = JSON.parse(v);
+                    } catch {
+                        configs[k] = v;
+                    }
                 }
             }
 
-            if (Array.isArray(configs.dominios_autorizados)) dominiosAutorizados = configs.dominios_autorizados;
-            if (typeof configs.auto_cadastro === 'boolean') autoCadastroPermitido = configs.auto_cadastro;
+            if (Array.isArray(configs.dominios_autorizados) && configs.dominios_autorizados.length > 0) {
+                dominiosAutorizados = configs.dominios_autorizados;
+            }
+            if (typeof configs.auto_cadastro === 'boolean') {
+                autoCadastroPermitido = configs.auto_cadastro;
+            }
         } catch (e) {
-            console.warn('[Auth] Falha ao carregar configurações de governança, usando padrões.', e);
+            console.error('[Auth] Falha crítica ao carregar governança:', e);
         }
 
         // 1. Validar assinatura RS256 com JWKS da Microsoft
@@ -77,13 +84,20 @@ rotasAuth.post('/msal', async (c) => {
         }
 
         // 2. Validar claims de negócio
+        const email = (payload.upn || payload.preferred_username || '').toLowerCase();
+        
+        // Verificação de Bootstrap (Regra 13 - Admin via env) - DEVE vir antes da validação de domínio para permitir recuperação
+        const listaBootstrap = (BOOTSTRAP_ADMIN_EMAIL || '').toLowerCase().split(',').map(e => e.trim());
+        const isBootstrapAdmin = email && listaBootstrap.includes(email);
+
         const erroValidacao = validarClaims(payload, MSAL_TENANT_ID, MSAL_CLIENT_ID, dominiosAutorizados);
-        if (erroValidacao) {
+        
+        // Se houver erro de validação (como domínio inválido), só bloqueamos se NÃO for um admin de bootstrap
+        if (erroValidacao && !isBootstrapAdmin) {
             return c.json({ erro: 'Rejeitado por segurança.', detalhe: erroValidacao }, 403);
         }
 
         // 3. Extrair dados
-        const email = (payload.upn || payload.preferred_username || '').toLowerCase();
         const nome = payload.name || email;
 
         // 4. Verificação de DB
@@ -92,10 +106,6 @@ rotasAuth.post('/msal', async (c) => {
             .bind(email)
             .first();
         let usuario = resUsuario as any;
-
-        // 5. Verificação de Bootstrap (Regra 13 - Admin via env)
-        const listaBootstrap = (BOOTSTRAP_ADMIN_EMAIL || '').toLowerCase().split(',').map(e => e.trim());
-        const isBootstrapAdmin = listaBootstrap.includes(email);
 
         let isNew = false;
 
