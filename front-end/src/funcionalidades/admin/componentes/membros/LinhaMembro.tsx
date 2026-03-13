@@ -38,12 +38,18 @@ export const LinhaMembro = memo(({ membro, salvando, selecionado, onToggleSelect
 
                     <div className="flex items-center gap-3">
                         <Avatar nome={membro.nome} fotoPerfil={membro.foto_perfil} tamanho="md" coroa={ehOMesmoUsuario} />
-                        <div className="flex flex-col">
-                            <span className="text-[12px] font-black uppercase text-foreground/90 leading-tight">
-                                {membro.nome || <span className="italic opacity-30">Pendente</span>}
-                                {ehOMesmoUsuario && <span className="ml-2 text-[8px] font-black bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">VOCÊ</span>}
-                            </span>
-                            <span className="text-[10px] font-bold text-muted-foreground lowercase mt-0.5">{membro.email}</span>
+                        <div className="flex flex-col min-w-0">
+                            <div className="flex items-center gap-2">
+                                <span className="text-[12px] font-black uppercase text-foreground/90 whitespace-nowrap">
+                                    {membro.nome || <span className="italic opacity-30 italic">Pendente</span>}
+                                </span>
+                                {ehOMesmoUsuario && (
+                                    <span className="shrink-0 text-[8px] font-black bg-primary/10 text-primary px-1.5 py-0.5 rounded-full border border-primary/10">
+                                        VOCÊ
+                                    </span>
+                                )}
+                            </div>
+                            <span className="text-[10px] font-bold text-muted-foreground/50 lowercase mt-0.5 truncate">{membro.email}</span>
                         </div>
                     </div>
                 </div>

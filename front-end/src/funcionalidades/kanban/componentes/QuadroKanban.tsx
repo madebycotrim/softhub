@@ -136,9 +136,10 @@ export const QuadroKanban = memo(() => {
                         {podeCriar && (
                             <button
                                 onClick={handleAbrirCriar}
-                                className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.03] active:scale-[0.98] transition-all"
+                                className="h-11 px-6 bg-primary text-primary-foreground rounded-full flex items-center gap-2 text-[11px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 active:scale-95 transition-all"
                             >
-                                <Plus className="w-4 h-4" /> Nova Tarefa
+                                <Plus size={18} strokeWidth={3} />
+                                <span>Nova Tarefa</span>
                             </button>
                         )}
                         {carregando && tarefas.length > 0 && (

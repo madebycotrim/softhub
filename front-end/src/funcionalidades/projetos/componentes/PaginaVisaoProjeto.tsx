@@ -44,9 +44,10 @@ export default function PaginaVisaoProjeto() {
                     {podeVerDocumentos && (
                         <button 
                             onClick={() => setModalDocsAberto(true)}
-                            className="h-10 px-4 bg-primary text-primary-foreground rounded-2xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all flex items-center gap-2 shadow-lg shadow-primary/20"
+                            className="h-11 px-6 bg-primary text-primary-foreground rounded-full flex items-center gap-2 text-[11px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 active:scale-95 transition-all"
                         >
-                            <FileText size={14} /> Arquivos e Docs
+                            <FileText size={18} strokeWidth={3} />
+                            <span>Arquivos e Docs</span>
                         </button>
                     )}
                 </div>

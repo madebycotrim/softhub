@@ -45,9 +45,9 @@ export const MuralAvisos = memo(() => {
                     {podeCriar && (
                         <button
                             onClick={() => setModalAberto(true)}
-                            className="h-11 px-5 rounded-2xl bg-primary text-primary-foreground font-bold text-xs shadow-lg hover:bg-primary/90 transition-all flex items-center gap-2 active:scale-95"
+                            className="h-11 px-6 bg-primary text-primary-foreground rounded-full flex items-center gap-2 text-[11px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 active:scale-95 transition-all"
                         >
-                            <Plus size={18} />
+                            <Plus size={18} strokeWidth={3} />
                             <span>Criar Aviso</span>
                         </button>
                     )}

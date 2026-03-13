@@ -252,5 +252,73 @@ rotasUsuarios.post('/', autenticacaoRequerida(), verificarPermissao('membros:ger
     }
 });
 
+// ─── POST /lote — Registro em Lote ────────────────────────────
+
+const LoteCadastroSchema = z.object({
+    emails: z.array(z.string().email()),
+    role: z.enum(['ADMIN', 'COORDENADOR', 'GESTOR', 'LIDER', 'SUBLIDER', 'MEMBRO'])
+});
+
+rotasUsuarios.post('/lote', autenticacaoRequerida(), verificarPermissao('membros:gerenciar'), zValidator('json', LoteCadastroSchema), async (c: Context) => {
+    const { DB } = c.env;
+    const usuarioLogado = c.get('usuario') as any;
+    const { emails, role } = (c.req as any).valid('json');
+
+    const { softhub_kv } = c.env;
+    let dominiosAutorizados = ['unieuro.com.br', 'unieuro.edu.br'];
+    try {
+        let v = await softhub_kv?.get('dominios_autorizados');
+        if (!v) {
+            const row = await DB.prepare('SELECT valor FROM configuracoes_sistema WHERE chave = ?').bind('dominios_autorizados').first() as any;
+            if (row) v = row.valor;
+        }
+        if (v) dominiosAutorizados = JSON.parse(v);
+    } catch (e) {}
+
+    const resultados = { criados: 0, pulados: 0, erros: [] as string[] };
+
+    for (const email of emails) {
+        const emailLimpo = email.toLowerCase().trim();
+        const possuiDominioValido = dominiosAutorizados.some(d => emailLimpo.endsWith(`@${d.toLowerCase()}`));
+
+        if (!possuiDominioValido) {
+            resultados.erros.push(`${emailLimpo}: Domínio inválido`);
+            continue;
+        }
+
+        try {
+            const existente = await DB.prepare('SELECT id FROM usuarios WHERE email = ?').bind(emailLimpo).first();
+            if (existente) {
+                resultados.pulados++;
+                continue;
+            }
+
+            const novoId = crypto.randomUUID();
+            const nomePadrao = emailLimpo.split('@')[0];
+
+            await DB.prepare('INSERT INTO usuarios (id, nome, email, role) VALUES (?, ?, ?, ?)')
+                .bind(novoId, nomePadrao, emailLimpo, role)
+                .run();
+
+            resultados.criados++;
+        } catch (e: any) {
+            resultados.erros.push(`${emailLimpo}: ${e.message}`);
+        }
+    }
+
+    if (resultados.criados > 0) {
+        await registrarLog(DB, {
+            usuarioId: usuarioLogado.id,
+            acao: 'MEMBROS_LOTE_PRE_CADASTRO',
+            modulo: 'admin',
+            descricao: `Admin pré-cadastrou ${resultados.criados} membros em lote com role ${role}. (Pulados: ${resultados.pulados}, Erros: ${resultados.erros.length})`,
+            ip: c.req.header('CF-Connecting-IP') ?? '',
+            entidadeTipo: 'usuarios'
+        });
+    }
+
+    return c.json({ sucesso: true, ...resultados });
+});
+
 
 export default rotasUsuarios;

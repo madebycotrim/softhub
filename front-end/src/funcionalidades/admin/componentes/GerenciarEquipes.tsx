@@ -147,7 +147,7 @@ export const GerenciarEquipes = memo(() => {
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => setModalOrg({ aberto: true, tipo: 'equipe' })}
-                        className="h-11 px-5 bg-primary text-primary-foreground rounded-xl flex items-center gap-2 text-[11px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 active:scale-95 transition-all hover:bg-primary/90"
+                        className="h-11 px-6 bg-primary text-primary-foreground rounded-full flex items-center gap-2 text-[11px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 active:scale-95 transition-all"
                     >
                         <Plus size={18} strokeWidth={3} />
                         <span>Nova Equipe</span>

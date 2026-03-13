@@ -277,9 +277,9 @@ export const BaterPonto = memo(() => {
                             {podeJustificar && (
                                 <button
                                     onClick={handleNovaJustificativa}
-                                    className="h-11 px-5 bg-primary text-primary-foreground rounded-2xl text-xs font-bold flex items-center gap-2 transition-all active:scale-95 shadow-lg shadow-primary/20"
+                                    className="h-11 px-6 bg-primary text-primary-foreground rounded-full flex items-center gap-2 text-[11px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 active:scale-95 transition-all"
                                 >
-                                    <Plus className="w-4 h-4" />
+                                    <Plus size={18} strokeWidth={3} />
                                     <span>Justificar</span>
                                 </button>
                             )}

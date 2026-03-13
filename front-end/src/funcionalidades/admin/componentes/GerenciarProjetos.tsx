@@ -113,9 +113,10 @@ export default function GerenciarProjetos() {
                     {podeCriar && (
                         <button 
                             onClick={handleAbrirCriar}
-                            className="h-10 px-4 bg-primary text-primary-foreground rounded-2xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all flex items-center gap-2 shadow-lg shadow-primary/20"
+                            className="h-11 px-6 bg-primary text-primary-foreground rounded-full flex items-center gap-2 text-[11px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 active:scale-95 transition-all"
                         >
-                            <Plus size={14} /> Novo Projeto
+                            <Plus size={18} strokeWidth={3} />
+                            <span>Novo Projeto</span>
                         </button>
                     )}
                 </CabecalhoFuncionalidade>

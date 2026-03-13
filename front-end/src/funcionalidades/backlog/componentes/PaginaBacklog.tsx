@@ -91,9 +91,10 @@ const PaginaBacklog = memo(() => {
                     {podeCriar && (
                         <button
                             onClick={() => setModalCriarAberto(true)}
-                            className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+                            className="h-11 px-6 bg-primary text-primary-foreground rounded-full flex items-center gap-2 text-[11px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 active:scale-95 transition-all"
                         >
-                            <Plus className="w-4 h-4" /> Nova Tarefa
+                            <Plus size={18} strokeWidth={3} />
+                            <span>Nova Tarefa</span>
                         </button>
                     )}
                 </div>
