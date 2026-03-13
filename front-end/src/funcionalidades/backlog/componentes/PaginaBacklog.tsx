@@ -14,11 +14,11 @@ import { Emblema } from '@/compartilhado/componentes/Emblema';
 import { LABELS_PRIORIDADE, LABELS_STATUS } from '@/utilitarios/constantes';
 import { Avatar } from '@/compartilhado/componentes/Avatar';
 import { PROJETO_PADRAO_ID } from '@/utilitarios/constantes';
-import { useState } from 'react';
+import { useState, useCallback, memo } from 'react';
 import { ModalCriarTarefa } from './ModalCriarTarefa';
 import { BarraFiltros, FiltroPills } from '@/compartilhado/componentes/BarraFiltros';
 
-export default function PaginaBacklog() {
+const PaginaBacklog = memo(() => {
     const [modalCriarAberto, setModalCriarAberto] = useState(false);
     const [busca, setBusca] = useState('');
     const [statusFiltro, setStatusFiltro] = useState<string[]>([]);
@@ -35,13 +35,13 @@ export default function PaginaBacklog() {
         prioridades: prioridadeFiltro.length > 0 ? prioridadeFiltro : undefined
     });
 
-    const toggleStatus = (s: string) => {
+    const toggleStatus = useCallback((s: string) => {
         setStatusFiltro(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
-    };
+    }, []);
 
-    const togglePrioridade = (p: string) => {
+    const togglePrioridade = useCallback((p: string) => {
         setPrioridadeFiltro(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p]);
-    };
+    }, []);
 
     const podeCriar = usarPermissaoAcesso('tarefas:criar');
 
@@ -203,4 +203,6 @@ export default function PaginaBacklog() {
             />
         </div>
     );
-}
+});
+
+export default PaginaBacklog;

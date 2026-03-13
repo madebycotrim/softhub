@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
-import { usarAutenticacaoContexto } from '@/contexto/ContextoAutenticacao';
-import { usarConfiguracoes } from '@/contexto/ContextoConfiguracoes';
+import { usarAutenticacao } from '@/contexto/ContextoAutenticacao';
 
 /**
  * Hook utilitário APENAS para UX (mostrar/esconder botões e seções).
@@ -13,8 +12,8 @@ import { usarConfiguracoes } from '@/contexto/ContextoConfiguracoes';
  * Uso: const podeEditar = usarPermissao('LIDER');
  */
 export function usarPermissao(roleMinimoRequerido: string | null): boolean {
-    const { usuario } = usarAutenticacaoContexto();
-    const { hierarquia_roles } = usarConfiguracoes(); // <-- Get hierarchy from context
+    const { usuario, configuracoes } = usarAutenticacao();
+    const { hierarquia_roles } = configuracoes;
 
     return useMemo(() => {
         // Sem role mínimo requerido — qualquer autenticado tem acesso
@@ -43,8 +42,8 @@ export function usarPermissao(roleMinimoRequerido: string | null): boolean {
  * @example const podeCriarTarefa = usarPermissaoAcesso('tarefas:criar');
  */
 export function usarPermissaoAcesso(chavePermissao: string): boolean {
-    const { usuario } = usarAutenticacaoContexto();
-    const { permissoes_roles } = usarConfiguracoes(); // <-- Get permissions from context
+    const { usuario, configuracoes } = usarAutenticacao();
+    const { permissoes_roles } = configuracoes;
     const role = usuario?.role || 'MEMBRO';
 
     // ADMIN sempre tem acesso total, independente da matriz.

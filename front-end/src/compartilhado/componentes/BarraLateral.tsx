@@ -1,7 +1,7 @@
 import { FolderKanban, Clock, Users, Megaphone, LayoutDashboard, Database, Settings, LogOut, Sun, Moon, QrCode, FileText, LayoutGrid, Bell, Trash2, CheckCircle2, ListTodo } from 'lucide-react';
 import { useLocation, Link } from 'react-router';
 import { Tooltip } from './Tooltip';
-import { usarAutenticacao } from '@/funcionalidades/autenticacao/hooks/usarAutenticacao';
+import { usarAutenticacao } from '@/contexto/ContextoAutenticacao';
 import { usarTema } from '@/contexto/ContextoTema';
 import { usarPermissaoAcesso } from '@/compartilhado/hooks/usarPermissao';
 import { Avatar } from './Avatar';

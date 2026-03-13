@@ -1,11 +1,11 @@
 import { Hono, Context } from 'hono';
-import { autenticacaoRequerida } from '../middleware/auth';
+import { autenticacaoRequerida, verificarPermissao } from '../middleware/auth';
 import { Env } from '../index';
 
 const rotasConfiguracoes = new Hono<{ Bindings: Env }>();
 
 // ─── GET / (Admin) ──────────────────────────────────────────────────────────
-rotasConfiguracoes.get('/', autenticacaoRequerida('ADMIN'), async (c) => {
+rotasConfiguracoes.get('/', autenticacaoRequerida(), verificarPermissao('configuracoes:visualizar'), async (c) => {
     const { DB } = c.env;
 
     try {
@@ -28,20 +28,22 @@ rotasConfiguracoes.get('/', autenticacaoRequerida('ADMIN'), async (c) => {
     }
 });
 
-// ─── GET /publico — Endpoint acessível para TODOS autenticados (UX) ─────────
-rotasConfiguracoes.get('/publico', autenticacaoRequerida(), async (c: Context) => {
+// ─── GET /publico — Endpoint acessível para TODOS (Público) ─────────
+rotasConfiguracoes.get('/publico', async (c: Context) => {
     const { DB } = c.env;
 
     try {
-        const { results } = await DB.prepare('SELECT chave, valor FROM configuracoes_sistema WHERE chave IN (?, ?, ?, ?)')
-            .bind('permissoes_roles', 'hierarquia_roles', 'dominios_autorizados', 'modo_manutencao')
+        const { results } = await DB.prepare('SELECT chave, valor FROM configuracoes_sistema WHERE chave IN (?, ?, ?, ?, ?, ?)')
+            .bind('permissoes_roles', 'hierarquia_roles', 'dominios_autorizados', 'modo_manutencao', 'hora_inicio_ponto', 'hora_fim_ponto')
             .all();
 
         const config: Record<string, any> = {
             permissoes_roles: {},
             hierarquia_roles: [],
             dominios_autorizados: ['unieuro.com.br'],
-            modo_manutencao: false
+            modo_manutencao: false,
+            hora_inicio_ponto: '13:00',
+            hora_fim_ponto: '17:00'
         };
 
         if (results) {
@@ -61,7 +63,7 @@ rotasConfiguracoes.get('/publico', autenticacaoRequerida(), async (c: Context) =
 });
 
 // ─── POST / (Admin) ─────────────────────────────────────────────────────────
-rotasConfiguracoes.post('/', autenticacaoRequerida('ADMIN'), async (c) => {
+rotasConfiguracoes.post('/', autenticacaoRequerida(), verificarPermissao('configuracoes:editar'), async (c) => {
     const { DB, softhub_kv } = c.env;
     const body = await c.req.json();
 
@@ -100,12 +102,38 @@ rotasConfiguracoes.post('/', autenticacaoRequerida('ADMIN'), async (c) => {
 });
 
 // ─── PATCH /:chave (Admin) — Suporte ao hook usarConfiguracoes ──────────────
-rotasConfiguracoes.patch('/:chave', autenticacaoRequerida('ADMIN'), async (c) => {
+rotasConfiguracoes.patch('/:chave', autenticacaoRequerida(), verificarPermissao('configuracoes:editar'), async (c) => {
     const { DB, softhub_kv } = c.env;
+    const usuario = c.get('usuario');
+    const isAdmin = usuario.role === 'ADMIN';
     const chave = c.req.param('chave');
     const { valor } = await c.req.json();
 
     if (!chave) return c.json({ erro: 'Chave não especificada.' }, 400);
+
+    // ─── TRAVA DE SEGURANÇA: Matriz de Governança ───
+    if (chave === 'permissoes_roles' && !isAdmin) {
+        try {
+            const resAtual = await DB.prepare('SELECT valor FROM configuracoes_sistema WHERE chave = ?').bind('permissoes_roles').first<{ valor: string }>();
+            const permissoesAtuais = resAtual ? JSON.parse(resAtual.valor) : {};
+            const permissoesNovas = valor;
+
+            // Percorre todas as roles para ver se houve tentativa de mudar 'configuracoes:matriz_governanca'
+            const roles = new Set([...Object.keys(permissoesAtuais), ...Object.keys(permissoesNovas)]);
+            
+            for (const role of roles) {
+                const atualv = permissoesAtuais[role]?.['configuracoes:matriz_governanca'];
+                const novov = permissoesNovas[role]?.['configuracoes:matriz_governanca'];
+                
+                if (atualv !== novov) {
+                    return c.json({ erro: 'Apenas o Administrador pode delegar ou revogar permissões de Governança Crítica.' }, 403);
+                }
+            }
+        } catch (e) {
+            console.error('[CONFIG] Erro ao validar trava de governança:', e);
+            return c.json({ erro: 'Falha na validação de segurança.' }, 500);
+        }
+    }
 
     try {
         const valorFinal = valor === undefined ? null : valor;

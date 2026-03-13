@@ -9,6 +9,8 @@ export interface ConfiguracoesSistema {
     auto_cadastro: boolean;
     ips_autorizados_ponto: string[];
     modo_manutencao: boolean;
+    hora_inicio_ponto: string;
+    hora_fim_ponto: string;
 }
 
 export function usarConfiguracoes() {
@@ -44,6 +46,14 @@ export function usarConfiguracoes() {
 
             if (typeof dados.modo_manutencao !== 'boolean') {
                 dados.modo_manutencao = false;
+            }
+
+            if (typeof dados.hora_inicio_ponto !== 'string') {
+                dados.hora_inicio_ponto = '13:00';
+            }
+
+            if (typeof dados.hora_fim_ponto !== 'string') {
+                dados.hora_fim_ponto = '17:00';
             }
 
             setConfiguracoes(dados);

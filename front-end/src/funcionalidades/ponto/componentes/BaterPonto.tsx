@@ -1,4 +1,4 @@
-import { useState, useMemo, memo } from 'react';
+import { useState, useMemo, useCallback, memo } from 'react';
 import { Plus, AlertTriangle, LayoutDashboard, ScrollText, History, Fingerprint, ChevronLeft, ChevronRight, Timer, LogIn, LogOut } from 'lucide-react';
 import { usarPonto } from '@/funcionalidades/ponto/hooks/usarPonto';
 import { formatarDataHora, formatarHoras } from '@/utilitarios/formatadores';
@@ -20,14 +20,13 @@ import type { JustificativaPonto } from '@/funcionalidades/ponto/hooks/usarJusti
 import type { RegistroPonto } from '@/funcionalidades/ponto/hooks/usarPonto';
 import { Clock } from 'lucide-react';
 
-const HORA_ABERTURA = 13;
-const HORA_FECHAMENTO = 17;
+import { api } from '@/compartilhado/servicos/api';
 
 /**
  * Interface de registro e visualização diária do ponto.
  * Controla os blocos de lógica de travamento fora da rede da Instituição.
  */
-export function BaterPonto() {
+export const BaterPonto = memo(() => {
     const { registrosHoje, historico, carregando, erro, baterPonto } = usarPonto();
     const { justificativas, enviarJustificativa, editarJustificativa, excluirJustificativa } = usarJustificativas();
 
@@ -40,6 +39,26 @@ export function BaterPonto() {
     const [busca, setBusca] = useState('');
     const [semanaSelecionada, setSemanaSelecionada] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }).getTime());
     const [tentativaBloqueada, setTentativaBloqueada] = useState(false);
+    
+    // Governança de Horário Dinâmica
+    const [janelaTrabalho, setJanelaTrabalho] = useState({ inicio: '13:00', fim: '17:00' });
+
+    useReactEffect(() => {
+        const carregarGovernanca = async () => {
+            try {
+                const res = await api.get('/api/configuracoes/publico');
+                if (res.data.hora_inicio_ponto && res.data.hora_fim_ponto) {
+                    setJanelaTrabalho({
+                        inicio: res.data.hora_inicio_ponto,
+                        fim: res.data.hora_fim_ponto
+                    });
+                }
+            } catch (e) {
+                console.error('Falha ao sincronizar governança de horário');
+            }
+        };
+        carregarGovernanca();
+    }, []);
 
     const podeRegistrar = usarPermissaoAcesso('ponto:registrar');
     const podeJustificar = usarPermissaoAcesso('ponto:justificar');
@@ -67,8 +86,20 @@ export function BaterPonto() {
         return () => clearInterval(interval);
     }, []);
 
-    const horaAtual = agoraRelogio.getHours();
-    const foraDoHorario = horaAtual < HORA_ABERTURA || horaAtual >= HORA_FECHAMENTO;
+    const foraDoHorario = useMemo(() => {
+        const horaBrasiliaStr = agoraRelogio.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', hour12: false });
+        
+        const converterParaMinutos = (h: string) => {
+            const [horas, minutos] = h.split(':').map(Number);
+            return horas * 60 + minutos;
+        };
+
+        const agoraMinutos = converterParaMinutos(horaBrasiliaStr);
+        const inicioMinutos = converterParaMinutos(janelaTrabalho.inicio);
+        const fimMinutos = converterParaMinutos(janelaTrabalho.fim);
+
+        return agoraMinutos < inicioMinutos || agoraMinutos > fimMinutos;
+    }, [agoraRelogio, janelaTrabalho]);
 
 
 
@@ -78,12 +109,15 @@ export function BaterPonto() {
         if (!ultimoRegistro || ultimoRegistro.tipo === 'saida') return null;
 
         const entrada = new Date(ultimoRegistro.registrado_em);
-        // O cronômetro deve parar às 17h se não houve saída
-        const fim = horaAtual >= HORA_FECHAMENTO
-            ? new Date(new Date().setHours(HORA_FECHAMENTO, 0, 0, 0))
-            : agoraRelogio;
+        
+        const { inicio, fim } = janelaTrabalho;
+        const [hFim, mFim] = fim.split(':').map(Number);
+        const dataFim = new Date(new Date().setHours(hFim, mFim, 0, 0));
 
-        const diffms = Math.max(0, fim.getTime() - entrada.getTime());
+        // O cronômetro deve parar no horário de fechamento se não houve saída
+        const fimProcesso = agoraRelogio > dataFim ? dataFim : agoraRelogio;
+
+        const diffms = Math.max(0, fimProcesso.getTime() - entrada.getTime());
         const totalSegundos = Math.floor(diffms / 1000);
 
         const h = Math.floor(totalSegundos / 3600);
@@ -92,21 +126,9 @@ export function BaterPonto() {
 
         return {
             texto: `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`,
-            finalizadoAuto: horaAtual >= 17 && ultimoRegistro.tipo === 'entrada'
+            finalizadoAuto: foraDoHorario && ultimoRegistro.tipo === 'entrada'
         };
-    }, [ultimoRegistro, agoraRelogio, horaAtual]);
-
-    const handleBaterPonto = async () => {
-        setErroPonto(null);
-        setSalvando(true);
-        try {
-            await baterPonto(proximoTipo);
-        } catch (e: any) {
-            setErroPonto(e.message);
-        } finally {
-            setSalvando(false);
-        }
-    };
+    }, [ultimoRegistro, agoraRelogio, foraDoHorario, janelaTrabalho]);
 
     // Identifica todas as semanas únicas que possuem registros + a semana atual
     const semanasDisponiveis = useMemo(() => {
@@ -119,6 +141,73 @@ export function BaterPonto() {
     }, [historico]);
 
     const indiceSemanaAtual = semanasDisponiveis.indexOf(semanaSelecionada);
+
+    const handleBaterPonto = useCallback(async () => {
+        setErroPonto(null);
+        setSalvando(true);
+        try {
+            await baterPonto(proximoTipo);
+        } catch (e: any) {
+            setErroPonto(e.message);
+        } finally {
+            setSalvando(false);
+        }
+    }, [baterPonto, proximoTipo]);
+
+    const handleAlternarAba = useCallback(() => {
+        setAbaAtiva(prev => prev === 'registro' ? 'justificativas' : 'registro');
+    }, []);
+
+    const handleNovaJustificativa = useCallback(() => {
+        setJustificativaEditando(null);
+        setModalJustificativaAberto(true);
+    }, []);
+
+    const handleMudarBusca = useCallback((v: string) => setBusca(v), []);
+
+    const handleSemanaAnterior = useCallback(() => {
+        setSemanaSelecionada(semanasDisponiveis[indiceSemanaAtual - 1]);
+    }, [semanasDisponiveis, indiceSemanaAtual]);
+
+    const handleSemanaProxima = useCallback(() => {
+        setSemanaSelecionada(semanasDisponiveis[indiceSemanaAtual + 1]);
+    }, [semanasDisponiveis, indiceSemanaAtual]);
+
+    const handleEditarJustificativa = useCallback((just: JustificativaPonto) => {
+        if (just.status !== 'pendente') return;
+        setJustificativaEditando(just);
+        setModalJustificativaAberto(true);
+    }, []);
+
+    const handleExcluirJustificativa = useCallback((id: string) => {
+        const just = justificativas.find(j => j.id === id);
+        if (just?.status === 'pendente') {
+            setIdExcluindo(id);
+        }
+    }, [justificativas]);
+
+    const handleConfirmarExclusao = useCallback(async () => {
+        if (idExcluindo) {
+            const just = justificativas.find(j => j.id === idExcluindo);
+            if (just?.status === 'pendente') {
+                await excluirJustificativa(idExcluindo);
+            }
+            setIdExcluindo(null);
+        }
+    }, [idExcluindo, justificativas, excluirJustificativa]);
+
+    const handleSalvarJustificativa = useCallback(async (dados: any) => {
+        if (justificativaEditando) {
+            if (justificativaEditando.status !== 'pendente') {
+                throw new Error('Apenas justificativas pendentes podem ser editadas.');
+            }
+            await editarJustificativa(justificativaEditando.id, dados);
+        } else {
+            await enviarJustificativa(dados);
+        }
+    }, [justificativaEditando, editarJustificativa, enviarJustificativa]);
+
+    // Semanas disponíveis movidas para cima para evitar TDZ em callbacks
 
     const diasSemana = useMemo(() => {
         return Array.from({ length: 5 }, (_, i) => addDays(new Date(semanaSelecionada), i));
@@ -164,7 +253,7 @@ export function BaterPonto() {
                         )}
                         <Tooltip texto={abaAtiva === 'registro' ? "Ver Justificativas" : "Ver Registros"} posicao="bottom">
                             <button
-                                onClick={() => setAbaAtiva(abaAtiva === 'registro' ? 'justificativas' : 'registro')}
+                                onClick={handleAlternarAba}
                                 className={`flex items-center justify-center w-11 h-11 rounded-2xl border transition-all ${abaAtiva === 'justificativas'
                                         ? 'bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20'
                                         : 'bg-background border-border text-muted-foreground hover:border-primary/20 hover:text-primary hover:bg-primary/5'
@@ -183,10 +272,7 @@ export function BaterPonto() {
 
                             {podeJustificar && (
                                 <button
-                                    onClick={() => {
-                                        setJustificativaEditando(null);
-                                        setModalJustificativaAberto(true);
-                                    }}
+                                    onClick={handleNovaJustificativa}
                                     className="h-11 px-5 bg-primary text-primary-foreground rounded-2xl text-xs font-bold flex items-center gap-2 transition-all active:scale-95 shadow-lg shadow-primary/20"
                                 >
                                     <Plus className="w-4 h-4" />
@@ -381,7 +467,7 @@ export function BaterPonto() {
                                     {abaAtiva === 'registro' && semanasDisponiveis.length > 1 && (
                                         <div className="flex items-center gap-2 bg-slate-950/[0.03] p-1.5 rounded-2xl border border-slate-950/5 backdrop-blur-sm">
                                             <button 
-                                                onClick={() => setSemanaSelecionada(semanasDisponiveis[indiceSemanaAtual - 1])}
+                                                onClick={handleSemanaAnterior}
                                                 disabled={indiceSemanaAtual <= 0}
                                                 className="p-1.5 hover:bg-white hover:shadow-sm rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed text-slate-600"
                                                 title="Semana Anterior com Registros"
@@ -396,7 +482,7 @@ export function BaterPonto() {
                                                 </span>
                                             </div>
                                             <button 
-                                                onClick={() => setSemanaSelecionada(semanasDisponiveis[indiceSemanaAtual + 1])}
+                                                onClick={handleSemanaProxima}
                                                 disabled={indiceSemanaAtual >= semanasDisponiveis.length - 1}
                                                 className="p-1.5 hover:bg-white hover:shadow-sm rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed text-slate-600"
                                                 title="Próxima Semana com Registros"
@@ -409,7 +495,7 @@ export function BaterPonto() {
                                     <div className="relative w-full sm:w-56">
                                         <BarraBusca
                                             valor={busca}
-                                            aoMudar={setBusca}
+                                            aoMudar={handleMudarBusca}
                                             placeholder="Buscar registros..."
                                         />
                                     </div>
@@ -431,17 +517,8 @@ export function BaterPonto() {
                                 ) : (
                                     <ListaJustificativas
                                         justificativas={justificativas.filter(j => j.motivo.toLowerCase().includes(busca.toLowerCase()) || j.tipo.toLowerCase().includes(busca.toLowerCase()))}
-                                        aoEditar={(just) => {
-                                            if (just.status !== 'pendente') return;
-                                            setJustificativaEditando(just);
-                                            setModalJustificativaAberto(true);
-                                        }}
-                                        aoExcluir={(id) => {
-                                            const just = justificativas.find(j => j.id === id);
-                                            if (just?.status === 'pendente') {
-                                                setIdExcluindo(id);
-                                            }
-                                        }}
+                                        aoEditar={handleEditarJustificativa}
+                                        aoExcluir={handleExcluirJustificativa}
                                     />
                                 )}
                             </div>
@@ -459,30 +536,13 @@ export function BaterPonto() {
                     aberto={modalJustificativaAberto}
                     aoFechar={setModalJustificativaAberto}
                     justificativaAtual={justificativaEditando}
-                    aoSalvar={async (dados) => {
-                        if (justificativaEditando) {
-                            if (justificativaEditando.status !== 'pendente') {
-                                throw new Error('Apenas justificativas pendentes podem ser editadas.');
-                            }
-                            await editarJustificativa(justificativaEditando.id, dados);
-                        } else {
-                            await enviarJustificativa(dados);
-                        }
-                    }}
+                    aoSalvar={handleSalvarJustificativa}
                 />
 
                 <ConfirmacaoExclusao
                     aberto={!!idExcluindo}
                     aoFechar={() => setIdExcluindo(null)}
-                    aoConfirmar={async () => {
-                        if (idExcluindo) {
-                            const just = justificativas.find(j => j.id === idExcluindo);
-                            if (just?.status === 'pendente') {
-                                await excluirJustificativa(idExcluindo);
-                            }
-                            setIdExcluindo(null);
-                        }
-                    }}
+                    aoConfirmar={handleConfirmarExclusao}
                     titulo="Excluir justificativa?"
                     descricao="Apenas justificativas pendentes podem ser excluídas. Esta ação não poderá ser desfeita."
                 />
@@ -491,7 +551,7 @@ export function BaterPonto() {
             </div>
         </div>
     );
-}
+});
 
 /**
  * Card individual de exibição de registros por dia.
@@ -594,3 +654,5 @@ const DayCard = memo(({ dia, registros, hoje }: { dia: Date; registros: Registro
         </div>
     );
 });
+ 
+export default BaterPonto;

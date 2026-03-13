@@ -4,11 +4,11 @@ import { createBrowserRouter, Navigate, Outlet } from 'react-router';
 import { MsalProvider } from '@azure/msal-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { msalInstance } from './msal';
-import { ProvedorAutenticacao } from '@/contexto/ContextoAutenticacao';
-import { ProvedorTema } from '@/contexto/ContextoTema';
+import { ProvedorAutenticacao } from '../contexto/ContextoAutenticacao';
+import { ProvedorTema } from '../contexto/ContextoTema';
 import { RotaProtegida } from './RotaProtegida';
-import { LayoutPrincipal } from '@/compartilhado/componentes/LayoutPrincipal';
-import { Carregando } from '@/compartilhado/componentes/Carregando';
+import { LayoutPrincipal } from '../compartilhado/componentes/LayoutPrincipal';
+import { Carregando } from '../compartilhado/componentes/Carregando';
 
 // Configuração do React Query
 const queryClient = new QueryClient({
@@ -23,20 +23,20 @@ const queryClient = new QueryClient({
 
 // --- Lazy Loading das Páginas ---
 // As páginas agora são carregadas sob demanda, melhorando o tempo de carregamento inicial.
-const TelaLogin = lazy(() => import('@/funcionalidades/autenticacao/componentes/TelaLogin'));
-const PaginaDashboard = lazy(() => import('@/funcionalidades/dashboard/componentes/PaginaDashboard').then(m => ({ default: m.PaginaDashboard })));
-const PaginaBacklog = lazy(() => import('@/funcionalidades/backlog/componentes/PaginaBacklog'));
-const QuadroKanban = lazy(() => import('@/funcionalidades/kanban/componentes/QuadroKanban').then(m => ({ default: m.QuadroKanban })));
-const BaterPonto = lazy(() => import('@/funcionalidades/ponto/componentes/BaterPonto').then(m => ({ default: m.BaterPonto })));
-const MuralAvisos = lazy(() => import('@/funcionalidades/avisos/componentes/MuralAvisos').then(m => ({ default: m.MuralAvisos })));
+const TelaLogin = lazy(() => import('../funcionalidades/autenticacao/componentes/TelaLogin'));
+const PaginaDashboard = lazy(() => import('../funcionalidades/dashboard/componentes/PaginaDashboard'));
+const PaginaBacklog = lazy(() => import('../funcionalidades/backlog/componentes/PaginaBacklog'));
+const QuadroKanban = lazy(() => import('../funcionalidades/kanban/componentes/QuadroKanban'));
+const BaterPonto = lazy(() => import('../funcionalidades/ponto/componentes/BaterPonto'));
+const MuralAvisos = lazy(() => import('../funcionalidades/avisos/componentes/MuralAvisos'));
 
 // Páginas de Administração
-const PainelLogs = lazy(() => import('@/funcionalidades/admin/componentes/PainelLogs').then(m => ({ default: m.PainelLogs })));
-const GerenciarMembros = lazy(() => import('@/funcionalidades/admin/componentes/GerenciarMembros'));
-const PainelJustificativas = lazy(() => import('@/funcionalidades/admin/componentes/PainelJustificativas').then(m => ({ default: m.PainelJustificativas })));
-const PaginaRelatorios = lazy(() => import('@/funcionalidades/admin/componentes/PaginaRelatorios'));
-const GerenciarEquipes = lazy(() => import('@/funcionalidades/admin/componentes/GerenciarEquipes').then(m => ({ default: m.GerenciarEquipes })));
-const PaginaConfiguracoes = lazy(() => import('@/funcionalidades/admin/componentes/PaginaConfiguracoes').then(m => ({ default: m.PaginaConfiguracoes })));
+const PainelLogs = lazy(() => import('../funcionalidades/admin/componentes/PainelLogs'));
+const GerenciarMembros = lazy(() => import('../funcionalidades/admin/componentes/GerenciarMembros'));
+const PainelJustificativas = lazy(() => import('../funcionalidades/admin/componentes/PainelJustificativas'));
+const PaginaRelatorios = lazy(() => import('../funcionalidades/admin/componentes/PaginaRelatorios'));
+const GerenciarEquipes = lazy(() => import('../funcionalidades/admin/componentes/GerenciarEquipes'));
+const PaginaConfiguracoes = lazy(() => import('../funcionalidades/admin/componentes/PaginaConfiguracoes'));
 
 /**
  * Layout raiz — renderizado em TODAS as rotas.

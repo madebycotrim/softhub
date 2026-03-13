@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback, memo } from 'react';
 import {
     DndContext,
     DragOverlay,
@@ -7,26 +7,28 @@ import {
     PointerSensor,
     useSensor,
     useSensors,
+    DragStartEvent,
+    DragEndEvent,
     useDroppable
 } from '@dnd-kit/core';
-import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { COLUNAS_KANBAN, PROJETO_PADRAO_ID } from '@/utilitarios/constantes';
-import type { ColunaKanban } from '@/utilitarios/constantes';
+import { FolderKanban, Circle, Zap, Search, CheckCircle2, Plus, Info } from 'lucide-react';
+
 import { usarKanban } from '@/funcionalidades/kanban/hooks/usarKanban';
-import type { Tarefa, FiltrosKanban } from '@/funcionalidades/kanban/hooks/usarKanban';
-import { CartaoTarefa } from './CartaoTarefa';
+import type { Tarefa } from '@/funcionalidades/kanban/hooks/usarKanban';
+import { usarBacklog } from '@/funcionalidades/backlog/hooks/usarBacklog';
 import { usarPermissaoAcesso } from '@/compartilhado/hooks/usarPermissao';
+import { COLUNAS_KANBAN, PROJETO_PADRAO_ID } from '@/utilitarios/constantes';
+import type { ColunaKanban as ColunaTipo } from '@/utilitarios/constantes';
+
+import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
+import { CartaoTarefa } from './CartaoTarefa';
+import { PainelFiltrosKanban } from './PainelFiltrosKanban';
+import { ModalDetalhesTarefa } from './ModalDetalhesTarefa';
+import { ModalCriarTarefa } from '@/funcionalidades/backlog/componentes/ModalCriarTarefa';
 import { Carregando } from '@/compartilhado/componentes/Carregando';
 import { EstadoVazio } from '@/compartilhado/componentes/EstadoVazio';
 import { EstadoErro } from '@/compartilhado/componentes/EstadoErro';
-import { ModalDetalhesTarefa } from './ModalDetalhesTarefa';
-import { PainelFiltrosKanban } from './PainelFiltrosKanban';
-import { ModalCriarTarefa } from '@/funcionalidades/backlog/componentes/ModalCriarTarefa';
-import { usarBacklog } from '@/funcionalidades/backlog/hooks/usarBacklog';
-import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
-import { FolderKanban, Circle, Zap, Search, CheckCircle2, Plus, Info } from 'lucide-react';
-import { useMemo } from 'react';
 
 /** Mapeamento amigável das colunas */
 const LABELS_COLUNAS: Record<string, string> = {
@@ -44,7 +46,7 @@ const ICONES_COLUNAS: Record<string, any> = {
 };
 
 /** Coluna Drop Zone interna */
-function ColunaDropZone({ id, titulo, tarefas, aoApertarTarefa }: { id: ColunaKanban; titulo: string; tarefas: Tarefa[], aoApertarTarefa: (t: Tarefa) => void }) {
+const ColunaDropZone = memo(({ id, titulo, tarefas, aoApertarTarefa }: { id: string; titulo: string; tarefas: Tarefa[], aoApertarTarefa: (t: Tarefa) => void }) => {
     const { setNodeRef, isOver } = useDroppable({
         id: id,
         data: {
@@ -53,7 +55,7 @@ function ColunaDropZone({ id, titulo, tarefas, aoApertarTarefa }: { id: ColunaKa
         }
     });
 
-    const Icone = ICONES_COLUNAS[id];
+    const Icone = ICONES_COLUNAS[id] || Circle;
 
     return (
         <div className="flex flex-col flex-1 min-w-[320px] max-w-[360px] bg-card/60 dark:bg-card/20 backdrop-blur-3xl rounded-b-2xl border border-border/50 shadow-sm overflow-hidden h-full transition-all duration-500 group/column">
@@ -81,13 +83,13 @@ function ColunaDropZone({ id, titulo, tarefas, aoApertarTarefa }: { id: ColunaKa
             </div>
         </div>
     );
-}
+});
 
 /**
  * O Quadro Kanban que exibe as colunas com Drag and Drop funcional.
  */
-export function QuadroKanban({ projetoId = PROJETO_PADRAO_ID }: { projetoId?: string }) {
-    const [filtros, setFiltros] = useState<FiltrosKanban>({});
+export const QuadroKanban = memo(({ projetoId = PROJETO_PADRAO_ID }: { projetoId?: string }) => {
+    const [filtros, setFiltros] = useState<any>({});
     const { tarefas, carregando, erro, moverCard } = usarKanban(projetoId, filtros);
     const [activeTarefa, setActiveTarefa] = useState<Tarefa | null>(null);
     const [tarefaDetalhes, setTarefaDetalhes] = useState<Tarefa | null>(null);
@@ -98,7 +100,6 @@ export function QuadroKanban({ projetoId = PROJETO_PADRAO_ID }: { projetoId?: st
 
     const { criarTarefa } = usarBacklog(projetoId);
 
-    // Agrupamento otimizado de tarefas por status
     const tarefasPorStatus = useMemo(() => {
         const agrupado: Record<string, Tarefa[]> = {
             todo: [],
@@ -113,20 +114,20 @@ export function QuadroKanban({ projetoId = PROJETO_PADRAO_ID }: { projetoId?: st
     }, [tarefas]);
 
     const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), // Exige mover 5px para ativar drag
+        useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
 
     const temFiltroAtivo = !!(filtros.busca || filtros.prioridades?.length || filtros.responsavelId);
 
-    const handleDragStart = (event: DragStartEvent) => {
+    const handleDragStart = useCallback((event: DragStartEvent) => {
         if (!podeMover) return;
         const { active } = event;
-        const tarefa = tarefas.find((t: Tarefa) => t.id === active.id);
-        if (tarefa) setActiveTarefa(tarefa);
-    };
+        const t = tarefas.find((item: Tarefa) => item.id === active.id);
+        if (t) setActiveTarefa(t);
+    }, [podeMover, tarefas]);
 
-    const handleDragEnd = (event: DragEndEvent) => {
+    const handleDragEnd = useCallback((event: DragEndEvent) => {
         if (!podeMover) return;
         const { active, over } = event;
         setActiveTarefa(null);
@@ -134,13 +135,23 @@ export function QuadroKanban({ projetoId = PROJETO_PADRAO_ID }: { projetoId?: st
         if (!over) return;
 
         const tarefaId = active.id as string;
-        const colunaDestino = over.id as ColunaKanban;
-        const tarefa = tarefas.find((t: Tarefa) => t.id === tarefaId);
+        const colDestino = over.id as string;
+        const t = tarefas.find((item: Tarefa) => item.id === tarefaId);
 
-        if (tarefa && tarefa.status !== (colunaDestino as any)) {
-            moverCard(tarefaId, colunaDestino as any);
+        if (t && t.status !== colDestino) {
+            moverCard(tarefaId, colDestino as any);
         }
-    };
+    }, [podeMover, tarefas, moverCard]);
+
+    const handleFiltrar = useCallback((f: any) => setFiltros(f), []);
+    const handleFecharDetalhes = useCallback(() => setTarefaDetalhes(null), []);
+    const handleAbrirCriar = useCallback(() => setModalCriarAberto(true), []);
+    const handleFecharCriar = useCallback(() => setModalCriarAberto(false), []);
+    const handleLimparFiltros = useCallback(() => setFiltros({}), []);
+    const handleCriarTarefa = useCallback(async (dados: any) => {
+        await criarTarefa({ ...dados, status: 'todo' });
+        setModalCriarAberto(false);
+    }, [criarTarefa]);
 
     return (
         <div className="flex flex-col h-full w-full overflow-hidden bg-background/50">
@@ -153,7 +164,7 @@ export function QuadroKanban({ projetoId = PROJETO_PADRAO_ID }: { projetoId?: st
                     <div className="flex items-center gap-4">
                         {podeCriar && (
                             <button
-                                onClick={() => setModalCriarAberto(true)}
+                                onClick={handleAbrirCriar}
                                 className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.03] active:scale-[0.98] transition-all"
                             >
                                 <Plus className="w-4 h-4" /> Nova Tarefa
@@ -170,7 +181,7 @@ export function QuadroKanban({ projetoId = PROJETO_PADRAO_ID }: { projetoId?: st
             </div>
 
             <div className="shrink-0 px-0.5">
-                <PainelFiltrosKanban filtros={filtros} aoFiltrar={setFiltros} />
+                <PainelFiltrosKanban filtros={filtros} aoFiltrar={handleFiltrar} />
             </div>
 
             <div className={`flex-1 min-h-0 transition-opacity duration-300 ${carregando && tarefas.length > 0 ? 'opacity-70' : 'opacity-100'}`}>
@@ -195,7 +206,7 @@ export function QuadroKanban({ projetoId = PROJETO_PADRAO_ID }: { projetoId?: st
                                 compacto={true}
                                 acao={{
                                     rotulo: "Limpar todos os filtros",
-                                    aoClicar: () => setFiltros({})
+                                    aoClicar: handleLimparFiltros
                                 }}
                             />
                         ) : (
@@ -213,11 +224,11 @@ export function QuadroKanban({ projetoId = PROJETO_PADRAO_ID }: { projetoId?: st
                             onDragStart={handleDragStart}
                             onDragEnd={handleDragEnd}
                         >
-                        <div className="h-full flex justify-between gap-6 overflow-x-hidden scrollbar-none">
+                            <div className="h-full flex justify-between gap-6 overflow-x-auto pb-6 custom-scrollbar px-1">
                                 {COLUNAS_KANBAN.map(coluna => (
                                     <ColunaDropZone
                                         key={coluna}
-                                        id={coluna as any}
+                                        id={coluna}
                                         titulo={LABELS_COLUNAS[coluna]}
                                         tarefas={tarefasPorStatus[coluna] || []}
                                         aoApertarTarefa={setTarefaDetalhes}
@@ -237,21 +248,19 @@ export function QuadroKanban({ projetoId = PROJETO_PADRAO_ID }: { projetoId?: st
                 )}
             </div>
 
-    
-
             <ModalDetalhesTarefa
                 tarefa={tarefaDetalhes}
                 aberto={!!tarefaDetalhes}
-                aoFechar={() => setTarefaDetalhes(null)}
+                aoFechar={handleFecharDetalhes}
             />
 
             <ModalCriarTarefa
                 aberto={modalCriarAberto}
-                aoFechar={() => setModalCriarAberto(false)}
-                aoCriar={async (dados) => {
-                    await criarTarefa({ ...dados, status: 'todo' });
-                }}
+                aoFechar={handleFecharCriar}
+                aoCriar={handleCriarTarefa}
             />
         </div>
     );
-}
+});
+ 
+export default QuadroKanban;

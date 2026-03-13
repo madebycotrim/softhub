@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, memo } from 'react';
 import { 
     FileText, 
     Network,
@@ -36,7 +36,7 @@ import {
  * Pagina de Relatórios - Versão Relatórios Essenciais e Estruturados.
  * Focada em 4 pilares fundamentais: Frequência, Justificativas, Alocação e Desempenho.
  */
-export default function PaginaRelatorios() {
+const PaginaRelatorios = memo(() => {
     const [dataInicio, setDataInicio] = useState('');
     const [dataFim, setDataFim] = useState('');
     const [abaAtiva, setAbaAtiva] = useState<'presenca' | 'justificativas' | 'equipes' | 'alunos'>('presenca');
@@ -52,18 +52,20 @@ export default function PaginaRelatorios() {
 
     const [busca, setBusca] = useState('');
 
-    const membrosFiltrados = (frequenciaMembros || []).filter(m => 
-        m.nome.toLowerCase().includes(busca.toLowerCase()) || 
-        m.email.toLowerCase().includes(busca.toLowerCase())
-    );
+    const membrosFiltrados = useMemo(() => {
+        return (frequenciaMembros || []).filter((m: any) => 
+            m.nome.toLowerCase().includes(busca.toLowerCase()) || 
+            m.email.toLowerCase().includes(busca.toLowerCase())
+        );
+    }, [frequenciaMembros, busca]);
 
     // Relatórios Essenciais Definidos
-    const ABAS_ESSENCIAIS = [
+    const ABAS_ESSENCIAIS = useMemo(() => [
         { id: 'presenca', label: 'Consolidado de Presenças', icone: BarChart4, info: 'Visão volumétrica e tendências diárias.' },
         { id: 'justificativas', label: 'Controle de Ausências', icone: ClipboardList, info: 'Gestão de justificativas e motivos de falta.' },
         { id: 'alunos', label: 'Auditoria de Membros', icone: UserCheck, info: 'Frequência individual e status de engajamento.' },
         { id: 'equipes', label: 'Mapeamento Estrutural', icone: Map, info: 'Organização de equipes e grupos operativos.' },
-    ];
+    ], []);
 
     return (
         <div className="w-full space-y-8 pb-20 animate-in fade-in duration-700 max-w-[1600px] mx-auto px-4 sm:px-6">
@@ -388,4 +390,6 @@ export default function PaginaRelatorios() {
             </div>
         </div>
     );
-}
+});
+
+export default PaginaRelatorios;

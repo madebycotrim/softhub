@@ -301,3 +301,5 @@ export function PainelJustificativas() {
         </div>
     );
 }
+ 
+export default PainelJustificativas;

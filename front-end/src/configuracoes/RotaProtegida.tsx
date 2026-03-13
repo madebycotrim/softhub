@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router';
-import { usarAutenticacaoContexto } from '@/contexto/ContextoAutenticacao';
+import { usarAutenticacao } from '@/contexto/ContextoAutenticacao';
 import { usarPermissao } from '@/compartilhado/hooks/usarPermissao';
 
 interface RotaProtegidaProps {
@@ -15,7 +15,7 @@ interface RotaProtegidaProps {
  * 3. Role suficiente — senão redireciona para /app/dashboard
  */
 export function RotaProtegida({ children, roleMinimo }: RotaProtegidaProps) {
-    const { estaAutenticado, carregando } = usarAutenticacaoContexto();
+    const { estaAutenticado, carregando } = usarAutenticacao();
     const location = useLocation();
     const temPermissao = usarPermissao(roleMinimo ?? null);
 

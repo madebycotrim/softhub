@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { RefreshCw, CheckCircle } from 'lucide-react';
 import { api } from '@/compartilhado/servicos/api';
-import { usarAutenticacaoContexto } from '@/contexto/ContextoAutenticacao';
+import { usarAutenticacao } from '@/contexto/ContextoAutenticacao';
 import { useNavigate } from 'react-router';
-import { usarDispositivo } from '@/compartilhado/hooks/usarDispositivo';
-import { Avatar } from '@/compartilhado/componentes/Avatar';
+import { usarDispositivo } from '../../../compartilhado/hooks/usarDispositivo';
+import { Avatar } from '../../../compartilhado/componentes/Avatar';
 
 /**
  * Componente que gera e exibe o QR Code na tela de login desktop.
@@ -14,7 +14,7 @@ import { Avatar } from '@/compartilhado/componentes/Avatar';
 export default function PainelQRCode() {
     const [sessao, setSessao] = useState<{ id: string; expiraEm: string; usuario?: any } | null>(null);
     const [status, setStatus] = useState<'gerando' | 'pendente' | 'identificado' | 'autorizado' | 'expirado' | 'erro'>('gerando');
-    const { entrar } = usarAutenticacaoContexto();
+    const { entrar } = usarAutenticacao();
     const navigate = useNavigate();
     const { isMobile } = usarDispositivo();
 

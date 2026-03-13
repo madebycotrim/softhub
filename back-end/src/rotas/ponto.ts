@@ -36,14 +36,53 @@ rotasPonto.post('/',
     validarRedeLocal, // <-- Validação de rede aplicada aqui!
     zValidator('json', BaterPontoSchema), 
     async (c: Context) => {
-        const { DB } = c.env;
+        const { DB, softhub_kv } = c.env;
         const { tipo } = (c.req as any).valid('json');
 
-        // Validação de horário
+        // 1. Buscar Janela de Trabalho na Governança
+        let horaInicio = '13:00';
+        let horaFim = '17:00';
+
+        try {
+            const chaves = ['hora_inicio_ponto', 'hora_fim_ponto'];
+            const configs: Record<string, string> = {};
+
+            for (const k of chaves) {
+                let v = await softhub_kv?.get(k);
+                if (!v) {
+                    const row = await DB.prepare('SELECT valor FROM configuracoes_sistema WHERE chave = ?').bind(k).first() as any;
+                    if (row) {
+                        v = row.valor;
+                        if (softhub_kv) await softhub_kv.put(k, v!, { expirationTtl: 3600 });
+                    }
+                }
+                if (v) configs[k] = v.replace(/"/g, ''); // Limpa aspas do JSON/KV
+            }
+
+            if (configs.hora_inicio_ponto) horaInicio = configs.hora_inicio_ponto;
+            if (configs.hora_fim_ponto) horaFim = configs.hora_fim_ponto;
+        } catch (e) {
+            console.error('[PONTO] Falha ao carregar jornada, usando padrão:', e);
+        }
+
+        // Validação de horário dinâmica
         const agora = new Date();
-        const horaBrasilia = (agora.getUTCHours() - 3 + 24) % 24;
-        if (horaBrasilia < 13 || horaBrasilia >= 17) {
-            return c.json({ erro: 'O sistema de ponto só funciona das 13:00 às 17:00.' }, 403);
+        const horaBrasiliaStr = agora.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', hour12: false });
+        
+        const converterParaMinutos = (h: string) => {
+            const [horas, minutos] = h.split(':').map(Number);
+            return horas * 60 + minutos;
+        };
+
+        const agoraMinutos = converterParaMinutos(horaBrasiliaStr);
+        const inicioMinutos = converterParaMinutos(horaInicio);
+        const fimMinutos = converterParaMinutos(horaFim);
+
+        if (agoraMinutos < inicioMinutos || agoraMinutos > fimMinutos) {
+            return c.json({ 
+                erro: 'Fora do horário permitido.', 
+                detalhe: `O registro de ponto está autorizado apenas entre ${horaInicio} e ${horaFim}.` 
+            }, 403);
         }
 
         try {

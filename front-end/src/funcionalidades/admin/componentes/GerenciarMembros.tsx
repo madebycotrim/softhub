@@ -1,5 +1,5 @@
-import { useState, useMemo, useCallback, useEffect, memo } from 'react';
-import { UserCog, X, Shield, Mail, Trash2, Loader2, ListPlus, Download, ChevronDown, Users as UsersIcon, Plus, CheckSquare, Square, History, Search, Filter, Pencil, Check } from 'lucide-react';
+import { useState, useMemo, useCallback, useEffect, memo, FormEvent } from 'react';
+import { UserCog, X, Shield, Mail, Trash2, Loader2, ListPlus, Download, ChevronDown, Users as UsersIcon, Plus, CheckSquare, Square, History, Search, Filter, Pencil, Check, LayoutGrid } from 'lucide-react';
 import { Tooltip } from '@/compartilhado/componentes/Tooltip';
 
 import { api } from '@/compartilhado/servicos/api';
@@ -7,7 +7,7 @@ import { usarMembros } from '@/funcionalidades/membros/hooks/usarMembros';
 import type { Membro } from '@/funcionalidades/membros/hooks/usarMembros';
 import { Avatar } from '@/compartilhado/componentes/Avatar';
 import { Carregando } from '@/compartilhado/componentes/Carregando';
-import { usarAutenticacao } from '@/funcionalidades/autenticacao/hooks/usarAutenticacao';
+import { usarAutenticacao } from '@/contexto/ContextoAutenticacao';
 import { usarPermissaoAcesso } from '@/compartilhado/hooks/usarPermissao';
 import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
 import { Modal } from '@/compartilhado/componentes/Modal';
@@ -17,7 +17,6 @@ import { Alerta } from '@/compartilhado/componentes/Alerta';
 import { ambiente } from '@/configuracoes/ambiente';
 import { usarConfiguracoes } from '@/funcionalidades/admin/hooks/usarConfiguracoes';
 import { usarDebounce } from '@/compartilhado/hooks/usarDebounce';
-import { usarAutenticacaoContexto } from '@/contexto/ContextoAutenticacao';
 import { usarToast } from '@/compartilhado/hooks/usarToast';
 import { ToastContainer } from '@/compartilhado/componentes/ToastContainer';
 import { Paginacao } from '@/compartilhado/componentes/Paginacao';
@@ -38,7 +37,7 @@ function useGerenciarMembros() {
 
     const [salvandoIds, setSalvandoIds] = useState<Set<string>>(new Set());
     const { toasts, exibirToast } = usarToast();
-    const { usuario: usuarioAutenticado, atualizarUsuarioLocalmente } = usarAutenticacaoContexto();
+    const { usuario: usuarioAutenticado, atualizarUsuarioLocalmente } = usarAutenticacao();
 
     const marcarSalvando = useCallback((id: string) => {
         setSalvandoIds(prev => new Set(prev).add(id));
@@ -164,7 +163,7 @@ const LinhaMembro = memo(({ membro, salvando, selecionado, onToggleSelect, onAlt
             {/* Último Acesso */}
             <td className="px-6 py-4 border-b border-border/40 hidden lg:table-cell">
                 <span className="text-[10px] font-bold text-muted-foreground/60 uppercase">
-                    {membro.ultimo_login ? new Date(membro.ultimo_login).toLocaleDateString('pt-BR') : 'Nunca'}
+                    {membro.criado_em ? new Date(membro.criado_em).toLocaleDateString('pt-BR') : 'Desconhecido'}
                 </span>
             </td>
 
@@ -186,8 +185,11 @@ const LinhaMembro = memo(({ membro, salvando, selecionado, onToggleSelect, onAlt
 
 // ─── Componente Principal ─────────────────────────────────────────────────────
 
-export default function GerenciarMembros() {
-    const { membros, carregando, erro, recarregar, salvandoIds, toasts, alterarRole, cadastrarMembro, removerMembro } = useGerenciarMembros();
+export const GerenciarMembros = memo(() => {
+    const { 
+        membros, carregando, erro, recarregar, salvandoIds, toasts, 
+        alterarRole, cadastrarMembro, removerMembro 
+    } = useGerenciarMembros();
     const { configuracoes } = usarConfiguracoes();
     const { toasts: toastHook, exibirToast } = usarToast();
 
@@ -202,7 +204,12 @@ export default function GerenciarMembros() {
     const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
     const [membroParaExcluir, setMembroParaExcluir] = useState<Membro | null>(null);
     const [pagina, setPagina] = useState(1);
-    const itensPorPagina = 15;
+    const [itensPorPagina, setItensPorPagina] = useState(15);
+
+    const handleMudarItensPorPagina = useCallback((n: number) => {
+        setItensPorPagina(n);
+        setPagina(1);
+    }, []);
 
     const listaFiltrada = useMemo(() => {
         if (!buscaDebounced.trim()) return membros;
@@ -220,11 +227,30 @@ export default function GerenciarMembros() {
         });
     }, []);
 
-    const handleRemoverConfirmado = async () => {
+    const handleMudarPagina = useCallback((p: number) => setPagina(p), []);
+    const handleRemoverConfirmado = useCallback(async () => {
         if (!membroParaExcluir) return;
+        const membro = membroParaExcluir;
         setMembroParaExcluir(null);
-        await removerMembro(membroParaExcluir);
-    };
+        await removerMembro(membro);
+    }, [membroParaExcluir, removerMembro]);
+
+    const handleRemoverLote = useCallback(async () => {
+        const ids = Array.from(selecionados);
+        setSelecionados(new Set());
+        try {
+            await Promise.all(ids.map(id => api.delete(`/api/usuarios/${id}`)));
+            await recarregar();
+            exibirToast(`${ids.length} membros removidos.`);
+        } catch (e: any) {
+            exibirToast(e.response?.data?.erro ?? 'Erro ao remover em lote.', 'erro');
+        }
+    }, [selecionados, recarregar, exibirToast]);
+
+    const handleLimparSelecao = useCallback(() => setSelecionados(new Set()), []);
+    const handleFecharModal = useCallback(() => setModalAberto(false), []);
+    const handleAbrirModal = useCallback(() => setModalAberto(true), []);
+    const handleSetMembroExcluir = useCallback((m: Membro) => setMembroParaExcluir(m), []);
 
     return (
         <div className="flex flex-col h-full space-y-6">
@@ -247,7 +273,7 @@ export default function GerenciarMembros() {
                     </div>
                     
                     <button
-                        onClick={() => setModalAberto(true)}
+                        onClick={handleAbrirModal}
                         className="h-11 px-5 bg-primary text-primary-foreground rounded-xl flex items-center gap-2 text-[11px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 active:scale-95 transition-all hover:bg-primary/90"
                     >
                         <Plus size={18} strokeWidth={3} />
@@ -298,7 +324,7 @@ export default function GerenciarMembros() {
                                     selecionado={selecionados.has(m.id)}
                                     onToggleSelect={toggleSelect}
                                     onAlterarRole={alterarRole}
-                                    onRemover={setMembroParaExcluir}
+                                    onRemover={handleSetMembroExcluir}
                                     rolesDisponiveis={rolesDisponiveis}
                                 />
                             ))}
@@ -325,7 +351,11 @@ export default function GerenciarMembros() {
                     <Paginacao
                         paginaAtual={pagina}
                         totalPaginas={Math.ceil(listaFiltrada.length / itensPorPagina)}
-                        aoMudarPagina={setPagina}
+                        totalRegistros={listaFiltrada.length}
+                        itensPorPagina={itensPorPagina}
+                        itensListados={paginada.length}
+                        aoMudarPagina={handleMudarPagina}
+                        aoMudarItensPorPagina={handleMudarItensPorPagina}
                     />
                 </div>
             </div>
@@ -343,19 +373,13 @@ export default function GerenciarMembros() {
                         
                         <div className="flex items-center gap-3">
                             <button
-                                onClick={() => setSelecionados(new Set())}
+                                onClick={handleLimparSelecao}
                                 className="text-[10px] font-black uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity"
                             >
                                 Cancelar
                             </button>
                             <button
-                                onClick={async () => {
-                                    const ids = Array.from(selecionados);
-                                    await Promise.all(ids.map(id => api.delete(`/api/usuarios/${id}`)));
-                                    await recarregar();
-                                    setSelecionados(new Set());
-                                    exibirToast(`${ids.length} membros removidos.`);
-                                }}
+                                onClick={handleRemoverLote}
                                 className="px-4 py-2 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-rose-500/20"
                             >
                                 Remover Acesso
@@ -366,8 +390,8 @@ export default function GerenciarMembros() {
             )}
 
             {/* Modais */}
-            <Modal aberto={modalAberto} aoFechar={() => setModalAberto(false)} titulo="Autorizar Acesso" largura="sm">
-                <FormularioCadastro aoCadastrar={cadastrarMembro} aoSucesso={() => setModalAberto(false)} roles={rolesDisponiveis} />
+            <Modal aberto={modalAberto} aoFechar={handleFecharModal} titulo="Autorizar Acesso" largura="sm">
+                <FormularioCadastro aoCadastrar={cadastrarMembro} aoSucesso={handleFecharModal} roles={rolesDisponiveis} />
             </Modal>
 
             <ConfirmacaoExclusao
@@ -379,11 +403,11 @@ export default function GerenciarMembros() {
             />
         </div>
     );
-}
+});
 
 // ─── Componente Interno: FormularioCadastro ───────────────────────────────────
 
-function FormularioCadastro({ aoCadastrar, aoSucesso, roles }: { aoCadastrar: any, aoSucesso: any, roles: string[] }) {
+const FormularioCadastro = memo(({ aoCadastrar, aoSucesso, roles }: { aoCadastrar: any, aoSucesso: any, roles: string[] }) => {
     const [email, setEmail] = useState('');
     const [role, setRole] = useState(roles[0] || 'MEMBRO');
     const [salvando, setSalvando] = useState(false);
@@ -438,4 +462,6 @@ function FormularioCadastro({ aoCadastrar, aoSucesso, roles }: { aoCadastrar: an
             </button>
         </form>
     );
-}
+});
+ 
+export default GerenciarMembros;

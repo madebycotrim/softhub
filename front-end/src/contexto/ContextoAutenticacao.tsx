@@ -1,5 +1,6 @@
 import { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
+import { api } from '@/compartilhado/servicos/api';
 
 export interface Usuario {
     id: string;
@@ -9,11 +10,17 @@ export interface Usuario {
     foto_perfil?: string;
 }
 
+export interface IConfiguracoesUX {
+    hierarquia_roles: string[];
+    permissoes_roles: Record<string, Record<string, boolean>>;
+}
+
 interface ContextoAutenticacaoContrato {
     usuario: Usuario | null;
     token: string | null;
     estaAutenticado: boolean;
     carregando: boolean;
+    configuracoes: IConfiguracoesUX;
     entrar: (usuario: Usuario, token: string) => void;
     sair: () => void;
     atualizarUsuarioLocalmente: (usuario: Usuario) => void;
@@ -21,9 +28,13 @@ interface ContextoAutenticacaoContrato {
 
 export const ContextoAutenticacao = createContext<ContextoAutenticacaoContrato | null>(null);
 
-export function usarAutenticacaoContexto() {
+/**
+ * Hook central de autenticação e governança.
+ * Substitui o antigo 'usarAutenticacaoContexto' e o duplicado em 'autenticacao/hooks'.
+ */
+export function usarAutenticacao() {
     const ctx = useContext(ContextoAutenticacao);
-    if (!ctx) throw new Error('usarAutenticacaoContexto deve ser usado dentro de ProvedorAutenticacao');
+    if (!ctx) throw new Error('usarAutenticacao deve ser usado dentro de ProvedorAutenticacao');
     return ctx;
 }
 
@@ -51,10 +62,36 @@ export function ProvedorAutenticacao({ children }: { children: ReactNode }) {
         return null;
     });
 
-    const [carregando, setCarregando] = useState(false);
+    const [configuracoes, setConfiguracoes] = useState<IConfiguracoesUX>({
+        hierarquia_roles: [],
+        permissoes_roles: {},
+    });
+
+    const [carregando, setCarregando] = useState(true);
+
+    const buscarConfiguracoesPublicas = useCallback(async () => {
+        try {
+            const { data } = await api.get('/api/configuracoes/publico');
+            setConfiguracoes({
+                hierarquia_roles: data.hierarquia_roles || [],
+                permissoes_roles: data.permissoes_roles || {},
+            });
+        } catch (error) {
+            console.error("[Auth] Falha ao carregar matriz de governança:", error);
+        } finally {
+            setCarregando(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (token) {
+            buscarConfiguracoesPublicas();
+        } else {
+            setCarregando(false);
+        }
+    }, [token, buscarConfiguracoesPublicas]);
 
     const entrar = useCallback((novoUsuario: Usuario, novoToken: string) => {
-        console.log('[Auth] Entrando com usuário:', novoUsuario.email);
         setUsuario(novoUsuario);
         setToken(novoToken);
         localStorage.setItem(CHAVE_TOKEN, novoToken);
@@ -83,6 +120,7 @@ export function ProvedorAutenticacao({ children }: { children: ReactNode }) {
             usuario, token,
             estaAutenticado: !!token && !!usuario,
             carregando,
+            configuracoes,
             entrar, sair,
             atualizarUsuarioLocalmente,
         }}>

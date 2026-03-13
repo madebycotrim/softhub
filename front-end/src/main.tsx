@@ -1,6 +1,6 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { RouterProvider } from 'react-router-dom';
+import * as React from 'react';
+import * as ReactDOM from 'react-dom/client';
+import { RouterProvider } from 'react-router';
 import { rotas } from './configuracoes/rotas';
 import './index.css';
 

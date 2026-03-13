@@ -36,9 +36,11 @@ async function doFetch(method: string, url: string, data?: any, config?: any) {
         body: data ? JSON.stringify(data) : undefined,
     });
 
-    // Redireciona para login se token expirar (401), exceto em rotas de autenticação
-    const isAuthRoute = url.includes('/api/auth');
-    if (res.status === 401 && !isAuthRoute) {
+    // Redireciona para login se token expirar (401), exceto em rotas de autenticação ou públicas
+    const isAuthRoute = url.includes('/api/auth') || url.includes('/api/configuracoes/publico');
+    const isNoLogin = typeof window !== 'undefined' && window.location.pathname === '/login';
+
+    if (res.status === 401 && !isAuthRoute && !isNoLogin) {
         localStorage.removeItem('softhub_token');
         localStorage.removeItem('softhub_usuario');
         if (typeof window !== 'undefined') {

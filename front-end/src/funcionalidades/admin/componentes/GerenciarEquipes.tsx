@@ -1,4 +1,4 @@
-import { useState, useRef, useLayoutEffect, useEffect, useMemo, useCallback } from 'react';
+import { useState, useRef, useLayoutEffect, useEffect, useMemo, useCallback, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { LayoutGrid, Users, Plus, Pencil, Trash2, UserCheck, Search, ChevronDown, Check, ArrowRightLeft, X } from 'lucide-react';
 import { Tooltip } from '@/compartilhado/componentes/Tooltip';
@@ -33,7 +33,7 @@ import { BarraFiltros } from '@/compartilhado/componentes/BarraFiltros';
  * Seletor customizado com busca interna para lidar com listas longas (membros/grupos/equipes).
  * Usa Portals para renderizar o menu fora do DOM da modal, evitando cortes por overflow.
  */
-function SeletorBuscavel({
+const SeletorBuscavel = memo(({
     label,
     valor,
     aoAlterar,
@@ -47,7 +47,7 @@ function SeletorBuscavel({
     opcoes: { id: string, nome: string }[],
     placeholderVazio: string,
     icone?: any
-}) {
+}) => {
     const [aberto, setAberto] = useState(false);
     const [busca, setBusca] = useState('');
     const containerRef = useRef<HTMLDivElement>(null);
@@ -141,7 +141,7 @@ function SeletorBuscavel({
             )}
         </div>
     );
-}
+});
 
 
 // ─── Modal de Alocação de Membros ─────────────────────────────────────────────
@@ -161,7 +161,11 @@ interface ModalAlocacaoProps {
  * Modal para alocar membros em grupos e equipes.
  * Redesenhado para ser mais intuitivo com seleção lateral.
  */
-function ModalAlocacao({ aberto, aoFechar, grupos, membros, aoAlocar, grupoIdPadrao, equipeIdPadrao }: ModalAlocacaoProps) {
+/**
+ * Modal para alocar membros em grupos e equipes.
+ * Redesenhado para ser mais intuitivo com seleção lateral.
+ */
+const ModalAlocacao = memo(({ aberto, aoFechar, grupos, membros, aoAlocar, grupoIdPadrao, equipeIdPadrao }: ModalAlocacaoProps) => {
     const [selecionados, setSelecionados] = useState<string[]>([]);
     const [salvando, setSalvando] = useState(false);
     const [erro, setErro] = useState<string | null>(null);
@@ -188,29 +192,31 @@ function ModalAlocacao({ aberto, aoFechar, grupos, membros, aoAlocar, grupoIdPad
         );
     };
 
-    const handleSelecionarTudo = () => {
+    const handleSelecionarTudo = useCallback(() => {
         const disponiveis = membrosFiltrados.filter(m => !(m.grupos_ids?.split(',') || []).includes(grupoIdPadrao || ''));
         if (selecionados.length === disponiveis.length) {
             setSelecionados([]);
         } else {
             setSelecionados(disponiveis.map(m => m.id));
         }
-    };
+    }, [membrosFiltrados, selecionados.length, grupoIdPadrao]);
 
-    const handleAlocar = async () => {
+    const handleAlocar = useCallback(async () => {
         if (selecionados.length === 0 || !grupoIdPadrao || !equipeIdPadrao) return;
         setSalvando(true);
         setErro(null);
         try {
+            // Executa em paralelo mas com tratamento de erro
             await Promise.all(selecionados.map(id => aoAlocar(id, equipeIdPadrao, grupoIdPadrao)));
             setSelecionados([]);
             aoFechar();
-        } catch {
+        } catch (error) {
+            console.error(error);
             setErro('Não foi possível realizar a alocação de alguns membros.');
         } finally {
             setSalvando(false);
         }
-    };
+    }, [selecionados, grupoIdPadrao, equipeIdPadrao, aoAlocar, aoFechar]);
 
     const grupoNome = useMemo(() => grupos.find(g => g.id === grupoIdPadrao)?.nome, [grupos, grupoIdPadrao]);
     
@@ -260,27 +266,27 @@ function ModalAlocacao({ aberto, aoFechar, grupos, membros, aoAlocar, grupoIdPad
                                     key={m.id}
                                     onClick={() => !jaVinculado && toggleSelecionado(m.id)}
                                     disabled={jaVinculado}
-                                    className={`w-full flex items-center justify-between p-3.5 rounded-2xl border transition-all text-left group
+                                    className={`w-full flex items-center justify-between p-2.5 rounded-xl border transition-all text-left group
                                         ${selecionado ? 'bg-blue-50 border-blue-200 ring-1 ring-blue-100' : 'bg-white border-slate-100 hover:border-slate-300 hover:shadow-sm'}
                                         ${jaVinculado ? 'opacity-50 grayscale cursor-not-allowed bg-slate-50' : ''}
                                     `}
                                 >
-                                    <div className="flex items-center gap-4 min-w-0">
-                                        <Avatar nome={m.nome} fotoPerfil={m.foto_perfil} tamanho="md" className={selecionado ? 'ring-2 ring-blue-200' : ''} />
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <Avatar nome={m.nome} fotoPerfil={m.foto_perfil} tamanho="sm" className={selecionado ? 'ring-2 ring-blue-200' : ''} />
                                         <div className="min-w-0">
-                                            <p className={`text-sm font-bold truncate transition-colors ${selecionado ? 'text-blue-900' : 'text-slate-900'}`}>{m.nome}</p>
-                                            <p className="text-[11px] text-slate-400 font-medium truncate">{m.email}</p>
+                                            <p className={`text-[11px] font-bold truncate transition-colors leading-none mb-0.5 ${selecionado ? 'text-blue-900' : 'text-slate-900'}`}>{m.nome}</p>
+                                            <p className="text-[10px] text-slate-400 font-medium truncate leading-none">{m.email}</p>
                                         </div>
                                     </div>
                                     
                                     <div className="shrink-0 pl-2">
                                         {jaVinculado ? (
-                                            <div className="bg-slate-200 text-slate-500 text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-2xl">Vinculado</div>
+                                            <div className="bg-slate-200 text-slate-500 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg">Vinculado</div>
                                         ) : (
-                                            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all
+                                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all
                                                 ${selecionado ? 'bg-blue-600 border-blue-600' : 'bg-transparent border-slate-200 group-hover:border-blue-300'}
                                             `}>
-                                                <div className={`w-2 h-2 rounded-full bg-white transition-all ${selecionado ? 'scale-100' : 'scale-0'}`} />
+                                                <div className={`w-1.5 h-1.5 rounded-full bg-white transition-all ${selecionado ? 'scale-100' : 'scale-0'}`} />
                                             </div>
                                         )}
                                     </div>
@@ -323,7 +329,7 @@ function ModalAlocacao({ aberto, aoFechar, grupos, membros, aoAlocar, grupoIdPad
             </div>
         </Modal>
     );
-}
+});
 
 // ─── Modal de Movimentação de Membros ─────────────────────────────────────────
 
@@ -336,7 +342,7 @@ interface ModalMovimentacaoProps {
     aoMover: (membroId: string, equipeId: string, grupoDestinoId: string) => Promise<void>;
 }
 
-function ModalMovimentacao({ aberto, aoFechar, membro, grupos, equipeId, aoMover }: ModalMovimentacaoProps) {
+const ModalMovimentacao = memo(({ aberto, aoFechar, membro, grupos, equipeId, aoMover }: ModalMovimentacaoProps) => {
     const [grupoDestinoId, setGrupoDestinoId] = useState('');
     const [salvando, setSalvando] = useState(false);
 
@@ -399,11 +405,11 @@ function ModalMovimentacao({ aberto, aoFechar, membro, grupos, equipeId, aoMover
             </div>
         </Modal>
     );
-}
+});
 
 // ─── Modal de Seleção de Líder ────────────────────────────────────────────────
 
-function ModalSelecaoLider({ 
+const ModalSelecaoLider = memo(({ 
     aberto, 
     aoFechar, 
     membros, 
@@ -421,7 +427,7 @@ function ModalSelecaoLider({
     valorAtual?: string | null,
     outroId?: string | null,
     tipo?: 'lider' | 'sub_lider'
-}) {
+}) => {
     const [busca, setBusca] = useState('');
     const [salvando, setSalvando] = useState(false);
 
@@ -502,12 +508,12 @@ function ModalSelecaoLider({
             </div>
         </Modal>
     );
-}
+});
 
 
 // ─── Componente: CardMembroFino ──────────────────────────────────────────────
 
-function CardMembroFino({ membro, aoRemover, aoMover }: { membro: MembroSimples, aoRemover: () => void, aoMover: () => void }) {
+const CardMembroFino = memo(({ membro, aoRemover, aoMover }: { membro: MembroSimples, aoRemover: () => void, aoMover: () => void }) => {
     const podeEditar = usarPermissaoAcesso('equipes:editar_equipe');
 
     return (
@@ -541,11 +547,11 @@ function CardMembroFino({ membro, aoRemover, aoMover }: { membro: MembroSimples,
             )}
         </div>
     );
-}
+});
 
 // ─── Componente: DetalheEquipe ────────────────────────────────────────────────
 
-function DetalheEquipe({
+const DetalheEquipe = memo(({
     equipe,
     grupos,
     membros,
@@ -569,7 +575,7 @@ function DetalheEquipe({
     aoSelecionarLider: (tipo: 'lider' | 'sub_lider') => void,
     aoSalvarNomeGrupo: (id: string, nome: string) => Promise<void>,
     aoSalvarNomeEquipe: (id: string, nome: string) => Promise<void>
-}) {
+}) => {
     const [editandoId, setEditandoId] = useState<string | null>(null);
     const [editandoEquipe, setEditandoEquipe] = useState(false);
     const [nomeTemp, setNomeTemp] = useState('');
@@ -616,7 +622,7 @@ function DetalheEquipe({
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col h-full overflow-hidden">
             <div className="shrink-0">
                 {/* Header da Equipe */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-5">
                 <div className="flex items-center gap-6">
                     <div className="w-14 h-14 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center border border-slate-100">
                         <Users size={24} />
@@ -693,7 +699,7 @@ function DetalheEquipe({
             </div>
 
             {/* Leadership Section */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
                 <div 
                     onClick={() => podeEditarEquipe && aoSelecionarLider('lider')}
                     className={`flex items-center gap-5 p-5 rounded-2xl border transition-all group/lead ${equipe.lider_id ? 'bg-slate-50/50 border-slate-100 shadow-sm hover:border-blue-200' : 'bg-white border-dashed border-slate-200 hover:bg-slate-50'} ${podeEditarEquipe ? 'cursor-pointer' : 'cursor-default'}`}
@@ -732,7 +738,7 @@ function DetalheEquipe({
             </div>
 
             {/* Side-by-Side Groups Header */}
-            <div className="flex items-center justify-between mb-4 shrink-0">
+            <div className="flex items-center justify-between mb-3 shrink-0">
                 <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400/80">Grupos de Trabalho</h4>
                 {podeCriarGrupo && (
                     <button
@@ -748,9 +754,9 @@ function DetalheEquipe({
 
             {/* Scrollable Groups Area */}
             <div className="flex-1 overflow-y-auto min-h-0 pr-2 -mr-2 custom-scrollbar">
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 h-full">
                 {grupos.length === 0 ? (
-                    <div className="col-span-full py-16 bg-muted/5 border-2 border-dashed border-border rounded-2xl flex flex-col items-center justify-center">
+                    <div className="col-span-full h-full bg-muted/5 border-2 border-dashed border-border rounded-2xl flex flex-col items-center justify-center py-16">
                         <EstadoVazio 
                             titulo="Equipe sem Grupos"
                             descricao="Esta equipe ainda não possui grupos de trabalho definidos."
@@ -767,8 +773,8 @@ function DetalheEquipe({
                         const inicial = devePularPrimeira ? partes[1].charAt(0).toUpperCase() : partes[0].charAt(0).toUpperCase();
 
                         return (
-                            <div key={g.id} className="bg-card border border-border rounded-2xl p-6 flex flex-col h-full min-h-[400px] shadow-sm hover:shadow-md transition-all overflow-hidden group/gcard">
-                                <div className="flex items-center justify-between mb-6">
+                            <div key={g.id} className="bg-card border border-border rounded-2xl p-4 flex flex-col h-full shadow-sm hover:shadow-md transition-all overflow-hidden group/gcard">
+                                <div className="flex items-center justify-between mb-4">
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-xl border border-primary/20">
                                             {inicial}
@@ -859,7 +865,7 @@ function DetalheEquipe({
                                                         </button>
                                                     )}
                                                 </div>
-                                                <div className="flex-1 overflow-y-auto min-h-0 space-y-2 pr-1 custom-scrollbar">
+                                                <div className="flex-1 overflow-y-auto min-h-0 space-y-2 pr-1 custom-scrollbar flex flex-col">
                                                     {membrosDoGrupo.map(membro => (
                                                         <CardMembroFino 
                                                             key={membro.id} 
@@ -869,9 +875,11 @@ function DetalheEquipe({
                                                         />
                                                     ))}
                                                     {membrosDoGrupo.length === 0 && (
-                                                        <div className="flex flex-col items-center justify-center border-2 border-dashed border-border/40 rounded-xl bg-muted/5 py-10">
-                                                            <p className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-widest">Base de Dados Vazia</p>
-                                                        </div>
+                                                        <EstadoVazio 
+                                                            titulo="Sem Operadores"
+                                                            descricao="Este grupo ainda não possui membros alocados."
+                                                            compacto={true}
+                                                        />
                                                     )}
                                                 </div>
                                             </>
@@ -886,11 +894,11 @@ function DetalheEquipe({
             </div>
         </div>
     );
-}
+});
 
 // ─── Componente Principal: GerenciarOrganizacao ───────────────────────────────
 
-export function GerenciarEquipes() {
+export const GerenciarEquipes = memo(() => {
     const {
         grupos, equipes, membros, carregando, erro,
         criarGrupo, editarGrupo, desativarGrupo,
@@ -1005,8 +1013,18 @@ export function GerenciarEquipes() {
         }
     }, [modalLider, idEquipeAtiva, equipeAtiva, editarEquipe]);
 
+    // Callbacks Memoizados para DetalheEquipe
+    const handleAdicionarGrupo = useCallback(() => setModalOrg({ aberto: true, tipo: 'grupo', dados: { equipe_id: idEquipeAtiva } }), [idEquipeAtiva]);
+    const handleExcluirGrupo = useCallback((g: Grupo) => setConfirmacaoExclusao({ id: g.id, nome: g.nome, tipo: 'grupo' }), []);
+    const handleAlocarAbrir = useCallback((gId: string, eId: string) => setModalAlocacao({ grupoId: gId, equipeId: eId }), []);
+    const handleRemoverMembro = useCallback((mId: string) => alocarMembro(mId, null, null), [alocarMembro]);
+    const handleMoverMembroAbrir = useCallback((mId: string, gOrigemId: string) => setModalMover({ membroId: mId, grupoOrigemId: gOrigemId, equipeId: idEquipeAtiva! }), [idEquipeAtiva]);
+    const handleSelecionarLiderAbrir = useCallback((tipo: 'lider' | 'sub_lider') => setModalLider({ aberto: true, tipo }), []);
+    const handleSalvarNomeGrupo = useCallback((id: string, nome: string) => editarGrupo(id, { nome }), [editarGrupo]);
+    const handleSalvarNomeEquipe = useCallback((id: string, nome: string) => editarEquipe(id, { nome }), [editarEquipe]);
+
     return (
-        <div className="flex flex-col h-full space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-10">
+        <div className="flex flex-col h-full space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <CabecalhoFuncionalidade
                 titulo="Estrutura Organizacional"
                 subtitulo="Gestão de equipes, grupos de trabalho e alocação de lideranças."
@@ -1029,7 +1047,7 @@ export function GerenciarEquipes() {
                 ) : (
                     <>
                         {/* Sidebar de Equipes */}
-                        <aside className="w-full lg:w-72 xl:w-80 flex flex-col shrink-0">
+                        <aside className="w-full lg:w-80 flex flex-col shrink-0">
                             <div className="bg-card border border-border rounded-2xl shadow-sm flex flex-col h-full overflow-hidden">
                                 <div className="p-5 border-b border-border bg-muted/10 flex items-center justify-between">
                                     <div className="flex items-center gap-2">
@@ -1041,18 +1059,18 @@ export function GerenciarEquipes() {
                                     <span className="text-[9px] font-black text-muted-foreground/60">{equipesAtivas.length}</span>
                                 </div>
 
-                                <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+                                <div className="flex-1 overflow-y-auto p-3 space-y-1.5 custom-scrollbar">
                                     {equipesAtivas.map(e => (
                                         <div
                                             key={e.id}
                                             onClick={() => setIdEquipeAtiva(e.id)}
-                                            className={`group/card relative flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer ${
+                                            className={`group/card relative flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${
                                                 idEquipeAtiva === e.id
                                                     ? 'bg-primary/10 border-primary text-primary shadow-sm'
                                                     : 'bg-muted/10 border-transparent hover:bg-muted/30 hover:border-border/50 text-muted-foreground'
                                             }`}
                                         >
-                                            <div className="flex flex-col min-w-0 pr-6">
+                                            <div className="flex flex-col min-w-0 pr-6 w-full">
                                                 <span className={`text-[11px] font-black uppercase tracking-wider truncate mb-1 ${idEquipeAtiva === e.id ? 'text-primary' : 'text-foreground/80'}`}>
                                                     {e.nome}
                                                 </span>
@@ -1068,7 +1086,7 @@ export function GerenciarEquipes() {
                                                         ev.stopPropagation();
                                                         setConfirmacaoExclusao({ id: e.id, nome: e.nome, tipo: 'equipe' });
                                                     }}
-                                                    className="opacity-0 group-hover/card:opacity-100 p-2 rounded-lg text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-all active:scale-95"
+                                                    className={`p-2 rounded-lg text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-all active:scale-95 ${idEquipeAtiva === e.id ? 'opacity-100' : 'opacity-0 group-hover/card:opacity-100'}`}
                                                 >
                                                     <Trash2 size={12} />
                                                 </button>
@@ -1077,8 +1095,16 @@ export function GerenciarEquipes() {
                                     ))}
 
                                     {equipesAtivas.length === 0 && (
-                                        <div className="py-20 text-center border border-dashed border-border rounded-xl">
-                                            <p className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-widest">Nenhuma equipe</p>
+                                        <div className="flex-1 flex flex-col items-center justify-center">
+                                            <EstadoVazio 
+                                                titulo="Sem Equipes"
+                                                descricao="Nenhuma equipe foi criada ainda."
+                                                compacto={true}
+                                                acao={podeCriarEquipe ? {
+                                                    rotulo: "Criar Equipe",
+                                                    aoClicar: () => setModalOrg({ aberto: true, tipo: 'equipe' })
+                                                } : undefined}
+                                            />
                                         </div>
                                     )}
                                 </div>
@@ -1087,30 +1113,30 @@ export function GerenciarEquipes() {
 
                         {/* Detalhe da Equipe Selecionada */}
                         <main className="flex-1 flex flex-col min-w-0 min-h-0">
-                            {equipeAtiva ? (
-                                <DetalheEquipe
-                                    key={equipeAtiva.id}
-                                    equipe={equipeAtiva}
-                                    grupos={gruposDaEquipe}
-                                    membros={membros}
-                                    aoAdicionarGrupo={() => setModalOrg({ aberto: true, tipo: 'grupo', dados: { equipe_id: idEquipeAtiva } })}
-                                    aoExcluirGrupo={(g) => setConfirmacaoExclusao({ id: g.id, nome: g.nome, tipo: 'grupo' })}
-                                    aoAlocar={(gId, eId) => setModalAlocacao({ grupoId: gId, equipeId: eId })}
-                                    aoRemoverMembro={(mId) => alocarMembro(mId, null, null)}
-                                    aoMoverMembro={(mId, gOrigemId) => setModalMover({ membroId: mId, grupoOrigemId: gOrigemId, equipeId: idEquipeAtiva! })}
-                                    aoSelecionarLider={(tipo) => setModalLider({ aberto: true, tipo })}
-                                    aoSalvarNomeGrupo={(id, nome) => editarGrupo(id, { nome })}
-                                    aoSalvarNomeEquipe={(id, nome) => editarEquipe(id, { nome })}
-                                />
-                            ) : (
-                                <div className="flex-1 flex flex-col items-center justify-center bg-card border border-border rounded-2xl border-dashed">
-                                    <div className="p-6 bg-muted/20 rounded-full text-muted-foreground/30 mb-4 animate-pulse">
-                                        <LayoutGrid size={48} strokeWidth={1} />
-                                    </div>
-                                    <h3 className="text-[12px] font-black uppercase tracking-widest text-foreground/40">Selecione uma Equipe</h3>
-                                    <p className="text-[10px] text-muted-foreground/40 mt-2">Escolha na lista lateral para gerenciar as equipes</p>
-                                </div>
-                            )}
+                             {equipeAtiva ? (
+                                 <DetalheEquipe
+                                     key={equipeAtiva.id}
+                                     equipe={equipeAtiva}
+                                     grupos={gruposDaEquipe}
+                                     membros={membros}
+                                     aoAdicionarGrupo={handleAdicionarGrupo}
+                                     aoExcluirGrupo={handleExcluirGrupo}
+                                     aoAlocar={handleAlocarAbrir}
+                                     aoRemoverMembro={handleRemoverMembro}
+                                     aoMoverMembro={handleMoverMembroAbrir}
+                                     aoSelecionarLider={handleSelecionarLiderAbrir}
+                                     aoSalvarNomeGrupo={handleSalvarNomeGrupo}
+                                     aoSalvarNomeEquipe={handleSalvarNomeEquipe}
+                                 />
+                             ) : (
+                                 <div className="flex-1 flex flex-col items-center justify-center bg-card border border-border rounded-2xl border-dashed p-12">
+                                     <EstadoVazio 
+                                        titulo="Painel Organizacional"
+                                        descricao="Selecione uma equipe na lista lateral para gerenciar seus membros e grupos de trabalho."
+                                        iconeCustom={<LayoutGrid size={32} strokeWidth={1.5} className="text-primary/40" />}
+                                     />
+                                 </div>
+                             )}
                         </main>
                     </>
                 )}
@@ -1180,7 +1206,7 @@ export function GerenciarEquipes() {
             />
         </div>
     );
-}
+});
 
 // ─── Componente Interno: FormGrupoEquipe ──────────────────────────────────────
 
@@ -1193,7 +1219,7 @@ interface FormGrupoEquipeProps {
     aoFechar: () => void;
 }
 
-function FormGrupoEquipe({ titulo, tipo, equipes, equipeAtivaId, aoSalvar, aoFechar }: FormGrupoEquipeProps) {
+const FormGrupoEquipe = memo(({ titulo, tipo, equipes, equipeAtivaId, aoSalvar, aoFechar }: FormGrupoEquipeProps) => {
     const [salvando, setSalvando] = useState(false);
     const [nome, setNome] = useState('');
     const [equipeId, setEquipeId] = useState(equipeAtivaId || '');
@@ -1256,4 +1282,6 @@ function FormGrupoEquipe({ titulo, tipo, equipes, equipeAtivaId, aoSalvar, aoFec
             </div>
         </form>
     );
-}
+});
+ 
+export default GerenciarEquipes;

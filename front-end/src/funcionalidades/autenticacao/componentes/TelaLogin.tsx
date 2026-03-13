@@ -2,15 +2,15 @@ import { useState, useEffect } from 'react';
 import { useMsal } from '@azure/msal-react';
 import { useSearchParams, useNavigate } from 'react-router';
 import { Globe, Code, Info, Download } from 'lucide-react';
-import { ambiente } from '@/configuracoes/ambiente';
-import { api } from '@/compartilhado/servicos/api';
-import { usarAutenticacaoContexto } from '@/contexto/ContextoAutenticacao';
-import logoUnieuro from '@/assets/logo-unieuro-branca.png';
-import { loginRequest } from '@/configuracoes/msal';
+import { ambiente } from '../../../configuracoes/ambiente';
+import { api } from '../../../compartilhado/servicos/api';
+import { usarAutenticacao } from '../../../contexto/ContextoAutenticacao';
+import logoUnieuro from '../../../assets/logo-unieuro-branca.png';
+import { loginRequest } from '../../../configuracoes/msal';
 import PainelQRCode from './PainelQRCode';
-import { usarDispositivo } from '@/compartilhado/hooks/usarDispositivo';
+import { usarDispositivo } from '../../../compartilhado/hooks/usarDispositivo';
 
-import { Alerta } from '@/compartilhado/componentes/Alerta';
+import { Alerta } from '../../../compartilhado/componentes/Alerta';
 
 /**
  * Tela de login com estética Discord-Style (Minimalista e Funcional).
@@ -22,13 +22,17 @@ export default function TelaLogin() {
     const { instance } = useMsal();
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const { entrar, estaAutenticado } = usarAutenticacaoContexto();
+    const { entrar, estaAutenticado } = usarAutenticacao();
     const { isMobile } = usarDispositivo();
 
     const [carregando, setCarregando] = useState(false);
     const [erroLocal, setErroLocal] = useState<string | null>(null);
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
     const [configPublica, setConfigPublica] = useState<{ dominios_autorizados: string[], modo_manutencao: boolean } | null>(null);
+    const configRef = useState<{ current: any }>({ current: null })[0]; // Ref manual para persistir config sem disparar hooks
+
+    // Sincroniza ref com estado para uso no processador assíncrono
+    useEffect(() => { configRef.current = configPublica; }, [configPublica]);
 
     // ─── Buscar Governança Pública (Domínios e Manutenção) ──────────────────────
     useEffect(() => {
@@ -71,81 +75,82 @@ export default function TelaLogin() {
     };
     const erro = erroLocal ?? (erroRedirect ? mensagemErroRedirect[erroRedirect] : null);
 
+    // ─── Lógica de Redirecionamento se já Autenticado ───────────────────────────
     useEffect(() => {
-        // Se já está logado no SoftHub, sai do Login
         if (estaAutenticado) {
             navigate('/app/dashboard', { replace: true });
+        }
+    }, [estaAutenticado, navigate]);
+
+    // ─── Processador de Autenticação Backend ──────────────────────────────────
+    const realizarAutenticacaoNoBackend = async (conta: any) => {
+        const config = configRef.current; // Usa a ref para não depender do estado no callback
+        if (travaAuthGlobal || !config) return;
+        travaAuthGlobal = true;
+
+        const email = (conta.username || '').toLowerCase();
+        const dominiosValidos = config.dominios_autorizados || ['unieuro.com.br'];
+        
+        if (!dominiosValidos.some((d: string) => email.endsWith(`@${d.toLowerCase()}`))) {
+            console.warn('[Login] ❌ Domínio não autorizado:', email);
+            setErroLocal(`Use o e-mail institucional (${dominiosValidos.map((d: string) => `@${d}`).join(' ou ')}).`);
+            setCarregando(false);
+            travaAuthGlobal = false;
             return;
         }
 
-        // Se já temos um erro na tela OU já está processando, bloqueia tudo (Morte do Loop)
-        if (erroLocal || travaAuthGlobal) {
-            return;
+        try {
+            setCarregando(true);
+            const tokenResponse = await instance.acquireTokenSilent({
+                ...loginRequest,
+                account: conta
+            });
+
+            const response = await api.post('/api/auth/msal', {
+                accessToken: tokenResponse.accessToken,
+                idToken: tokenResponse.idToken
+            });
+
+            console.log('[Login] ✅ Autorizado como:', email);
+            entrar(response.data.usuario, response.data.token);
+            navigate('/app/dashboard', { replace: true });
+        } catch (error: any) {
+            console.error('[Login] ❌ Erro autenticação:', error);
+            const dataErro = error.response?.data;
+            const msgUser = dataErro?.erro || 'Tente logar manualmente clicando no botão.';
+            const detalhe = dataErro?.detalhe ? ` (${dataErro.detalhe})` : '';
+
+            setErroLocal(`${msgUser}${detalhe}`);
+            setCarregando(false);
+            travaAuthGlobal = false;
         }
+    };
 
-        const realizarAutenticacaoNoBackend = async (conta: any) => {
-            if (travaAuthGlobal) return;
-            travaAuthGlobal = true;
+    // ─── Gerenciamento de Eventos MSAL ──────────────────────────────────────────
+    useEffect(() => {
+        let montado = true;
 
-            const email = (conta.username || '').toLowerCase();
-            const dominiosValidos = configPublica?.dominios_autorizados || ['unieuro.com.br'];
-            
-            if (!dominiosValidos.some(d => email.endsWith(`@${d.toLowerCase()}`))) {
-                console.warn('[Login] ❌ Domínio não autorizado:', email);
-                setErroLocal(`Use o e-mail institucional (${dominiosValidos.map(d => `@${d}`).join(' ou ')}).`);
-                setCarregando(false);
-                return;
-            }
-
-            try {
-                setCarregando(true);
-                const tokenResponse = await instance.acquireTokenSilent({
-                    ...loginRequest,
-                    account: conta
-                });
-
-                const response = await api.post('/api/auth/msal', {
-                    accessToken: tokenResponse.accessToken,
-                    idToken: tokenResponse.idToken
-                });
-
-                console.log('[Login] ✅ Autorizado como:', email);
-                entrar(response.data.usuario, response.data.token);
-                navigate('/app/dashboard', { replace: true });
-            } catch (error: any) {
-                console.error('[Login] ❌ Erro autenticação:', error);
-                
-                // Mensagem amigável com ajuda técnica se for 401
-                const dataErro = error.response?.data;
-                const msgUser = dataErro?.erro || 'Tente logar manualmente clicando no botão.';
-                const detalhe = dataErro?.detalhe ? ` (${dataErro.detalhe})` : '';
-
-                setErroLocal(`${msgUser}${detalhe}`);
-                setCarregando(false);
-                // NÃO limpamos travaAuthGlobal aqui. Isso para o looping.
-            }
-        };
-
-        // Captura o resultado de um retorno de login microsoft
+        // 1. Tenta capturar resultado de redirect pendente - APENAS UMA VEZ
         instance.handleRedirectPromise().then((response) => {
-            if (response?.account) {
+            if (montado && response?.account) {
                 realizarAutenticacaoNoBackend(response.account);
             }
         }).catch(err => {
-            console.error('[Login] MSAL Error:', err);
-            setErroLocal('A comunicação com a Microsoft falhou.');
+            if (montado) console.error('[Login] MSAL Error:', err);
         });
 
+        // 2. Escuta eventos de sucesso do MSAL
         const callbackId = instance.addEventCallback((event: any) => {
-            if (event.eventType === 'msal:loginSuccess' && event.payload?.account) {
+            if (montado && event.eventType === 'msal:loginSuccess' && event.payload?.account) {
                 realizarAutenticacaoNoBackend(event.payload.account);
             }
         });
 
         return () => {
+            montado = false;
             if (callbackId) instance.removeEventCallback(callbackId);
         };
-    }, [instance, navigate, entrar, estaAutenticado, erroLocal, configPublica]);
+    }, [instance]); // Removeu configPublica, entrar e navigate das dependências
 
     const handleLogin = async () => {
         setCarregando(true);

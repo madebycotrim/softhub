@@ -1,3 +1,4 @@
+import { useState, useMemo, memo } from 'react';
 import { Plus, Trash2, Megaphone } from 'lucide-react';
 import { usarAvisos } from '@/funcionalidades/avisos/hooks/usarAvisos';
 import { Avatar } from '@/compartilhado/componentes/Avatar';
@@ -5,14 +6,13 @@ import { Carregando } from '@/compartilhado/componentes/Carregando';
 import { EstadoErro } from '@/compartilhado/componentes/EstadoErro';
 import { formatarDataHora } from '@/utilitarios/formatadores';
 import { usarPermissao, usarPermissaoAcesso } from '@/compartilhado/hooks/usarPermissao';
-import { useState } from 'react';
 import { Modal } from '@/compartilhado/componentes/Modal';
 import { FormularioAviso } from './FormularioAviso';
 import { CabecalhoFuncionalidade } from '@/compartilhado/componentes/CabecalhoFuncionalidade';
 import { EstadoVazio } from '@/compartilhado/componentes/EstadoVazio';
-import { usarAutenticacao } from '@/funcionalidades/autenticacao/hooks/usarAutenticacao';
+import { usarAutenticacao } from '@/contexto/ContextoAutenticacao';
 
-export function MuralAvisos() {
+export const MuralAvisos = memo(() => {
     const { avisos, carregando, erro, removerAviso } = usarAvisos();
     const podeCriar = usarPermissaoAcesso('avisos:criar');
     const podeRemoverGeral = usarPermissaoAcesso('avisos:remover');
@@ -21,10 +21,12 @@ export function MuralAvisos() {
     const { usuario } = usarAutenticacao();
 
     // Ordenamos os avisos para Urgente aparecer primeiro
-    const avisosOrdenados = [...avisos].sort((a, b) => {
-        const pVal: Record<string, number> = { urgente: 3, importante: 2, info: 1 };
-        return pVal[b.prioridade] - pVal[a.prioridade];
-    });
+    const avisosOrdenados = useMemo(() => {
+        return [...avisos].sort((a, b) => {
+            const pVal: Record<string, number> = { urgente: 3, importante: 2, info: 1 };
+            return (pVal[b.prioridade] || 0) - (pVal[a.prioridade] || 0);
+        });
+    }, [avisos]);
 
     return (
         <div className="w-full space-y-10 pb-20 animate-in fade-in duration-500">
@@ -155,4 +157,6 @@ export function MuralAvisos() {
 
         </div>
     );
-}
+});
+ 
+export default MuralAvisos;
