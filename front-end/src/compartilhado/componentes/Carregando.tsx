@@ -14,7 +14,7 @@ export function Carregando({ tamanho = 'md', Centralizar = true, className = '' 
         lg: 'w-12 h-12 border-4',
     };
 
-    const spinnerCSS = `rounded-full border-blue-600/30 border-t-blue-600 animate-spin flex-shrink-0 ${tamanhosMap[tamanho]} ${className}`;
+    const spinnerCSS = `rounded-full border-primary/20 border-t-primary animate-spin animate-[glow-pulse_2s_infinite] flex-shrink-0 ${tamanhosMap[tamanho]} ${className}`;
 
     if (Centralizar) {
         return (

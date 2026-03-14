@@ -91,10 +91,26 @@ export function autenticacaoRequerida(roleMinimoRequerido?: string) {
             return c.json({ erro: 'Token inválido ou expirado.' }, 401);
         }
 
-        const resUsuario = await c.env.DB.prepare('SELECT id, nome, email, role, versao_token FROM usuarios WHERE id = ?').bind(payload.id).first<any>();
-        if (!resUsuario) {
-            return c.json({ erro: 'Usuário não encontrado.' }, 401);
+        // ─── OTIMIZAÇÃO: Cache de Sessão no KV ───
+        const chaveCache = `sessao:${payload.id}`;
+        let resUsuario: any;
+
+        if (c.env.softhub_kv) {
+            const cache = await c.env.softhub_kv.get(chaveCache);
+            if (cache) resUsuario = JSON.parse(cache);
         }
+
+        if (!resUsuario) {
+            resUsuario = await c.env.DB.prepare('SELECT id, nome, email, role, versao_token FROM usuarios WHERE id = ?').bind(payload.id).first<any>();
+            if (!resUsuario) {
+                return c.json({ erro: 'Usuário não encontrado.' }, 401);
+            }
+            // Salva no KV por 1 hora para evitar D1 em cada requisição
+            if (c.env.softhub_kv) {
+                await c.env.softhub_kv.put(chaveCache, JSON.stringify(resUsuario), { expirationTtl: 3600 });
+            }
+        }
+
         if (payload.versao_token !== undefined && resUsuario.versao_token !== payload.versao_token) {
             return c.json({ erro: 'Sua sessão foi encerrada porque você entrou em outro dispositivo.' }, 401);
         }

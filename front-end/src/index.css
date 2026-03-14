@@ -189,6 +189,16 @@
     100% { transform: translateX(100%); }
   }
 
+  @keyframes shimmer {
+    100% { transform: translateX(100%); }
+  }
+
+  /* Brilho pulsante suave para o logo/loaders */
+  @keyframes glow-pulse {
+    0%, 100% { filter: drop-shadow(0 0 5px rgba(var(--primary), 0.2)); }
+    50% { filter: drop-shadow(0 0 15px rgba(var(--primary), 0.5)); }
+  }
+
   .animate-progress-bar {
     animation: progress-bar 2s infinite ease-in-out;
   }

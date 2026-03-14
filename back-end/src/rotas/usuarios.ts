@@ -19,17 +19,23 @@ rotasUsuarios.get('/ping', async (c) => {
 
 /**
  * Lista todos os membros do sistema.
+ * Requer permissão 'membros:gerenciar'.
  */
 rotasUsuarios.get('/', autenticacaoRequerida(), verificarPermissao('membros:gerenciar'), async (c: Context) => {
     const { DB } = c.env;
     try {
+        // OTIMIZAÇÃO: Consulta única com GROUP_CONCAT e JOIN para evitar subconsultas custosas
         const query = `
-            SELECT
+            SELECT 
                 u.id, u.nome, u.email, u.role, u.foto_perfil, u.foto_banner, u.bio, u.criado_em,
                 u.github_url, u.linkedin_url, u.website_url,
-                (SELECT GROUP_CONCAT(grupo_id) FROM usuarios_organizacao WHERE usuario_id = u.id) as grupos_ids,
-                (SELECT GROUP_CONCAT(e.nome) FROM usuarios_organizacao uo JOIN equipes e ON e.id = uo.equipe_id WHERE uo.usuario_id = u.id) as equipe_nome
+                GROUP_CONCAT(uo.grupo_id) as grupos_ids,
+                GROUP_CONCAT(e.nome) as equipe_nome,
+                MAX(uo.equipe_id) as equipe_id
             FROM usuarios u
+            LEFT JOIN usuarios_organizacao uo ON uo.usuario_id = u.id
+            LEFT JOIN equipes e ON e.id = uo.equipe_id
+            GROUP BY u.id
             ORDER BY u.nome ASC
         `;
         const res = await DB.prepare(query).all();

@@ -36,9 +36,16 @@ rotasConfiguracoes.get('/', autenticacaoRequerida(), verificarPermissao('configu
  * Acessível sem autenticação.
  */
 rotasConfiguracoes.get('/publico', async (c: Context) => {
-    const { DB } = c.env;
+    const { DB, softhub_kv } = c.env;
+    const CHAVE_CACHE = 'configs_publicas';
 
     try {
+        // 1. Tenta buscar no cache KV primeiro
+        if (softhub_kv) {
+            const cache = await softhub_kv.get(CHAVE_CACHE);
+            if (cache) return c.json(JSON.parse(cache));
+        }
+
         const { results } = await DB.prepare('SELECT chave, valor FROM configuracoes_sistema WHERE chave IN (?, ?, ?, ?, ?, ?)')
             .bind('permissoes_roles', 'hierarquia_roles', 'dominios_autorizados', 'modo_manutencao', 'hora_inicio_ponto', 'hora_fim_ponto')
             .all();
@@ -60,6 +67,11 @@ rotasConfiguracoes.get('/publico', async (c: Context) => {
                     config[row.chave] = row.valor === 'true' ? true : row.valor === 'false' ? false : row.valor;
                 }
             });
+        }
+
+        // 2. Salva no KV por 1 hora
+        if (softhub_kv) {
+            await softhub_kv.put(CHAVE_CACHE, JSON.stringify(config), { expirationTtl: 3600 });
         }
 
         return c.json(config);
@@ -94,6 +106,7 @@ rotasConfiguracoes.post('/', autenticacaoRequerida(), verificarPermissao('config
         
         // Limpa cache KV de forma resiliente
         if (softhub_kv) {
+            await softhub_kv.delete('configs_publicas');
             for (const chave of Object.keys(body)) {
                 try {
                     await softhub_kv.delete(chave);
@@ -160,6 +173,7 @@ rotasConfiguracoes.patch('/:chave', autenticacaoRequerida(), verificarPermissao(
         // Limpa cache no KV de forma resiliente
         if (softhub_kv) {
             try {
+                await softhub_kv.delete('configs_publicas');
                 await softhub_kv.delete(chave);
             } catch (kvErro) {
                 console.error(`[CONFIG] Falha ao limpar KV para ${chave}:`, kvErro);
@@ -222,8 +236,11 @@ rotasConfiguracoes.patch('/roles/:antigo/renomear', autenticacaoRequerida('ADMIN
         await DB.batch(batch);
 
         // 3. Invalidar caches para refletir a mudança imediatamente
-        await softhub_kv.delete('permissoes_roles');
-        await softhub_kv.delete('hierarquia_roles');
+        if (softhub_kv) {
+            await softhub_kv.delete('configs_publicas');
+            await softhub_kv.delete('permissoes_roles');
+            await softhub_kv.delete('hierarquia_roles');
+        }
         
         // Nota: usuários logados podem precisar de novo token se a role for validada no JWT, 
         // mas aqui a role é buscada no banco por ID no middleware autenticacaoRequerida, então será imediato.

@@ -13,47 +13,23 @@ rotasPerfil.get('/me', autenticacaoRequerida(), async (c: Context) => {
     const usuarioLogado = c.get('usuario');
 
     try {
-        // 1. Dados Básicos do Usuário (Query simplificada para evitar falhas em JOINS)
-        const usuario = await DB.prepare(`
-            SELECT 
-                id, nome, email, role, foto_perfil, foto_banner, bio, criado_em,
-                github_url, linkedin_url, website_url
-            FROM usuarios 
-            WHERE id = ?
-        `).bind(usuarioLogado.id).first() as any;
+        // OTIMIZAÇÃO: Batch de todas as consultas do perfil em uma única ida ao banco
+        const [resUsuario, resOrg, resStatsTarefas, resStatsPonto] = await DB.batch([
+            DB.prepare(`SELECT id, nome, email, role, foto_perfil, foto_banner, bio, criado_em, github_url, linkedin_url, website_url FROM usuarios WHERE id = ?`).bind(usuarioLogado.id),
+            DB.prepare(`SELECT e.nome as equipe_nome, g.nome as grupo_nome FROM usuarios_organizacao uo LEFT JOIN equipes e ON e.id = uo.equipe_id LEFT JOIN grupos g ON g.id = uo.grupo_id WHERE uo.usuario_id = ?`).bind(usuarioLogado.id),
+            DB.prepare(`SELECT COUNT(*) as total, SUM(CASE WHEN t.status = 'concluida' THEN 1 ELSE 0 END) as concluidas FROM tarefas t JOIN tarefas_responsaveis tr ON tr.tarefa_id = t.id WHERE tr.usuario_id = ?`).bind(usuarioLogado.id),
+            DB.prepare(`SELECT COUNT(*) as batidas FROM ponto_registros WHERE usuario_id = ? AND strftime('%m', registrado_em) = strftime('%m', 'now')`).bind(usuarioLogado.id)
+        ]);
+
+        const usuario = resUsuario.results[0] as any;
+        const organizacao = resOrg.results[0] as any;
+        const statsTarefas = resStatsTarefas.results[0] as any;
+        const statsPonto = resStatsPonto.results[0] as any;
 
         if (!usuario) {
             console.error(`[PERFIL] Usuário não encontrado no banco: ${usuarioLogado.id}`);
             return c.json({ erro: 'Perfil não mapeado no sistema (ERR_D1_NOT_FOUND).' }, 404);
         }
-
-        // 2. Dados de Organização (Separados para evitar quebras)
-        const organizacao = await DB.prepare(`
-            SELECT 
-                e.nome as equipe_nome,
-                g.nome as grupo_nome
-            FROM usuarios_organizacao uo
-            LEFT JOIN equipes e ON e.id = uo.equipe_id
-            LEFT JOIN grupos g ON g.id = uo.grupo_id
-            WHERE uo.usuario_id = ?
-        `).bind(usuarioLogado.id).first() as any;
-
-        // 3. Estatísticas de Tarefas
-        const statsTarefas = await DB.prepare(`
-            SELECT 
-                COUNT(*) as total,
-                SUM(CASE WHEN t.status = 'concluida' THEN 1 ELSE 0 END) as concluidas
-            FROM tarefas t
-            JOIN tarefas_responsaveis tr ON tr.tarefa_id = t.id
-            WHERE tr.usuario_id = ?
-        `).bind(usuarioLogado.id).first() as any;
-
-        // 4. Estatísticas de Ponto
-        const statsPonto = await DB.prepare(`
-            SELECT COUNT(*) as batidas
-            FROM ponto_registros
-            WHERE usuario_id = ? AND strftime('%m', registrado_em) = strftime('%m', 'now')
-        `).bind(usuarioLogado.id).first() as any;
 
         const total = Number(statsTarefas?.total || 0);
         const concluidas = Number(statsTarefas?.concluidas || 0);
@@ -118,6 +94,10 @@ rotasPerfil.patch('/me', autenticacaoRequerida(), zValidator('json', UpdatePerfi
         
         await DB.prepare(query).bind(...values).run();
 
+        // Invalida cache de sessão
+        const { softhub_kv } = c.env;
+        if (softhub_kv) await softhub_kv.delete(`sessao:${usuarioLogado.id}`);
+
         await registrarLog(DB, {
             usuarioId: usuarioLogado.id,
             acao: 'PERFIL_ATUALIZADO',
@@ -140,44 +120,20 @@ rotasPerfil.get('/:id', autenticacaoRequerida(), async (c: Context) => {
     const id = c.req.param('id');
 
     try {
-        // 1. Dados Básicos
-        const usuario = await DB.prepare(`
-            SELECT 
-                id, nome, email, role, foto_perfil, foto_banner, bio, criado_em,
-                github_url, linkedin_url, website_url
-            FROM usuarios 
-            WHERE id = ?
-        `).bind(id).first() as any;
+        // OTIMIZAÇÃO: Batch de todas as consultas do perfil em uma única ida ao banco
+        const [resUsuario, resOrg, resStatsTarefas, resStatsPonto] = await DB.batch([
+            DB.prepare(`SELECT id, nome, email, role, foto_perfil, foto_banner, bio, criado_em, github_url, linkedin_url, website_url FROM usuarios WHERE id = ?`).bind(id),
+            DB.prepare(`SELECT e.nome as equipe_nome, g.nome as grupo_nome FROM usuarios_organizacao uo LEFT JOIN equipes e ON e.id = uo.equipe_id LEFT JOIN grupos g ON g.id = uo.grupo_id WHERE uo.usuario_id = ?`).bind(id),
+            DB.prepare(`SELECT COUNT(*) as total, SUM(CASE WHEN t.status = 'concluida' THEN 1 ELSE 0 END) as concluidas FROM tarefas t JOIN tarefas_responsaveis tr ON tr.tarefa_id = t.id WHERE tr.usuario_id = ?`).bind(id),
+            DB.prepare(`SELECT COUNT(*) as batidas FROM ponto_registros WHERE usuario_id = ? AND strftime('%m', registrado_em) = strftime('%m', 'now')`).bind(id)
+        ]);
+
+        const usuario = resUsuario.results[0] as any;
+        const organizacao = resOrg.results[0] as any;
+        const statsTarefas = resStatsTarefas.results[0] as any;
+        const statsPonto = resStatsPonto.results[0] as any;
 
         if (!usuario) return c.json({ erro: 'Usuário não encontrado.' }, 404);
-
-        // 2. Dados de Organização
-        const organizacao = await DB.prepare(`
-            SELECT 
-                e.nome as equipe_nome,
-                g.nome as grupo_nome
-            FROM usuarios_organizacao uo
-            LEFT JOIN equipes e ON e.id = uo.equipe_id
-            LEFT JOIN grupos g ON g.id = uo.grupo_id
-            WHERE uo.usuario_id = ?
-        `).bind(id).first() as any;
-
-        // 3. Estatísticas de Tarefas
-        const statsTarefas = await DB.prepare(`
-            SELECT 
-                COUNT(*) as total,
-                SUM(CASE WHEN t.status = 'concluida' THEN 1 ELSE 0 END) as concluidas
-            FROM tarefas t
-            JOIN tarefas_responsaveis tr ON tr.tarefa_id = t.id
-            WHERE tr.usuario_id = ?
-        `).bind(id).first() as any;
-
-        // 4. Estatísticas de Ponto
-        const statsPonto = await DB.prepare(`
-            SELECT COUNT(*) as batidas
-            FROM ponto_registros
-            WHERE usuario_id = ? AND strftime('%m', registrado_em) = strftime('%m', 'now')
-        `).bind(id).first() as any;
 
         const total = Number(statsTarefas?.total || 0);
         const concluidas = Number(statsTarefas?.concluidas || 0);

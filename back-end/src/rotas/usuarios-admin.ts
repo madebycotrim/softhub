@@ -28,6 +28,9 @@ rotasAdmin.patch('/:id/role', autenticacaoRequerida(), verificarPermissao('membr
 
         await DB.prepare('UPDATE usuarios SET role = ? WHERE id = ?').bind(role, id).run();
 
+        // Invalida cache de sessão
+        if (softhub_kv) await softhub_kv.delete(`sessao:${id}`);
+
         await criarNotificacoes(DB, {
             usuarioId: id,
             tipo: 'sistema',
@@ -68,6 +71,10 @@ rotasAdmin.delete('/:id', autenticacaoRequerida(), verificarPermissao('membros:d
         if (!atual) return c.json({ erro: 'Não encontrado.' }, 404);
 
         await DB.prepare('DELETE FROM usuarios WHERE id = ?').bind(id).run();
+        
+        // Invalida cache de sessão
+        const { softhub_kv } = c.env;
+        if (softhub_kv) await softhub_kv.delete(`sessao:${id}`);
         await registrarLog(DB, {
             usuarioId: usuarioLogado.id,
             acao: 'MEMBRO_REMOVIDO_HARD',
