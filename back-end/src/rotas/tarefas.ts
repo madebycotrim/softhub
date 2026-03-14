@@ -1,57 +1,36 @@
 import { Hono, Context } from 'hono';
-import { z } from 'zod';
-import { zValidator } from '@hono/zod-validator';
 import { Env } from '../index';
 import { autenticacaoRequerida, verificarPermissao } from '../middleware/auth';
-import { registrarLog } from '../servicos/servico-logs';
-import { D1Database } from '@cloudflare/workers-types';
-import { criarNotificacoes, removerNotificacoesPorEntidade } from '../servicos/servico-notificacoes';
+import { obterAcessoEquipeNoProjeto } from '../servicos/servico-acesso';
 
 const rotasTarefas = new Hono<{ Bindings: Env, Variables: { usuario: any } }>({ strict: false });
 
-/** Verifica o Nível de Acesso da Equipe do Usuário no Projeto */
-async function obterAcessoEquipeNoProjeto(DB: D1Database, projetoId: string, usuario: any): Promise<'GESTAO' | 'EDICAO' | 'LEITURA' | 'NENHUM'> {
-    if (usuario.role === 'ADMIN') return 'GESTAO';
-    
-    const p = await DB.prepare('SELECT publico FROM projetos WHERE id = ?').bind(projetoId).first();
-    if (!p) return 'NENHUM';
-
-    const { results } = await DB.prepare(`
-        SELECT pe.acesso 
-        FROM projetos_equipes pe
-        JOIN usuarios_organizacao uo ON uo.equipe_id = pe.equipe_id
-        WHERE pe.projeto_id = ? AND uo.usuario_id = ?
-    `).bind(projetoId, usuario.id).all();
-
-    if (!results || results.length === 0) {
-        return p.publico === 1 ? 'LEITURA' : 'NENHUM';
-    }
-
-    const acessos = results.map((r: any) => r.acesso);
-    if (acessos.includes('GESTAO')) return 'GESTAO';
-    if (acessos.includes('EDICAO')) return 'EDICAO';
-    if (acessos.includes('LEITURA')) return 'LEITURA';
-    
-    return 'NENHUM';
-}
-
-// Listar Tarefas do Projeto
+/**
+ * Lista as tarefas de um projeto específico, com suporte a filtros.
+ * Filtros suportados: busca (texto), prioridade, responsavelId, modulo.
+ */
 rotasTarefas.get('/', autenticacaoRequerida(), verificarPermissao(['tarefas:visualizar_kanban', 'tarefas:visualizar_backlog', 'tarefas:visualizar_detalhes']), async (c: Context) => {
     const { DB } = c.env;
     const projetoId = c.req.query('projetoId');
+    const usuario = c.get('usuario');
 
-    // Workflow 26 - Parâmetros de Filtro
+    if (!projetoId) return c.json({ erro: 'ID do projeto é obrigatório.' }, 400);
+
+    // Validação de acesso básica antes de listar
+    const acesso = await obterAcessoEquipeNoProjeto(DB, projetoId, usuario);
+    if (acesso === 'NENHUM') return c.json({ erro: 'Você não tem acesso a este projeto.' }, 403);
+
     const busca = c.req.query('busca');
-    const prioridade = c.req.query('prioridade'); // Suporta multiplas separadas por vírgula
+    const prioridade = c.req.query('prioridade'); 
     const responsavelId = c.req.query('responsavelId');
     const modulo = c.req.query('modulo');
 
     try {
         let query = `
-      SELECT t.id, t.titulo, t.descricao, t.status, t.prioridade, t.pontos, t.modulo
-      FROM tarefas t
-      WHERE t.projeto_id = ?
-    `;
+            SELECT t.id, t.titulo, t.descricao, t.status, t.prioridade, t.pontos, t.modulo
+            FROM tarefas t
+            WHERE t.projeto_id = ?
+        `;
         const params: any[] = [projetoId];
 
         if (busca) {
@@ -78,293 +57,23 @@ rotasTarefas.get('/', autenticacaoRequerida(), verificarPermissao(['tarefas:visu
 
         const { results: tarefas } = await DB.prepare(query).bind(...params).all();
 
-        // Buscar responsáveis 
+        // Buscar responsáveis de cada tarefa de forma otimizada
         for (const tarefa of (tarefas as any[])) {
             const resp = await DB.prepare(`
-        SELECT u.id, u.nome, u.foto_perfil as foto
-        FROM usuarios u
-        JOIN tarefas_responsaveis tr ON tr.usuario_id = u.id
-        WHERE tr.tarefa_id = ?
-      `).bind(tarefa.id).all();
+                SELECT u.id, u.nome, u.foto_perfil as foto
+                FROM usuarios u
+                JOIN tarefas_responsaveis tr ON tr.usuario_id = u.id
+                WHERE tr.tarefa_id = ?
+            `).bind(tarefa.id).all();
 
             (tarefa as any).responsaveis = resp.results;
         }
 
         return c.json(tarefas);
     } catch (erro) {
-        console.error('[ERRO DB] GET /tarefas', erro);
+        console.error('[ERRO] GET /api/tarefas', erro);
         return c.json({ erro: 'Falha ao buscar tarefas' }, 500);
     }
 });
 
-// Criar Tarefa (WF 5)
-const CriarTarefaSchema = z.object({
-    projeto_id: z.string(),
-    titulo: z.string().min(3).max(100),
-    descricao: z.string().optional(),
-    prioridade: z.enum(['baixa', 'media', 'alta', 'urgente']).default('media'),
-    status: z.enum(['backlog', 'todo', 'in_progress', 'em_revisao', 'concluida']).default('backlog'),
-    modulo: z.string().optional(),
-    pontos: z.number().int().min(0).max(100).optional(),
-});
-
-rotasTarefas.post('/', 
-    autenticacaoRequerida(), 
-    verificarPermissao('tarefas:criar'), 
-    zValidator('json', CriarTarefaSchema), 
-    async (c: Context) => {
-    
-    const { DB } = c.env;
-    const body = (c.req as any).valid('json');
-    const usuario = c.get('usuario') as any;
-
-    try {
-        // Validação de existência do projeto (evita 500 por FK failure)
-        const projeto = await DB.prepare('SELECT id FROM projetos WHERE id = ?').bind(body.projeto_id).first();
-        if (!projeto) {
-            return c.json({ erro: 'O projeto especificado não existe ou foi removido.' }, 404);
-        }
-
-        const acessoEquipe = await obterAcessoEquipeNoProjeto(DB, body.projeto_id, usuario);
-        if (acessoEquipe === 'LEITURA' || acessoEquipe === 'NENHUM') {
-            return c.json({ erro: 'Sua equipe tem apenas permissão de Leitura neste projeto.' }, 403);
-        }
-
-        const id = crypto.randomUUID();
-        await DB.prepare(`
-            INSERT INTO tarefas (id, projeto_id, titulo, descricao, prioridade, status, modulo, pontos)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `).bind(
-            id, 
-            body.projeto_id, 
-            body.titulo, 
-            body.descricao || null, 
-            body.prioridade, 
-            body.status, 
-            body.modulo || null, 
-            body.pontos ?? 1
-        ).run();
-
-        await registrarLog(DB, {
-            usuarioId: usuario.id,
-            acao: 'TAREFA_CRIADA',
-            modulo: 'kanban',
-            descricao: `Tarefa "${body.titulo}" criada no projeto ${body.projeto_id}`,
-            ip: c.req.header('CF-Connecting-IP') ?? '',
-            entidadeTipo: 'tarefas',
-            entidadeId: id
-        });
-
-        return c.json({ id, sucesso: true }, 201);
-    } catch (erro: any) {
-        console.error('[ERRO DB] POST /tarefas', {
-            mensagem: erro.message,
-            stack: erro.stack,
-            body
-        });
-        return c.json({ 
-            erro: 'Falha ao criar tarefa', 
-            detalhe: erro.message,
-            codigo: 'DB_INSERT_ERROR'
-        }, 500);
-    }
-});
-
-// Mover Tarefa com Validação Estrita (Fase 2)
-const MoverTarefaSchema = z.object({
-    status: z.enum(['backlog', 'todo', 'in_progress', 'em_revisao', 'concluida']),
-});
-
-rotasTarefas.patch('/:id/mover', 
-    autenticacaoRequerida(), 
-    verificarPermissao('tarefas:mover'), 
-    zValidator('json', MoverTarefaSchema), 
-    async (c: Context) => {
-    
-    const { DB } = c.env;
-    const id = c.req.param('id');
-    const { status: colunaDestino } = (c.req as any).valid('json');
-
-    try {
-        const usuario = c.get('usuario') as any; // tipagem simplificada
-
-        const { results } = await DB.prepare('SELECT titulo, status, prioridade, projeto_id FROM tarefas WHERE id = ?').bind(id).all();
-        const tarefa = results[0] as { titulo: string, status: string, prioridade: string, projeto_id: string };
-
-        if (!tarefa) {
-            return c.json({ erro: 'Tarefa não encontrada' }, 404);
-        }
-
-        const acessoEquipe = await obterAcessoEquipeNoProjeto(DB, tarefa.projeto_id, usuario);
-        if (acessoEquipe === 'LEITURA' || acessoEquipe === 'NENHUM') {
-            return c.json({ erro: 'Sua equipe tem apenas permissão de Leitura neste projeto.' }, 403);
-        }
-
-        // Workflow 8 - Mover Card (Verificar permissão)
-        const ehAdminOuLider = ['ADMIN', 'COORDENADOR', 'GESTOR', 'LIDER', 'SUBLIDER'].includes(usuario.role);
-        let podeMover = ehAdminOuLider;
-
-        if (!podeMover) {
-            const resp = await DB.prepare('SELECT usuario_id FROM tarefas_responsaveis WHERE tarefa_id = ? AND usuario_id = ?').bind(id, usuario.id).first();
-            if (resp) podeMover = true;
-        }
-
-        if (!podeMover) {
-            return c.json({ erro: 'Apenas os responsáveis ou líderes podem mover esta tarefa.' }, 403);
-        }
-
-        if (tarefa.status !== colunaDestino) {
-            const dataConclusao = colunaDestino === 'concluida' ? new Date().toISOString() : null;
-            
-            await DB.prepare('UPDATE tarefas SET status = ?, data_conclusao = ?, atualizado_em = ? WHERE id = ?')
-                .bind(colunaDestino, dataConclusao, new Date().toISOString(), id).run();
-
-            // Histórico
-            await DB.prepare('INSERT INTO tarefa_historico (id, tarefa_id, usuario_id, campo_alterado, valor_antigo, valor_novo) VALUES (?, ?, ?, ?, ?, ?)')
-                .bind(crypto.randomUUID(), id, usuario.id, 'status', tarefa.status, colunaDestino).run();
-
-            await registrarLog(DB, {
-                usuarioId: usuario.id,
-                acao: 'TAREFA_MOVIDA',
-                modulo: 'kanban',
-                descricao: `Tarefa "${tarefa.titulo}" movida para ${colunaDestino}`,
-                ip: c.req.header('CF-Connecting-IP') ?? '',
-                entidadeTipo: 'tarefas',
-                entidadeId: id,
-                dadosAnteriores: { status: tarefa.status },
-                dadosNovos: { status: colunaDestino }
-            });
-
-            if (colunaDestino === 'em_revisao') {
-                const { results: lideres } = await DB.prepare("SELECT id FROM usuarios WHERE role IN ('SUBLIDER', 'LIDER', 'GESTOR', 'COORDENADOR')").all();
-                if (lideres && lideres.length > 0) {
-                    await criarNotificacoes(DB, {
-                        usuariosIds: lideres.map((l: any) => l.id),
-                        tipo: 'tarefa',
-                        titulo: 'Tarefa precisa de revisão',
-                        mensagem: `A tarefa "${tarefa.titulo}" foi movida para Em Revisão por ${usuario.nome}.`,
-                        link: `/app/kanban?tarefa=${id}`,
-                        entidadeId: id
-                    });
-                }
-            }
-
-            if (colunaDestino === 'concluida') {
-                const { results: lideres } = await DB.prepare("SELECT id FROM usuarios WHERE role IN ('LIDER', 'GESTOR', 'COORDENADOR', 'ADMIN')").all();
-                if (lideres && lideres.length > 0) {
-                    await criarNotificacoes(DB, {
-                        usuariosIds: lideres.map((l: any) => l.id),
-                        tipo: 'tarefa',
-                        titulo: 'Tarefa Concluída',
-                        mensagem: `A tarefa "${tarefa.titulo}" foi finalizada por ${usuario.nome}.`,
-                        link: `/app/kanban?tarefa=${id}`,
-                        entidadeId: id
-                    });
-                }
-            }
-        } return c.json({ sucesso: true });
-    } catch (erro) {
-        console.error('[ERRO DB] PATCH /tarefas/:id/mover', erro);
-        return c.json({ erro: 'Falha ao mover tarefa' }, 500);
-    }
-});
-
-// Atribuir Responsável (WF 13)
-const AtribuirResponsavelSchema = z.object({
-    usuario_id: z.string().uuid()
-});
-
-rotasTarefas.post('/:id/responsaveis', autenticacaoRequerida(), verificarPermissao('tarefas:editar'), zValidator('json', AtribuirResponsavelSchema), async (c: Context) => {
-    const { DB } = c.env;
-    const id = c.req.param('id');
-    const { usuario_id } = (c.req as any).valid('json');
-    const usuario = c.get('usuario') as any;
-
-    try {
-        const tarefa = await DB.prepare('SELECT titulo, projeto_id FROM tarefas WHERE id = ?').bind(id).first() as any;
-        if (!tarefa) return c.json({ erro: 'Tarefa não encontrada' }, 404);
-
-        const acessoEquipe = await obterAcessoEquipeNoProjeto(DB, tarefa.projeto_id, usuario);
-        if (acessoEquipe === 'LEITURA' || acessoEquipe === 'NENHUM') {
-            return c.json({ erro: 'Sua equipe tem apenas permissão de Leitura neste projeto.' }, 403);
-        }
-
-        const ehAdminOuLider = ['ADMIN', 'COORDENADOR', 'GESTOR', 'LIDER', 'SUBLIDER'].includes(usuario.role);
-        let podeAtribuir = ehAdminOuLider;
-        if (!podeAtribuir) {
-            const resp = await DB.prepare('SELECT usuario_id FROM tarefas_responsaveis WHERE tarefa_id = ? AND usuario_id = ?').bind(id, usuario.id).first();
-            if (resp) podeAtribuir = true;
-        }
-
-        if (!podeAtribuir) {
-            return c.json({ erro: 'Apenas liderança ou os responsáveis atuais da tarefa.' }, 403);
-        }
-
-        await DB.prepare('INSERT OR IGNORE INTO tarefas_responsaveis (tarefa_id, usuario_id) VALUES (?, ?)').bind(id, usuario_id).run();
-
-        await DB.prepare('INSERT INTO tarefa_historico (id, tarefa_id, usuario_id, campo_alterado, valor_antigo, valor_novo) VALUES (?, ?, ?, ?, ?, ?)')
-            .bind(crypto.randomUUID(), id, usuario.id, 'responsavel', null, usuario_id).run();
-
-        await criarNotificacoes(DB, {
-            usuarioId: usuario_id,
-            tipo: 'tarefa',
-            titulo: 'Você foi atribuído a uma tarefa',
-            mensagem: `A tarefa "${tarefa.titulo}" foi atribuída a você.`,
-            link: `/app/kanban?tarefa=${id}`,
-            entidadeId: id
-        });
-
-        await registrarLog(DB, {
-            usuarioId: usuario.id,
-            acao: 'TAREFA_RESPONSAVEL_ADICIONADO',
-            modulo: 'kanban',
-            descricao: `Responsável ${usuario_id} adicionado à tarefa "${tarefa.titulo}"`,
-            ip: c.req.header('CF-Connecting-IP') ?? '',
-            entidadeTipo: 'tarefas',
-            entidadeId: id
-        });
-
-        return c.json({ sucesso: true });
-    } catch (erro) {
-        console.error('[ERRO DB] POST /tarefas/:id/responsaveis', erro);
-        return c.json({ erro: 'Falha ao atribuir responsabilidade' }, 500);
-    }
-});
-
-// Arquivar/Deletar Tarefa (Hard Delete - Regra atualizada)
-rotasTarefas.delete('/:id', autenticacaoRequerida(), verificarPermissao('tarefas:editar'), async (c: Context) => {
-    const { DB } = c.env;
-    const id = c.req.param('id');
-    const usuario = c.get('usuario') as any;
-
-    try {
-        const tarefa = await DB.prepare('SELECT titulo, projeto_id FROM tarefas WHERE id = ?').bind(id).first() as any;
-        if (!tarefa) return c.json({ erro: 'Tarefa não encontrada' }, 404);
-
-        const acessoEquipe = await obterAcessoEquipeNoProjeto(DB, tarefa.projeto_id, usuario);
-        if (acessoEquipe === 'LEITURA' || acessoEquipe === 'NENHUM') {
-            return c.json({ erro: 'Sua equipe tem apenas permissão de Leitura neste projeto.' }, 403);
-        }
-
-        await DB.prepare('DELETE FROM tarefas WHERE id = ?').bind(id).run();
-        
-        // Remove notificações vinculadas
-        if (id) await removerNotificacoesPorEntidade(DB, id);
-
-        await registrarLog(DB, {
-            usuarioId: usuario.id,
-            acao: 'TAREFA_REMOVIDA_HARD',
-            modulo: 'kanban',
-            descricao: `Tarefa "${tarefa.titulo}" removida permanentemente (Hard Delete)`,
-            ip: c.req.header('CF-Connecting-IP') ?? '',
-            entidadeTipo: 'tarefas',
-            entidadeId: id
-        });
-
-        return c.json({ sucesso: true });
-    } catch (erro) {
-        console.error('[ERRO DB] DELETE /tarefas/:id', erro);
-        return c.json({ erro: 'Falha ao remover tarefa' }, 500);
-    }
-});
 export default rotasTarefas;

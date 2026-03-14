@@ -77,7 +77,7 @@ export function LayoutPrincipal({ children }: LayoutPrincipalProps) {
                 </div>
             )}
 
-            <div className="flex flex-col flex-1 overflow-hidden relative">
+            <div className="flex flex-col flex-1 overflow-hidden relative min-w-0">
                 {/* Botão de menu mobile flutuante */}
                 <button
                     onClick={() => setSidebarAberta(true)}
@@ -86,7 +86,7 @@ export function LayoutPrincipal({ children }: LayoutPrincipalProps) {
                     <Menu size={20} strokeWidth={2.5} />
                 </button>
 
-                <main className="flex-1 p-6 overflow-y-auto relative z-10 transition-all overflow-x-hidden animar-entrada scrollbar-none bg-background/50">
+                <main className="flex-1 p-6 overflow-y-auto relative z-10 transition-all overflow-x-hidden animar-entrada scrollbar-none bg-background/50 min-w-0">
                     <Breadcrumbs />
                     <ErrorBoundary modulo="Módulo Selecionado">
                         {children}

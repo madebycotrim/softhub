@@ -8,15 +8,31 @@ const rotasNotificacoes = new Hono<{ Bindings: Env, Variables: { usuario: any } 
  * 🔔 LISTAR NOTIFICAÇÕES NÃO LIDAS
  */
 rotasNotificacoes.get('/', autenticacaoRequerida(), async (c: Context) => {
-    const { DB } = c.env;
+    const { DB, softhub_kv } = c.env;
     const usuarioLogado = c.get('usuario') as any;
 
     try {
+        // 🚀 1. Checa flag no KV primeiro
+        const cacheKey = `tem_notificacao:${usuarioLogado.id}`;
+        const temCache = await softhub_kv?.get(cacheKey);
+
+        if (temCache === 'false') {
+            return c.json({ notificacoes: [] });
+        }
+
+        // 2. Busca no D1
         const { results } = await DB.prepare(`
             SELECT * FROM notificacoes 
             WHERE usuario_id = ? AND lida = 0 
             ORDER BY criado_em DESC
         `).bind(usuarioLogado.id).all();
+
+        // 3. Atualiza KV com base no resultado real
+        if (results.length === 0) {
+            await softhub_kv?.put(cacheKey, 'false', { expirationTtl: 86400 });
+        } else {
+            await softhub_kv?.put(cacheKey, 'true', { expirationTtl: 86400 });
+        }
 
         return c.json({ notificacoes: results });
     } catch (erro) {
@@ -29,7 +45,7 @@ rotasNotificacoes.get('/', autenticacaoRequerida(), async (c: Context) => {
  * ✅ MARCAR COMO LIDA
  */
 rotasNotificacoes.patch('/:id/lida', autenticacaoRequerida(), async (c: Context) => {
-    const { DB } = c.env;
+    const { DB, softhub_kv } = c.env;
     const usuarioLogado = c.get('usuario') as any;
     const id = c.req.param('id');
 
@@ -37,6 +53,13 @@ rotasNotificacoes.patch('/:id/lida', autenticacaoRequerida(), async (c: Context)
         await DB.prepare('UPDATE notificacoes SET lida = 1 WHERE id = ? AND usuario_id = ?')
             .bind(id, usuarioLogado.id)
             .run();
+
+        // 🚀 Atualiza flag no KV (verifica se ainda resta alguma)
+        const restantes = await DB.prepare('SELECT id FROM notificacoes WHERE usuario_id = ? AND lida = 0 LIMIT 1')
+            .bind(usuarioLogado.id)
+            .first();
+        
+        await softhub_kv?.put(`tem_notificacao:${usuarioLogado.id}`, restantes ? 'true' : 'false', { expirationTtl: 86400 });
 
         return c.json({ sucesso: true });
     } catch (erro) {
@@ -49,13 +72,16 @@ rotasNotificacoes.patch('/:id/lida', autenticacaoRequerida(), async (c: Context)
  * 🧹 LIMPAR TODAS (MARCAR TODAS COMO LIDAS)
  */
 rotasNotificacoes.delete('/limpar-todas', autenticacaoRequerida(), async (c: Context) => {
-    const { DB } = c.env;
+    const { DB, softhub_kv } = c.env;
     const usuarioLogado = c.get('usuario') as any;
 
     try {
         await DB.prepare('UPDATE notificacoes SET lida = 1 WHERE usuario_id = ?')
             .bind(usuarioLogado.id)
             .run();
+
+        // 🚀 Zera flag no KV
+        await softhub_kv?.put(`tem_notificacao:${usuarioLogado.id}`, 'false', { expirationTtl: 86400 });
 
         return c.json({ sucesso: true });
     } catch (erro) {

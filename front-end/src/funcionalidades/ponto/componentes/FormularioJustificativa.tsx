@@ -3,9 +3,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Modal } from '@/compartilhado/componentes/Modal';
-import { Fingerprint, Calendar, Info } from 'lucide-react';
+import { Fingerprint, Calendar, Info, Sparkles } from 'lucide-react';
 import { Carregando } from '@/compartilhado/componentes/Carregando';
 import { Alerta } from '@/compartilhado/componentes/Alerta';
+import { servicoIA } from '@/compartilhado/servicos/servico-ia';
 
 const esquemaJustificativa = z.object({
     data: z.string().optional().or(z.literal('')),
@@ -23,12 +24,14 @@ interface FormularioJustificativaProps {
 }
 
 export function FormularioJustificativa({ aberto, aoFechar, aoSalvar, justificativaAtual }: FormularioJustificativaProps) {
-    const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<DadosJustificativa>({
+    const { register, handleSubmit, formState: { errors, isSubmitting }, reset, watch, setValue } = useForm<DadosJustificativa>({
         resolver: zodResolver(esquemaJustificativa),
         defaultValues: { data: '', tipo: 'esquecimento', motivo: '' }
     });
 
+    const [processandoIA, setProcessandoIA] = useState(false);
     const [erroGlobal, setErroGlobal] = useState<string | null>(null);
+    const motivo = watch('motivo');
 
     // Preenche para edição
     useEffect(() => {
@@ -45,6 +48,22 @@ export function FormularioJustificativa({ aberto, aoFechar, aoSalvar, justificat
             setErroGlobal(null);
         }
     }, [aberto, justificativaAtual, reset]);
+
+    const handleRefinarIA = async () => {
+        if (!motivo || motivo.length < 10) return;
+        setProcessandoIA(true);
+        setErroGlobal(null);
+        try {
+            const analise = await servicoIA.analisarJustificativa(motivo);
+            if (analise.analise) {
+                setValue('motivo', analise.analise);
+            }
+        } catch (e: any) {
+            setErroGlobal(e.response?.data?.detalhe || 'O mentor digital está descansando agora. Tente novamente mais tarde.');
+        } finally {
+            setProcessandoIA(false);
+        }
+    };
 
     const onSubmit = async (dados: DadosJustificativa) => {
         try {
@@ -125,7 +144,18 @@ export function FormularioJustificativa({ aberto, aoFechar, aoSalvar, justificat
                     </div>
 
                     <div className="group">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block ml-1">Motivo e Detalhes</label>
+                        <div className="flex justify-between items-center mb-2 ml-1">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Motivo e Detalhes</label>
+                            <button
+                                type="button"
+                                onClick={handleRefinarIA}
+                                disabled={processandoIA || !motivo || motivo.length < 10}
+                                className="flex items-center gap-1.5 text-[10px] font-black underline decoration-blue-500/30 underline-offset-4 uppercase tracking-wider text-blue-600 hover:text-blue-700 transition-all disabled:opacity-30 disabled:no-underline"
+                            >
+                                {processandoIA ? <Carregando tamanho="sm" Centralizar={false} /> : <Sparkles size={12} className="text-amber-500" />}
+                                Mágica do Mentor
+                            </button>
+                        </div>
                         <textarea
                             placeholder="Explique com detalhes o ocorrido..."
                             {...register('motivo')}

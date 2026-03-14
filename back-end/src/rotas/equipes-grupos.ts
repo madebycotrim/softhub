@@ -1,0 +1,160 @@
+import { Hono, Context } from 'hono';
+import { Env } from '../index';
+import { autenticacaoRequerida, verificarPermissao } from '../middleware/auth';
+import { registrarLog } from '../servicos/servico-logs';
+import { removerNotificacoesPorEntidade } from '../servicos/servico-notificacoes';
+
+const rotasGrupos = new Hono<{ Bindings: Env; Variables: { usuario: any } }>();
+
+/**
+ * Lista todos os grupos cadastrados.
+ * Inclui informações da equipe vinculada e totais de membros.
+ */
+rotasGrupos.get('/grupos', autenticacaoRequerida(), verificarPermissao('equipes:visualizar'), async (c: Context) => {
+    const { DB } = c.env;
+
+    try {
+        const grupos = await DB.prepare(`
+            SELECT
+                g.id, g.nome, g.descricao, g.criado_em,
+                g.equipe_id,
+                e.nome AS equipe_nome,
+                ul.nome AS lider_nome,
+                us.nome AS sub_lider_nome,
+                COUNT(uo.usuario_id) AS total_membros
+            FROM grupos g
+            LEFT JOIN equipes e ON g.equipe_id = e.id
+            LEFT JOIN usuarios ul ON e.lider_id = ul.id
+            LEFT JOIN usuarios us ON e.sub_lider_id = us.id
+            LEFT JOIN usuarios_organizacao uo ON uo.grupo_id = g.id
+            GROUP BY g.id
+            ORDER BY e.nome ASC, g.nome ASC
+        `).all();
+
+        return c.json({ grupos: grupos.results ?? [] });
+    } catch (erro: any) {
+        console.error('[ERRO] GET /api/equipes/grupos', erro);
+        return c.json({ erro: 'Falha ao listar grupos.' }, 500);
+    }
+});
+
+/**
+ * Cria um novo grupo vinculado a uma equipe.
+ */
+rotasGrupos.post('/grupos', autenticacaoRequerida(), verificarPermissao('equipes:criar_grupo'), async (c: Context) => {
+    const { DB } = c.env;
+    const usuarioLogado = c.get('usuario') as any;
+
+    let nome: string, descricao: string | null, equipe_id: string | null;
+    try {
+        ({ nome, descricao = null, equipe_id = null } = await c.req.json());
+    } catch {
+        return c.json({ erro: 'Corpo da requisição inválido.' }, 400);
+    }
+
+    if (!nome?.trim()) return c.json({ erro: 'O nome do grupo é obrigatório.' }, 400);
+    if (!equipe_id) return c.json({ erro: 'O vínculo com uma equipe é obrigatório.' }, 400);
+
+    try {
+        const id = crypto.randomUUID();
+        await DB.prepare(
+            'INSERT INTO grupos (id, nome, descricao, equipe_id) VALUES (?, ?, ?, ?)'
+        ).bind(id, nome.trim(), descricao, equipe_id).run();
+
+        await registrarLog(DB, {
+            usuarioId: usuarioLogado.id,
+            acao: 'GRUPO_CRIADO',
+            modulo: 'equipes',
+            descricao: `Grupo "${nome}" criado`,
+            ip: c.req.header('CF-Connecting-IP') ?? '',
+            entidadeTipo: 'grupos',
+            entidadeId: id,
+            dadosNovos: { nome, descricao, equipe_id },
+        });
+
+        return c.json({ sucesso: true, id }, 201);
+    } catch (erro: any) {
+        console.error('[ERRO] POST /api/equipes/grupos', erro);
+        return c.json({ erro: 'Falha ao criar grupo.' }, 500);
+    }
+});
+
+/**
+ * Edita dados básicos de um grupo.
+ */
+rotasGrupos.patch('/grupos/:id', autenticacaoRequerida(), verificarPermissao('equipes:editar_grupo'), async (c: Context) => {
+    const { DB } = c.env;
+    const usuarioLogado = c.get('usuario') as any;
+    const id = c.req.param('id');
+
+    let corpo: any;
+    try {
+        corpo = await c.req.json();
+    } catch {
+        return c.json({ erro: 'Corpo da requisição inválido.' }, 400);
+    }
+
+    try {
+        const atual = await DB.prepare('SELECT nome, descricao, equipe_id FROM grupos WHERE id = ?').bind(id).first() as any;
+        if (!atual) return c.json({ erro: 'Grupo não encontrado.' }, 404);
+
+        const nome = (corpo.nome !== undefined ? corpo.nome : atual.nome)?.trim();
+        const descricao = corpo.descricao !== undefined ? corpo.descricao : atual.descricao;
+        const equipe_id = corpo.equipe_id !== undefined ? corpo.equipe_id : atual.equipe_id;
+
+        if (!nome) return c.json({ erro: 'O nome do grupo é obrigatório.' }, 400);
+
+        await DB.prepare(
+            'UPDATE grupos SET nome = ?, descricao = ?, equipe_id = ? WHERE id = ?'
+        ).bind(nome, descricao, equipe_id, id).run();
+
+        await registrarLog(DB, {
+            usuarioId: usuarioLogado.id,
+            acao: 'GRUPO_EDITADO',
+            modulo: 'equipes',
+            descricao: `Grupo "${nome}" atualizado`,
+            ip: c.req.header('CF-Connecting-IP') ?? '',
+            entidadeTipo: 'grupos',
+            entidadeId: id,
+            dadosAnteriores: { nome: atual.nome, descricao: atual.descricao, equipe_id: atual.equipe_id },
+            dadosNovos: { nome, descricao, equipe_id },
+        });
+
+        return c.json({ sucesso: true });
+    } catch (erro: any) {
+        console.error('[ERRO] PATCH /api/equipes/grupos/:id', erro);
+        return c.json({ erro: 'Falha ao editar grupo.' }, 500);
+    }
+});
+
+/**
+ * Remove um grupo permanentemente (Hard Delete).
+ */
+rotasGrupos.delete('/grupos/:id', autenticacaoRequerida(), verificarPermissao('equipes:editar_grupo'), async (c: Context) => {
+    const { DB } = c.env;
+    const usuarioLogado = c.get('usuario') as any;
+    const id = c.req.param('id');
+
+    try {
+        await DB.prepare('DELETE FROM grupos WHERE id = ?').bind(id).run();
+
+        if (id) await removerNotificacoesPorEntidade(DB, id);
+
+        await registrarLog(DB, {
+            usuarioId: usuarioLogado.id,
+            acao: 'GRUPO_REMOVIDO_HARD',
+            modulo: 'equipes',
+            descricao: `Grupo ${id} removido permanentemente`,
+            ip: c.req.header('CF-Connecting-IP') ?? '',
+            entidadeTipo: 'grupos',
+            entidadeId: id,
+        });
+
+        return c.json({ sucesso: true });
+    } catch (erro: any) {
+        console.error('[ERRO] DELETE /api/equipes/grupos/:id', erro);
+        return c.json({ erro: 'Falha ao remover grupo.' }, 500);
+    }
+});
+
+export default rotasGrupos;

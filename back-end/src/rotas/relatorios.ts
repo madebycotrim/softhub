@@ -9,9 +9,13 @@ const rotasRelatorios = new Hono<{ Bindings: Env, Variables: { usuario: any } }>
  * Retorna contagem de membros por grupo e equipe, além de lideranças.
  */
 rotasRelatorios.get('/equipes', autenticacaoRequerida(), verificarPermissao('relatorios:visualizar'), async (c: Context) => {
-    const { DB } = c.env;
+    const { DB, softhub_kv } = c.env;
 
     try {
+        const cacheKey = 'relatorio:equipes';
+        const cached = await softhub_kv?.get(cacheKey);
+        if (cached) return c.json(JSON.parse(cached));
+
         // 1. Resumo de Grupos
         const gruposResumo = await DB.prepare(`
             SELECT
@@ -32,10 +36,14 @@ rotasRelatorios.get('/equipes', autenticacaoRequerida(), verificarPermissao('rel
             FROM equipes e
         `).all();
 
-        return c.json({
+        const resposta = {
             grupos: gruposResumo.results,
             equipes: equipesResumo.results
-        });
+        };
+
+        await softhub_kv?.put(cacheKey, JSON.stringify(resposta), { expirationTtl: 900 }); // 15 min
+
+        return c.json(resposta);
     } catch (erro) {
         console.error('[ERRO DB] GET /relatorios/equipes', erro);
         return c.json({ erro: 'Falha ao gerar relatório de equipes' }, 500);
@@ -47,8 +55,12 @@ rotasRelatorios.get('/equipes', autenticacaoRequerida(), verificarPermissao('rel
  * Retorna métricas agregadas de presença e justificativas.
  */
 rotasRelatorios.get('/frequencia/geral', autenticacaoRequerida(), verificarPermissao('relatorios:visualizar'), async (c: Context) => {
-    const { DB } = c.env;
+    const { DB, softhub_kv } = c.env;
     const { data_inicio, data_fim } = c.req.query();
+
+    const cacheKey = `relatorio:frequencia_geral:${data_inicio || 'auto'}_${data_fim || 'auto'}`;
+    const cached = await softhub_kv?.get(cacheKey);
+    if (cached) return c.json(JSON.parse(cached));
 
     const filtroData = data_inicio && data_fim 
         ? `AND registrado_em BETWEEN '${data_inicio}' AND '${data_fim}'`
@@ -109,12 +121,16 @@ rotasRelatorios.get('/frequencia/geral', autenticacaoRequerida(), verificarPermi
             ORDER BY j.criado_em DESC
         `).all();
 
-        return c.json({
+        const resposta = {
             tendencia: presencasDiarias.results,
             statusJustificativas: justificativasStatus.results,
             tiposJustificativas: justificativasTipos.results,
             justificativasLista: justificativasLista.results
-        });
+        };
+
+        await softhub_kv?.put(cacheKey, JSON.stringify(resposta), { expirationTtl: 900 });
+
+        return c.json(resposta);
     } catch (erro) {
         console.error('[ERRO DB] GET /relatorios/frequencia/geral', erro);
         return c.json({ erro: 'Falha ao gerar relatório de frequência geral' }, 500);
@@ -126,18 +142,22 @@ rotasRelatorios.get('/frequencia/geral', autenticacaoRequerida(), verificarPermi
  * Retorna o histórico resumido de cada membro com base no período.
  */
 rotasRelatorios.get('/frequencia/membros', autenticacaoRequerida(), verificarPermissao('relatorios:visualizar'), async (c: Context) => {
-    const { DB } = c.env;
+    const { DB, softhub_kv } = c.env;
     const { data_inicio, data_fim } = c.req.query();
 
-    const subFiltroPonto = data_inicio && data_fim 
-        ? `AND registrado_em BETWEEN '${data_inicio}' AND '${data_fim}'`
-        : "";
-
-    const subFiltroJustificativa = data_inicio && data_fim 
-        ? `AND criado_em BETWEEN '${data_inicio}' AND '${data_fim}'`
-        : "";
-
     try {
+        const cacheKey = `relatorio:frequencia_membros:${data_inicio || 'auto'}_${data_fim || 'auto'}`;
+        const cached = await softhub_kv?.get(cacheKey);
+        if (cached) return c.json(JSON.parse(cached));
+
+        const subFiltroPonto = data_inicio && data_fim 
+            ? `AND registrado_em BETWEEN '${data_inicio}' AND '${data_fim}'`
+            : "";
+
+        const subFiltroJustificativa = data_inicio && data_fim 
+            ? `AND criado_em BETWEEN '${data_inicio}' AND '${data_fim}'`
+            : "";
+
         const membrosFrequencia = await DB.prepare(`
             SELECT 
                 u.id, 
@@ -153,9 +173,13 @@ rotasRelatorios.get('/frequencia/membros', autenticacaoRequerida(), verificarPer
             ORDER BY u.nome ASC
         `).all();
 
-        return c.json({
+        const resposta = {
             membros: membrosFrequencia.results
-        });
+        };
+
+        await softhub_kv?.put(cacheKey, JSON.stringify(resposta), { expirationTtl: 900 });
+
+        return c.json(resposta);
     } catch (erro) {
         console.error('[ERRO DB] GET /relatorios/frequencia/membros', erro);
         return c.json({ erro: 'Falha ao gerar relatório de frequência por membro' }, 500);

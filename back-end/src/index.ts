@@ -1,12 +1,17 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { rateLimiter } from 'hono-rate-limiter';
+import { obterConfiguracao } from './servicos/servico-configuracoes';
 import rotasUsuarios from './rotas/usuarios';
+import rotasUsuariosAdmin from './rotas/usuarios-admin';
 import rotasProjetos from './rotas/projetos';
 import rotasTarefas from './rotas/tarefas';
+import rotasTarefasGerenciamento from './rotas/tarefas-gerenciamento';
+import rotasTarefasMovimentacao from './rotas/tarefas-movimentacao';
 import rotasTarefasDetalhes from './rotas/tarefas-detalhes';
 import rotasPonto from './rotas/ponto';
 import rotasPontoJustificativas from './rotas/ponto-justificativas';
+import rotasPontoJustificativasAdmin from './rotas/ponto-justificativas-admin';
 import rotasAvisos from './rotas/avisos';
 import rotasDashboard from './rotas/dashboard';
 import rotasLogs from './rotas/logs';
@@ -16,6 +21,8 @@ import rotasAuthQr from './rotas/auth-qr';
 import rotasConfiguracoes from './rotas/configuracoes';
 import rotasRelatorios from './rotas/relatorios';
 import rotasEquipes from './rotas/equipes';
+import rotasEquipesGrupos from './rotas/equipes-grupos';
+import rotasEquipesAlocacao from './rotas/equipes-alocacao';
 import rotasNotificacoes from './rotas/notificacoes';
 import rotasIA from './rotas/ia';
 import rotasPerfil from './rotas/perfil';
@@ -74,25 +81,10 @@ app.use('*', async (c, next) => {
     }
 
     try {
-        const chave = 'modo_manutencao';
-        let v = await softhub_kv?.get(chave);
+        const emManutencao = await obterConfiguracao(c.env, 'modo_manutencao');
 
-        if (v === null) {
-            const row = await DB.prepare('SELECT valor FROM configuracoes_sistema WHERE chave = ?').bind(chave).first() as any;
-            if (row) {
-                v = row.valor;
-                if (softhub_kv) await softhub_kv.put(chave, v!, { expirationTtl: 3600 });
-            }
-        }
-
-        const emManutencao = v === 'true' || v === '"true"'; // Lida com formatos de string/JSON do KV
-
-        if (emManutencao) {
-            // Se estiver em manutenção, precisamos checar se é ADMIN antes de barrar
-            // Mas o middleware de auth ainda não rodou... 
-            // Vamos deixar o auth rodar e barrar depois? 
-            // Ou checar o token aqui manualmente?
-            
+        if (emManutencao === true || emManutencao === 'true') {
+            // No modo de manutenção, apenas ADMINs podem prosseguir
             const authHeader = c.req.header('Authorization');
             if (authHeader?.startsWith('Bearer ')) {
                 try {
@@ -100,18 +92,15 @@ app.use('*', async (c, next) => {
                     const token = authHeader.slice(7);
                     const payload = await verify(token, c.env.JWT_SECRET, 'HS256') as any;
                     
-                    if (payload.role === 'ADMIN') {
-                        return await next(); // Admin passa
-                    }
+                    if (payload.role === 'ADMIN') return await next();
                 } catch {
                     // Token inválido, segue para o bloqueio
                 }
             }
 
-            // Se não é admin ou não está logado, bloqueia
             return c.json({ 
                 erro: 'Sistema em manutenção programada.',
-                detalhe: 'Estamos realizando melhorias técnicas para sua melhor experiência. Administradores ainda possuem acesso.' 
+                detalhe: 'Estamos realizando melhorias técnicas. Administradores ainda possuem acesso.' 
             }, 503);
         }
     } catch (e) {
@@ -128,17 +117,23 @@ app.onError(lidarExcecao);
 app.route('/api/auth', rotasAuth);
 app.route('/api/auth', rotasAuthQr);
 app.route('/api/usuarios', rotasUsuarios);
+app.route('/api/usuarios', rotasUsuariosAdmin);
 app.route('/api/projetos', rotasProjetos);
 app.route('/api/tarefas', rotasTarefas);
+app.route('/api/tarefas', rotasTarefasGerenciamento);
+app.route('/api/tarefas', rotasTarefasMovimentacao);
 app.route('/api/tarefas', rotasTarefasDetalhes);
 app.route('/api/ponto', rotasPonto);
 app.route('/api/ponto', rotasPontoJustificativas);
+app.route('/api/ponto', rotasPontoJustificativasAdmin);
 app.route('/api/avisos', rotasAvisos);
 app.route('/api/dashboard', rotasDashboard);
 app.route('/api/logs', rotasLogs);
 app.route('/api/configuracoes', rotasConfiguracoes);
 app.route('/api/relatorios', rotasRelatorios);
 app.route('/api/equipes', rotasEquipes);
+app.route('/api/equipes', rotasEquipesGrupos);
+app.route('/api/equipes', rotasEquipesAlocacao);
 app.route('/api/notificacoes', rotasNotificacoes);
 app.route('/api/ia', rotasIA);
 app.route('/api/perfil', rotasPerfil);

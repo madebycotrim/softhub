@@ -18,7 +18,7 @@ export interface ParamsNotificacao {
     entidadeId?: string;
 }
 
-export async function criarNotificacoes(db: any, params: ParamsNotificacao): Promise<void> {
+export async function criarNotificacoes(db: any, params: ParamsNotificacao, kv?: any): Promise<void> {
     const idsToNotify = new Set<string>();
 
     if (params.usuarioId) {
@@ -64,6 +64,13 @@ export async function criarNotificacoes(db: any, params: ParamsNotificacao): Pro
         // D1 executa mutations em batch para evitar limitação de requisições separadas
         if (statements.length > 0) {
             await db.batch(statements);
+            
+            // 🚀 Atualiza flag no KV para cada usuário notificado
+            if (kv) {
+                for (const id of idsToNotify) {
+                    await kv.put(`tem_notificacao:${id}`, 'true', { expirationTtl: 86400 }); // Expira em 24h se não houver atividade
+                }
+            }
         }
     }
 }

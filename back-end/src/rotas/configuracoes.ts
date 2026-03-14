@@ -4,7 +4,10 @@ import { Env } from '../index';
 
 const rotasConfiguracoes = new Hono<{ Bindings: Env }>();
 
-// ─── GET / (Admin) ──────────────────────────────────────────────────────────
+/**
+ * Lista todas as configurações do sistema.
+ * Requer permissão 'configuracoes:visualizar'.
+ */
 rotasConfiguracoes.get('/', autenticacaoRequerida(), verificarPermissao('configuracoes:visualizar'), async (c) => {
     const { DB } = c.env;
 
@@ -28,7 +31,10 @@ rotasConfiguracoes.get('/', autenticacaoRequerida(), verificarPermissao('configu
     }
 });
 
-// ─── GET /publico — Endpoint acessível para TODOS (Público) ─────────
+/**
+ * Endpoint público que retorna configurações essenciais (domínios, permissões, etc).
+ * Acessível sem autenticação.
+ */
 rotasConfiguracoes.get('/publico', async (c: Context) => {
     const { DB } = c.env;
 
@@ -62,7 +68,10 @@ rotasConfiguracoes.get('/publico', async (c: Context) => {
     }
 });
 
-// ─── POST / (Admin) ─────────────────────────────────────────────────────────
+/**
+ * Atualiza múltiplas configurações do sistema em lote.
+ * Requer permissão 'configuracoes:editar'.
+ */
 rotasConfiguracoes.post('/', autenticacaoRequerida(), verificarPermissao('configuracoes:editar'), async (c) => {
     const { DB, softhub_kv } = c.env;
     const body = await c.req.json();
@@ -101,7 +110,10 @@ rotasConfiguracoes.post('/', autenticacaoRequerida(), verificarPermissao('config
     }
 });
 
-// ─── PATCH /:chave (Admin) — Suporte ao hook usarConfiguracoes ──────────────
+/**
+ * Atualiza uma configuração específica identificada pela chave.
+ * Possui travas de segurança para configurações críticas como 'permissoes_roles'.
+ */
 rotasConfiguracoes.patch('/:chave', autenticacaoRequerida(), verificarPermissao('configuracoes:editar'), async (c) => {
     const { DB, softhub_kv } = c.env;
     const usuario = c.get('usuario');
@@ -161,7 +173,11 @@ rotasConfiguracoes.patch('/:chave', autenticacaoRequerida(), verificarPermissao(
     }
 });
 
-// ─── PATCH /roles/:antigo/renomear (Admin) ───────────────────────────────────
+/**
+ * Renomeia um cargo (role) em todo o sistema.
+ * Atualiza permissões, hierarquia e todos os usuários vinculados.
+ * Requer permissão de 'ADMIN'.
+ */
 rotasConfiguracoes.patch('/roles/:antigo/renomear', autenticacaoRequerida('ADMIN'), async (c) => {
     const { DB, softhub_kv } = c.env;
     const antigo = c.req.param('antigo');

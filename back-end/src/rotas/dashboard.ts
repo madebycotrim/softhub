@@ -59,7 +59,7 @@ rotasDashboard.get('/', autenticacaoRequerida(), verificarPermissao('dashboard:v
 
         const horasHoje = await DB.prepare(`
             SELECT COUNT(*) as batidas FROM ponto_registros 
-            WHERE usuario_id = ? AND date(registrado_em) = date('now')
+            WHERE usuario_id = ? AND date(registrado_em, '-3 hours') = date('now', '-3 hours')
         `).bind(usuarioLogado.id).first() as any;
 
         const total = Number(countQuery?.total || 0);
@@ -103,7 +103,7 @@ rotasDashboard.get('/', autenticacaoRequerida(), verificarPermissao('dashboard:v
             projetosAtivos: nomesProjetos
         };
 
-        await softhub_kv.put(cacheKey, JSON.stringify(resposta), { expirationTtl: 60 });
+        await softhub_kv.put(cacheKey, JSON.stringify(resposta), { expirationTtl: 300 }); // 5 min
         return c.json(resposta);
     } catch (erro) {
         console.error('[ERRO DB] GET /dashboard', erro);
@@ -116,11 +116,15 @@ rotasDashboard.get('/', autenticacaoRequerida(), verificarPermissao('dashboard:v
 
 // Obter dados para o gráfico de BurnDown consolidado ou por projeto
 rotasDashboard.get('/burndown', autenticacaoRequerida(), verificarPermissao('dashboard:visualizar'), async (c: Context) => {
-    const { DB } = c.env;
+    const { DB, softhub_kv } = c.env;
     const projetoId = c.req.query('projetoId');
     const usuarioLogado = c.get('usuario') as any;
 
     try {
+        const cacheKey = `burndown_${projetoId || 'global'}_${usuarioLogado.id}`;
+        const cached = await softhub_kv?.get(cacheKey);
+        if (cached) return c.json(JSON.parse(cached));
+
         let projetosIds: string[] = [];
 
         if (projetoId && projetoId !== 'global') {
@@ -183,6 +187,7 @@ rotasDashboard.get('/burndown', autenticacaoRequerida(), verificarPermissao('das
             };
         });
 
+        await softhub_kv?.put(cacheKey, JSON.stringify(dataBurndown), { expirationTtl: 300 });
 
         return c.json(dataBurndown);
     } catch (e) {

@@ -35,7 +35,7 @@ const ComentarioSchema = z.object({
 });
 
 rotasTarefasDetalhes.post('/:id/comentarios', autenticacaoRequerida(), verificarPermissao('tarefas:comentar'), zValidator('json', ComentarioSchema), async (c: Context) => {
-    const { DB } = c.env;
+    const { DB, softhub_kv } = c.env;
     const tarefaId = c.req.param('id');
     const { conteudo } = (c.req as any).valid('json');
     const usuario = c.get('usuario') as any;
@@ -68,7 +68,7 @@ rotasTarefasDetalhes.post('/:id/comentarios', autenticacaoRequerida(), verificar
                 titulo: 'Novo comentário',
                 mensagem: `${usuario.nome} comentou na tarefa "${tarefaData.titulo}".`,
                 link: `/app/kanban?tarefa=${tarefaId}`
-            });
+            }, softhub_kv);
         }
 
         // Comentário em Tarefa registrada com sucesso

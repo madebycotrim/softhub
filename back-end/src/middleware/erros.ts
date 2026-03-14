@@ -1,5 +1,11 @@
 import { Context } from 'hono';
 
+/**
+ * Manipulador global de exceções.
+ * Captura erros não tratados nas rotas e retorna uma resposta padronizada em PT-BR.
+ * @param erro O erro capturado.
+ * @param c Contexto do Hono.
+ */
 export async function lidarExcecao(erro: Error, c: Context) {
     console.error(`[EXCEÇÃO GLOBAL] ${c.req.method} ${c.req.url} - `, erro);
 

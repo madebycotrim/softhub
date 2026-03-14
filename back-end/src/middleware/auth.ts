@@ -13,6 +13,10 @@ type HonoEnv = { Bindings: Env; Variables: { usuario: UsuarioAutenticado } };
 
 // ─── Funções Auxiliares (com cache) ──────────────────────────────────────────
 
+/**
+ * Recupera a hierarquia de cargos (roles) do sistema.
+ * Utiliza cache no KV para performance.
+ */
 async function getHierarquiaRoles(c: Context<HonoEnv>): Promise<string[] | null> {
     const { DB, softhub_kv } = c.env;
     let hierarquiaJson = await softhub_kv.get('hierarquia_roles');
@@ -36,6 +40,10 @@ async function getHierarquiaRoles(c: Context<HonoEnv>): Promise<string[] | null>
     }
 }
 
+/**
+ * Recupera o mapeamento de permissões por role.
+ * Utiliza cache no KV para performance.
+ */
 async function getPermissoesRoles(c: Context<HonoEnv>): Promise<Record<string, any> | null> {
     const { DB, softhub_kv } = c.env;
     let permissoesJson = await softhub_kv.get('permissoes_roles');
@@ -59,6 +67,10 @@ async function getPermissoesRoles(c: Context<HonoEnv>): Promise<Record<string, a
 
 // ─── Middleware Principal de Autenticação ───────────────────────────────────
 
+/**
+ * Middleware que exige autenticação JWT e opcionalmente um nível hierárquico mínimo.
+ * @param roleMinimoRequerido Cargo mínimo para acessar a rota (ex: 'LIDER').
+ */
 export function autenticacaoRequerida(roleMinimoRequerido?: string) {
     return async (c: Context<HonoEnv>, next: Next) => {
         const authHeader = c.req.header('Authorization');
@@ -112,6 +124,12 @@ export function autenticacaoRequerida(roleMinimoRequerido?: string) {
 
 // ─── Middleware de Verificação de Permissão Específica ──────────────────────
 
+/**
+ * Middleware para verificar se o usuário possui permissões específicas.
+ * Suporta permissões simples (ex: 'tarefas:criar') ou curingas (ex: '*').
+ * @param permissaoRequerida String ou Array de strings com as permissões necessárias.
+ * @returns Um middleware Hono.
+ */
 export function verificarPermissao(permissaoRequerida: string | string[]) {
     return async (c: Context<HonoEnv>, next: Next) => {
         const usuario = c.get('usuario');

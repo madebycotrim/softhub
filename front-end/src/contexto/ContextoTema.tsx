@@ -20,24 +20,30 @@ interface ProvedorTemaProps {
 
 export function ProvedorTema({
     children,
-    temaPadrao = "light",
+    temaPadrao = "dark",
 }: ProvedorTemaProps) {
-    const [tema, setTemaState] = useState<Tema>("light");
+    const [tema, setTemaState] = useState<Tema>(() => {
+        return (localStorage.getItem(ChaveTemaStorage) as Tema) || temaPadrao;
+    });
 
-
-    const [temaReal, setTemaReal] = useState<"dark" | "light">("light");
+    const [temaReal, setTemaReal] = useState<"dark" | "light">("dark");
 
     useEffect(() => {
         const root = window.document.documentElement;
+        
+        // Determina o tema real (considerando 'system')
+        const sistemaDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const modo = tema === "system" ? (sistemaDark ? "dark" : "light") : tema;
+        
         root.classList.remove("light", "dark");
-        root.classList.add("light");
-        setTemaReal("light");
-        localStorage.setItem(ChaveTemaStorage, "light");
-    }, []);
+        root.classList.add(modo);
+        setTemaReal(modo as "dark" | "light");
+        
+        localStorage.setItem(ChaveTemaStorage, tema);
+    }, [tema]);
 
     const setTema = (novoTema: Tema) => {
-        // Ignorar solicitações de mudança de tema para manter sempre claro
-        console.log("Modo Claro forçado pelo sistema.");
+        setTemaState(novoTema);
     };
 
     return (

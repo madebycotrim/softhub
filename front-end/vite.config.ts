@@ -4,13 +4,10 @@ import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 
-// Configuração de emergência: Foco total em estabilidade.
-// Removida toda a complexidade de build (PWA, manualChunks).
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), '');
 
     return {
-        // Nenhuma configuração de build. O Vite usará sua estratégia padrão e mais segura.
         plugins: [
             react(),
             tailwindcss(),
@@ -44,7 +41,6 @@ export default defineConfig(({ mode }) => {
             },
         },
         server: {
-            // Proxy mantido por ser essencial para o desenvolvimento.
             proxy: {
                 '/api': {
                     target: env.VITE_API || 'https://api.softhub.workers.dev',

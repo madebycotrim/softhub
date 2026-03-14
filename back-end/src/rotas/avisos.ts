@@ -7,7 +7,10 @@ import { registrarLog } from '../servicos/servico-logs';
 import { criarNotificacoes, removerNotificacoesPorEntidade } from '../servicos/servico-notificacoes';
 const rotasAvisos = new Hono<{ Bindings: Env, Variables: { usuario: any } }>();
 
-// Listar avisos ativos
+/**
+ * Lista todos os avisos ativos (dentro do prazo de validade).
+ * Utiliza cache nativo do Cloudflare para performance.
+ */
 rotasAvisos.get('/', autenticacaoRequerida(), verificarPermissao('avisos:visualizar'), async (c: Context) => {
     // Fase 1 - Cacheamento nativo
     const cache = await caches.open('avisos-cache');
@@ -62,8 +65,12 @@ const CriarAvisoSchema = z.object({
     expira_em: z.string().nullable().optional()
 });
 
+/**
+ * Cria um novo aviso no mural e notifica os membros.
+ * Requer permissão 'avisos:criar'.
+ */
 rotasAvisos.post('/', autenticacaoRequerida(), verificarPermissao('avisos:criar'), zValidator('json', CriarAvisoSchema), async (c: Context) => {
-    const { DB } = c.env;
+    const { DB, softhub_kv } = c.env;
     const usuario = c.get('usuario') as any;
     const { titulo, conteudo, prioridade, expira_em } = (c.req as any).valid('json');
 
@@ -77,14 +84,14 @@ rotasAvisos.post('/', autenticacaoRequerida(), verificarPermissao('avisos:criar'
 
         // Workflow 12 - Notificações
         // Simplificado para 'todosOsUsuarios' já que backend da tabela Grupos/Equipes precisaria expansão (e schema atual de avisos não suporta)
-        await criarNotificacoes(c.env.DB, {
+        await criarNotificacoes(DB, {
             todosOsUsuarios: true,
             titulo: `Novo Aviso: ${titulo}`,
             mensagem: conteudo,
             tipo: 'aviso',
             link: '/app/avisos',
             entidadeId: novoId
-        });
+        }, softhub_kv);
 
         await registrarLog(DB, {
             usuarioId: usuario.id,
@@ -107,7 +114,10 @@ rotasAvisos.post('/', autenticacaoRequerida(), verificarPermissao('avisos:criar'
     }
 });
 
-// Remover aviso (Hard delete)
+/**
+ * Remove um aviso do mural (Hard Delete).
+ * Lideranças ou o próprio autor podem remover.
+ */
 rotasAvisos.delete('/:id', autenticacaoRequerida(), async (c: Context) => {
     const { DB } = c.env;
     const id = c.req.param('id');

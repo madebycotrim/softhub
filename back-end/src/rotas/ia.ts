@@ -1,12 +1,42 @@
-import { Hono } from 'hono';
+import { Hono, Context } from 'hono';
 import { Env } from '../index';
 import { autenticacaoRequerida } from '../middleware/auth';
 import { sugerirPrioridade, resumirTarefa, analisarJustificativa, formatarAviso, aprimorarDescricao } from '../servicos/servico-ai';
 
-const rotasIA = new Hono<{ Bindings: Env }>();
+const rotasIA = new Hono<{ Bindings: Env; Variables: { usuario: any } }>();
 
 // Todas as rotas de IA exigem autenticação
 rotasIA.use('*', autenticacaoRequerida());
+
+/**
+ * Middleware para verificar cota diária de IA no KV
+ * Cada usuário tem 50 chamadas/dia (totalizando ~1000 chamadas para 20 pessoas)
+ */
+rotasIA.use('*', async (c, next) => {
+    const { softhub_kv } = c.env;
+    const usuario = c.get('usuario');
+    
+    if (!usuario?.id) return c.json({ erro: 'Usuário não identificado.' }, 401);
+
+    const hoje = new Date().toISOString().split('T')[0];
+    const chaveCota = `cota_ia:${hoje}:${usuario.id}`;
+
+    const usos = Number(await softhub_kv?.get(chaveCota) || 0);
+
+    if (usos >= 50) {
+        return c.json({ 
+            erro: 'Cota diária de "neurônios" atingida.', 
+            detalhe: 'Você já utilizou suas 50 sugestões automáticas de hoje. Tente novamente amanhã para manter o sistema sustentável.' 
+        }, 429);
+    }
+
+    await next();
+
+    // Se a requisição foi bem sucedida (status 2xx), incrementa o uso
+    if (c.res.status >= 200 && c.res.status < 300) {
+        await softhub_kv?.put(chaveCota, String(usos + 1), { expirationTtl: 86400 });
+    }
+});
 
 /**
  * POST /api/ia/prioridade

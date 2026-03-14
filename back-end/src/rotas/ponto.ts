@@ -9,7 +9,10 @@ import { criarNotificacoes } from '../servicos/servico-notificacoes';
 
 const rotasPonto = new Hono<{ Bindings: Env, Variables: { usuario: any } }>({ strict: false });
 
-// Listar registros do usuário (Hoje e Histórico)
+/**
+ * Lista os registros de ponto do usuário autenticado.
+ * Retorna os registros de hoje e os últimos 50 do histórico.
+ */
 rotasPonto.get('/', autenticacaoRequerida(), verificarPermissao('ponto:visualizar'), async (c: Context) => {
     const { DB } = c.env;
     const usuario = c.get('usuario') as any;
@@ -24,45 +27,63 @@ rotasPonto.get('/', autenticacaoRequerida(), verificarPermissao('ponto:visualiza
     }
 });
 
-// Listar todos os membros online (que deram entrada hoje e não saíram)
+/**
+ * Lista todos os membros que estão "online" (deram entrada hoje e não saíram).
+ * Requer permissão de 'ADMIN'.
+ */
 rotasPonto.get('/online', autenticacaoRequerida('ADMIN'), async (c: Context) => {
-    const { DB } = c.env;
+    const { DB, softhub_kv } = c.env;
 
     try {
-        // Busca o último registro de hoje para cada usuário e filtra os que são 'entrada'
-        const query = `
-            SELECT 
-                u.id, 
-                u.nome, 
-                u.email, 
-                u.foto_perfil, 
-                p.registrado_em as entrada_em
-            FROM usuarios u
-            JOIN ponto_registros p ON u.id = p.usuario_id
-            WHERE p.id IN (
-                SELECT id FROM (
-                    SELECT id, ROW_NUMBER() OVER(PARTITION BY usuario_id ORDER BY registrado_em DESC) as rn
-                    FROM ponto_registros
-                    WHERE DATE(registrado_em, '-3 hours') = DATE('now', '-3 hours')
-                ) WHERE rn = 1
-            )
-            AND p.tipo = 'entrada'
-            ORDER BY p.registrado_em ASC
-        `;
+        // 🚀 Busca no KV quem está online
+        const lista = await softhub_kv.list({ prefix: 'presenca:' });
+        const membros = [];
 
-        const { results: online } = await DB.prepare(query).all();
-        return c.json({ online });
+        for (const key of lista.keys) {
+            const dados = await softhub_kv.get(key.name, 'json');
+            if (dados) membros.push(dados);
+        }
+
+        // Se o KV estiver vazio (ex: expirou ou acabou de configurar), 
+        // poderíamos buscar no D1 como fallback, mas o ideal é que o KV seja a fonte da verdade para o "agora".
+        // Para garantir robustez inicial, se membros[] vazio, fazemos a query uma vez e populamos o KV.
+        if (membros.length === 0) {
+            const query = `
+                SELECT u.id, u.nome, u.email, u.foto_perfil, p.registrado_em as entrada_em
+                FROM usuarios u
+                JOIN ponto_registros p ON u.id = p.usuario_id
+                WHERE p.id IN (
+                    SELECT id FROM (
+                        SELECT id, ROW_NUMBER() OVER(PARTITION BY usuario_id ORDER BY registrado_em DESC) as rn
+                        FROM ponto_registros
+                        WHERE DATE(registrado_em, '-3 hours') = DATE('now', '-3 hours')
+                    ) WHERE rn = 1
+                )
+                AND p.tipo = 'entrada'
+            `;
+            const { results } = await DB.prepare(query).all();
+            
+            for (const u of (results as any[])) {
+                await softhub_kv.put(`presenca:${u.id}`, JSON.stringify(u), { expirationTtl: 28800 }); // 8h
+                membros.push(u);
+            }
+        }
+
+        return c.json({ online: membros });
     } catch (erro: any) {
         console.error('[ERRO] GET /api/ponto/online:', erro);
         return c.json({ erro: 'Falha ao buscar membros online', detalhe: erro.message }, 500);
     }
 });
 
-// Bater ponto - Requer presença na Rede UNIEURO
 const BaterPontoSchema = z.object({
     tipo: z.enum(['entrada', 'saida'])
 });
 
+/**
+ * Registra uma batida de ponto (entrada ou saída).
+ * Requer presença na rede física da UNIEURO e respeita o horário permitido.
+ */
 rotasPonto.post('/', 
     autenticacaoRequerida(), 
     verificarPermissao('ponto:registrar'), 
@@ -131,6 +152,19 @@ rotasPonto.post('/',
             // Inserção no banco
             await DB.prepare(`INSERT INTO ponto_registros (id, usuario_id, tipo, ip_origem) VALUES (?, ?, ?, ?)`).bind(crypto.randomUUID(), usuario.id, tipo, ipOrigem).run();
 
+            // 🚀 Atualiza Presence no KV
+            if (tipo === 'entrada') {
+                await softhub_kv.put(`presenca:${usuario.id}`, JSON.stringify({
+                    id: usuario.id,
+                    nome: usuario.nome,
+                    email: usuario.email,
+                    foto_perfil: usuario.foto_perfil,
+                    entrada_em: new Date().toISOString()
+                }), { expirationTtl: 28800 }); // 8 horas de jornada máxima
+            } else {
+                await softhub_kv.delete(`presenca:${usuario.id}`);
+            }
+
             await registrarLog(DB, {
                 usuarioId: usuario.id,
                 acao: tipo === 'entrada' ? 'PONTO_ENTRADA' : 'PONTO_SAIDA',
@@ -147,7 +181,10 @@ rotasPonto.post('/',
         }
     });
 
-// RODOVIA DE TESTE: Registro de ponto sem travas (Somente ADMIN)
+/**
+ * RODOVIA DE TESTE: Permite o registro de ponto ignorando validações de IP e horário.
+ * Requer permissão de 'ADMIN'.
+ */
 rotasPonto.post('/teste', 
     autenticacaoRequerida('ADMIN'), 
     zValidator('json', BaterPontoSchema), 

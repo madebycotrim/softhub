@@ -3,7 +3,7 @@ import { Square, CheckSquare, Trash2, Eye, LayoutGrid, ChevronRight } from 'luci
 import { Avatar } from '@/compartilhado/componentes/Avatar';
 import { usarAutenticacao } from '@/contexto/ContextoAutenticacao';
 import { usarPermissaoAcesso } from '@/compartilhado/hooks/usarPermissao';
-import type { Membro } from '@/funcionalidades/membros/hooks/usarMembros';
+import type { Membro } from '@/funcionalidades/admin/hooks/usarMembros';
 
 interface MembroCardMobileProps {
     membro: Membro;
@@ -21,9 +21,9 @@ interface MembroCardMobileProps {
  * Versão Card para Mobile dos membros.
  * Focado em toque e legibilidade em telas pequenas.
  */
-export const MembroCardMobile = memo(({ 
-    membro, salvando, selecionado, onToggleSelect, onAlterarRole, 
-    onRemover, onVerPerfil, onAlocar, rolesDisponiveis 
+export const MembroCardMobile = memo(({
+    membro, salvando, selecionado, onToggleSelect, onAlterarRole,
+    onRemover, onVerPerfil, onAlocar, rolesDisponiveis
 }: MembroCardMobileProps) => {
     const { usuario } = usarAutenticacao();
     const ehOMesmoUsuario = usuario?.id === membro.id;
@@ -94,7 +94,7 @@ export const MembroCardMobile = memo(({
                     <Eye size={14} />
                     <span>Ver Perfil</span>
                 </button>
-                
+
                 {usarPermissaoAcesso('equipes:editar_equipe') && (
                     <button
                         onClick={() => onAlocar(membro)}

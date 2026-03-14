@@ -44,6 +44,7 @@ export function usarAutenticacao() {
 const CHAVE_TOKEN = 'softhub_token';
 const CHAVE_USUARIO = 'softhub_usuario';
 const CHAVE_PROJETO = 'softhub_projeto_ativo';
+const CHAVE_CONFIGS = 'softhub_configs_ux';
 
 /**
  * ProvedorAutenticacao NÃO usa useNavigate — ele vive fora do RouterProvider.
@@ -64,12 +65,21 @@ export function ProvedorAutenticacao({ children }: { children: ReactNode }) {
         return null;
     });
 
-    const [configuracoes, setConfiguracoes] = useState<IConfiguracoesUX>({
-        hierarquia_roles: [],
-        permissoes_roles: {},
+    const [configuracoes, setConfiguracoes] = useState<IConfiguracoesUX>(() => {
+        const salvo = localStorage.getItem(CHAVE_CONFIGS);
+        if (salvo) {
+            try { return JSON.parse(salvo); } catch { return { hierarquia_roles: [], permissoes_roles: {} }; }
+        }
+        return { hierarquia_roles: [], permissoes_roles: {} };
     });
 
-    const [carregando, setCarregando] = useState(true);
+    // Se já temos usuário e configurações no cache, podemos começar sem loading
+    const [carregando, setCarregando] = useState(() => {
+        const temConfig = localStorage.getItem(CHAVE_CONFIGS);
+        const temToken = localStorage.getItem(CHAVE_TOKEN);
+        // Só carrega se tiver token mas não tiver configs ainda
+        return !!temToken && !temConfig;
+    });
 
     const [projetoAtivoId, setProjetoAtivoIdInterno] = useState<string>(() => {
         return localStorage.getItem(CHAVE_PROJETO) || '';
@@ -87,10 +97,12 @@ export function ProvedorAutenticacao({ children }: { children: ReactNode }) {
     const buscarConfiguracoesPublicas = useCallback(async () => {
         try {
             const { data } = await api.get('/api/configuracoes/publico');
-            setConfiguracoes({
+            const novasConfigs = {
                 hierarquia_roles: data.hierarquia_roles || [],
                 permissoes_roles: data.permissoes_roles || {},
-            });
+            };
+            setConfiguracoes(novasConfigs);
+            localStorage.setItem(CHAVE_CONFIGS, JSON.stringify(novasConfigs));
         } catch (error) {
             console.error("[Auth] Falha ao carregar matriz de governança:", error);
         } finally {
@@ -123,6 +135,8 @@ export function ProvedorAutenticacao({ children }: { children: ReactNode }) {
         setToken(null);
         localStorage.removeItem(CHAVE_TOKEN);
         localStorage.removeItem(CHAVE_USUARIO);
+        localStorage.removeItem(CHAVE_CONFIGS);
+        localStorage.removeItem(CHAVE_PROJETO);
 
         // Apenas redireciona localmente, sem deslogar da conta Microsoft global
         window.location.href = '/login';

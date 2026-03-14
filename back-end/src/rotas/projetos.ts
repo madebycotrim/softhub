@@ -27,14 +27,21 @@ const ProjetoSchema = z.object({
  * Rota pública para o portfólio.
  */
 rotasProjetos.get('/publicos', async (c) => {
-    const { DB } = c.env;
+    const { DB, softhub_kv } = c.env;
     try {
+        const cacheKey = 'portfolio:publicos';
+        const cached = await softhub_kv?.get(cacheKey);
+        if (cached) return c.json(JSON.parse(cached));
+
         const { results } = await DB.prepare(`
             SELECT id, nome, descricao, github_repo, documentacao_url, figma_url, criado_em 
             FROM projetos 
             WHERE publico = 1 
             ORDER BY criado_em DESC
         `).all();
+
+        await softhub_kv?.put(cacheKey, JSON.stringify(results), { expirationTtl: 86400 }); // 24h (invalidado na escrita)
+
         return c.json(results);
     } catch (e: any) {
         return c.json({ erro: 'Falha ao buscar projetos públicos' }, 500);
@@ -42,11 +49,11 @@ rotasProjetos.get('/publicos', async (c) => {
 });
 
 /**
- * GET /api/projetos
- * Listar todos os projetos (Privado - Requer permissão de Admin ou da Equipe)
+ * Lista todos os projetos disponíveis para o usuário autenticado.
+ * Filtra por permissão de Admin, projetos públicos ou projetos onde a equipe do usuário está vinculada.
  */
 rotasProjetos.get('/', autenticacaoRequerida(), verificarPermissao(['projetos:visualizar', 'projetos:visualizar_detalhes']), async (c) => {
-    const { DB } = c.env;
+    const { DB, softhub_kv } = c.env;
     const usuario = c.get('usuario');
 
     try {
@@ -78,15 +85,15 @@ rotasProjetos.get('/', autenticacaoRequerida(), verificarPermissao(['projetos:vi
 });
 
 /**
- * POST /api/projetos
- * Criar um novo projeto (Privado - Admin/Gestor)
+ * Cria um novo projeto e vincula as equipes especificadas.
+ * Requer permissão 'projetos:criar'.
  */
 rotasProjetos.post('/', 
     autenticacaoRequerida(), 
     verificarPermissao('projetos:criar'), 
     zValidator('json', ProjetoSchema), 
     async (c) => {
-    const { DB } = c.env;
+    const { DB, softhub_kv } = c.env;
     const body = c.req.valid('json');
     const usuario = c.get('usuario');
     const id = crypto.randomUUID();
@@ -115,6 +122,9 @@ rotasProjetos.post('/',
             }
         }
 
+        // 🚀 Invalida cache do portfólio
+        if (body.publico) await softhub_kv?.delete('portfolio:publicos');
+
         await registrarLog(DB, {
             usuarioId: usuario.id,
             acao: 'PROJETO_CRIADO',
@@ -133,15 +143,15 @@ rotasProjetos.post('/',
 });
 
 /**
- * PATCH /api/projetos/:id
- * Editar projeto existente
+ * Atualiza os dados de um projeto existente.
+ * Requer permissão 'projetos:editar'.
  */
 rotasProjetos.patch('/:id', 
     autenticacaoRequerida(), 
     verificarPermissao('projetos:editar'), 
     zValidator('json', ProjetoSchema.partial()), 
     async (c) => {
-    const { DB } = c.env;
+    const { DB, softhub_kv } = c.env;
     const id = c.req.param('id');
     const body = c.req.valid('json');
     const usuario = c.get('usuario');
@@ -175,6 +185,9 @@ rotasProjetos.patch('/:id',
             }
         }
 
+        // 🚀 Invalida cache do portfólio
+        await softhub_kv?.delete('portfolio:publicos');
+
         await registrarLog(DB, {
             usuarioId: usuario.id,
             acao: 'PROJETO_EDITADO',
@@ -192,11 +205,11 @@ rotasProjetos.patch('/:id',
 });
 
 /**
- * DELETE /api/projetos/:id
- * Remoção permanente (Hard Delete conforme regra)
+ * Remove permanentemente um projeto (Hard Delete).
+ * Requer permissão 'projetos:excluir'.
  */
 rotasProjetos.delete('/:id', autenticacaoRequerida(), verificarPermissao('projetos:excluir'), async (c) => {
-    const { DB } = c.env;
+    const { DB, softhub_kv } = c.env;
     const id = c.req.param('id');
     const usuario = c.get('usuario');
 
@@ -215,6 +228,9 @@ rotasProjetos.delete('/:id', autenticacaoRequerida(), verificarPermissao('projet
             entidadeTipo: 'projetos',
             entidadeId: id
         });
+
+        // 🚀 Invalida cache do portfólio
+        if (softhub_kv) await softhub_kv.delete('portfolio:publicos');
 
         return c.json({ sucesso: true });
     } catch (e: any) {

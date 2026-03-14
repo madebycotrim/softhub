@@ -4,9 +4,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Modal } from '@/compartilhado/componentes/Modal';
 import { Carregando } from '@/compartilhado/componentes/Carregando';
 import { api } from '@/compartilhado/servicos/api';
-import { Wand2 } from 'lucide-react';
+import { Wand2, Sparkles, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
 import { LABELS_PRIORIDADE } from '@/utilitarios/constantes';
+import { servicoIA } from '@/compartilhado/servicos/servico-ia';
 
 const esquemaTarefa = z.object({
     titulo: z.string().min(3, 'Mínimo 3 caracteres').max(100),
@@ -29,6 +30,7 @@ export function ModalCriarTarefa({ aberto, aoFechar, aoCriar }: ModalCriarTarefa
     });
 
     const [processandoDescricaoIA, setProcessandoDescricaoIA] = useState(false);
+    const [erroIA, setErroIA] = useState<string | null>(null);
     const [carregandoCriacao, setCarregandoCriacao] = useState(false);
     const titulo = watch('titulo');
     const descricao = watch('descricao');
@@ -36,11 +38,12 @@ export function ModalCriarTarefa({ aberto, aoFechar, aoCriar }: ModalCriarTarefa
     const handleAprimorarDescricaoIA = async () => {
         if (!titulo || !descricao) return;
         setProcessandoDescricaoIA(true);
+        setErroIA(null);
         try {
-            const res = await api.post('/api/ia/aprimorar-descricao', { titulo, descricao });
-            if (res.data.descricao) setValue('descricao', res.data.descricao);
-        } catch (e) {
-            console.error('Erro IA Descrição:', e);
+            const novaDescricao = await servicoIA.aprimorarDescricao(titulo, descricao);
+            if (novaDescricao) setValue('descricao', novaDescricao);
+        } catch (e: any) {
+            setErroIA(e.response?.data?.detalhe || 'O Mentor Tech está ocupado. Tente novamente mais tarde.');
         } finally {
             setProcessandoDescricaoIA(false);
         }
@@ -78,12 +81,22 @@ export function ModalCriarTarefa({ aberto, aoFechar, aoCriar }: ModalCriarTarefa
                             type="button"
                             onClick={handleAprimorarDescricaoIA}
                             disabled={processandoDescricaoIA || !titulo || !descricao || descricao.length < 10}
-                            className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-primary hover:text-primary/70 transition-all disabled:opacity-30"
+                            className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-primary hover:text-primary/70 transition-all disabled:opacity-30 group"
                         >
-                            {processandoDescricaoIA ? <Carregando tamanho="sm" Centralizar={false} /> : <Wand2 size={12} />}
-                            Aprimorar com IA
+                            {processandoDescricaoIA ? (
+                                <Carregando tamanho="sm" Centralizar={false} />
+                            ) : (
+                                <Sparkles size={12} className="text-amber-500 group-hover:scale-125 transition-transform" />
+                            )}
+                            Mágica do Tech Lead
                         </button>
                     </div>
+                    {erroIA && (
+                        <div className="mb-3 p-3 bg-destructive/5 border border-destructive/10 rounded-xl flex items-start gap-2 animate-in fade-in slide-in-from-top-1 duration-300">
+                            <AlertCircle size={14} className="text-destructive shrink-0 mt-0.5" />
+                            <p className="text-[10px] font-medium text-destructive leading-tight">{erroIA}</p>
+                        </div>
+                    )}
                     <textarea
                         {...register('descricao')}
                         rows={4}
