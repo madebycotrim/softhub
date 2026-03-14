@@ -147,11 +147,14 @@ rotasDashboard.get('/burndown', autenticacaoRequerida(), verificarPermissao('das
 
         const totalPontos = tarefas.reduce((acc: number, t: any) => acc + (t.pontos || 0), 0);
         
-        const hoje = new Date();
+        // Ajuste para Fuso de Brasília (UTC-3) para cálculo de "hoje"
+        const agora = new Date();
+        const hojeBr = new Date(agora.getTime() - (3 * 60 * 60 * 1000));
+        
         const dias = [];
         for (let i = 14; i >= 0; i--) {
-            const d = new Date(hoje);
-            d.setDate(d.getDate() - i);
+            const d = new Date(hojeBr);
+            d.setUTCDate(d.getUTCDate() - i);
             dias.push(d.toISOString().split('T')[0]);
         }
 
@@ -167,8 +170,11 @@ rotasDashboard.get('/burndown', autenticacaoRequerida(), verificarPermissao('das
 
             const ideal = Math.max(0, totalPontos - (totalPontos / 15) * index);
 
-            const d = new Date(dia + 'T00:00:00Z'); // Força interpretação como UTC
-            const diaMes = `${d.getUTCDate().toString().padStart(2, '0')}/${(d.getUTCMonth() + 1).toString().padStart(2, '0')}`;
+            // Formatação estrita DD/MM (Brasil)
+            const d = new Date(dia + 'T00:00:00Z');
+            const diaStr = d.getUTCDate().toString().padStart(2, '0');
+            const mesStr = (d.getUTCMonth() + 1).toString().padStart(2, '0');
+            const diaMes = `${diaStr}/${mesStr}`;
 
             return {
                 dia: diaMes,

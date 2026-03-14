@@ -55,27 +55,15 @@ export const CabecalhoDashboard = memo(({ nomeUsuario, projetosAtivos, metricas 
                             : `Status atual da operação no projeto ${projetosAtivos[0] || 'selecionado'}.`
                         }
                     </p>
-                    
-                    {/* Lista de Projetos Monitorados */}
-                    {projetosAtivos.length > 0 && (
-                        <div className="flex flex-wrap items-center gap-2 mt-4">
-                            <span className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest mr-1">Monitorando:</span>
-                            {projetosAtivos.map(p => (
-                                <div key={p} className="px-3 py-1 bg-muted/30 border border-border/40 rounded-xl text-[10px] font-bold text-muted-foreground">
-                                    {p}
-                                </div>
-                            ))}
-                        </div>
-                    )}
                 </div>
 
                 <div className="flex items-center gap-3">
                     <button 
                         onClick={() => setModalPerfilAberto(true)}
-                        className="group flex items-center gap-2.5 px-6 py-3 bg-card/40 hover:bg-card border border-border/40 rounded-3xl transition-all active:scale-95 shadow-sm hover:shadow-md"
+                        className="group flex items-center gap-2.5 px-6 py-3 bg-card/40 backdrop-blur-md hover:bg-card border border-border/40 rounded-3xl transition-all active:scale-95 shadow-sm hover:shadow-md"
                     >
                         <User className="w-4 h-4 text-primary group-hover:scale-110 transition-transform duration-300" />
-                        <span className="text-[11px] font-black uppercase tracking-widest text-foreground/80">Configurações de Perfil</span>
+                        <span className="text-[11px] font-black uppercase tracking-widest text-foreground/80">Ajustes de Perfil</span>
                     </button>
 
                     <div className="flex items-center gap-2.5 px-5 py-3 bg-primary/5 border border-primary/10 rounded-3xl backdrop-blur-sm">
@@ -95,68 +83,103 @@ export const CabecalhoDashboard = memo(({ nomeUsuario, projetosAtivos, metricas 
             {/* Modal de Perfil Unificado */}
             <ModalEdicaoPerfil aberto={modalPerfilAberto} aoFechar={() => setModalPerfilAberto(false)} />
 
-            {/* Grid de Performance Operacional (Vision System Style) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                {/* Ativas */}
-                <div className="group relative bg-card hover:bg-card/80 dark:bg-[#0f172a] dark:hover:bg-[#1e293b] border border-blue-500/10 hover:border-blue-500/30 p-6 rounded-[32px] transition-all duration-500 shadow-xl shadow-blue-500/5 overflow-hidden active:scale-95">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-[80px] rounded-full -mr-16 -mt-16 group-hover:bg-blue-500/20 transition-all duration-700" />
-                    <div className="flex flex-col gap-4 relative z-10">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-2xl bg-blue-500/10 dark:bg-blue-500/20 flex items-center justify-center border border-blue-500/10 dark:border-blue-500/20 shadow-inner">
-                                <Target className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                            </div>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">Hub de Demandas</span>
+            {/* Lista de Projetos Monitorados (Floating Pill) */}
+            {projetosAtivos.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 animate-in slide-in-from-left-4 duration-700">
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-card/50 backdrop-blur-md border border-border/40 rounded-2xl">
+                        <span className="text-[9px] font-black text-primary uppercase tracking-[0.2em] opacity-80">Radar Ativo:</span>
+                        <div className="flex items-center -space-x-2">
+                            {projetosAtivos.slice(0, 3).map(p => (
+                                <div key={p} className="h-6 px-3 bg-primary/10 border border-primary/20 rounded-full flex items-center shadow-inner group/pill hover:z-10 transition-all">
+                                    <span className="text-[9px] font-bold text-primary truncate max-w-[100px]">{p}</span>
+                                </div>
+                            ))}
+                            {projetosAtivos.length > 3 && (
+                                <div className="h-6 w-6 bg-muted border border-border rounded-full flex items-center justify-center text-[8px] font-black text-muted-foreground">
+                                    +{projetosAtivos.length - 3}
+                                </div>
+                            )}
                         </div>
-                        <div className="text-5xl font-black text-foreground tracking-tighter">{metricas?.totalTarefas || 0}</div>
-                        <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest opacity-50">Volume Ativo em {projetosAtivos.length} projetos</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Grid de Performance Operacional (Vision System System) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* Ativas */}
+                <div className="group relative bg-card/40 backdrop-blur-xl hover:bg-card border border-border/40 hover:border-blue-500/30 p-6 rounded-[40px] transition-all duration-500 shadow-sm hover:shadow-xl active:scale-95">
+                    <div className="flex flex-col gap-4 relative z-10">
+                        <div className="flex items-center justify-between">
+                            <div className="w-10 h-10 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/10 shadow-inner group-hover:bg-blue-500/20 transition-colors">
+                                <Target className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <div className="flex flex-col items-end">
+                                <span className="text-[9px] font-black uppercase tracking-widest text-blue-600">Fluxo</span>
+                                <span className="text-[8px] font-bold text-muted-foreground uppercase opacity-40">Load</span>
+                            </div>
+                        </div>
+                        <div>
+                            <div className="text-5xl font-black text-foreground tracking-tighter group-hover:translate-x-1 transition-transform">{metricas?.totalTarefas || 0}</div>
+                            <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest mt-2">Demandas em Ciclo</p>
+                        </div>
                     </div>
                 </div>
 
                 {/* Entregues */}
-                <div className="group relative bg-card hover:bg-card/80 dark:bg-[#0f172a] dark:hover:bg-[#1e293b] border border-emerald-500/10 hover:border-emerald-500/30 p-6 rounded-[32px] transition-all duration-500 shadow-xl shadow-emerald-500/5 overflow-hidden active:scale-95">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-[80px] rounded-full -mr-16 -mt-16 group-hover:bg-emerald-500/20 transition-all duration-700" />
+                <div className="group relative bg-card/40 backdrop-blur-xl hover:bg-card border border-border/40 hover:border-emerald-500/30 p-6 rounded-[40px] transition-all duration-500 shadow-sm hover:shadow-xl active:scale-95">
                     <div className="flex flex-col gap-4 relative z-10">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center border border-emerald-500/10 dark:border-emerald-500/20 shadow-inner">
-                                <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                        <div className="flex items-center justify-between">
+                            <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/10 shadow-inner group-hover:bg-emerald-500/20 transition-colors">
+                                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                             </div>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Entregues</span>
+                            <div className="flex flex-col items-end">
+                                <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600">Output</span>
+                                <span className="text-[8px] font-bold text-muted-foreground uppercase opacity-40">Success</span>
+                            </div>
                         </div>
-                        <div className="text-5xl font-black text-foreground tracking-tighter">{metricas?.tarefasConcluidas || 0}</div>
-                        <p className="text-[9px] text-emerald-600 dark:text-emerald-500 font-black uppercase tracking-widest">Sucesso Metodológico</p>
+                        <div>
+                            <div className="text-5xl font-black text-foreground tracking-tighter group-hover:translate-x-1 transition-transform">{metricas?.tarefasConcluidas || 0}</div>
+                            <p className="text-[9px] text-emerald-600 font-black uppercase tracking-widest mt-2 leading-none">Entregas Validadas</p>
+                        </div>
                     </div>
                 </div>
 
                 {/* Críticas */}
-                <div className="group relative bg-card hover:bg-card/80 dark:bg-[#0f172a] dark:hover:bg-[#1e293b] border border-rose-500/10 hover:border-rose-500/30 p-6 rounded-[32px] transition-all duration-500 shadow-xl shadow-rose-500/5 overflow-hidden active:scale-95">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/10 blur-[80px] rounded-full -mr-16 -mt-16 group-hover:bg-rose-500/20 transition-all duration-700" />
+                <div className="group relative bg-card/40 backdrop-blur-xl hover:bg-card border border-border/40 hover:border-rose-500/30 p-6 rounded-[40px] transition-all duration-500 shadow-sm hover:shadow-xl active:scale-95">
                     <div className="flex flex-col gap-4 relative z-10">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-2xl bg-rose-500/10 dark:bg-rose-500/20 flex items-center justify-center border border-rose-500/10 dark:border-rose-500/20 shadow-inner">
-                                <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400" />
+                        <div className="flex items-center justify-between">
+                            <div className="w-10 h-10 rounded-2xl bg-rose-500/10 flex items-center justify-center border border-rose-500/10 shadow-inner group-hover:bg-rose-500/20 transition-colors">
+                                <AlertCircle className="w-5 h-5 text-rose-600" />
                             </div>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-rose-600 dark:text-rose-400">Fogo Cruzado</span>
+                            <div className="flex flex-col items-end">
+                                <span className="text-[9px] font-black uppercase tracking-widest text-rose-600">Critical</span>
+                                <span className="text-[8px] font-bold text-muted-foreground uppercase opacity-40">Risk</span>
+                            </div>
                         </div>
-                        <div className="text-5xl font-black text-foreground tracking-tighter">{metricas?.tarefasAtrasadas || 0}</div>
-                        <p className="text-[9px] text-rose-600 dark:text-rose-500 font-black uppercase tracking-widest">Urgência Crítica</p>
+                        <div>
+                            <div className="text-5xl font-black text-foreground tracking-tighter group-hover:translate-x-1 transition-transform">{metricas?.tarefasAtrasadas || 0}</div>
+                            <p className="text-[9px] text-rose-600 font-black uppercase tracking-widest mt-2 underline decoration-rose-500/20 underline-offset-4">Gargalos Detectados</p>
+                        </div>
                     </div>
                 </div>
 
                 {/* Eficiência / Progresso */}
-                <div className="group relative bg-card hover:bg-card/80 dark:bg-[#0f172a] dark:hover:bg-[#1e293b] border border-primary/20 hover:border-primary/40 p-6 rounded-[32px] transition-all duration-500 shadow-xl shadow-primary/5 overflow-hidden active:scale-95">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-[80px] rounded-full -mr-16 -mt-16 group-hover:bg-primary/20 transition-all duration-700" />
+                <div className="group relative bg-card/40 backdrop-blur-xl hover:bg-card border border-border/40 hover:border-primary/40 p-6 rounded-[40px] transition-all duration-500 shadow-sm hover:shadow-xl active:scale-95">
                     <div className="flex flex-col gap-4 relative z-10">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-2xl bg-primary/10 dark:bg-primary/30 flex items-center justify-center border border-primary/20 shadow-inner">
-                                <Clock className="w-5 h-5 text-primary" />
+                        <div className="flex items-center justify-between">
+                            <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/10 shadow-inner group-hover:bg-primary/20 transition-colors">
+                                <Zap className="w-5 h-5 text-primary" />
                             </div>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-primary">Aproveitamento</span>
+                            <div className="flex flex-col items-end">
+                                <span className="text-[9px] font-black uppercase tracking-widest text-primary">Ratio</span>
+                                <span className="text-[8px] font-bold text-muted-foreground uppercase opacity-40">Health</span>
+                            </div>
                         </div>
                         <div>
-                            <div className="text-5xl font-black text-primary tracking-tighter">{metricas?.progressoGeral || 0}%</div>
+                            <div className="text-5xl font-black text-primary tracking-tighter group-hover:translate-x-1 transition-transform">{metricas?.progressoGeral || 0}%</div>
                             <div className="w-full h-1.5 bg-primary/10 rounded-full mt-3 overflow-hidden border border-primary/5">
                                 <div 
-                                    className="h-full bg-gradient-to-r from-primary to-blue-400 rounded-full transition-all duration-1000 ease-out"
+                                    className="h-full bg-gradient-to-r from-primary via-blue-400 to-primary/80 rounded-full transition-all duration-1000 ease-out"
                                     style={{ width: `${metricas?.progressoGeral || 0}%` }}
                                 />
                             </div>
@@ -164,9 +187,6 @@ export const CabecalhoDashboard = memo(({ nomeUsuario, projetosAtivos, metricas 
                     </div>
                 </div>
             </div>
-
         </div>
     );
 });
-
-

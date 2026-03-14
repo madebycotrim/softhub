@@ -69,14 +69,17 @@ export const GraficoBurndown = memo(({ projetoId }: GraficoBurndownProps) => {
                             tickLine={false} 
                             dy={10}
                             tick={(props) => {
-                                const { x, y, payload } = props;
+                                const { x, y, payload, index, visibleTicksCount } = props;
                                 const hoje = new Date();
                                 const d = hoje.getDate().toString().padStart(2, '0');
                                 const m = (hoje.getMonth() + 1).toString().padStart(2, '0');
-                                const hojeFormatado = `${d}/${m}`;
                                 
-                                // Aceita 13/03 ou 03/13 (por segurança), mas prioriza o formato brasileiro
-                                const ehHoje = payload.value === hojeFormatado || payload.value === `${m}/${d}`;
+                                const hojeBr = `${d}/${m}`;
+                                const hojeUs = `${m}/${d}`;
+                                
+                                // É hoje se o valor bater com DD/MM, MM/DD ou se for o ÚLTIMO tick e estamos no dia certo
+                                const ehHoje = payload.value === hojeBr || payload.value === hojeUs;
+                                const ehUltimo = index === visibleTicksCount - 1;
 
                                 return (
                                     <g transform={`translate(${x},${y})`}>
@@ -95,7 +98,7 @@ export const GraficoBurndown = memo(({ projetoId }: GraficoBurndownProps) => {
                                             {ehHoje ? 'HOJE' : payload.value}
                                         </text>
                                         {ehHoje && (
-                                            <circle cx={0} cy={24} r={2.5} fill="hsl(var(--primary))" className="animate-pulse" />
+                                            <circle cx={0} cy={24} r={3} fill="hsl(var(--primary))" className="animate-pulse shadow-lg" />
                                         )}
                                     </g>
                                 );
