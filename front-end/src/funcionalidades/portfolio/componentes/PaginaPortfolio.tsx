@@ -11,9 +11,9 @@ export const PaginaPortfolio = memo(() => {
     const { projetos, carregando, erro } = usarPortfolio();
 
     return (
-        <div className="min-h-screen bg-[#020617] text-slate-200 selection:bg-primary/30 selection:text-primary-foreground">
+        <div className="min-h-screen bg-slate-50 text-slate-800 selection:bg-primary/10 selection:text-primary">
             {/* Header / Navbar */}
-            <header className="sticky top-0 z-50 w-full border-b border-border/10 bg-background/80 backdrop-blur-md">
+            <header className="sticky top-0 z-50 w-full border-b border-border/10 bg-white/80 backdrop-blur-md">
                 <div className="container mx-auto px-6 h-20 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
@@ -44,7 +44,7 @@ export const PaginaPortfolio = memo(() => {
                     <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 border border-primary/20 rounded-full text-primary text-[10px] font-black uppercase tracking-widest animar-entrada">
                         <Globe size={12} /> Engenharia de Software em Ação
                     </div>
-                    <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-white leading-[0.9] max-w-4xl mx-auto animar-entrada" style={{ animationDelay: '100ms' }}>
+                    <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-slate-900 leading-[0.9] max-w-4xl mx-auto animar-entrada" style={{ animationDelay: '100ms' }}>
                         Transformando ideias em <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-400">código de alto nível.</span>
                     </h1>
                     <p className="text-lg text-slate-400 max-w-2xl mx-auto font-medium animar-entrada" style={{ animationDelay: '200ms' }}>
@@ -69,11 +69,11 @@ export const PaginaPortfolio = memo(() => {
             </section>
 
             {/* Projetos Section */}
-            <section id="projetos" className="py-20 md:py-32 bg-slate-950/50">
+            <section id="projetos" className="py-20 md:py-32 bg-white">
                 <div className="container mx-auto px-6 space-y-16">
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                         <div className="space-y-4">
-                            <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-white">Nossas Produções</h2>
+                            <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-slate-900">Nossas Produções</h2>
                             <p className="text-slate-400 max-w-md font-medium">Sistemas ativos, modulares e focados em experiência do usuário.</p>
                         </div>
                         <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
@@ -106,17 +106,17 @@ export const PaginaPortfolio = memo(() => {
                                     className="group bg-card/20 hover:bg-card/40 border border-border/10 hover:border-primary/30 rounded-3xl overflow-hidden transition-all duration-500 hover:-translate-y-2 animar-entrada"
                                     style={{ animationDelay: `${idx * 100}ms` }}
                                 >
-                                    <div className="aspect-video bg-slate-900 flex items-center justify-center relative overflow-hidden">
+                                    <div className="aspect-video bg-slate-50 flex items-center justify-center relative overflow-hidden">
                                         <Code2 size={48} className="text-primary/20 group-hover:scale-125 transition-transform duration-700" />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 to-transparent flex items-end p-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className="absolute inset-0 bg-gradient-to-t from-white/80 to-transparent flex items-end p-6 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <div className="flex gap-2">
                                                 <span className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-[9px] font-black uppercase tracking-widest">Produção</span>
-                                                <span className="px-3 py-1.5 bg-white/10 backdrop-blur-sm text-white rounded-lg text-[9px] font-black uppercase tracking-widest">React v19</span>
+                                                <span className="px-3 py-1.5 bg-slate-800 text-white rounded-lg text-[9px] font-black uppercase tracking-widest">React v19</span>
                                             </div>
                                         </div>
                                     </div>
                                     <div className="p-8 space-y-4">
-                                        <h3 className="text-xl font-black text-white group-hover:text-primary transition-colors">{p.nome}</h3>
+                                        <h3 className="text-xl font-black text-slate-900 group-hover:text-primary transition-colors">{p.nome}</h3>
                                         <p className="text-sm text-slate-400 font-medium line-clamp-2 leading-relaxed h-10">
                                             {p.descricao || 'Este projeto demonstra excelência em arquitetura e escalabilidade técnica.'}
                                         </p>
@@ -151,7 +151,7 @@ export const PaginaPortfolio = memo(() => {
             </section>
 
             {/* Footer */}
-            <footer className="py-20 border-t border-border/10 bg-black">
+            <footer className="py-20 border-t border-border/10 bg-slate-50">
                 <div className="container mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-8">
                     <div className="flex items-center gap-3 opacity-60 grayscale hover:grayscale-0 transition-all">
                         <Rocket size={24} className="text-primary" />

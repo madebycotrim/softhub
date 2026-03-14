@@ -251,44 +251,37 @@ export const BaterPonto = memo(() => {
         <div className="w-full font-sans text-slate-900 animar-entrada">
             <div className="w-full space-y-4">
 
-                {/* Cabeçalho Padronizado */}
+                {/* Cabeçalho */}
                 <CabecalhoFuncionalidade
                     titulo="Ponto Eletrônico"
                     subtitulo="Controle de jornada e registros."
-                    icone={Fingerprint}
-                    variante="padrao"
+                    icone={Clock}
                 >
-                    <div className="flex items-center gap-3 sm:gap-4">
-                        <Tooltip texto={abaAtiva === 'registro' ? "Ver Justificativas" : "Ver Registros"} posicao="bottom">
-                            <button
-                                onClick={handleAlternarAba}
-                                className={`flex items-center justify-center w-11 h-11 rounded-2xl border transition-all ${abaAtiva === 'justificativas'
-                                        ? 'bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20'
-                                        : 'bg-background border-border text-muted-foreground hover:border-primary/20 hover:text-primary hover:bg-primary/5'
-                                    }`}
-                            >
-                                {abaAtiva === 'justificativas' ? (
-                                    <ScrollText size={18} strokeWidth={2.5} />
-                                ) : (
-                                    <History size={18} strokeWidth={2.5} />
-                                )}
-                            </button>
-                        </Tooltip>
-
-                        <div className="flex items-center gap-2">
-
-
-                            {podeJustificar && (
-                                <button
-                                    onClick={handleNovaJustificativa}
-                                    className="h-11 px-6 bg-primary text-primary-foreground rounded-full flex items-center gap-2 text-[11px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 active:scale-95 transition-all"
-                                >
-                                    <Plus size={18} strokeWidth={3} />
-                                    <span>Justificar</span>
-                                </button>
+                    <Tooltip texto={abaAtiva === 'registro' ? "Ver Justificativas" : "Ver Registros"} posicao="bottom">
+                        <button
+                            onClick={handleAlternarAba}
+                            className={`flex items-center justify-center w-10 h-10 rounded-xl border transition-all ${abaAtiva === 'justificativas'
+                                    ? 'bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20'
+                                    : 'bg-background border-border text-muted-foreground hover:border-primary/20 hover:text-primary hover:bg-primary/5'
+                                }`}
+                        >
+                            {abaAtiva === 'justificativas' ? (
+                                <ScrollText size={16} strokeWidth={2.5} />
+                            ) : (
+                                <History size={16} strokeWidth={2.5} />
                             )}
-                        </div>
-                    </div>
+                        </button>
+                    </Tooltip>
+
+                    {podeJustificar && (
+                        <button
+                            onClick={handleNovaJustificativa}
+                            className="h-10 px-5 bg-primary text-primary-foreground rounded-xl flex items-center gap-2 text-xs font-bold shadow-md shadow-primary/20 hover:shadow-primary/30 active:scale-95 transition-all"
+                        >
+                            <Plus size={16} strokeWidth={2.5} />
+                            <span>Justificar</span>
+                        </button>
+                    )}
                 </CabecalhoFuncionalidade>
 
                 {/* Layout Unificado 'Platinum Glass' */}
@@ -323,7 +316,7 @@ export const BaterPonto = memo(() => {
                         />
 
                         {/* TILE 4: HISTÓRICO RECENTE (LINHA DO TEMPO) */}
-                        <div className="bg-white/60 border border-slate-200/60 rounded-2xl p-8 flex flex-col shadow-[0_30px_70px_-20px_rgba(0,0,0,0.04)] max-h-[540px]">
+                        <div className="card-glass p-8 flex flex-col card-glass-hover max-h-[540px]">
                             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-6 shrink-0">
                                 <div className="space-y-1">
                                     <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Linha do Tempo</h3>

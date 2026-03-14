@@ -30,12 +30,11 @@ export const PaginaDashboard = memo(() => {
     return (
         <div className="w-full animate-in fade-in duration-700 max-w-[1600px] mx-auto">
 
-            {/* Cabeçalho de Destaque Operacional (Global ou por Projeto) */}
-            <CabecalhoDashboard 
-                nomeUsuario={usuario?.nome || 'Usuário'} 
-                metricas={metricas} 
-                projetosAtivos={projetosAtivos}
-            />
+            {/* Título Básico Reemplazando CabocalhoDashboard */}
+            <div className="mb-8">
+                <h1 className="text-3xl font-black text-foreground tracking-tighter">Dashboard</h1>
+                <p className="text-muted-foreground text-sm">Resumo operacional do seu ecossistema.</p>
+            </div>
 
             {!carregandoProjetos && projetos.length === 0 ? (
                 <DashboardVazio podeGerenciarProjetos={podeGerenciarProjetos} />
@@ -90,7 +89,7 @@ export const PaginaDashboard = memo(() => {
 
                     {/* Coluna Lateral: Radar e Backdrop (SPAN 4) */}
                     <div className="xl:col-span-4 space-y-8 xl:sticky xl:top-6">
-                        <div className="bg-card/40 backdrop-blur-xl border border-border/40 rounded-[32px] overflow-hidden p-5 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="card-glass card-glass-hover p-5">
                             <RadarCompetencias dados={radar || []} />
                         </div>
                         

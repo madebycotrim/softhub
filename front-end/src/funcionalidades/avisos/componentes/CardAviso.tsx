@@ -14,7 +14,7 @@ export const CardAviso = memo(({ aviso, podeDeletar, aoRemover, index }: CardAvi
     const IconePrioridade = aviso.prioridade === 'urgente' ? Megaphone : null;
 
     return (
-        <div className={`bg-card border border-border rounded-2xl p-6 sm:p-8 relative overflow-hidden flex flex-col sm:flex-row gap-6 shadow-sm h-full transition-all group hover:border-primary/30 animar-entrada atraso-${(index % 5) + 1}`}>
+        <div className={`card-glass p-5 md:p-6 relative overflow-hidden flex flex-col sm:flex-row gap-6 card-glass-hover h-full transition-all group animar-entrada atraso-${(index % 5) + 1}`}>
             {aviso.prioridade === 'urgente' && (
                 <div className="absolute top-0 left-0 w-1.5 h-full bg-destructive" />
             )}

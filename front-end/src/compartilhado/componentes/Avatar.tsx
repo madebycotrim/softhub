@@ -6,13 +6,14 @@ interface AvatarProps {
     tamanho?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
     className?: string;
     coroa?: boolean;
+    status?: 'online' | 'offline' | 'none';
     onClick?: (e: React.MouseEvent) => void;
 }
 
 /**
  * Avatar do usuário. Exibe a foto externa ou as iniciais baseadas no nome.
  */
-export function Avatar({ nome, fotoPerfil, tamanho = 'md', className = '', coroa = false, onClick }: AvatarProps) {
+export function Avatar({ nome, fotoPerfil, tamanho = 'md', className = '', coroa = false, status = 'none', onClick }: AvatarProps) {
     // Tamanhos mapeados por pixels
     const medidas = {
         sm: { box: 'w-6 h-6 text-[10px]', corona: 'w-2.5 h-2.5 -top-1 -left-1' },
@@ -21,6 +22,12 @@ export function Avatar({ nome, fotoPerfil, tamanho = 'md', className = '', coroa
         xl: { box: 'w-16 h-16 text-xl', corona: 'w-6 h-6 -top-3 -left-3' },
         '2xl': { box: 'w-24 h-24 text-3xl', corona: 'w-8 h-8 -top-4 -left-4' },
         'full': { box: 'w-full h-full text-4xl', corona: 'w-10 h-10 -top-5 -left-5' }
+    };
+
+    const statusCores = {
+        online: 'bg-emerald-500',
+        offline: 'bg-slate-400',
+        none: 'transparent'
     };
 
     const tamanhoAtual = medidas[tamanho].box;
@@ -72,6 +79,10 @@ export function Avatar({ nome, fotoPerfil, tamanho = 'md', className = '', coroa
                         <Crown className="w-[70%] h-[70%] text-white fill-white" />
                     </div>
                 )}
+
+                {status !== 'none' && (
+                    <span className={`absolute bottom-0 right-0 w-[25%] h-[25%] min-w-[6px] min-h-[6px] rounded-full border-2 border-white ring-1 ring-black/5 z-20 ${statusCores[status]} animate-in fade-in duration-300`} />
+                )}
             </div>
         );
     }
@@ -88,6 +99,10 @@ export function Avatar({ nome, fotoPerfil, tamanho = 'md', className = '', coroa
                 <div className={`absolute ${tamanhoCorona} bg-amber-500 rounded-full flex items-center justify-center border-2 border-background shadow-lg rotate-[-15deg] animate-in zoom-in duration-500 z-10`}>
                     <Crown className="w-[70%] h-[70%] text-white fill-white" />
                 </div>
+            )}
+
+            {status !== 'none' && (
+                <span className={`absolute bottom-0 right-0 w-[25%] h-[25%] min-w-[6px] min-h-[6px] rounded-full border-2 border-white ring-1 ring-black/5 z-20 ${statusCores[status]} animate-in fade-in duration-300`} />
             )}
         </div>
     );

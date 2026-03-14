@@ -22,52 +22,22 @@ export function ProvedorTema({
     children,
     temaPadrao = "light",
 }: ProvedorTemaProps) {
-    const [tema, setTemaState] = useState<Tema>(
-        () => (localStorage.getItem(ChaveTemaStorage) as Tema) || temaPadrao
-    );
+    const [tema, setTemaState] = useState<Tema>("light");
 
 
-    const [temaReal, setTemaReal] = useState<"dark" | "light">(() => {
-        if (tema !== "system") return tema;
-        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    });
+    const [temaReal, setTemaReal] = useState<"dark" | "light">("light");
 
     useEffect(() => {
         const root = window.document.documentElement;
-
         root.classList.remove("light", "dark");
-
-        let temaAplicado: "dark" | "light";
-
-        if (tema === "system") {
-            temaAplicado = window.matchMedia("(prefers-color-scheme: dark)")
-                .matches
-                ? "dark"
-                : "light";
-        } else {
-            temaAplicado = tema;
-        }
-
-        root.classList.add(temaAplicado);
-        setTemaReal(temaAplicado);
-
-        // Listener para mudanças no sistema se estiver em modo system
-        if (tema === "system") {
-            const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-            const handler = (e: MediaQueryListEvent) => {
-                const novoTema = e.matches ? "dark" : "light";
-                root.classList.remove("light", "dark");
-                root.classList.add(novoTema);
-                setTemaReal(novoTema);
-            };
-            mediaQuery.addEventListener("change", handler);
-            return () => mediaQuery.removeEventListener("change", handler);
-        }
-    }, [tema]);
+        root.classList.add("light");
+        setTemaReal("light");
+        localStorage.setItem(ChaveTemaStorage, "light");
+    }, []);
 
     const setTema = (novoTema: Tema) => {
-        localStorage.setItem(ChaveTemaStorage, novoTema);
-        setTemaState(novoTema);
+        // Ignorar solicitações de mudança de tema para manter sempre claro
+        console.log("Modo Claro forçado pelo sistema.");
     };
 
     return (

@@ -36,9 +36,11 @@ export const SeletorProjetoGlobal = memo(() => {
 
     if (projetos.length === 0 && !carregando) {
         return (
-            <div className="h-11 w-full flex items-center gap-3 px-3 bg-destructive/5 border border-destructive/10 rounded-2xl">
-                <Layers size={14} className="text-destructive/40" />
-                <span className="text-[10px] font-black text-destructive/60 uppercase tracking-widest">
+            <div className="h-11 w-full flex items-center gap-3 px-4 bg-sidebar-accent/5 border border-sidebar-border/30 rounded-2xl group/vazio">
+                <div className="w-6 h-6 rounded-lg bg-background/50 flex items-center justify-center text-muted-foreground/20 group-hover/vazio:text-primary/30 transition-colors">
+                    <Layers size={14} />
+                </div>
+                <span className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-[0.2em]">
                     Sem Projetos
                 </span>
             </div>
@@ -48,7 +50,7 @@ export const SeletorProjetoGlobal = memo(() => {
     return (
         <div className="relative group/seletor">
             <div className="absolute inset-0 bg-primary/5 rounded-2xl opacity-0 group-hover/seletor:opacity-100 transition-opacity duration-300 pointer-events-none" />
-            
+
             <select
                 value={projetoAtivoId}
                 onChange={(e) => setProjetoAtivoId(e.target.value)}

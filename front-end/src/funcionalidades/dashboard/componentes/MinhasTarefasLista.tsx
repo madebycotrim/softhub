@@ -8,7 +8,7 @@ interface MinhasTarefasListaProps {
 
 export const MinhasTarefasLista = memo(({ minhasTarefas }: MinhasTarefasListaProps) => {
     return (
-        <section className="group bg-card hover:bg-muted/10 border border-border/60 rounded-[32px] overflow-hidden shadow-xl transition-all duration-500 animar-entrada atraso-3 relative">
+        <section className="group card-glass card-glass-hover overflow-hidden animar-entrada atraso-3 relative">
             <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform duration-700">
                 <ListTodo size={120} className="text-primary" />
             </div>

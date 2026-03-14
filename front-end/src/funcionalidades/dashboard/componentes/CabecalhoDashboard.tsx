@@ -63,7 +63,7 @@ export const CabecalhoDashboard = memo(({ nomeUsuario, projetosAtivos, metricas 
                         className="group flex items-center gap-2.5 px-6 py-3 bg-card/40 backdrop-blur-md hover:bg-card border border-border/40 rounded-3xl transition-all active:scale-95 shadow-sm hover:shadow-md"
                     >
                         <User className="w-4 h-4 text-primary group-hover:scale-110 transition-transform duration-300" />
-                        <span className="text-[11px] font-black uppercase tracking-widest text-foreground/80">Ajustes de Perfil</span>
+                        <span className="text-[11px] font-black uppercase tracking-widest text-foreground/80">Perfil</span>
                     </button>
 
                     <div className="flex items-center gap-2.5 px-5 py-3 bg-primary/5 border border-primary/10 rounded-3xl backdrop-blur-sm">

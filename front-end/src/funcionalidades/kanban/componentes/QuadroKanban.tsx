@@ -156,11 +156,13 @@ export const QuadroKanban = memo(() => {
     return (
         <div className="flex flex-col h-full w-full overflow-hidden bg-background/50">
             <div className="shrink-0">
-                <CabecalhoFuncionalidade
-                    titulo="Quadro Kanban"
-                    subtitulo="Gerencie e acompanhe o fluxo de tarefas do projeto em tempo real."
-                    icone={FolderKanban}
-                >
+                {/* Título Básico */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-4">
+                    <div>
+                        <h1 className="text-2xl font-black text-foreground tracking-tight">Quadro Kanban</h1>
+                        <p className="text-muted-foreground text-xs uppercase tracking-widest mt-1">Gerencie e acompanhe o fluxo de tarefas.</p>
+                    </div>
+
                     <div className="flex items-center gap-4">
                         {podeCriar && (
                             <button
@@ -172,7 +174,7 @@ export const QuadroKanban = memo(() => {
                             </button>
                         )}
                     </div>
-                </CabecalhoFuncionalidade>
+                </div>
             </div>
 
             {!carregandoProjetos && projetos.length === 0 ? (

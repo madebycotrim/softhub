@@ -8,6 +8,7 @@ import { Carregando } from '@/compartilhado/componentes/Carregando';
 import { EstadoErro } from '@/compartilhado/componentes/EstadoErro';
 import { LinhaJustificativa } from './justificativas/LinhaJustificativa';
 import { ModalRejeicao } from './justificativas/ModalRejeicao';
+import { JustificativaCardMobile } from './justificativas/JustificativaCardMobile';
 
 /** Mapeia o tipo técnico para rótulo amigável. */
 const formatarTipo = (tipo: string): string => {
@@ -97,29 +98,49 @@ export function PainelJustificativas() {
                             <p className="text-[10px] text-muted-foreground/40 mt-2">Nenhuma justificativa aguardando auditoria neste momento.</p>
                         </div>
                     ) : (
-                        <table className="w-full border-collapse">
-                            <thead>
-                                <tr className="border-b border-border bg-muted/10 sticky top-0 z-10 backdrop-blur-md">
-                                    <th className="px-6 py-4 text-left text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 w-[25%]">
-                                        OPERADOR
-                                    </th>
-                                    <th className="px-4 py-4 text-left text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 w-[20%]">
-                                        ESTADO & CRONOGRAMA
-                                    </th>
-                                    <th className="px-4 py-4 text-left text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
-                                        INCIDENTE & ARGUMENTAÇÃO
-                                    </th>
-                                    <th className="px-6 py-4 text-right text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 w-[140px]">
-                                        CONTROLES
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border/40">
-                                {justificativas.map((just, index) => (
-                                    <LinhaJustificativa 
+                        <>
+                            {/* Desktop: Tabela */}
+                            <table className="w-full border-collapse hidden lg:table">
+                                <thead>
+                                    <tr className="border-b border-border bg-muted/10 sticky top-0 z-10 backdrop-blur-md">
+                                        <th className="px-6 py-4 text-left text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 w-[25%]">
+                                            OPERADOR
+                                        </th>
+                                        <th className="px-4 py-4 text-left text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 w-[20%]">
+                                            ESTADO & CRONOGRAMA
+                                        </th>
+                                        <th className="px-4 py-4 text-left text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
+                                            INCIDENTE & ARGUMENTAÇÃO
+                                        </th>
+                                        <th className="px-6 py-4 text-right text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 w-[140px]">
+                                            CONTROLES
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border/40">
+                                    {justificativas.map((just, index) => (
+                                        <LinhaJustificativa 
+                                            key={just.id}
+                                            justificativa={just}
+                                            index={index}
+                                            formatarTipo={formatarTipo}
+                                            analiseIA={analisesIA[just.id]}
+                                            carregandoIA={carregandoIA === just.id}
+                                            processandoAcao={processandoAcao === just.id}
+                                            onAnalisarIA={handleAnalisarIA}
+                                            onAprovar={handleAprovar}
+                                            onInciarRejeicao={setJustificativaSelecionada}
+                                        />
+                                    ))}
+                                </tbody>
+                            </table>
+
+                            {/* Mobile: Cards */}
+                            <div className="lg:hidden p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {justificativas.map((just) => (
+                                    <JustificativaCardMobile
                                         key={just.id}
                                         justificativa={just}
-                                        index={index}
                                         formatarTipo={formatarTipo}
                                         analiseIA={analisesIA[just.id]}
                                         carregandoIA={carregandoIA === just.id}
@@ -129,8 +150,8 @@ export function PainelJustificativas() {
                                         onInciarRejeicao={setJustificativaSelecionada}
                                     />
                                 ))}
-                            </tbody>
-                        </table>
+                            </div>
+                        </>
                     )}
                 </div>
             </div>

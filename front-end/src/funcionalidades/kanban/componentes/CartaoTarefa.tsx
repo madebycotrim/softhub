@@ -8,6 +8,8 @@ import { usarPermissaoAcesso } from '@/compartilhado/hooks/usarPermissao';
 import { usarChecklist } from '@/funcionalidades/kanban/hooks/usarChecklist';
 import { CheckCircle2, ChevronDown, ChevronUp, Maximize2 } from 'lucide-react';
 
+import { usarMembrosOnline } from '@/compartilhado/hooks/usarMembrosOnline';
+
 interface CartaoTarefaProps {
     tarefa: Tarefa;
     aoClicar?: (tarefa: Tarefa) => void;
@@ -23,6 +25,7 @@ export function CartaoTarefa({ tarefa, aoClicar, aoVerPerfil }: CartaoTarefaProp
     const isUrgente = tarefa.prioridade === 'urgente';
     const { totalConcluidos, totalItens } = usarChecklist(tarefa.id);
     const podeMover = usarPermissaoAcesso('tarefas:mover');
+    const { estaOnline } = usarMembrosOnline();
 
     // Configuração DnD Kit
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
@@ -96,7 +99,13 @@ export function CartaoTarefa({ tarefa, aoClicar, aoVerPerfil }: CartaoTarefaProp
                     {!expandido && tarefa.responsaveis.length > 0 && (
                         <div className="flex items-center -space-x-4 opacity-40 group-hover/card:opacity-100 transition-opacity scale-75">
                             {tarefa.responsaveis.slice(0, 1).map((resp) => (
-                                <Avatar key={resp.id} nome={resp.nome} fotoPerfil={resp.foto || null} tamanho="sm" />
+                                <Avatar 
+                                    key={resp.id} 
+                                    nome={resp.nome} 
+                                    fotoPerfil={resp.foto || null} 
+                                    tamanho="sm" 
+                                    status={estaOnline(resp.id) ? 'online' : 'none'}
+                                />
                             ))}
                         </div>
                     )}
@@ -138,6 +147,7 @@ export function CartaoTarefa({ tarefa, aoClicar, aoVerPerfil }: CartaoTarefaProp
                                         nome={resp.nome}
                                         fotoPerfil={resp.foto || null}
                                         tamanho="sm"
+                                        status={estaOnline(resp.id) ? 'online' : 'none'}
                                         className="ring-2 ring-card shadow-sm group-hover/avatar:ring-primary/40 group-hover/avatar:scale-110 transition-all z-0 hover:z-10 cursor-pointer"
                                         onClick={(e: React.MouseEvent) => {
                                             e.stopPropagation();

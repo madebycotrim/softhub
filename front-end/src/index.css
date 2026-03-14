@@ -221,4 +221,17 @@
   .atraso-3 { animation-delay: 300ms; }
   .atraso-4 { animation-delay: 400ms; }
   .atraso-5 { animation-delay: 500ms; }
+
+  /* Utilitários Premium Mission Control */
+  .card-glass {
+    @apply bg-card/40 backdrop-blur-xl border border-border/40 rounded-[32px] transition-all duration-500 shadow-sm overflow-hidden;
+  }
+
+  .card-glass-hover {
+    @apply hover:bg-card/60 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 active:scale-[0.98];
+  }
+
+  .text-gradient-premium {
+    @apply text-transparent bg-clip-text bg-gradient-to-br from-foreground via-foreground/90 to-foreground/50 tracking-tighter;
+  }
 }

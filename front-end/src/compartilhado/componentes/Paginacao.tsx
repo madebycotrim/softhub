@@ -30,72 +30,60 @@ export function Paginacao({
     if (totalRegistros === 0) return null;
 
     return (
-        <div className="p-4 border-t border-border bg-muted/50 flex flex-col sm:flex-row items-center justify-between gap-4 w-full">
-            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full sm:w-auto">
-                {/* Selector Itens por Página */}
-                <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Exibir</span>
-                    <select
-                        value={itensPorPagina}
-                        onChange={e => aoMudarItensPorPagina(Number(e.target.value))}
-                        disabled={desabilitado}
-                        className="bg-background border border-border rounded-2xl px-2 py-1 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/10 appearance-none cursor-pointer disabled:opacity-50"
-                    >
-                        {opcoesItensPorPagina.map(num => (
-                            <option key={num} value={num}>{num}</option>
-                        ))}
-                    </select>
-                </div>
-                
-                <span className="text-xs text-muted-foreground font-medium text-center sm:text-left">
-                    Mostrando <span className="text-foreground font-bold">{itensListados}</span> de <span className="text-foreground font-bold">{totalRegistros}</span> registros
-                </span>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 w-full">
+            {/* Info + Seletor */}
+            <div className="flex items-center gap-4 text-[11px] text-muted-foreground/50">
+                <span>{itensListados} de {totalRegistros}</span>
+                <select
+                    value={itensPorPagina}
+                    onChange={e => aoMudarItensPorPagina(Number(e.target.value))}
+                    disabled={desabilitado}
+                    className="bg-transparent text-muted-foreground/50 text-[11px] outline-none cursor-pointer appearance-none hover:text-foreground transition-colors disabled:opacity-30"
+                >
+                    {opcoesItensPorPagina.map(num => (
+                        <option key={num} value={num}>{num} por página</option>
+                    ))}
+                </select>
             </div>
 
-            {/* Controles Nuvem / Botões */}
-            <div className="flex items-center justify-center gap-1 w-full sm:w-auto">
+            {/* Navegação */}
+            <div className="flex items-center gap-0.5">
                 <button
                     disabled={paginaAtual === 1 || desabilitado}
                     onClick={() => aoMudarPagina(1)}
-                    className="w-10 h-9 rounded-2xl border border-border text-foreground hover:bg-accent disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center justify-center"
+                    className="p-1.5 rounded-md text-muted-foreground/30 hover:text-foreground disabled:opacity-0 disabled:pointer-events-none transition-colors"
                     title="Primeira Página"
                 >
-                    <ChevronsLeft className="w-5 h-5" />
+                    <ChevronsLeft size={14} />
                 </button>
 
                 <button
                     disabled={paginaAtual === 1 || desabilitado}
                     onClick={() => aoMudarPagina(paginaAtual - 1)}
-                    className="h-9 px-3 rounded-2xl border border-border text-foreground hover:bg-accent disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center gap-1.5"
+                    className="p-1.5 rounded-md text-muted-foreground/30 hover:text-foreground disabled:opacity-0 disabled:pointer-events-none transition-colors"
                 >
-                    <ChevronLeft className="w-5 h-5" />
-                    <span className="text-xs font-bold hidden sm:inline">Anterior</span>
+                    <ChevronLeft size={14} />
                 </button>
 
-                <div className="flex items-center px-3 sm:px-4 bg-background border border-border rounded-2xl h-9">
-                    <span className="text-xs font-bold whitespace-nowrap">
-                        <span className="text-primary">{paginaAtual}</span>
-                        <span className="mx-1 sm:mx-2 text-muted-foreground/40">/</span>
-                        <span className="text-muted-foreground">{totalPaginas}</span>
-                    </span>
-                </div>
+                <span className="px-3 text-[11px] text-muted-foreground/50 tabular-nums">
+                    {paginaAtual} <span className="text-muted-foreground/20">/</span> {totalPaginas}
+                </span>
 
                 <button
                     disabled={paginaAtual === totalPaginas || desabilitado}
                     onClick={() => aoMudarPagina(paginaAtual + 1)}
-                    className="h-9 px-3 rounded-2xl border border-border text-foreground hover:bg-accent disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center gap-1.5"
+                    className="p-1.5 rounded-md text-muted-foreground/30 hover:text-foreground disabled:opacity-0 disabled:pointer-events-none transition-colors"
                 >
-                    <span className="text-xs font-bold hidden sm:inline">Próxima</span>
-                    <ChevronRight className="w-5 h-5" />
+                    <ChevronRight size={14} />
                 </button>
 
                 <button
                     disabled={paginaAtual === totalPaginas || desabilitado}
                     onClick={() => aoMudarPagina(totalPaginas)}
-                    className="w-10 h-9 rounded-2xl border border-border text-foreground hover:bg-accent disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center justify-center"
+                    className="p-1.5 rounded-md text-muted-foreground/30 hover:text-foreground disabled:opacity-0 disabled:pointer-events-none transition-colors"
                     title="Última Página"
                 >
-                    <ChevronsRight className="w-5 h-5" />
+                    <ChevronsRight size={14} />
                 </button>
             </div>
         </div>

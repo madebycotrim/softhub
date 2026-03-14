@@ -40,18 +40,18 @@ export const GerenciarEquipes = memo(() => {
     const equipesAtivas = equipes;
 
     const equipesFiltradas = useMemo(() => 
-        equipesAtivas.filter(e => 
+        equipesAtivas.filter((e: any) => 
             e.nome.toLowerCase().includes(buscaEquipe.toLowerCase())
         ),
     [equipesAtivas, buscaEquipe]);
 
     // Otimização: Memoização de dados derivados
     const equipeAtiva = useMemo(() => 
-        equipesAtivas.find(e => e.id === idEquipeAtiva),
+        equipesAtivas.find((e: any) => e.id === idEquipeAtiva),
     [equipesAtivas, idEquipeAtiva]);
 
     const gruposDaEquipe = useMemo(() => 
-        grupos.filter(g => g.equipe_id === idEquipeAtiva),
+        grupos.filter((g: any) => g.equipe_id === idEquipeAtiva),
     [grupos, idEquipeAtiva]);
 
     const handleSalvarOrg = useCallback(async (dados: any) => {
@@ -131,11 +131,12 @@ export const GerenciarEquipes = memo(() => {
     const handleAdicionarGrupo = useCallback(() => setModalOrg({ aberto: true, tipo: 'grupo', dados: { equipe_id: idEquipeAtiva } }), [idEquipeAtiva]);
     const handleExcluirGrupo = useCallback((g: Grupo) => setConfirmacaoExclusao({ id: g.id, nome: g.nome, tipo: 'grupo' }), []);
     const handleAlocarAbrir = useCallback((gId: string, eId: string) => setModalAlocacao({ grupoId: gId, equipeId: eId }), []);
-    const handleRemoverMembro = useCallback((mId: string) => alocarMembro(mId, null, null), [alocarMembro]);
+    const handleRemoverMembro = useCallback((mId: string) => { alocarMembro(mId, null, null); }, [alocarMembro]);
+    const handleAlocarLote = useCallback(async (mId: string, eId: string | null, gId: string | null) => { await alocarMembro(mId, eId, gId); }, [alocarMembro]);
     const handleMoverMembroAbrir = useCallback((mId: string, gOrigemId: string) => setModalMover({ membroId: mId, grupoOrigemId: gOrigemId, equipeId: idEquipeAtiva! }), [idEquipeAtiva]);
     const handleSelecionarLiderAbrir = useCallback((tipo: 'lider' | 'sub_lider') => setModalLider({ aberto: true, tipo }), []);
-    const handleSalvarNomeGrupo = useCallback((id: string, nome: string) => editarGrupo(id, { nome }), [editarGrupo]);
-    const handleSalvarNomeEquipe = useCallback((id: string, nome: string) => editarEquipe(id, { nome }), [editarEquipe]);
+    const handleSalvarNomeGrupo = useCallback(async (id: string, nome: string) => { await editarGrupo(id, { nome }); }, [editarGrupo]);
+    const handleSalvarNomeEquipe = useCallback(async (id: string, nome: string) => { await editarEquipe(id, { nome }); }, [editarEquipe]);
 
     return (
         <div className="flex flex-col h-full space-y-6 animar-entrada">
@@ -145,9 +146,18 @@ export const GerenciarEquipes = memo(() => {
                 icone={LayoutGrid}
             >
                 <div className="flex items-center gap-3">
+                    {/* Botão Voltar para Mobile quando há equipe selecionada */}
+                    <button
+                        onClick={() => setIdEquipeAtiva(null)}
+                        className={`lg:hidden h-11 px-4 bg-muted/20 text-foreground rounded-full flex items-center gap-2 text-[11px] font-black uppercase tracking-widest transition-all ${!idEquipeAtiva ? 'opacity-0 pointer-events-none w-0 truncate' : 'opacity-100'}`}
+                    >
+                        <Trash2 size={16} className="rotate-45" />
+                        <span>Voltar</span>
+                    </button>
+
                     <button
                         onClick={() => setModalOrg({ aberto: true, tipo: 'equipe' })}
-                        className="h-11 px-6 bg-primary text-primary-foreground rounded-full flex items-center gap-2 text-[11px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 active:scale-95 transition-all"
+                        className={`h-11 px-6 bg-primary text-primary-foreground rounded-full flex items-center gap-2 text-[11px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 active:scale-95 transition-all ${idEquipeAtiva ? 'hidden lg:flex' : 'flex'}`}
                     >
                         <Plus size={18} strokeWidth={3} />
                         <span>Nova Equipe</span>
@@ -164,18 +174,20 @@ export const GerenciarEquipes = memo(() => {
                 ) : (
                     <>
                         {/* Sidebar de Equipes */}
-                        <SidebarEquipes
-                            equipes={equipesAtivas}
-                            idEquipeAtiva={idEquipeAtiva}
-                            aoSelecionar={setIdEquipeAtiva}
-                            podeEditar={podeEditarEquipe}
-                            aoExcluir={(e) => setConfirmacaoExclusao({ id: e.id, nome: e.nome, tipo: 'equipe' })}
-                            podeCriar={podeCriarEquipe}
-                            aoCriar={() => setModalOrg({ aberto: true, tipo: 'equipe' })}
-                        />
+                        <div className={`w-full lg:w-80 shrink-0 ${idEquipeAtiva ? 'hidden lg:flex' : 'flex'}`}>
+                            <SidebarEquipes
+                                equipes={equipesAtivas}
+                                idEquipeAtiva={idEquipeAtiva}
+                                aoSelecionar={setIdEquipeAtiva}
+                                podeEditar={podeEditarEquipe}
+                                aoExcluir={(e) => setConfirmacaoExclusao({ id: e.id, nome: e.nome, tipo: 'equipe' })}
+                                podeCriar={podeCriarEquipe}
+                                aoCriar={() => setModalOrg({ aberto: true, tipo: 'equipe' })}
+                            />
+                        </div>
 
                         {/* Detalhe da Equipe Selecionada */}
-                        <main className="flex-1 flex flex-col min-w-0 min-h-0">
+                        <main className={`flex-1 min-w-0 min-h-0 flex-col ${idEquipeAtiva ? 'flex' : 'hidden lg:flex'}`}>
                              {equipeAtiva ? (
                                  <DetalheEquipe
                                      key={equipeAtiva.id}
@@ -238,7 +250,7 @@ export const GerenciarEquipes = memo(() => {
                 grupos={grupos}
                 equipes={equipesAtivas}
                 membros={membros as any}
-                aoAlocar={alocarMembro}
+                aoAlocar={handleAlocarLote}
                 grupoIdPadrao={modalAlocacao?.grupoId}
                 equipeIdPadrao={modalAlocacao?.equipeId}
             />
@@ -246,8 +258,8 @@ export const GerenciarEquipes = memo(() => {
             <ModalMovimentacao
                 aberto={!!modalMover}
                 aoFechar={() => setModalMover(null)}
-                membro={(membros.find(m => m.id === modalMover?.membroId) as any) || null}
-                grupos={grupos.filter(g => g.equipe_id === modalMover?.equipeId && g.id !== modalMover?.grupoOrigemId)}
+                membro={(membros.find((m: any) => m.id === modalMover?.membroId) as any) || null}
+                grupos={grupos.filter((g: any) => g.equipe_id === modalMover?.equipeId && g.id !== modalMover?.grupoOrigemId)}
                 aoMover={async (mId: string, eId: string, gDestId: string) => {
                     if (modalMover) {
                         await moverMembro(mId, eId, gDestId, modalMover.grupoOrigemId);

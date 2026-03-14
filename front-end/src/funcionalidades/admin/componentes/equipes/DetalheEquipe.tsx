@@ -79,7 +79,7 @@ export const DetalheEquipe = memo(({
     const podeEditarGrupo = usarPermissaoAcesso('equipes:editar_grupo');
 
     return (
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col h-full overflow-hidden">
+        <div className="card-glass p-6 card-glass-hover flex flex-col h-full overflow-hidden">
             <div className="shrink-0">
                 {/* Header da Equipe */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-5">
