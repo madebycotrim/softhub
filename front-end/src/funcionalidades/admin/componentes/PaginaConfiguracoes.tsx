@@ -42,8 +42,24 @@ export const PaginaConfiguracoes = memo(() => {
         setTimeout(() => setErroLocal(null), 5000);
     };
 
-    if (carregando) return <Carregando />;
-    if (erro) return <div className="p-10 flex justify-center"><Alerta tipo="erro" mensagem={erro} /></div>;
+    if (carregando && !configuracoes) {
+        return (
+            <div className="w-full space-y-8 animate-pulse p-6">
+                <div className="h-16 w-1/3 bg-muted/20 rounded-2xl" />
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <div className="lg:col-span-3 space-y-6">
+                        <div className="h-40 bg-muted/20 rounded-2xl" />
+                        <div className="h-40 bg-muted/20 rounded-2xl" />
+                    </div>
+                    <div className="lg:col-span-9 h-[600px] bg-muted/20 rounded-2xl" />
+                </div>
+            </div>
+        );
+    }
+
+    if (erro && !configuracoes) {
+        return <div className="p-10 flex justify-center"><Alerta tipo="erro" mensagem={erro} /></div>;
+    }
 
     return (
         <div className="w-full animar-entrada pb-10 relative">
@@ -65,18 +81,18 @@ export const PaginaConfiguracoes = memo(() => {
                     {(isAdmin || temAcessoCritico) && (
                         <>
                             <SecaoSistema 
-                                configuracoes={configuracoes} 
+                                configuracoes={configuracoes ?? null} 
                                 atualizarConfiguracao={atualizarConfiguracao} 
                             />
                             
                             <SecaoGovernanca 
-                                configuracoes={configuracoes} 
+                                configuracoes={configuracoes ?? null} 
                                 atualizarConfiguracao={atualizarConfiguracao} 
                                 podeEditar={podeEditar} 
                             />
                             
                             <SecaoRedePonto 
-                                configuracoes={configuracoes} 
+                                configuracoes={configuracoes ?? null} 
                                 atualizarConfiguracao={atualizarConfiguracao} 
                                 podeEditar={podeEditar} 
                             />
@@ -84,13 +100,13 @@ export const PaginaConfiguracoes = memo(() => {
                     )}
 
                     <SecaoJornada 
-                        configuracoes={configuracoes} 
+                        configuracoes={configuracoes ?? null} 
                         atualizarConfiguracao={atualizarConfiguracao} 
                         podeEditar={podeEditar} 
                     />
 
                     <SecaoCargos 
-                        configuracoes={configuracoes} 
+                        configuracoes={configuracoes ?? null} 
                         atualizarConfiguracao={atualizarConfiguracao} 
                         renomearCargo={renomearCargo}
                         podeEditar={podeEditar}
@@ -103,7 +119,7 @@ export const PaginaConfiguracoes = memo(() => {
                 {/* Coluna Principal: Matriz de Permissões e Acesso */}
                 <div className="lg:col-span-9 space-y-6">
                     <SecaoMatrizAcesso 
-                        configuracoes={configuracoes} 
+                        configuracoes={configuracoes ?? null} 
                         atualizarConfiguracao={atualizarConfiguracao} 
                         podeEditar={podeEditar} 
                         isAdmin={isAdmin}

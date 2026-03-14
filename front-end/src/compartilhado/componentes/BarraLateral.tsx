@@ -349,9 +349,11 @@ export function BarraLateral({ aoNavegar, aoAbrirScanner }: BarraLateralProps) {
                                     <Link
                                         to={n.link_acao}
                                         onClick={() => { marcarComoLida(n.id); setModalNotificacoes(false); }}
-                                        className="inline-flex mt-3 text-[10px] font-black text-primary uppercase tracking-[0.1em] hover:underline"
+                                        className="inline-flex items-center gap-2 mt-3 px-3 py-1.5 bg-primary/5 hover:bg-primary text-primary hover:text-white rounded-xl text-[10px] font-black uppercase tracking-[0.1em] transition-all border border-primary/10 hover:border-transparent group/btn"
                                     >
-                                        Ver detalhes →
+                                        <div className="w-1.5 h-1.5 rounded-full bg-primary group-hover/btn:bg-white animate-pulse" />
+                                        Ver detalhes
+                                        <span className="opacity-0 -translate-x-2 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all font-serif">→</span>
                                     </Link>
                                 )}
                             </div>

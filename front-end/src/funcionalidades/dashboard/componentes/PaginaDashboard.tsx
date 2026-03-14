@@ -29,14 +29,6 @@ export const PaginaDashboard = memo(() => {
 
     return (
         <div className="w-full animate-in fade-in duration-700 max-w-[1600px] mx-auto">
-            {carregando && metricas && (
-                <div className="fixed top-6 right-6 z-50">
-                    <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/5 rounded-full border border-primary/10 animate-pulse transition-all backdrop-blur-sm">
-                        <Carregando Centralizar={false} tamanho="sm" />
-                        <span className="text-[9px] font-black uppercase tracking-widest text-primary">Sincronizando...</span>
-                    </div>
-                </div>
-            )}
 
             {/* Cabeçalho de Destaque Operacional (Global ou por Projeto) */}
             <CabecalhoDashboard 
@@ -80,7 +72,7 @@ export const PaginaDashboard = memo(() => {
                 <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
                     {/* Coluna Central: Operações e Feed (SPAN 8) */}
                     <div className="xl:col-span-8 space-y-8">
-                        <div className={`transition-opacity duration-500 ${carregando ? 'opacity-70' : 'opacity-100'}`}>
+                        <div>
                             <GraficoBurndown projetoId={projetoAtivoId} />
                         </div>
                         
@@ -98,7 +90,7 @@ export const PaginaDashboard = memo(() => {
 
                     {/* Coluna Lateral: Radar e Backdrop (SPAN 4) */}
                     <div className="xl:col-span-4 space-y-8 xl:sticky xl:top-6">
-                        <div className="bg-card/40 backdrop-blur-xl border border-border/40 rounded-[40px] overflow-hidden p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="bg-card/40 backdrop-blur-xl border border-border/40 rounded-[32px] overflow-hidden p-5 shadow-sm hover:shadow-md transition-shadow">
                             <RadarCompetencias dados={radar || []} />
                         </div>
                         

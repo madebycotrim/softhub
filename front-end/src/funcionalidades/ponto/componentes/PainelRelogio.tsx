@@ -64,11 +64,11 @@ export const PainelRelogio = memo(({
 
             <div 
                 className={`
-                    bg-white/70 backdrop-blur-xl border border-slate-200/60 rounded-2xl p-10 
+                    bg-card/60 backdrop-blur-xl border border-border/50 rounded-[40px] 
                     flex flex-col items-center justify-center text-center relative overflow-hidden group 
-                    shadow-[0_50px_100px_-20px_rgba(0,0,0,0.08)] h-[480px] transition-all duration-700
-                    animate-fade-up hover:border-primary/20 hover:shadow-[0_60px_120px_-20px_rgba(var(--primary-rgb),0.12)]
-                    ${tentativaBloqueada ? 'animate-shake border-rose-500/50 shadow-rose-500/10' : ''}
+                    shadow-[0_20px_50px_-12px_rgba(0,0,0,0.05)] h-[400px] transition-all duration-700
+                    animate-fade-up hover:border-primary/30 hover:shadow-[0_40px_80px_-20px_rgba(var(--primary-rgb),0.1)]
+                    ${tentativaBloqueada ? 'animate-shake border-rose-500/40 shadow-rose-500/5' : ''}
                 `}
             >
                 {/* Visual Shine Effect */}
@@ -91,18 +91,18 @@ export const PainelRelogio = memo(({
                             </span>
                         </div>
                         <div className="flex flex-col items-center">
-                            <h2 className="text-8xl sm:text-9xl font-black tracking-[-0.08em] text-slate-950 tabular-nums flex items-baseline justify-center drop-shadow-sm">
+                            <h2 className="text-7xl sm:text-8xl font-black tracking-[-0.05em] text-foreground tabular-nums flex items-baseline justify-center drop-shadow-sm">
                                 {agoraRelogio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                                <span className="text-3xl sm:text-4xl text-slate-400/60 font-black ml-3 select-none tracking-widest">
+                                <span className="text-xl sm:text-2xl text-muted-foreground/40 font-bold ml-3 select-none tracking-widest">
                                     {agoraRelogio.toLocaleTimeString('pt-BR', { second: '2-digit' })}
                                 </span>
                             </h2>
-                            <div className="w-24 h-1.5 bg-slate-900/5 rounded-full mt-4 overflow-hidden relative border border-slate-900/5 shadow-inner">
+                            <div className="w-20 h-1 bg-muted/30 rounded-full mt-4 overflow-hidden relative border border-border/20">
                                 <div 
-                                    className="absolute inset-y-0 left-0 bg-primary transition-all duration-1000 shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]" 
+                                    className="absolute inset-y-0 left-0 bg-primary transition-all duration-1000" 
                                     style={{ width: `${(agoraRelogio.getSeconds() / 60) * 100}%` }}
                                 />
-                                <div className="absolute inset-y-0 w-8 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-scan z-10" />
+                                <div className="absolute inset-y-0 w-8 bg-gradient-to-r from-transparent via-primary/20 to-transparent animate-scan z-10" />
                             </div>
                         </div>
                     </div>
@@ -113,12 +113,12 @@ export const PainelRelogio = memo(({
                             onClick={aoBaterPonto}
                             disabled={carregando || salvando || foraDaRede || foraDoHorario || !podeRegistrar}
                             className={`
-                                w-full py-5 rounded-2xl text-[13px] font-black uppercase tracking-[0.3em] 
-                                transition-all active:scale-[0.97] border shadow-2xl relative z-10
+                                w-full py-4 rounded-3xl text-[11px] font-black uppercase tracking-[0.3em] 
+                                transition-all active:scale-[0.97] border shadow-xl relative z-10
                                 disabled:cursor-not-allowed
                                 ${proximoTipo === 'entrada'
-                                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-emerald-600/30 hover:bg-emerald-700'
-                                    : 'bg-rose-600 text-white border-rose-600 shadow-rose-600/30 hover:bg-rose-700'
+                                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-emerald-600/20 hover:bg-emerald-700'
+                                    : 'bg-rose-600 text-white border-rose-600 shadow-rose-600/20 hover:bg-rose-700'
                                 }
                                 ${(foraDaRede || foraDoHorario) ? 'saturate-[0.2] opacity-80' : ''}
                             `}

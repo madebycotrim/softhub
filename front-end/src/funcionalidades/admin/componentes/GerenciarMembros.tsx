@@ -325,7 +325,6 @@ export const GerenciarMembros = memo(() => {
 
     return (
         <div className="flex flex-col h-full space-y-6 animar-entrada">
-            
             <CabecalhoFuncionalidade
                 titulo="Administrar Time"
                 subtitulo="Controle de acessos, permissões e hierarquia de membros."
@@ -493,7 +492,18 @@ export const GerenciarMembros = memo(() => {
                     )}
                     
                     {carregando && membros.length === 0 && (
-                        <div className="p-20 flex justify-center"><Carregando /></div>
+                        <div className="divide-y divide-border/10">
+                            {[1, 2, 3, 4, 5].map(i => (
+                                <div key={i} className="px-6 py-6 animate-pulse flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-full bg-muted/20" />
+                                    <div className="flex-1 space-y-2">
+                                        <div className="h-4 w-1/4 bg-muted/20 rounded" />
+                                        <div className="h-3 w-1/6 bg-muted/20 rounded" />
+                                    </div>
+                                    <div className="h-8 w-32 bg-muted/20 rounded-full" />
+                                </div>
+                            ))}
+                        </div>
                     )}
                 </div>
 

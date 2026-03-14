@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/compartilhado/servicos/api';
 
 export interface ConfiguracoesSistema {
@@ -12,84 +12,84 @@ export interface ConfiguracoesSistema {
     hora_fim_ponto: string;
 }
 
+/**
+ * Hook de gerenciamento de configurações globais do sistema.
+ * Utiliza React Query para cache inteligente e atualizações otimistas.
+ */
 export function usarConfiguracoes() {
-    const [configuracoes, setConfiguracoes] = useState<ConfiguracoesSistema | null>(null);
-    const [carregando, setCarregando] = useState(true);
-    const [erro, setErro] = useState<string | null>(null);
+    const queryClient = useQueryClient();
+    const queryKey = ['configuracoes'];
 
-    const buscarConfiguracoes = useCallback(async () => {
-        setCarregando(true);
-        try {
+    const { 
+        data: configuracoes, 
+        isLoading: carregando, 
+        error 
+    } = useQuery<ConfiguracoesSistema>({
+        queryKey,
+        queryFn: async () => {
             const res = await api.get('/api/configuracoes');
             const dados = res.data.configuracoes || {};
 
+            // Garantir integridade dos dados (fallbacks)
             if (!dados.permissoes_roles || typeof dados.permissoes_roles !== 'object') {
                 dados.permissoes_roles = {};
             }
-
             if (!Array.isArray(dados.dominios_autorizados)) {
                 dados.dominios_autorizados = ['unieuro.com.br', 'unieuro.edu.br'];
             }
-
             if (!Array.isArray(dados.ips_autorizados_ponto)) {
                 dados.ips_autorizados_ponto = [];
             }
+            if (typeof dados.auto_cadastro !== 'boolean') dados.auto_cadastro = false;
+            if (typeof dados.modo_manutencao !== 'boolean') dados.modo_manutencao = false;
+            if (typeof dados.hora_inicio_ponto !== 'string') dados.hora_inicio_ponto = '13:00';
+            if (typeof dados.hora_fim_ponto !== 'string') dados.hora_fim_ponto = '17:00';
 
-            if (typeof dados.auto_cadastro !== 'boolean') {
-                dados.auto_cadastro = false;
-            }
+            return dados;
+        },
+        staleTime: 5 * 60 * 1000, // 5 minutos
+    });
 
-            if (typeof dados.modo_manutencao !== 'boolean') {
-                dados.modo_manutencao = false;
-            }
-
-            if (typeof dados.hora_inicio_ponto !== 'string') {
-                dados.hora_inicio_ponto = '13:00';
-            }
-
-            if (typeof dados.hora_fim_ponto !== 'string') {
-                dados.hora_fim_ponto = '17:00';
-            }
-
-            setConfiguracoes(dados);
-            setErro(null);
-        } catch (e: any) {
-            setErro(e.response?.data?.erro || 'Erro ao carregar configurações');
-        } finally {
-            setCarregando(false);
+    const mutacaoConfig = useMutation({
+        mutationFn: async ({ chave, valor }: { chave: string, valor: any }) => {
+            return api.patch(`/api/configuracoes/${chave}`, { valor });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey });
         }
-    }, []);
+    });
 
-    const atualizarConfiguracao = async (chave: keyof ConfiguracoesSistema, valor: any) => {
-        try {
-            await api.patch(`/api/configuracoes/${chave}`, { valor });
-            await buscarConfiguracoes();
-            return { sucesso: true };
-        } catch (e: any) {
-            return { sucesso: false, erro: e.response?.data?.erro || 'Erro ao atualizar' };
+    const mutacaoRole = useMutation({
+        mutationFn: async ({ antigo, novo }: { antigo: string, novo: string }) => {
+            return api.patch(`/api/configuracoes/roles/${antigo}/renomear`, { novo });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey });
         }
-    };
+    });
 
-    const renomearCargo = async (antigo: string, novo: string) => {
-        try {
-            await api.patch(`/api/configuracoes/roles/${antigo}/renomear`, { novo });
-            await buscarConfiguracoes();
-            return { sucesso: true };
-        } catch (e: any) {
-            return { sucesso: false, erro: e.response?.data?.erro || 'Erro ao renomear cargo' };
-        }
-    };
-
-    useEffect(() => {
-        buscarConfiguracoes();
-    }, [buscarConfiguracoes]);
+    const erro = error ? (error as any).response?.data?.erro || 'Erro ao carregar configurações' : null;
 
     return {
         configuracoes,
         carregando,
         erro,
-        recarregar: buscarConfiguracoes,
-        atualizarConfiguracao,
-        renomearCargo
+        recarregar: () => queryClient.invalidateQueries({ queryKey }),
+        atualizarConfiguracao: async (chave: keyof ConfiguracoesSistema, valor: any) => {
+            try {
+                await mutacaoConfig.mutateAsync({ chave, valor });
+                return { sucesso: true };
+            } catch (e: any) {
+                return { sucesso: false, erro: e.response?.data?.erro || 'Erro ao atualizar' };
+            }
+        },
+        renomearCargo: async (antigo: string, novo: string) => {
+            try {
+                await mutacaoRole.mutateAsync({ antigo, novo });
+                return { sucesso: true };
+            } catch (e: any) {
+                return { sucesso: false, erro: e.response?.data?.erro || 'Erro ao renomear cargo' };
+            }
+        }
     };
 }

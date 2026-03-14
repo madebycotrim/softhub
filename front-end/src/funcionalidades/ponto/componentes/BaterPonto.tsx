@@ -22,6 +22,7 @@ import { PainelRelogio } from './PainelRelogio';
 import { PainelStatusJornada } from './PainelStatusJornada';
 import type { RegistroPonto } from '@/funcionalidades/ponto/hooks/usarPonto';
 import { Clock } from 'lucide-react';
+import { useSearchParams } from 'react-router';
 
 import { api } from '@/compartilhado/servicos/api';
 
@@ -42,6 +43,15 @@ export const BaterPonto = memo(() => {
     const [busca, setBusca] = useState('');
     const [semanaSelecionada, setSemanaSelecionada] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }).getTime());
     const [tentativaBloqueada, setTentativaBloqueada] = useState(false);
+    
+    const [searchParams] = useSearchParams();
+    const abaUrl = searchParams.get('aba');
+
+    useReactEffect(() => {
+        if (abaUrl === 'justificativas') {
+            setAbaAtiva('justificativas');
+        }
+    }, [abaUrl]);
     
     // Governança de Horário Dinâmica
     const [janelaTrabalho, setJanelaTrabalho] = useState({ inicio: '13:00', fim: '17:00' });
@@ -249,12 +259,6 @@ export const BaterPonto = memo(() => {
                     variante="padrao"
                 >
                     <div className="flex items-center gap-3 sm:gap-4">
-                        {carregando && historico.length > 0 && (
-                            <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/5 rounded-full border border-primary/10 animate-pulse transition-all">
-                                <Carregando Centralizar={false} tamanho="sm" />
-                                <span className="text-[9px] font-black uppercase tracking-widest text-primary">Sincronizando...</span>
-                            </div>
-                        )}
                         <Tooltip texto={abaAtiva === 'registro' ? "Ver Justificativas" : "Ver Registros"} posicao="bottom">
                             <button
                                 onClick={handleAlternarAba}

@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { 
     LineChart, 
     Line, 
@@ -8,10 +8,11 @@ import {
     Tooltip, 
     ResponsiveContainer,
     Area,
-    AreaChart
+    AreaChart,
+    ReferenceLine
 } from 'recharts';
 import { Flame, Info } from 'lucide-react';
-import { usarBurndown } from '../hooks/usarDashboard';
+import { usarBurndown, DadoBurndown } from '../hooks/usarDashboard';
 import { Carregando } from '@/compartilhado/componentes/Carregando';
 
 interface GraficoBurndownProps {
@@ -20,6 +21,17 @@ interface GraficoBurndownProps {
 
 export const GraficoBurndown = memo(({ projetoId }: GraficoBurndownProps) => {
     const { burndown, carregando } = usarBurndown(projetoId);
+
+    // Encontra o index do dia de hoje para a linha de referência
+    const hojeIndex = useMemo(() => {
+        const hoje = new Date();
+        const d = hoje.getDate().toString().padStart(2, '0');
+        const m = (hoje.getMonth() + 1).toString().padStart(2, '0');
+        const hojeBr = `${d}/${m}`;
+        const hojeUs = `${m}/${d}`;
+        
+        return burndown.findIndex(p => p.dia === hojeBr || p.dia === hojeUs);
+    }, [burndown]);
 
     if (carregando) return (
         <div className="h-[300px] flex items-center justify-center bg-card/30 border border-border rounded-3xl">
@@ -69,17 +81,14 @@ export const GraficoBurndown = memo(({ projetoId }: GraficoBurndownProps) => {
                             tickLine={false} 
                             dy={10}
                             tick={(props) => {
-                                const { x, y, payload, index, visibleTicksCount } = props;
+                                const { x, y, payload } = props;
                                 const hoje = new Date();
                                 const d = hoje.getDate().toString().padStart(2, '0');
                                 const m = (hoje.getMonth() + 1).toString().padStart(2, '0');
-                                
                                 const hojeBr = `${d}/${m}`;
                                 const hojeUs = `${m}/${d}`;
                                 
-                                // É hoje se o valor bater com DD/MM, MM/DD ou se for o ÚLTIMO tick e estamos no dia certo
                                 const ehHoje = payload.value === hojeBr || payload.value === hojeUs;
-                                const ehUltimo = index === visibleTicksCount - 1;
 
                                 return (
                                     <g transform={`translate(${x},${y})`}>
@@ -123,6 +132,24 @@ export const GraficoBurndown = memo(({ projetoId }: GraficoBurndownProps) => {
                             itemStyle={{ padding: '2px 0' }}
                             cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1, strokeDasharray: '4 4' }}
                         />
+                        
+                        {hojeIndex !== -1 && (
+                            <ReferenceLine 
+                                x={burndown[hojeIndex].dia} 
+                                stroke="hsl(var(--primary))" 
+                                strokeWidth={2}
+                                strokeDasharray="3 3"
+                                label={{ 
+                                    value: 'TEMPO ATUAL', 
+                                    position: 'top', 
+                                    fill: 'hsl(var(--primary))', 
+                                    fontSize: 9, 
+                                    fontWeight: 900,
+                                    letterSpacing: '0.1em'
+                                }}
+                            />
+                        )}
+
                         <Area 
                             type="monotone" 
                             dataKey="real" 

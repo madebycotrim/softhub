@@ -8,6 +8,7 @@ import { usarProjetos } from '@/funcionalidades/projetos/hooks/usarProjetos';
 import { Modal } from './Modal';
 import ScannerQR from '@/funcionalidades/autenticacao/componentes/ScannerQR';
 import { ErrorBoundary } from './ErrorBoundary';
+import { SincronizadorGlobal } from './SincronizadorGlobal';
 
 
 interface LayoutPrincipalProps {
@@ -37,6 +38,7 @@ export function LayoutPrincipal({ children }: LayoutPrincipalProps) {
 
     return (
         <div className="flex h-screen bg-background text-foreground overflow-hidden transition-colors duration-300 font-sans">
+            <SincronizadorGlobal />
             
             {/* Sidebar Desktop */}
             <div className="hidden lg:flex shrink-0 w-[280px]">

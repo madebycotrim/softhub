@@ -36,12 +36,6 @@ export const MuralAvisos = memo(() => {
                 variante="destaque"
             >
                 <div className="flex items-center gap-4">
-                    {carregando && avisos.length > 0 && (
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/5 rounded-full border border-primary/10 animate-pulse transition-all">
-                            <Carregando Centralizar={false} tamanho="sm" />
-                            <span className="text-[9px] font-black uppercase tracking-widest text-primary">Sincronizando...</span>
-                        </div>
-                    )}
                     {podeCriar && (
                         <button
                             onClick={() => setModalAberto(true)}
@@ -54,7 +48,7 @@ export const MuralAvisos = memo(() => {
                 </div>
             </CabecalhoFuncionalidade>
 
-            <div className={`grid grid-cols-1 gap-4 transition-opacity duration-300 ${carregando && avisos.length > 0 ? 'opacity-70' : 'opacity-100'}`}>
+            <div className="grid grid-cols-1 gap-4">
                 {carregando && avisos.length === 0 ? (
                     <div className="space-y-4">
                         {[1, 2, 3].map(i => (

@@ -241,7 +241,7 @@ rotasPontoJustificativas.patch('/admin/justificativas/:id/aprovar', autenticacao
             tipo: 'sistema',
             titulo: 'Justificativa aprovada',
             mensagem: `Sua justificativa para ${alvar.data} foi aprovada.`,
-            link: '/app/ponto',
+            link: '/app/ponto?aba=justificativas',
             entidadeId: justificativaId
         });
 
@@ -291,7 +291,7 @@ rotasPontoJustificativas.patch('/admin/justificativas/:id/rejeitar', autenticaca
             tipo: 'sistema',
             titulo: 'Justificativa rejeitada',
             mensagem: `Sua justificativa para ${alvar.data} foi rejeitada. Motivo: ${motivoRejeicao}`,
-            link: '/app/ponto',
+            link: '/app/ponto?aba=justificativas',
             entidadeId: justificativaId
         });
 

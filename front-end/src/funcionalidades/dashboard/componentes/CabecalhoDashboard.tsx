@@ -34,12 +34,12 @@ export const CabecalhoDashboard = memo(({ nomeUsuario, projetosAtivos, metricas 
     const ehGlobal = projetosAtivos.length > 1 || projetosAtivos.length === 0;
 
     return (
-        <div className="space-y-8 mb-12">
+        <div className="space-y-6 mb-8">
             {/* Saudação e Ações Rápidas */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div className="space-y-1">
                     <div className="flex items-center gap-3 mb-2">
-                        <h1 className="text-4xl font-black tracking-tighter text-foreground sm:text-6xl drop-shadow-sm">
+                        <h1 className="text-3xl font-black tracking-tighter text-foreground sm:text-5xl drop-shadow-sm">
                             Olá, <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-400 to-indigo-400">{primeiroNome}</span>! 👋
                         </h1>
                         {ehGlobal && (
@@ -107,7 +107,7 @@ export const CabecalhoDashboard = memo(({ nomeUsuario, projetosAtivos, metricas 
             {/* Grid de Performance Operacional (Vision System System) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {/* Ativas */}
-                <div className="group relative bg-card/40 backdrop-blur-xl hover:bg-card border border-border/40 hover:border-blue-500/30 p-6 rounded-[40px] transition-all duration-500 shadow-sm hover:shadow-xl active:scale-95">
+                <div className="group relative bg-card/40 backdrop-blur-xl hover:bg-card border border-border/40 hover:border-blue-500/30 p-5 rounded-[32px] transition-all duration-500 shadow-sm hover:shadow-xl active:scale-95">
                     <div className="flex flex-col gap-4 relative z-10">
                         <div className="flex items-center justify-between">
                             <div className="w-10 h-10 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/10 shadow-inner group-hover:bg-blue-500/20 transition-colors">
@@ -119,14 +119,14 @@ export const CabecalhoDashboard = memo(({ nomeUsuario, projetosAtivos, metricas 
                             </div>
                         </div>
                         <div>
-                            <div className="text-5xl font-black text-foreground tracking-tighter group-hover:translate-x-1 transition-transform">{metricas?.totalTarefas || 0}</div>
+                            <div className="text-4xl font-black text-foreground tracking-tighter group-hover:translate-x-1 transition-transform">{metricas?.totalTarefas || 0}</div>
                             <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest mt-2">Demandas em Ciclo</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Entregues */}
-                <div className="group relative bg-card/40 backdrop-blur-xl hover:bg-card border border-border/40 hover:border-emerald-500/30 p-6 rounded-[40px] transition-all duration-500 shadow-sm hover:shadow-xl active:scale-95">
+                <div className="group relative bg-card/40 backdrop-blur-xl hover:bg-card border border-border/40 hover:border-emerald-500/30 p-5 rounded-[32px] transition-all duration-500 shadow-sm hover:shadow-xl active:scale-95">
                     <div className="flex flex-col gap-4 relative z-10">
                         <div className="flex items-center justify-between">
                             <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/10 shadow-inner group-hover:bg-emerald-500/20 transition-colors">
@@ -138,14 +138,14 @@ export const CabecalhoDashboard = memo(({ nomeUsuario, projetosAtivos, metricas 
                             </div>
                         </div>
                         <div>
-                            <div className="text-5xl font-black text-foreground tracking-tighter group-hover:translate-x-1 transition-transform">{metricas?.tarefasConcluidas || 0}</div>
+                            <div className="text-4xl font-black text-foreground tracking-tighter group-hover:translate-x-1 transition-transform">{metricas?.tarefasConcluidas || 0}</div>
                             <p className="text-[9px] text-emerald-600 font-black uppercase tracking-widest mt-2 leading-none">Entregas Validadas</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Críticas */}
-                <div className="group relative bg-card/40 backdrop-blur-xl hover:bg-card border border-border/40 hover:border-rose-500/30 p-6 rounded-[40px] transition-all duration-500 shadow-sm hover:shadow-xl active:scale-95">
+                <div className="group relative bg-card/40 backdrop-blur-xl hover:bg-card border border-border/40 hover:border-rose-500/30 p-5 rounded-[32px] transition-all duration-500 shadow-sm hover:shadow-xl active:scale-95">
                     <div className="flex flex-col gap-4 relative z-10">
                         <div className="flex items-center justify-between">
                             <div className="w-10 h-10 rounded-2xl bg-rose-500/10 flex items-center justify-center border border-rose-500/10 shadow-inner group-hover:bg-rose-500/20 transition-colors">
@@ -157,14 +157,14 @@ export const CabecalhoDashboard = memo(({ nomeUsuario, projetosAtivos, metricas 
                             </div>
                         </div>
                         <div>
-                            <div className="text-5xl font-black text-foreground tracking-tighter group-hover:translate-x-1 transition-transform">{metricas?.tarefasAtrasadas || 0}</div>
+                            <div className="text-4xl font-black text-foreground tracking-tighter group-hover:translate-x-1 transition-transform">{metricas?.tarefasAtrasadas || 0}</div>
                             <p className="text-[9px] text-rose-600 font-black uppercase tracking-widest mt-2 underline decoration-rose-500/20 underline-offset-4">Gargalos Detectados</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Eficiência / Progresso */}
-                <div className="group relative bg-card/40 backdrop-blur-xl hover:bg-card border border-border/40 hover:border-primary/40 p-6 rounded-[40px] transition-all duration-500 shadow-sm hover:shadow-xl active:scale-95">
+                <div className="group relative bg-card/40 backdrop-blur-xl hover:bg-card border border-border/40 hover:border-primary/40 p-5 rounded-[32px] transition-all duration-500 shadow-sm hover:shadow-xl active:scale-95">
                     <div className="flex flex-col gap-4 relative z-10">
                         <div className="flex items-center justify-between">
                             <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/10 shadow-inner group-hover:bg-primary/20 transition-colors">
@@ -176,7 +176,7 @@ export const CabecalhoDashboard = memo(({ nomeUsuario, projetosAtivos, metricas 
                             </div>
                         </div>
                         <div>
-                            <div className="text-5xl font-black text-primary tracking-tighter group-hover:translate-x-1 transition-transform">{metricas?.progressoGeral || 0}%</div>
+                            <div className="text-4xl font-black text-primary tracking-tighter group-hover:translate-x-1 transition-transform">{metricas?.progressoGeral || 0}%</div>
                             <div className="w-full h-1.5 bg-primary/10 rounded-full mt-3 overflow-hidden border border-primary/5">
                                 <div 
                                     className="h-full bg-gradient-to-r from-primary via-blue-400 to-primary/80 rounded-full transition-all duration-1000 ease-out"

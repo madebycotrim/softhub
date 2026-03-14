@@ -13,6 +13,7 @@ import {
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { FolderKanban, Circle, Zap, Search, CheckCircle2, Plus, Layers } from 'lucide-react';
+import { useSearchParams } from 'react-router';
 
 import { usarKanban } from '@/funcionalidades/kanban/hooks/usarKanban';
 import type { Tarefa } from '@/funcionalidades/kanban/hooks/usarKanban';
@@ -61,6 +62,9 @@ export const QuadroKanban = memo(() => {
     const podeCriar = usarPermissaoAcesso('tarefas:criar');
     const podeGerenciarProjetos = usarPermissaoAcesso('projetos:visualizar');
 
+    const [searchParams, setSearchParams] = useSearchParams();
+    const tarefaIdUrl = searchParams.get('tarefa');
+
     const { criarTarefa } = usarBacklog(projetoAtivoId);
 
     const tarefasPorStatus = useMemo(() => {
@@ -70,6 +74,16 @@ export const QuadroKanban = memo(() => {
         });
         return agrupado;
     }, [tarefas]);
+
+    // Detectar tarefa na URL e abrir detalhes
+    useEffect(() => {
+        if (tarefaIdUrl && tarefas.length > 0) {
+            const tarefaEncontrada = tarefas.find((t: Tarefa) => t.id === tarefaIdUrl);
+            if (tarefaEncontrada) {
+                setTarefaDetalhes(tarefaEncontrada);
+            }
+        }
+    }, [tarefaIdUrl, tarefas]);
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -99,7 +113,15 @@ export const QuadroKanban = memo(() => {
     }, [podeMover, tarefas, moverCard]);
 
     const handleFiltrar = useCallback((f: any) => setFiltros(f), []);
-    const handleFecharDetalhes = useCallback(() => setTarefaDetalhes(null), []);
+    const handleFecharDetalhes = useCallback(() => {
+        setTarefaDetalhes(null);
+        // Remove o ID da tarefa da URL ao fechar o modal
+        if (tarefaIdUrl) {
+            const novosParams = new URLSearchParams(searchParams);
+            novosParams.delete('tarefa');
+            setSearchParams(novosParams, { replace: true });
+        }
+    }, [tarefaIdUrl, searchParams, setSearchParams]);
     const handleAbrirCriar = useCallback(() => setModalCriarAberto(true), []);
     const handleFecharCriar = useCallback(() => setModalCriarAberto(false), []);
     const handleLimparFiltros = useCallback(() => setFiltros({}), []);
@@ -149,12 +171,6 @@ export const QuadroKanban = memo(() => {
                                 <span>Nova Tarefa</span>
                             </button>
                         )}
-                        {carregando && tarefas.length > 0 && (
-                            <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/5 rounded-full border border-primary/10 animate-pulse transition-all">
-                                <Carregando Centralizar={false} tamanho="sm" />
-                                <span className="text-[9px] font-black uppercase tracking-widest text-primary">Sincronizando...</span>
-                            </div>
-                        )}
                     </div>
                 </CabecalhoFuncionalidade>
             </div>
@@ -166,7 +182,7 @@ export const QuadroKanban = memo(() => {
                     <div className="shrink-0 px-0.5">
                         <PainelFiltrosKanban filtros={filtros} aoFiltrar={handleFiltrar} />
                     </div>
-                    <div className={`flex-1 min-h-0 transition-opacity duration-300 ${carregando && tarefas.length > 0 ? 'opacity-70' : 'opacity-100'}`}>
+                    <div className="flex-1 min-h-0">
                         {carregando && tarefas.length === 0 ? (
                             <div className="h-full grid grid-cols-1 md:grid-cols-4 gap-6">
                                 {[1, 2, 3, 4].map(i => (

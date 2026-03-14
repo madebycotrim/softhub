@@ -37,7 +37,7 @@ export const ResumoPessoalDashboard = memo(() => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
             {/* Card: Tarefas Concluídas */}
-            <div className="group relative bg-card/40 backdrop-blur-xl border border-border/40 p-6 rounded-[40px] transition-all duration-300 hover:shadow-lg active:scale-95">
+            <div className="group relative bg-card/40 backdrop-blur-xl border border-border/40 p-5 rounded-[32px] transition-all duration-300 hover:shadow-lg active:scale-95">
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center">
@@ -46,7 +46,7 @@ export const ResumoPessoalDashboard = memo(() => {
                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Operações</span>
                     </div>
                     <div>
-                        <div className="text-4xl font-black text-foreground group-hover:translate-x-1 transition-transform">{stats?.tarefas.concluidas || 0}</div>
+                        <div className="text-3xl font-black text-foreground group-hover:translate-x-1 transition-transform">{stats?.tarefas.concluidas || 0}</div>
                         <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest mt-1">Entregas Validadas</p>
                     </div>
                 </div>
@@ -62,7 +62,7 @@ export const ResumoPessoalDashboard = memo(() => {
                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600/60">Yield</span>
                     </div>
                     <div>
-                        <div className="text-4xl font-black text-amber-600 group-hover:translate-x-1 transition-transform">{stats?.tarefas.aproveitamento || 0}%</div>
+                        <div className="text-3xl font-black text-amber-600 group-hover:translate-x-1 transition-transform">{stats?.tarefas.aproveitamento || 0}%</div>
                         <div className="w-full h-1.5 bg-amber-500/10 rounded-full mt-2 overflow-hidden border border-amber-500/5">
                             <div 
                                 className="h-full bg-gradient-to-r from-amber-500 to-orange-400 rounded-full transition-all duration-1000"
@@ -83,7 +83,7 @@ export const ResumoPessoalDashboard = memo(() => {
                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600/60">Uptime</span>
                     </div>
                     <div>
-                        <div className="text-4xl font-black text-blue-600 group-hover:translate-x-1 transition-transform">{stats?.ponto.batidasMes || 0}d</div>
+                        <div className="text-3xl font-black text-blue-600 group-hover:translate-x-1 transition-transform">{stats?.ponto.batidasMes || 0}d</div>
                         <div className="w-full h-1.5 bg-blue-500/10 rounded-full mt-2 overflow-hidden border border-blue-500/5">
                             <div 
                                 className="h-full bg-gradient-to-r from-blue-600 to-cyan-400 rounded-full transition-all duration-1000"
@@ -104,7 +104,7 @@ export const ResumoPessoalDashboard = memo(() => {
                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600/60">Volume</span>
                     </div>
                     <div>
-                        <div className="text-4xl font-black text-indigo-600 group-hover:translate-x-1 transition-transform">{stats?.ponto.estimativaHoras || 0}h</div>
+                        <div className="text-3xl font-black text-indigo-600 group-hover:translate-x-1 transition-transform">{stats?.ponto.estimativaHoras || 0}h</div>
                         <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest mt-1">Carga Operacional</p>
                     </div>
                 </div>

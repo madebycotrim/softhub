@@ -79,9 +79,10 @@ export function PainelJustificativas() {
             <div className="bg-card border border-border rounded-2xl flex flex-col flex-1 overflow-hidden shadow-sm shadow-black/5">
                 <div className="flex-1 overflow-auto custom-scrollbar">
                     {carregando && justificativas.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center gap-6 py-20 animate-in fade-in duration-500">
-                             <Carregando Centralizar={false} tamanho="lg" />
-                             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Sincronizando Base de Auditoria</span>
+                        <div className="space-y-4 p-8">
+                            {[1, 2, 3, 4, 5].map(i => (
+                                <div key={i} className="h-16 w-full bg-muted/20 rounded-xl animate-pulse" />
+                            ))}
                         </div>
                     ) : erro && justificativas.length === 0 ? (
                         <div className="h-full w-full flex items-center justify-center p-12">
