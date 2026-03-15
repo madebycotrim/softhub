@@ -164,7 +164,7 @@ export function CartaoTarefa({ tarefa, aoClicar, aoVerPerfil }: CartaoTarefaProp
                         className="w-full py-2 bg-primary/5 hover:bg-primary text-primary hover:text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 border border-primary/10 hover:border-transparent"
                     >
                         <Maximize2 size={12} />
-                        Gerenciar Demanda
+                        Ver Detalhes
                     </button>
                 </div>
             </div>

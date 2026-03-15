@@ -36,11 +36,11 @@ import { ModalEdicaoPerfil } from '@/funcionalidades/perfil/componentes/ModalEdi
 import { PerfilProvider } from '@/funcionalidades/perfil/contexto/PerfilContexto';
 
 const LABELS_COLUNAS: Record<string, string> = {
-    backlog: 'Backlog',
-    todo: 'À Fazer',
-    in_progress: 'Em Andamento',
-    em_revisao: 'Em Revisão',
-    concluida: 'Concluído'
+    backlog: 'Planejamento',
+    todo: 'Para Fazer',
+    in_progress: 'Em Execução',
+    em_revisao: 'Revisão',
+    concluida: 'Finalizado'
 };
 
 import { ColunaDropZone } from './ColunaDropZone';
@@ -148,7 +148,7 @@ export const QuadroKanban = memo(() => {
                     <Layers size={24} className="text-muted-foreground" />
                 </div>
                 <h3 className="text-foreground font-black uppercase tracking-widest mb-2">Nenhum Projeto Selecionado</h3>
-                <p className="text-muted-foreground text-sm">Selecione um projeto na barra lateral para ver o Quadro Kanban.</p>
+                <p className="text-muted-foreground text-sm">Selecione um projeto na barra lateral para ver o Kanban.</p>
             </div>
         );
     }
@@ -159,8 +159,8 @@ export const QuadroKanban = memo(() => {
                 {/* Título Básico */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-4">
                     <div>
-                        <h1 className="text-2xl font-black text-foreground tracking-tight">Quadro Kanban</h1>
-                        <p className="text-muted-foreground text-xs uppercase tracking-widest mt-1">Gerencie e acompanhe o fluxo de tarefas.</p>
+                        <h1 className="text-2xl font-black text-foreground tracking-tight">Kanban</h1>
+                        <p className="text-muted-foreground text-xs uppercase tracking-widest mt-1">Organize e acompanhe o dia a dia do projeto.</p>
                     </div>
 
                     <div className="flex items-center gap-4">
@@ -205,7 +205,7 @@ export const QuadroKanban = memo(() => {
                                 {temFiltroAtivo ? (
                                     <EstadoVazio tipo="pesquisa" titulo="Nenhuma tarefa encontrada" descricao="Não há tarefas que correspondam aos filtros ou termo de busca aplicados." compacto={true} acao={{ rotulo: "Limpar todos os filtros", aoClicar: handleLimparFiltros }} />
                                 ) : (
-                                    <EstadoVazio titulo="Quadro Vazio" descricao="Ainda não há tarefas cadastradas para este projeto. Comece adicionando novas demandas no Backlog." />
+                                    <EstadoVazio titulo="Sem tarefas" descricao="Ainda não há tarefas cadastradas. Comece adicionando novas atividades na lista." />
                                 )}
                             </div>
                         ) : (

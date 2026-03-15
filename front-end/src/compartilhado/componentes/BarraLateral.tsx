@@ -46,7 +46,7 @@ export function BarraLateral({ aoNavegar }: BarraLateralProps) {
                 label: 'Visão Geral',
                 links: [
                     { label: 'Dashboard', path: '/app/dashboard', icon: LayoutDashboard, visivel: podeVerDashboard },
-                    { label: 'Backlog', path: '/app/backlog', icon: ListTodo, visivel: podeVerBacklog },
+                    { label: 'Lista de Tarefas', path: '/app/backlog', icon: ListTodo, visivel: podeVerBacklog },
                     { label: 'Avisos', path: '/app/avisos', icon: Megaphone, visivel: podeVerAvisos },
                 ],
             },
@@ -55,7 +55,7 @@ export function BarraLateral({ aoNavegar }: BarraLateralProps) {
                 links: [
                     { label: 'Projeto', path: '/app/projeto', icon: Layers, visivel: podeVerProjetoDetalhes },
                     { label: 'Kanban', path: '/app/kanban', icon: FolderKanban, visivel: podeVerKanban },
-                    { label: 'Ponto Eletrônico', path: '/app/ponto', icon: Clock, visivel: podeVerPonto || podeVerJustificativas },
+                    { label: 'Minha Presença', path: '/app/ponto', icon: Clock, visivel: podeVerPonto || podeVerJustificativas },
                 ],
             },
             {

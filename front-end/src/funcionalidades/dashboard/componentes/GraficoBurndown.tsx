@@ -49,7 +49,7 @@ export const GraficoBurndown = memo(({ projetoId }: GraficoBurndownProps) => {
                         <Flame size={18} />
                     </div>
                     <div>
-                        <h4 className="text-sm font-bold text-foreground">Burndown do Projeto</h4>
+                        <h4 className="text-sm font-bold text-foreground">Evolução das Entregas</h4>
                         <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Progresso nos últimos 15 dias</p>
                     </div>
                 </div>
@@ -80,7 +80,7 @@ export const GraficoBurndown = memo(({ projetoId }: GraficoBurndownProps) => {
                             axisLine={false} 
                             tickLine={false} 
                             dy={10}
-                            tick={(props) => {
+                            tick={(props: any) => {
                                 const { x, y, payload } = props;
                                 const hoje = new Date();
                                 const d = hoje.getDate().toString().padStart(2, '0');
@@ -140,7 +140,7 @@ export const GraficoBurndown = memo(({ projetoId }: GraficoBurndownProps) => {
                                 strokeWidth={2}
                                 strokeDasharray="3 3"
                                 label={{ 
-                                    value: 'TEMPO ATUAL', 
+                                    value: 'TEMPO REAL', 
                                     position: 'top', 
                                     fill: 'hsl(var(--primary))', 
                                     fontSize: 9, 
@@ -175,8 +175,8 @@ export const GraficoBurndown = memo(({ projetoId }: GraficoBurndownProps) => {
             <div className="mt-4 flex items-start gap-2 p-3 bg-muted/30 rounded-xl border border-border/50">
                 <Info size={14} className="text-muted-foreground mt-0.5" />
                 <p className="text-[10px] text-muted-foreground leading-relaxed">
-                    O <b>Ideal</b> representa a velocidade esperada de queima de pontos. <br/> 
-                    Mantenha a linha <b>Real</b> abaixo da pontilhada para garantir a saúde das entregas.
+                    A linha <b>Ideal</b> mostra o ritmo esperado para terminar tudo. <br/> 
+                    Se a linha <b>Real</b> estiver abaixo da pontilhada, você está adiantado!
                 </p>
             </div>
         </div>

@@ -114,13 +114,13 @@ export const CabecalhoDashboard = memo(({ nomeUsuario, projetosAtivos, metricas 
                                 <Target className="w-5 h-5 text-blue-600" />
                             </div>
                             <div className="flex flex-col items-end">
-                                <span className="text-[9px] font-black uppercase tracking-widest text-blue-600">Fluxo</span>
-                                <span className="text-[8px] font-bold text-muted-foreground uppercase opacity-40">Load</span>
+                                <span className="text-[9px] font-black uppercase tracking-widest text-blue-600">Ativas</span>
+                                <span className="text-[8px] font-bold text-muted-foreground uppercase opacity-40">Total</span>
                             </div>
                         </div>
                         <div>
                             <div className="text-4xl font-black text-foreground tracking-tighter group-hover:translate-x-1 transition-transform">{metricas?.totalTarefas || 0}</div>
-                            <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest mt-2">Demandas em Ciclo</p>
+                            <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest mt-2">Tarefas em Aberto</p>
                         </div>
                     </div>
                 </div>
@@ -133,13 +133,13 @@ export const CabecalhoDashboard = memo(({ nomeUsuario, projetosAtivos, metricas 
                                 <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                             </div>
                             <div className="flex flex-col items-end">
-                                <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600">Output</span>
-                                <span className="text-[8px] font-bold text-muted-foreground uppercase opacity-40">Success</span>
+                                <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600">Concluídas</span>
+                                <span className="text-[8px] font-bold text-muted-foreground uppercase opacity-40">Sucesso</span>
                             </div>
                         </div>
                         <div>
                             <div className="text-4xl font-black text-foreground tracking-tighter group-hover:translate-x-1 transition-transform">{metricas?.tarefasConcluidas || 0}</div>
-                            <p className="text-[9px] text-emerald-600 font-black uppercase tracking-widest mt-2 leading-none">Entregas Validadas</p>
+                            <p className="text-[9px] text-emerald-600 font-black uppercase tracking-widest mt-2 leading-none">Total Entregue</p>
                         </div>
                     </div>
                 </div>
@@ -152,13 +152,13 @@ export const CabecalhoDashboard = memo(({ nomeUsuario, projetosAtivos, metricas 
                                 <AlertCircle className="w-5 h-5 text-rose-600" />
                             </div>
                             <div className="flex flex-col items-end">
-                                <span className="text-[9px] font-black uppercase tracking-widest text-rose-600">Critical</span>
-                                <span className="text-[8px] font-bold text-muted-foreground uppercase opacity-40">Risk</span>
+                                <span className="text-[9px] font-black uppercase tracking-widest text-rose-600">Atrasadas</span>
+                                <span className="text-[8px] font-bold text-muted-foreground uppercase opacity-40">Alerta</span>
                             </div>
                         </div>
                         <div>
                             <div className="text-4xl font-black text-foreground tracking-tighter group-hover:translate-x-1 transition-transform">{metricas?.tarefasAtrasadas || 0}</div>
-                            <p className="text-[9px] text-rose-600 font-black uppercase tracking-widest mt-2 underline decoration-rose-500/20 underline-offset-4">Gargalos Detectados</p>
+                            <p className="text-[9px] text-rose-600 font-black uppercase tracking-widest mt-2 underline decoration-rose-500/20 underline-offset-4">Fora do Prazo</p>
                         </div>
                     </div>
                 </div>
@@ -171,8 +171,8 @@ export const CabecalhoDashboard = memo(({ nomeUsuario, projetosAtivos, metricas 
                                 <Zap className="w-5 h-5 text-primary" />
                             </div>
                             <div className="flex flex-col items-end">
-                                <span className="text-[9px] font-black uppercase tracking-widest text-primary">Ratio</span>
-                                <span className="text-[8px] font-bold text-muted-foreground uppercase opacity-40">Health</span>
+                                <span className="text-[9px] font-black uppercase tracking-widest text-primary">Progresso</span>
+                                <span className="text-[8px] font-bold text-muted-foreground uppercase opacity-40">Status</span>
                             </div>
                         </div>
                         <div>

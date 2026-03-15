@@ -46,10 +46,10 @@ export const PaginaPortfolio = memo(() => {
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-6xl h-[500px] bg-primary/5 blur-[120px] rounded-full -z-10" />
                 <div className="container mx-auto px-6 text-center space-y-8">
                     <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 border border-primary/20 rounded-full text-primary text-[10px] font-black uppercase tracking-widest animar-entrada">
-                        <Globe size={12} /> Engenharia de Software em Ação
+                        <Globe size={12} /> Tecnologia Brasileira de Alto Nível
                     </div>
                     <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-slate-900 leading-[0.9] max-w-4xl mx-auto animar-entrada" style={{ animationDelay: '100ms' }}>
-                        Transformando ideias em <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-400">código de alto nível.</span>
+                        Transformando ideias em <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-400">soluções reais.</span>
                     </h1>
                     <p className="text-lg text-slate-400 max-w-2xl mx-auto font-medium animar-entrada" style={{ animationDelay: '200ms' }}>
                         Conheça os sistemas desenvolvidos pelos estudantes da Fábrica de Software. Inovação, técnica e foco em resolver problemas reais.
@@ -77,7 +77,7 @@ export const PaginaPortfolio = memo(() => {
                 <div className="container mx-auto px-6 space-y-16">
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                         <div className="space-y-4">
-                            <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-slate-900">Nossas Produções</h2>
+                            <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-slate-900">O que Construímos</h2>
                             <p className="text-slate-400 max-w-md font-medium">Sistemas ativos, modulares e focados em experiência do usuário.</p>
                         </div>
                         <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
@@ -143,7 +143,7 @@ export const PaginaPortfolio = memo(() => {
                                                 )}
                                             </div>
                                             <button className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-1.5 group/btn">
-                                                Explorar Case <ExternalLink size={12} className="group-hover/btn:-translate-y-0.5 group-hover/btn:translate-x-0.5 transition-transform" />
+                                                Ver Detalhes <ExternalLink size={12} className="group-hover/btn:-translate-y-0.5 group-hover/btn:translate-x-0.5 transition-transform" />
                                             </button>
                                         </div>
                                     </div>

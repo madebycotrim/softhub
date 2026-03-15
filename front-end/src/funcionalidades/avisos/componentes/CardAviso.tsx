@@ -34,7 +34,7 @@ export const CardAviso = memo(({ aviso, podeDeletar, aoRemover, index }: CardAvi
                     </span>
                     {aviso.expira_em && (
                         <span className="text-muted-foreground/50 text-[10px] uppercase font-bold tracking-wider border-l border-border pl-3 ml-1">
-                            Exp. {formatarDataHora(aviso.expira_em)}
+                            Expira em {formatarDataHora(aviso.expira_em)}
                         </span>
                     )}
                 </div>

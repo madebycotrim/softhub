@@ -128,15 +128,15 @@ export const GerenciarMembros = memo(() => {
     return (
         <div className="flex flex-col h-full w-full min-w-0 overflow-hidden space-y-6 animar-entrada">
             <CabecalhoFuncionalidade
-                titulo="Administrar Time"
-                subtitulo="Controle de acessos, permissões e hierarquia de membros."
+                titulo="Gestão de Pessoas"
+                subtitulo="Configure quem participa e o que cada um pode fazer no sistema."
                 icone={UserCog}
             >
                 <div className="flex items-center gap-3">
                     <div className="relative group/search max-w-xs">
                         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within/search:text-primary transition-colors" size={14} />
                         <input
-                            placeholder="Buscar membro..."
+                            placeholder="Buscar pessoa..."
                             value={busca}
                             onChange={e => setBusca(e.target.value)}
                             className="w-full h-11 bg-muted/40 border border-border/40 rounded-xl pl-10 pr-4 text-[11px] font-bold outline-none focus:bg-background focus:border-primary/30 transition-all placeholder:text-muted-foreground/30"
@@ -148,10 +148,10 @@ export const GerenciarMembros = memo(() => {
                         className="h-11 px-6 bg-primary text-primary-foreground rounded-full flex items-center gap-2 text-[11px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 active:scale-95 transition-all"
                     >
                         <Plus size={18} strokeWidth={3} />
-                        <span>Novo Membro</span>
+                        <span>Adicionar Pessoa</span>
                     </button>
 
-                    <Tooltip texto="Cadastro em Lote">
+                    <Tooltip texto="Adicionar Vários">
                         <button
                             onClick={() => { setModoModal('lote'); setModalAberto(true); }}
                             className="h-11 w-11 bg-muted text-muted-foreground rounded-full flex items-center justify-center hover:bg-muted/80 hover:-translate-y-0.5 active:scale-95 transition-all border border-border/40"

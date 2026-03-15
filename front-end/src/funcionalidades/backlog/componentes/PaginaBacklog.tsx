@@ -69,7 +69,7 @@ const PaginaBacklog = memo(() => {
                     <Layers size={24} className="text-muted-foreground" />
                 </div>
                 <h3 className="text-foreground font-black uppercase tracking-widest mb-2">Nenhum Projeto Selecionado</h3>
-                <p className="text-muted-foreground text-sm">Selecione um projeto na barra lateral para ver o Backlog de Demandas.</p>
+                <p className="text-muted-foreground text-sm">Selecione um projeto na barra lateral para ver a Lista de Tarefas.</p>
             </div>
         );
     }
@@ -83,8 +83,8 @@ const PaginaBacklog = memo(() => {
     return (
         <div className="w-full space-y-6 animar-entrada pb-20">
             <CabecalhoFuncionalidade
-                titulo="Backlog de Demandas"
-                subtitulo="Visão detalhada e gestão completa de todas as tarefas do projeto."
+                titulo="Lista de Tarefas"
+                subtitulo="Organize o que precisa ser feito e acompanhe o progresso."
                 icone={ListTodo}
             >
                 <div className="flex items-center gap-4">
@@ -104,7 +104,7 @@ const PaginaBacklog = memo(() => {
                 <BarraFiltros
                     busca={busca}
                     aoMudarBusca={setBusca}
-                    placeholderBusca="Buscar demanda pelo título ou descrição..."
+                    placeholderBusca="Buscar tarefa pelo nome ou descrição..."
                     temFiltrosAtivos={busca !== '' || statusFiltro.length > 0 || prioridadeFiltro.length > 0}
                     aoLimparFiltros={() => {
                         setBusca('');
@@ -155,8 +155,8 @@ const PaginaBacklog = memo(() => {
                 </div>
             ) : tarefas.length === 0 ? (
                 <EstadoVazio
-                    titulo="Backlog Vazio"
-                    descricao="Nenhuma tarefa corresponde aos filtros selecionados. Limpe os filtros ou crie uma nova demanda."
+                    titulo="Lista Vazia"
+                    descricao="Nenhuma tarefa corresponde aos filtros. Tente mudar os filtros ou crie uma nova tarefa."
                 />
             ) : (
                 <div className="bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl shadow-black/40 overflow-hidden animar-entrada atraso-2">
@@ -164,11 +164,11 @@ const PaginaBacklog = memo(() => {
                         <table className="w-full border-collapse">
                             <thead>
                                 <tr className="border-b border-white/5 bg-white/[0.02]">
-                                    <th className="px-8 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground/30">Título da Demanda</th>
+                                    <th className="px-8 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground/30">Nome da Tarefa</th>
                                     <th className="px-4 py-6 text-center text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground/30">Prioridade</th>
-                                    <th className="px-4 py-6 text-center text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground/30">Status Atual</th>
-                                    <th className="px-4 py-6 text-center text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground/30">Time Alocado</th>
-                                    <th className="px-8 py-6 text-right text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground/30">Gerir</th>
+                                    <th className="px-4 py-6 text-center text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground/30">Status</th>
+                                    <th className="px-4 py-6 text-center text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground/30">Responsáveis</th>
+                                    <th className="px-8 py-6 text-right text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground/30">Ações</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">

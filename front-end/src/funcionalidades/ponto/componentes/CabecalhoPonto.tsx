@@ -18,8 +18,8 @@ export const CabecalhoPonto = memo(({
 }: CabecalhoPontoProps) => {
     return (
         <CabecalhoFuncionalidade
-            titulo="Ponto Eletrônico"
-            subtitulo="Controle de jornada e registros."
+            titulo="Registro de Presença"
+            subtitulo="Registre seu horário e acompanhe suas atividades."
             icone={Clock}
         >
             <Tooltip texto={abaAtiva === 'registro' ? "Ver Justificativas" : "Ver Registros"} posicao="bottom">

@@ -43,11 +43,11 @@ export const ResumoPessoalDashboard = memo(() => {
                         <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center">
                             <CheckCircle2 className="w-5 h-5 text-primary" />
                         </div>
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Operações</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Entregas</span>
                     </div>
                     <div>
                         <div className="text-3xl font-black text-foreground group-hover:translate-x-1 transition-transform">{stats?.tarefas.concluidas || 0}</div>
-                        <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest mt-1">Entregas Validadas</p>
+                        <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest mt-1">Concluídas</p>
                     </div>
                 </div>
             </div>
@@ -59,7 +59,7 @@ export const ResumoPessoalDashboard = memo(() => {
                         <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center">
                             <Trophy className="w-5 h-5 text-amber-600" />
                         </div>
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600/60">Yield</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600/60">Qualidade</span>
                     </div>
                     <div>
                         <div className="text-3xl font-black text-amber-600 group-hover:translate-x-1 transition-transform">{stats?.tarefas.aproveitamento || 0}%</div>
@@ -80,7 +80,7 @@ export const ResumoPessoalDashboard = memo(() => {
                         <div className="w-10 h-10 rounded-2xl bg-blue-500/10 flex items-center justify-center">
                             <Clock className="w-5 h-5 text-blue-600" />
                         </div>
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600/60">Uptime</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600/60">Presença</span>
                     </div>
                     <div>
                         <div className="text-3xl font-black text-blue-600 group-hover:translate-x-1 transition-transform">{stats?.ponto.batidasMes || 0}d</div>
@@ -101,11 +101,11 @@ export const ResumoPessoalDashboard = memo(() => {
                         <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 flex items-center justify-center">
                             <Target className="w-5 h-5 text-indigo-600" />
                         </div>
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600/60">Volume</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600/60">Tempo</span>
                     </div>
                     <div>
                         <div className="text-3xl font-black text-indigo-600 group-hover:translate-x-1 transition-transform">{stats?.ponto.estimativaHoras || 0}h</div>
-                        <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest mt-1">Carga Operacional</p>
+                        <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest mt-1">Duração Total</p>
                     </div>
                 </div>
             </div>

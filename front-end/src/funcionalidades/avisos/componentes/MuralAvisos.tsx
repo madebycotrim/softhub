@@ -30,8 +30,8 @@ export const MuralAvisos = memo(() => {
     return (
         <div className="w-full space-y-6 animar-entrada">
             <CabecalhoFuncionalidade
-                titulo="Mural de Avisos"
-                subtitulo="Comunicados importantes para a equipe ou grupos."
+                titulo="Quadro de Avisos"
+                subtitulo="Comunicados importantes para toda a equipe."
                 icone={Megaphone}
                 variante="destaque"
             >
@@ -61,8 +61,8 @@ export const MuralAvisos = memo(() => {
                     </div>
                 ) : avisosOrdenados.length === 0 ? (
                     <EstadoVazio 
-                        titulo="Mural Silencioso"
-                        descricao="Nenhum comunicado importante foi publicado recentemente. Aproveite o foco!"
+                        titulo="Tudo Tranquilo"
+                        descricao="Nenhum aviso novo por aqui. Continue o bom trabalho!"
                     />
                 ) : (
                     avisosOrdenados.map((aviso, index) => (

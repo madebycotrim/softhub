@@ -8,19 +8,19 @@ import { useMemo } from 'react';
 const NOMES_ROTAS: Record<string, string> = {
     'app': 'Início',
     'dashboard': 'Dashboard',
-    'backlog': 'Backlog',
+    'backlog': 'Lista de Tarefas',
     'projeto': 'Projeto',
     'kanban': 'Kanban',
-    'ponto': 'Ponto Eletrônico',
-    'avisos': 'Mural de Avisos',
+    'ponto': 'Minha Presença',
+    'avisos': 'Quadro de Avisos',
     'admin': 'Administração',
-    'membros': 'Gerenciar Membros',
-    'equipes': 'Gestão de Equipes',
-    'projetos': 'Configurar Projetos',
+    'membros': 'Gestão de Pessoas',
+    'equipes': 'Equipes',
+    'projetos': 'Projetos',
     'relatorios': 'Relatórios',
-    'logs': 'Logs do Sistema',
+    'logs': 'Registros do Sistema',
     'configuracoes': 'Governança',
-    'justificativas': 'Auditoria de Ponto'
+    'justificativas': 'Aprovar Faltas'
 };
 
 /**

@@ -61,7 +61,7 @@ export const SecaoLoginMicrosoft = memo(({
                                 <rect x="11" y="11" width="10" height="10" fill="#FFB900" />
                             </svg>
                         </div>
-                        <span className="text-[15px] text-white leading-none whitespace-nowrap" style={{ fontWeight: 600 }}>Sign in with Microsoft</span>
+                        <span className="text-[15px] text-white leading-none whitespace-nowrap" style={{ fontWeight: 600 }}>Entrar com Microsoft</span>
                     </button>
 
                     <div className="flex items-center justify-center lg:justify-start gap-1.5 text-slate-500 text-[11px] lg:text-[11.5px] font-medium">

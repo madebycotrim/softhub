@@ -19,9 +19,9 @@ export const PainelStatusJornada = memo(({ ultimoRegistro, cronometroJornada }: 
                     <div className={`w-3 h-3 rounded-full mt-2 ring-4 ${ultimoRegistro?.tipo === 'entrada' ? 'bg-emerald-500 ring-emerald-500/10 animate-pulse' : 'bg-slate-200 ring-slate-100'}`} />
                 </div>
                 <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">Estado Atual</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">Minha Situação</p>
                     <p className="text-2xl font-black text-slate-900 leading-tight tracking-tight">
-                        {ultimoRegistro?.tipo === 'entrada' ? 'Em Jornada' : 'Em Pausa'}
+                        {ultimoRegistro?.tipo === 'entrada' ? 'Trabalhando' : 'Descanso'}
                     </p>
                 </div>
             </div>
@@ -34,7 +34,7 @@ export const PainelStatusJornada = memo(({ ultimoRegistro, cronometroJornada }: 
                     </div>
                 </div>
                 <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">Tempo Decorrido</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">Horas de Hoje</p>
                     <p className="text-2xl font-black text-slate-900 leading-tight tabular-nums tracking-tight">
                         {cronometroJornada?.texto || '00:00:00'}
                     </p>
