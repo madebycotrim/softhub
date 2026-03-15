@@ -2,6 +2,7 @@ import { createContext, useContext, ReactNode, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/compartilhado/servicos/api';
 import { usarToast } from '@/compartilhado/hooks/usarToast';
+import { usarAutenticacao } from '@/contexto/ContextoAutenticacao';
 import type { PerfilData } from '../hooks/usarPerfil';
 
 export interface PerfilContextType {
@@ -24,6 +25,7 @@ const PerfilContext = createContext<PerfilContextType | undefined>(undefined);
 export function PerfilProvider({ children, customUsuarioId }: { children: ReactNode, customUsuarioId?: string }) {
     const queryClient = useQueryClient();
     const { exibirToast } = usarToast();
+    const { estaAutenticado } = usarAutenticacao();
     const queryKey = useMemo(() => customUsuarioId ? ['perfil', customUsuarioId] : ['perfil_me'], [customUsuarioId]);
 
     const { data, isLoading: carregando, error, refetch } = useQuery<PerfilData>({
@@ -32,7 +34,8 @@ export function PerfilProvider({ children, customUsuarioId }: { children: ReactN
             const url = customUsuarioId ? `/api/perfil/${customUsuarioId}` : '/api/perfil/me';
             const res = await api.get(url);
             return res.data;
-        }
+        },
+        enabled: estaAutenticado || !!customUsuarioId
     });
 
     const { data: radar = [], isLoading: carregandoRadar } = useQuery({
@@ -41,7 +44,8 @@ export function PerfilProvider({ children, customUsuarioId }: { children: ReactN
             const url = customUsuarioId ? `/api/perfil/${customUsuarioId}/radar` : '/api/perfil/me/radar';
             const res = await api.get(url);
             return res.data;
-        }
+        },
+        enabled: estaAutenticado || !!customUsuarioId
     });
 
     const mutacao = useMutation({

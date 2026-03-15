@@ -9,6 +9,8 @@ import ScannerQR from '@/funcionalidades/autenticacao/componentes/ScannerQR';
 import { ErrorBoundary } from './ErrorBoundary';
 import { SincronizadorGlobal } from './SincronizadorGlobal';
 import { Breadcrumbs } from './Breadcrumbs';
+import { usarGuardiaoSessao } from '../hooks/usarGuardiaoSessao';
+import { ShieldAlert, LogOut, Clock } from 'lucide-react';
 
 
 interface LayoutPrincipalProps {
@@ -24,6 +26,7 @@ export function LayoutPrincipal({ children }: LayoutPrincipalProps) {
     const [scannerAberto, setScannerAberto] = useState(false);
     const { projetoAtivoId } = usarAutenticacao();
     const { projetos } = usarProjetos();
+    const { sessaoExpirando, continuarLogado, sairAgora } = usarGuardiaoSessao();
 
     // Dinamismo Inteligente: Atualiza o título da aba com o nome do projeto ativo
     useEffect(() => {
@@ -102,6 +105,42 @@ export function LayoutPrincipal({ children }: LayoutPrincipalProps) {
                 largura="sm"
             >
                 <ScannerQR aoFechar={() => setScannerAberto(false)} />
+            </Modal>
+
+            {/* Modal de Segurança: Inatividade (Guardião) */}
+            <Modal
+                aberto={sessaoExpirando}
+                aoFechar={continuarLogado}
+                titulo="Aviso de Segurança"
+                largura="sm"
+            >
+                <div className="p-2 space-y-6 text-center">
+                    <div className="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto">
+                        <ShieldAlert className="text-amber-500" size={32} />
+                    </div>
+                    
+                    <div className="space-y-2">
+                        <h3 className="text-lg font-black text-foreground">Sessão Inativa</h3>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                            Detectamos que você está inativo. Em computadores públicos, deslogamos automaticamente para proteger seus dados.
+                        </p>
+                    </div>
+
+                    <div className="flex flex-col gap-3">
+                        <button
+                            onClick={continuarLogado}
+                            className="w-full py-4 bg-primary text-primary-foreground rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
+                        >
+                            <Clock size={16} /> Continuar Logado
+                        </button>
+                        <button
+                            onClick={sairAgora}
+                            className="w-full py-4 bg-card border border-border/50 text-muted-foreground rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 transition-all flex items-center justify-center gap-2"
+                        >
+                            <LogOut size={16} /> Sair Agora
+                        </button>
+                    </div>
+                </div>
             </Modal>
         </div>
     );

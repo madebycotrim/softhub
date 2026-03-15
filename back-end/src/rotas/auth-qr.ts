@@ -152,7 +152,7 @@ rotasAuthQr.post('/qr/autorizar', autenticacaoRequerida(), async (c) => {
                 role: usuario.role,
                 email: usuario.email,
                 versao_token: novaVersao,
-                exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7, // 7 dias
+                exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30, // 30 dias (Igual experiência mobile)
             },
             JWT_SECRET,
         );

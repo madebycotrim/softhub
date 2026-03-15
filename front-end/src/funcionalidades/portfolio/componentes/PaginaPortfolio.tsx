@@ -2,6 +2,8 @@ import { memo } from 'react';
 import { ExternalLink, Github, Code2, Rocket, Globe, Boxes, ChevronRight, Figma, BookText } from 'lucide-react';
 import { usarPortfolio } from '../hooks/usarPortfolio';
 import { Skeleton } from '@/compartilhado/componentes/Skeleton';
+import { usarAutenticacao } from '@/contexto/ContextoAutenticacao';
+import { Link } from 'react-router';
 
 /**
  * Landing Page do Portfolio Público da Fábrica de Software.
@@ -9,6 +11,7 @@ import { Skeleton } from '@/compartilhado/componentes/Skeleton';
  */
 export const PaginaPortfolio = memo(() => {
     const { projetos, carregando, erro } = usarPortfolio();
+    const { estaAutenticado } = usarAutenticacao();
 
     return (
         <div className="min-h-screen bg-slate-50 text-slate-800 selection:bg-primary/10 selection:text-primary">
@@ -27,12 +30,12 @@ export const PaginaPortfolio = memo(() => {
                     <nav className="hidden md:flex items-center gap-8">
                         <a href="#projetos" className="text-[11px] font-black uppercase tracking-widest hover:text-primary transition-colors">Projetos</a>
                         <a href="https://unieuro.edu.br" className="text-[11px] font-black uppercase tracking-widest hover:text-primary transition-colors">Instituição</a>
-                        <a 
-                            href="/login" 
+                        <Link 
+                            to={estaAutenticado ? "/app/dashboard" : "/login"} 
                             className="px-6 py-2.5 bg-primary text-primary-foreground rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/10 hover:scale-[1.03] active:scale-[0.98] transition-all"
                         >
-                            Acesso Interno
-                        </a>
+                            {estaAutenticado ? "Ir para Dashboard" : "Acesso Interno"}
+                        </Link>
                     </nav>
                 </div>
             </header>

@@ -45,6 +45,7 @@ const CHAVE_TOKEN = 'softhub_token';
 const CHAVE_USUARIO = 'softhub_usuario';
 const CHAVE_PROJETO = 'softhub_projeto_ativo';
 const CHAVE_CONFIGS = 'softhub_configs_ux';
+const CHAVE_LEMBRAR = 'softhub_lembrar_membro';
 
 /**
  * ProvedorAutenticacao NÃO usa useNavigate — ele vive fora do RouterProvider.
@@ -128,6 +129,7 @@ export function ProvedorAutenticacao({ children }: { children: ReactNode }) {
         setToken(novoToken);
         localStorage.setItem(CHAVE_TOKEN, novoToken);
         localStorage.setItem(CHAVE_USUARIO, JSON.stringify(novoUsuario));
+        localStorage.setItem(CHAVE_LEMBRAR, 'true');
     }, []);
 
     const sair = useCallback(() => {

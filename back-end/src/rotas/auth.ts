@@ -176,4 +176,32 @@ rotasAuth.post('/msal', async (c) => {
     }
 });
 
+/**
+ * Verifica se o acesso atual vem da rede interna da Fábrica (conforme config rede_ponto)
+ */
+rotasAuth.get('/verificar-rede', async (c) => {
+    const { DB, softhub_kv } = c.env;
+    const ipAtual = c.req.header('CF-Connecting-IP') || '127.0.0.1';
+
+    try {
+        let redePonto: string[] = [];
+        const cached = await softhub_kv?.get('rede_ponto');
+
+        if (cached) {
+            redePonto = JSON.parse(cached);
+        } else {
+            const row = await DB.prepare('SELECT valor FROM configuracoes_sistema WHERE chave = "rede_ponto"').first() as any;
+            if (row?.valor) {
+                redePonto = JSON.parse(row.valor);
+                if (softhub_kv) await softhub_kv.put('rede_ponto', row.valor, { expirationTtl: 3600 });
+            }
+        }
+
+        const ehRedeInterna = redePonto.includes(ipAtual);
+        return c.json({ ehRedeInterna, ip: ipAtual });
+    } catch (e) {
+        return c.json({ ehRedeInterna: false, erro: 'Falha ao validar rede' });
+    }
+});
+
 export default rotasAuth;
