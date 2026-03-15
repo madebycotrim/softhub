@@ -16,7 +16,15 @@ rotasPerfil.get('/me', autenticacaoRequerida(), async (c: Context) => {
         // OTIMIZAÇÃO: Batch de todas as consultas do perfil em uma única ida ao banco
         const [resUsuario, resOrg, resStatsTarefas, resStatsPonto] = await DB.batch([
             DB.prepare(`SELECT id, nome, email, role, foto_perfil, foto_banner, bio, criado_em, github_url, linkedin_url, website_url FROM usuarios WHERE id = ?`).bind(usuarioLogado.id),
-            DB.prepare(`SELECT e.nome as equipe_nome, g.nome as grupo_nome FROM usuarios_organizacao uo LEFT JOIN equipes e ON e.id = uo.equipe_id LEFT JOIN grupos g ON g.id = uo.grupo_id WHERE uo.usuario_id = ?`).bind(usuarioLogado.id),
+            DB.prepare(`
+                SELECT 
+                    GROUP_CONCAT(e.nome, ', ') as equipe_nome, 
+                    GROUP_CONCAT(g.nome, ', ') as grupo_nome 
+                FROM usuarios_organizacao uo 
+                LEFT JOIN equipes e ON e.id = uo.equipe_id 
+                LEFT JOIN grupos g ON g.id = uo.grupo_id 
+                WHERE uo.usuario_id = ?
+            `).bind(usuarioLogado.id),
             DB.prepare(`SELECT COUNT(*) as total, SUM(CASE WHEN t.status = 'concluida' THEN 1 ELSE 0 END) as concluidas FROM tarefas t JOIN tarefas_responsaveis tr ON tr.tarefa_id = t.id WHERE tr.usuario_id = ?`).bind(usuarioLogado.id),
             DB.prepare(`SELECT COUNT(*) as batidas FROM ponto_registros WHERE usuario_id = ? AND strftime('%m', registrado_em) = strftime('%m', 'now')`).bind(usuarioLogado.id)
         ]);
@@ -37,8 +45,8 @@ rotasPerfil.get('/me', autenticacaoRequerida(), async (c: Context) => {
         return c.json({
             perfil: {
                 ...usuario,
-                equipe_nome: organizacao?.equipe_nome || null,
-                grupo_nome: organizacao?.grupo_nome || null
+                equipe_nome: organizacao?.equipe_nome || 'S/ Equipe',
+                grupo_nome: organizacao?.grupo_nome || 'S/ Grupo'
             },
             stats: {
                 tarefas: {
@@ -123,7 +131,15 @@ rotasPerfil.get('/:id', autenticacaoRequerida(), async (c: Context) => {
         // OTIMIZAÇÃO: Batch de todas as consultas do perfil em uma única ida ao banco
         const [resUsuario, resOrg, resStatsTarefas, resStatsPonto] = await DB.batch([
             DB.prepare(`SELECT id, nome, email, role, foto_perfil, foto_banner, bio, criado_em, github_url, linkedin_url, website_url FROM usuarios WHERE id = ?`).bind(id),
-            DB.prepare(`SELECT e.nome as equipe_nome, g.nome as grupo_nome FROM usuarios_organizacao uo LEFT JOIN equipes e ON e.id = uo.equipe_id LEFT JOIN grupos g ON g.id = uo.grupo_id WHERE uo.usuario_id = ?`).bind(id),
+            DB.prepare(`
+                SELECT 
+                    GROUP_CONCAT(e.nome, ', ') as equipe_nome, 
+                    GROUP_CONCAT(g.nome, ', ') as grupo_nome 
+                FROM usuarios_organizacao uo 
+                LEFT JOIN equipes e ON e.id = uo.equipe_id 
+                LEFT JOIN grupos g ON g.id = uo.grupo_id 
+                WHERE uo.usuario_id = ?
+            `).bind(id),
             DB.prepare(`SELECT COUNT(*) as total, SUM(CASE WHEN t.status = 'concluida' THEN 1 ELSE 0 END) as concluidas FROM tarefas t JOIN tarefas_responsaveis tr ON tr.tarefa_id = t.id WHERE tr.usuario_id = ?`).bind(id),
             DB.prepare(`SELECT COUNT(*) as batidas FROM ponto_registros WHERE usuario_id = ? AND strftime('%m', registrado_em) = strftime('%m', 'now')`).bind(id)
         ]);
@@ -141,8 +157,8 @@ rotasPerfil.get('/:id', autenticacaoRequerida(), async (c: Context) => {
         return c.json({
             perfil: {
                 ...usuario,
-                equipe_nome: organizacao?.equipe_nome || null,
-                grupo_nome: organizacao?.grupo_nome || null
+                equipe_nome: organizacao?.equipe_nome || 'S/ Equipe',
+                grupo_nome: organizacao?.grupo_nome || 'S/ Grupo'
             },
             stats: {
                 tarefas: {

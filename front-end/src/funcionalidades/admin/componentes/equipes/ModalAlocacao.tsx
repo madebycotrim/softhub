@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, memo } from 'react';
+import { pluralizar } from '@/utilitarios/formatadores';
 import { Search, UserCheck } from 'lucide-react';
 import { Modal } from '@/compartilhado/componentes/Modal';
 import { Alerta } from '@/compartilhado/componentes/Alerta';
@@ -98,7 +99,7 @@ export const ModalAlocacao = memo(({ aberto, aoFechar, grupos, membros, aoAlocar
                         </div>
                         <div className="flex items-center justify-between px-1">
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                {selecionados.length} selecionados
+                                {selecionados.length} {pluralizar(selecionados.length, 'selecionado', 'selecionados')}
                             </p>
                             <button 
                                 onClick={handleSelecionarTudo}
@@ -173,7 +174,7 @@ export const ModalAlocacao = memo(({ aberto, aoFechar, grupos, membros, aoAlocar
                     >
                         {salvando ? <Carregando Centralizar={false} tamanho="sm" className="border-t-white border-white/30" /> : (
                             <>
-                                <span>VINCULAR {selecionados.length > 1 ? `${selecionados.length} MEMBROS` : 'MEMBRO'}</span>
+                                <span>VINCULAR {selecionados.length} {pluralizar(selecionados.length, 'MEMBRO', 'MEMBROS')}</span>
                                 <UserCheck size={18} className="group-hover:rotate-12 transition-transform" />
                             </>
                         )}

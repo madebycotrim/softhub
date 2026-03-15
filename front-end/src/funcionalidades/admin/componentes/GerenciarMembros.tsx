@@ -11,6 +11,7 @@ import { usarConfiguracoes } from '@/funcionalidades/admin/hooks/usarConfiguraco
 import { usarDebounce } from '@/compartilhado/hooks/usarDebounce';
 import { usarToast } from '@/compartilhado/hooks/usarToast';
 import { usarEquipes } from '@/funcionalidades/admin/hooks/usarEquipes';
+import { pluralizar } from '@/utilitarios/formatadores';
 
 // Novos Hooks e Sub-componentes
 import { usarGerenciarMembros } from '../hooks/usarGerenciarMembros';
@@ -111,7 +112,7 @@ export const GerenciarMembros = memo(() => {
         try {
             await Promise.all(ids.map(id => api.delete(`/api/usuarios/${id}`)));
             await recarregar();
-            exibirToast(`${ids.length} membros removidos.`);
+            exibirToast(`${ids.length} ${pluralizar(ids.length, 'membro removido', 'membros removidos')}.`);
         } catch (e: any) {
             exibirToast(e.response?.data?.erro ?? 'Erro ao remover em lote.', 'erro');
         }

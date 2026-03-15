@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { Wifi, Clock, LayoutGrid } from 'lucide-react';
+import { pluralizar } from '@/utilitarios/formatadores';
 import { Modal } from '@/compartilhado/componentes/Modal';
 import { ConfirmacaoExclusao } from '@/compartilhado/componentes/ConfirmacaoExclusao';
 import { Avatar } from '@/compartilhado/componentes/Avatar';
@@ -82,7 +83,7 @@ export const ModaisMembros = memo(({
                         <p className="text-[11px] text-muted-foreground font-medium">
                             {membrosOnline.length === 0
                                 ? "Nenhum membro ativo no momento."
-                                : `${membrosOnline.length} ${membrosOnline.length === 1 ? 'membro está' : 'membros estão'} operando agora.`}
+                                : `${membrosOnline.length} ${pluralizar(membrosOnline.length, 'membro está', 'membros estão')} operando agora.`}
                         </p>
                     </div>
 
@@ -145,7 +146,7 @@ export const ModaisMembros = memo(({
                         <p className="text-[11px] text-muted-foreground font-medium">
                             {membrosSemEquipe.length === 0
                                 ? "Todos os membros estão alocados em equipes."
-                                : `${membrosSemEquipe.length} ${membrosSemEquipe.length === 1 ? 'membro está' : 'membros estão'} aguardando alocação.`}
+                                : `${membrosSemEquipe.length} ${pluralizar(membrosSemEquipe.length, 'membro está', 'membros estão')} aguardando alocação.`}
                         </p>
                     </div>
 

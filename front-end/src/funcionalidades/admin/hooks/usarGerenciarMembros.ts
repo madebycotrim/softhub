@@ -4,6 +4,7 @@ import { usarMembros } from '@/funcionalidades/admin/hooks/usarMembros';
 import type { Membro } from '@/funcionalidades/admin/hooks/usarMembros';
 import { usarAutenticacao } from '@/contexto/ContextoAutenticacao';
 import { usarToast } from '@/compartilhado/hooks/usarToast';
+import { pluralizar } from '@/utilitarios/formatadores';
 
 /**
  * Hook customizado para gerenciar a lógica de administração de membros.
@@ -75,11 +76,11 @@ export function usarGerenciarMembros() {
             await recarregar();
 
             if (criados > 0) {
-                exibirToast(`${criados} membros autorizados com sucesso.`);
+                exibirToast(`${criados} ${pluralizar(criados, 'membro autorizado', 'membros autorizados')} com sucesso.`);
             }
 
             if (erros.length > 0) {
-                exibirToast(`${erros.length} e-mails falharam na validação.`, 'erro');
+                exibirToast(`${erros.length} ${pluralizar(erros.length, 'e-mail falhou', 'e-mails falharam')} na validação.`, 'erro');
             } else if (pulados > 0 && criados === 0) {
                 exibirToast('Todos os e-mails já estavam cadastrados.', 'sucesso');
             }

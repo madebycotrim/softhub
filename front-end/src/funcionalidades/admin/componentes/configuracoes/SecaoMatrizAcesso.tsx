@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, Fragment } from 'react';
 import { Lock, ShieldCheck, Globe, Plus, Shield } from 'lucide-react';
+import { pluralizar } from '@/utilitarios/formatadores';
 import { 
     FolderKanban, Clock, LayoutDashboard, LayoutGrid, FileText, Database, UserCircle, MessageSquare, Settings2 
 } from 'lucide-react';
@@ -187,7 +188,7 @@ export function SecaoMatrizAcesso({ configuracoes, atualizarConfiguracao, podeEd
                     <div className="flex flex-col">
                         <h2 className="text-[13px] font-black uppercase tracking-[0.15em] text-foreground leading-none">Matriz de Controle de Acesso</h2>
                         <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider mt-1.5 opacity-60">
-                            {PERMISSOES_SISTEMA.reduce((acc, m) => acc + m.permissoes.length, 0)} Regras Ativas • {PERMISSOES_SISTEMA.length} Domínios
+                            {PERMISSOES_SISTEMA.reduce((acc, m) => acc + m.permissoes.length, 0)} {pluralizar(PERMISSOES_SISTEMA.reduce((acc, m) => acc + m.permissoes.length, 0), 'Regra Ativa', 'Regras Ativas')} • {PERMISSOES_SISTEMA.length} {pluralizar(PERMISSOES_SISTEMA.length, 'Domínio', 'Domínios')}
                         </span>
                     </div>
                 </div>

@@ -19,13 +19,13 @@ rotasDashboard.get('/', autenticacaoRequerida(), verificarPermissao('dashboard:v
             const p = await DB.prepare('SELECT nome FROM projetos WHERE id = ?').bind(projetoId).first() as any;
             if (p) nomesProjetos = [p.nome];
         } else {
-            // Dashboard Global: Projetos onde o usuário ou suas equipes estão alocados
+            // Dashboard Global: Projetos onde o usuário possui tarefas atribuídas
             const { results } = await DB.prepare(`
                 SELECT DISTINCT p.id, p.nome 
                 FROM projetos p
-                JOIN projetos_equipes pe ON pe.projeto_id = p.id
-                JOIN usuarios_organizacao uo ON uo.equipe_id = pe.equipe_id
-                WHERE uo.usuario_id = ?
+                JOIN tarefas t ON t.projeto_id = p.id
+                JOIN tarefas_responsaveis tr ON tr.tarefa_id = t.id
+                WHERE tr.usuario_id = ?
             `).bind(usuarioLogado.id).all();
             
             projetosIds = results.map((r: any) => r.id);
@@ -130,12 +130,13 @@ rotasDashboard.get('/burndown', autenticacaoRequerida(), verificarPermissao('das
         if (projetoId && projetoId !== 'global') {
             projetosIds = [projetoId];
         } else {
+            // Burndown Global: Apenas projetos com participação direta (tarefas atribuídas ao usuário)
             const { results } = await DB.prepare(`
                 SELECT DISTINCT p.id 
                 FROM projetos p
-                JOIN projetos_equipes pe ON pe.projeto_id = p.id
-                JOIN usuarios_organizacao uo ON uo.equipe_id = pe.equipe_id
-                WHERE uo.usuario_id = ?
+                JOIN tarefas t ON t.projeto_id = p.id
+                JOIN tarefas_responsaveis tr ON tr.tarefa_id = t.id
+                WHERE tr.usuario_id = ?
             `).bind(usuarioLogado.id).all();
             projetosIds = results.map((r: any) => r.id);
         }

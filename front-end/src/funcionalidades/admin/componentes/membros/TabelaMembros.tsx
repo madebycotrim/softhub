@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { UserCog } from 'lucide-react';
+import { pluralizar } from '@/utilitarios/formatadores';
 import { Paginacao } from '@/compartilhado/componentes/Paginacao';
 import { LinhaMembro } from './LinhaMembro';
 import type { Membro } from '@/funcionalidades/admin/hooks/usarMembros';
@@ -98,7 +99,7 @@ export const TabelaMembros = memo(({
             {/* Rodapé / Paginação */}
             <div className="p-4 border-t border-border bg-muted/5 flex items-center justify-between">
                 <span className="text-[10px] font-black uppercase text-muted-foreground/60">
-                    Exibindo {paginada.length} de {listaFiltrada.length} membros
+                    Exibindo {paginada.length} de {listaFiltrada.length} {pluralizar(listaFiltrada.length, 'membro', 'membros')}
                 </span>
                 <Paginacao
                     paginaAtual={pagina}

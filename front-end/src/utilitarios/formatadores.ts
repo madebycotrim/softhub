@@ -75,3 +75,17 @@ export function formatarEventoHistorico(campo: string, anterior: string, novo: s
 
     return `alterou ${campoAmigavel} de "${labelAnterior}" para "${labelNovo}"`;
 }
+
+/**
+ * Pluraliza uma palavra baseada na quantidade.
+ * @param {number} quantidade Valor numérico
+ * @param {string} singular Forma singular
+ * @param {string} plural Opcional. Forma plural (caso não seja apenas adicionar 's')
+ * @returns {string} Singular ou Plural conforme a regra gramatical
+ */
+export function pluralizar(quantidade: number, singular: string, plural?: string): string {
+    if (Math.abs(quantidade) === 1) {
+        return singular;
+    }
+    return plural || `${singular}s`;
+}

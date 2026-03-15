@@ -20,30 +20,25 @@ interface ProvedorTemaProps {
 
 export function ProvedorTema({
     children,
-    temaPadrao = "dark",
 }: ProvedorTemaProps) {
-    const [tema, setTemaState] = useState<Tema>(() => {
-        return (localStorage.getItem(ChaveTemaStorage) as Tema) || temaPadrao;
-    });
-
-    const [temaReal, setTemaReal] = useState<"dark" | "light">("dark");
+    // Forçamos o tema claro (light) permanentemente enquanto a troca de tema estiver desativada
+    const [tema] = useState<Tema>("light");
+    const [temaReal] = useState<"dark" | "light">("light");
 
     useEffect(() => {
         const root = window.document.documentElement;
         
-        // Determina o tema real (considerando 'system')
-        const sistemaDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        const modo = tema === "system" ? (sistemaDark ? "dark" : "light") : tema;
+        // Remove qualquer classe de tema anterior e fixa na light
+        root.classList.remove("dark");
+        root.classList.add("light");
         
-        root.classList.remove("light", "dark");
-        root.classList.add(modo);
-        setTemaReal(modo as "dark" | "light");
-        
-        localStorage.setItem(ChaveTemaStorage, tema);
-    }, [tema]);
+        // Garante que o localStorage reflita o estado forçado
+        localStorage.setItem(ChaveTemaStorage, "light");
+    }, []);
 
-    const setTema = (novoTema: Tema) => {
-        setTemaState(novoTema);
+    const setTema = () => {
+        // Função de troca desativada temporariamente
+        console.warn("Troca de tema desativada: O sistema está fixado no tema CLARO.");
     };
 
     return (

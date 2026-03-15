@@ -4,6 +4,7 @@ import { usarPortfolio } from '../hooks/usarPortfolio';
 import { Skeleton } from '@/compartilhado/componentes/Skeleton';
 import { usarAutenticacao } from '@/contexto/ContextoAutenticacao';
 import { Link } from 'react-router';
+import { pluralizar } from '@/utilitarios/formatadores';
 
 /**
  * Landing Page do Portfolio Público da Fábrica de Software.
@@ -80,7 +81,7 @@ export const PaginaPortfolio = memo(() => {
                             <p className="text-slate-400 max-w-md font-medium">Sistemas ativos, modulares e focados em experiência do usuário.</p>
                         </div>
                         <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
-                            <Boxes size={14} /> {projetos.length} Projetos Publicados
+                            <Boxes size={14} /> {projetos.length} {pluralizar(projetos.length, 'Projeto', 'Projetos')} Publicados
                         </div>
                     </div>
 

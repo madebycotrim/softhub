@@ -34,7 +34,7 @@ export const ResumoPessoalDashboard = memo(() => {
     if (!perfil) return null;
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
             {/* Card: Tarefas Concluídas */}
             <div className="group relative bg-card/40 backdrop-blur-xl border border-border/40 p-5 rounded-[32px] transition-all duration-300 hover:shadow-lg active:scale-95">

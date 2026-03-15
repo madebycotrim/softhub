@@ -13,18 +13,6 @@ export const MinhasTarefasLista = memo(({ minhasTarefas }: MinhasTarefasListaPro
                 <ListTodo size={120} className="text-primary" />
             </div>
 
-            <div className="p-6 border-b border-border/40 flex items-center justify-between relative z-10">
-                <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
-                        <Briefcase className="w-4 h-4 text-primary" />
-                    </div>
-                    <h2 className="text-xs font-black uppercase tracking-[0.2em] text-foreground/80">Minhas Tarefas</h2>
-                </div>
-                <span className="text-[10px] bg-primary/10 text-primary px-3 py-1 rounded-full font-black shadow-sm border border-primary/10">
-                    {minhasTarefas.length} TAREFAS
-                </span>
-            </div>
-
             <div className="p-3 space-y-2 relative z-10 min-h-[220px]">
                 {minhasTarefas.slice(0, 5).map(tarefa => (
                     <Link 
