@@ -54,7 +54,7 @@ export function ModalDetalhesTarefa({ tarefa, aberto, aoFechar }: ModalDetalhesT
                                 {tarefa.pontos}
                             </div>
                             <div>
-                                <h4 className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-[0.2em]">Custo da Demanda</h4>
+                                <h4 className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-[0.2em]">Custo da Tarefa</h4>
                                 <p className="text-sm font-bold text-foreground">Pontos de Esforço</p>
                             </div>
                         </div>
@@ -73,7 +73,7 @@ export function ModalDetalhesTarefa({ tarefa, aberto, aoFechar }: ModalDetalhesT
                         </div>
                     ) : (
                         <div className="bg-muted/20 border border-dashed border-border/60 rounded-2xl p-8 text-center">
-                            <p className="text-sm text-muted-foreground/60 font-medium italic">Esta demanda não possui detalhes técnicos descritos.</p>
+                            <p className="text-sm text-muted-foreground/60 font-medium italic">Esta tarefa não possui detalhes técnicos descritos.</p>
                         </div>
                     )}
                 </div>

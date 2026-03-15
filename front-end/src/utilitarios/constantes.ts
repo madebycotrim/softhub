@@ -11,7 +11,7 @@ export type ColunaKanban = typeof COLUNAS_KANBAN[number];
 export const CORES_PRIORIDADE = {
     urgente: 'vermelho',
     alta: 'amarelo',
-    media: 'amarelo',
+    media: 'azul',
     baixa: 'verde',
 } as const;
 

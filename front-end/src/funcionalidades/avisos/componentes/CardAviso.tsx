@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { Trash2, Megaphone } from 'lucide-react';
 import { Avatar } from '@/compartilhado/componentes/Avatar';
 import { formatarDataHora } from '@/utilitarios/formatadores';
+import { Emblema } from '@/compartilhado/componentes/Emblema';
 
 interface CardAvisoProps {
     aviso: any;
@@ -22,13 +23,11 @@ export const CardAviso = memo(({ aviso, podeDeletar, aoRemover, index }: CardAvi
             {/* Lado Esquerdo - Conteúdo Principal */}
             <div className="flex-1 flex flex-col">
                 <div className="flex flex-wrap items-center gap-2 mb-4">
-                    <span className={`px-2.5 py-1 text-[9px] font-black uppercase tracking-widest rounded-2xl ${
-                        aviso.prioridade === 'urgente' ? 'bg-rose-50 text-rose-600 border border-rose-200/50' :
-                        aviso.prioridade === 'importante' ? 'bg-amber-50 text-amber-600 border border-amber-200/50' :
-                        'bg-blue-50 text-blue-600 border border-blue-200/50'
-                    }`}>
-                        {aviso.prioridade === 'urgente' ? 'Urgente' : aviso.prioridade === 'importante' ? 'Importante' : 'Normal'}
-                    </span>
+                    <Emblema 
+                        texto={aviso.prioridade === 'info' ? 'Informativo' : aviso.prioridade === 'importante' ? 'Importante' : 'Urgente'}
+                        variante={aviso.prioridade === 'urgente' ? 'vermelho' : aviso.prioridade === 'importante' ? 'amarelo' : 'azul'}
+                        className="py-1 px-3"
+                    />
                     <span className="text-muted-foreground/60 text-[10px] font-bold uppercase tracking-wider pl-2">
                         {formatarDataHora(aviso.criado_em)}
                     </span>

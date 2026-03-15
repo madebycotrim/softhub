@@ -139,13 +139,13 @@ export const GerenciarMembros = memo(() => {
                             placeholder="Buscar pessoa..."
                             value={busca}
                             onChange={e => setBusca(e.target.value)}
-                            className="w-full h-11 bg-muted/40 border border-border/40 rounded-xl pl-10 pr-4 text-[11px] font-bold outline-none focus:bg-background focus:border-primary/30 transition-all placeholder:text-muted-foreground/30"
+                            className="h-11 w-full bg-background border border-border rounded-2xl pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/30 font-medium"
                         />
                     </div>
 
                     <button
                         onClick={() => { setModoModal('individual'); setModalAberto(true); }}
-                        className="h-11 px-6 bg-primary text-primary-foreground rounded-full flex items-center gap-2 text-[11px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 active:scale-95 transition-all"
+                        className="h-11 px-6 bg-primary text-white rounded-2xl flex items-center gap-2 text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
                     >
                         <Plus size={18} strokeWidth={3} />
                         <span>Adicionar Pessoa</span>
@@ -154,7 +154,7 @@ export const GerenciarMembros = memo(() => {
                     <Tooltip texto="Adicionar Vários">
                         <button
                             onClick={() => { setModoModal('lote'); setModalAberto(true); }}
-                            className="h-11 w-11 bg-muted text-muted-foreground rounded-full flex items-center justify-center hover:bg-muted/80 hover:-translate-y-0.5 active:scale-95 transition-all border border-border/40"
+                            className="h-11 w-11 bg-muted/30 text-muted-foreground rounded-2xl flex items-center justify-center hover:bg-muted/50 active:scale-95 transition-all border border-border/40"
                         >
                             <LayersPlus size={18} strokeWidth={3} />
                         </button>

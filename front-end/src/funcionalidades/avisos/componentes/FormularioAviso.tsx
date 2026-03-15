@@ -66,14 +66,14 @@ export function FormularioAviso({ aoSalvar }: FormularioAvisoProps) {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
 
             <div>
-                <label htmlFor="titulo" className="block text-sm font-medium text-foreground mb-1">
+                <label htmlFor="titulo" className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 ml-1">
                     Título do Aviso
                 </label>
                 <input
                     id="titulo"
                     type="text"
                     placeholder="Ex: Prazo de entrega do Módulo 1..."
-                    className="w-full bg-background border border-input rounded-2xl px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                    className="h-11 w-full bg-background border border-border rounded-2xl px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/30 font-medium"
                     {...register('titulo')}
                 />
                 {errors.titulo && (
@@ -83,8 +83,8 @@ export function FormularioAviso({ aoSalvar }: FormularioAvisoProps) {
 
             <div>
                 <div className="flex justify-between items-end mb-1">
-                    <label htmlFor="conteudo" className="block text-sm font-medium text-foreground">
-                        Conteúdo
+                    <label htmlFor="conteudo" className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
+                        Conteúdo Detalhado
                     </label>
                     <button
                         type="button"
@@ -103,8 +103,8 @@ export function FormularioAviso({ aoSalvar }: FormularioAvisoProps) {
                 <textarea
                     id="conteudo"
                     rows={4}
-                    placeholder="Descreva o aviso com detalhes..."
-                    className="w-full bg-background border border-input rounded-2xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-none"
+                    placeholder="Descreva o que precisa ser comunicado..."
+                    className="w-full bg-background border border-border rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/30 font-medium resize-none shadow-sm"
                     {...register('conteudo')}
                 />
                 {errors.conteudo && (
@@ -114,10 +114,10 @@ export function FormularioAviso({ aoSalvar }: FormularioAvisoProps) {
 
             <div className="flex flex-col gap-5 mt-1">
                 <div>
-                    <label htmlFor="prioridade" className="flex items-center text-[14px] font-bold text-foreground mb-2 h-[20px]">
-                        Prioridade
+                    <label htmlFor="prioridade" className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 ml-1">
+                        Nível de Prioridade
                     </label>
-                    <div className="flex bg-background border border-input rounded-2xl p-1 h-12 w-full">
+                    <div className="flex flex-wrap gap-2 w-full">
                         {[
                             { value: 'info', label: 'Informativo', icon: '💬' },
                             { value: 'importante', label: 'Importante', icon: '⚠️' },
@@ -126,9 +126,9 @@ export function FormularioAviso({ aoSalvar }: FormularioAvisoProps) {
                             const ativo = prioridadeAtual === opt.value;
                             let classesAtivas = '';
                             if (ativo) {
-                                if (opt.value === 'urgente') classesAtivas = 'bg-rose-50 text-rose-600 shadow-sm border border-rose-200/50';
-                                else if (opt.value === 'importante') classesAtivas = 'bg-amber-50 text-amber-600 shadow-sm border border-amber-200/50';
-                                else classesAtivas = 'bg-blue-50 text-blue-600 shadow-sm border border-blue-200/50';
+                                if (opt.value === 'urgente') classesAtivas = 'bg-rose-500 border-rose-500 text-white shadow-rose-500/20';
+                                else if (opt.value === 'importante') classesAtivas = 'bg-amber-500 border-amber-500 text-white shadow-amber-500/20';
+                                else classesAtivas = 'bg-primary border-primary text-white shadow-primary/20';
                             }
 
                             return (
@@ -136,14 +136,14 @@ export function FormularioAviso({ aoSalvar }: FormularioAvisoProps) {
                                     key={opt.value}
                                     type="button"
                                     onClick={() => setValue('prioridade', opt.value as 'info' | 'importante' | 'urgente')}
-                                    className={`flex-1 flex items-center justify-center gap-1.5 rounded-2xl text-[12px] font-bold transition-all duration-300 select-none ${
+                                    className={`flex-1 min-w-[100px] h-11 flex items-center justify-center gap-2 rounded-2xl border text-[10px] font-black uppercase tracking-tighter transition-all duration-300 shadow-sm ${
                                         ativo
                                             ? classesAtivas
-                                            : 'text-muted-foreground hover:text-foreground hover:bg-muted/30 border border-transparent'
+                                            : 'bg-muted/30 border-border/50 text-muted-foreground/60 hover:bg-muted/50'
                                     }`}
                                 >
                                     <span>{opt.icon}</span>
-                                    <span className="hidden sm:inline">{opt.label}</span>
+                                    <span>{opt.label}</span>
                                 </button>
                             );
                         })}

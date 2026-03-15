@@ -90,7 +90,7 @@ export const LinhaJustificativa = memo(({
                                 }`}>
                                     <Bot size={14} strokeWidth={3} />
                                 </div>
-                                <span className="font-black uppercase tracking-[0.2em] text-[9px]">Análise Inteligente</span>
+                                <span className="font-black uppercase tracking-[0.2em] text-[9px]">Análise por IA</span>
                             </div>
                             <p className="text-[11px] leading-relaxed font-semibold">{analiseIA.analise}</p>
                         </div>
@@ -113,7 +113,7 @@ export const LinhaJustificativa = memo(({
                 <div className="flex items-center justify-end gap-3">
                     {just.status === 'pendente' ? (
                         <div className="flex items-center gap-2 bg-muted/10 p-1.5 rounded-2xl border border-border/30">
-                            <Tooltip texto="Analisar via IA">
+                            <Tooltip texto="Consultar IA">
                                 <button
                                     onClick={() => onAnalisarIA(just.id, just.motivo)}
                                     disabled={carregandoIA || !!analiseIA}

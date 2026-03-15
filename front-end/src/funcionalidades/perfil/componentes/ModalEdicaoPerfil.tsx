@@ -221,20 +221,20 @@ export const ModalEdicaoPerfil = memo(({ aberto, aoFechar }: ModalEdicaoPerfilPr
                                         {/* Coluna 1: Visual */}
                                         <div className="space-y-4">
                                             <div className="space-y-2">
-                                                <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Foto de Perfil (URL)</label>
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 mb-2 block">Foto de Perfil (URL)</label>
                                                 <div className="relative group/input">
                                                     <Camera className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within/input:text-primary" />
                                                     <input
                                                         type="url"
                                                         value={fotoPerfil}
                                                         onChange={e => setFotoPerfil(e.target.value) }
-                                                        className="w-full h-11 bg-slate-50 border border-slate-200 rounded-2xl pl-11 pr-5 text-sm font-medium outline-none focus:border-primary/40 transition-all font-mono"
+                                                        className="w-full h-11 bg-background border border-border rounded-2xl pl-11 pr-5 text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono placeholder:text-muted-foreground/30"
                                                         placeholder="https://..."
                                                     />
                                                 </div>
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Banner de Perfil (URL)</label>
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 mb-2 block">Banner de Perfil (URL)</label>
                                                 <div className="relative group/input">
                                                     <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within/input:text-primary" />
                                                     <input
@@ -247,11 +247,11 @@ export const ModalEdicaoPerfil = memo(({ aberto, aoFechar }: ModalEdicaoPerfilPr
                                                 </div>
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Biografia Profissional</label>
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 mb-2 block">Biografia Profissional</label>
                                                 <textarea
                                                     value={bio}
                                                     onChange={e => setBio(e.target.value)}
-                                                    className="w-full h-[108px] bg-slate-50 border border-slate-200 rounded-2xl p-5 text-sm font-medium outline-none focus:border-primary/40 transition-all resize-none leading-relaxed"
+                                                    className="w-full h-[108px] bg-background border border-border rounded-2xl p-5 text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none leading-relaxed placeholder:text-muted-foreground/30"
                                                     placeholder="Sua jornada..."
                                                 />
                                             </div>
@@ -260,7 +260,7 @@ export const ModalEdicaoPerfil = memo(({ aberto, aoFechar }: ModalEdicaoPerfilPr
                                         {/* Coluna 2: Redes Sociais */}
                                         <div className="space-y-4">
                                             <div className="space-y-2">
-                                                <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">GitHub (URL)</label>
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 mb-2 block">GitHub (URL)</label>
                                                 <div className="relative group/input">
                                                     <Github className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within/input:text-slate-900" />
                                                     <input
@@ -273,7 +273,7 @@ export const ModalEdicaoPerfil = memo(({ aberto, aoFechar }: ModalEdicaoPerfilPr
                                                 </div>
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">LinkedIn (URL)</label>
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 mb-2 block">LinkedIn (URL)</label>
                                                 <div className="relative group/input">
                                                     <Linkedin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within/input:text-blue-600" />
                                                     <input
@@ -286,7 +286,7 @@ export const ModalEdicaoPerfil = memo(({ aberto, aoFechar }: ModalEdicaoPerfilPr
                                                 </div>
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Portfólio / Site</label>
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 mb-2 block">Portfólio / Site</label>
                                                 <div className="relative group/input">
                                                     <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within/input:text-emerald-600" />
                                                     <input
@@ -347,14 +347,14 @@ export const ModalEdicaoPerfil = memo(({ aberto, aoFechar }: ModalEdicaoPerfilPr
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setEditando(false)}
-                                className="px-6 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors"
+                                className="h-12 px-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
                             >
                                 Descartar
                             </button>
                             <button
                                 onClick={handleSalvar}
                                 disabled={salvando}
-                                className="flex items-center justify-center gap-2 px-8 py-3 bg-primary text-white rounded-2xl font-black text-[9px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+                                className="h-12 px-8 bg-primary text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                             >
                                 <Save size={12} /> {salvando ? 'Salvando...' : 'Aplicar'}
                             </button>

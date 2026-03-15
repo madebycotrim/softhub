@@ -39,6 +39,7 @@ export function usarBacklog(projetoId: string = PROJETO_PADRAO_ID, filtros: Filt
             return data;
         },
         staleTime: 30000,
+        enabled: !!projetoId,
     });
 
     // Mutação para criar tarefa

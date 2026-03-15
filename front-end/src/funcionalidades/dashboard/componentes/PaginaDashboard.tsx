@@ -13,7 +13,6 @@ import { ComunicadosPrioritarios } from './ComunicadosPrioritarios';
 import { MinhasTarefasLista } from './MinhasTarefasLista';
 import { ResumoPessoalDashboard } from './ResumoPessoalDashboard';
 import { Skeleton, SkeletonCard, SkeletonRow } from '@/compartilhado/componentes/Skeleton';
-import { GraficoBurndown } from './GraficoBurndown';
 import { CabecalhoDashboard } from './CabecalhoDashboard';
 import { pluralizar } from '@/utilitarios/formatadores';
 
@@ -81,14 +80,7 @@ export const PaginaDashboard = memo(() => {
                     <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
                         {/* Coluna Central: Burndown e Avisos (SPAN 8) */}
                         <div className="xl:col-span-8 space-y-12">
-                            {/* Tendência de Entrega (Burndown) */}
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-3 px-1">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                                    <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-muted-foreground/60">Rumo à Entrega (Burndown)</h3>
-                                </div>
-                                <GraficoBurndown projetoId={projetoAtivoId} />
-                            </div>
+
                             
                             {/* Mural de Avisos */}
                             <div className="space-y-4">
@@ -131,7 +123,7 @@ export const PaginaDashboard = memo(() => {
                             <div className="p-6 bg-gradient-to-br from-primary/5 to-transparent border border-primary/10 rounded-[32px] overflow-hidden relative">
                                 <div className="relative z-10">
                                     <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">Dica de Produtividade</p>
-                                    <p className="text-xs text-muted-foreground leading-relaxed">Foque nas tarefas de prioridade <span className="text-rose-500 font-bold">Urgente</span> para manter o Burndown saudável.</p>
+                                    <p className="text-xs text-muted-foreground leading-relaxed">Foque nas tarefas de prioridade <span className="text-rose-500 font-bold">Urgente</span> para manter a produtividade da equipe.</p>
                                 </div>
                             </div>
                         </div>

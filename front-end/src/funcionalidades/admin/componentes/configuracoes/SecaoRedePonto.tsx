@@ -62,9 +62,9 @@ export function SecaoRedePonto({ configuracoes, atualizarConfiguracao, podeEdita
                         <input 
                             name="ip"
                             placeholder="Ex: 192.168.1.1"
-                            className="flex-1 bg-muted/40 border border-border/50 rounded-xl px-4 py-2.5 text-[11px] font-bold outline-none focus:bg-background focus:border-amber-500/30 transition-all placeholder:text-muted-foreground/30 font-mono"
+                            className="flex-1 h-11 bg-background border border-border rounded-2xl px-4 text-sm font-medium outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/40 transition-all placeholder:text-muted-foreground/30 font-mono shadow-sm"
                         />
-                        <button className="p-2.5 bg-amber-500 text-white rounded-xl shadow-lg shadow-amber-500/10 active:scale-95 transition-all hover:bg-amber-600 flex items-center justify-center">
+                        <button className="h-11 w-11 bg-amber-500 text-white rounded-2xl shadow-lg shadow-amber-500/20 active:scale-[0.98] hover:scale-[1.02] transition-all hover:bg-amber-600 flex items-center justify-center shrink-0">
                             <Plus size={18} strokeWidth={3} />
                         </button>
                     </form>

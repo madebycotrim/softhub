@@ -62,10 +62,10 @@ export function ModalCriarTarefa({ aberto, aoFechar, aoCriar }: ModalCriarTarefa
     };
 
     return (
-        <Modal aberto={aberto} aoFechar={aoFechar} titulo="Nova Demanda">
+        <Modal aberto={aberto} aoFechar={aoFechar} titulo="Nova Tarefa">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                 <div>
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Título da Tarefa</label>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 ml-1">Título da Tarefa</label>
                     <input
                         {...register('titulo')}
                         placeholder="Ex: Refatorar middleware de autenticação..."
@@ -76,7 +76,7 @@ export function ModalCriarTarefa({ aberto, aoFechar, aoCriar }: ModalCriarTarefa
 
                 <div>
                     <div className="flex justify-between items-center mb-2">
-                        <label className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground">Descrição Detalhada</label>
+                        <label className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Descrição Detalhada</label>
                         <button
                             type="button"
                             onClick={handleAprimorarDescricaoIA}
@@ -88,7 +88,7 @@ export function ModalCriarTarefa({ aberto, aoFechar, aoCriar }: ModalCriarTarefa
                             ) : (
                                 <Sparkles size={12} className="text-amber-500 group-hover:scale-125 transition-transform" />
                             )}
-                            Mágica do Tech Lead
+                            Refinar com IA
                         </button>
                     </div>
                     {erroIA && (
@@ -107,7 +107,7 @@ export function ModalCriarTarefa({ aberto, aoFechar, aoCriar }: ModalCriarTarefa
                 </div>
 
                 <div>
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Prioridade</label>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 ml-1">Prioridade</label>
                     <div className="flex flex-wrap gap-2">
                         {Object.entries(LABELS_PRIORIDADE).map(([key, label]) => (
                             <label
@@ -124,10 +124,13 @@ export function ModalCriarTarefa({ aberto, aoFechar, aoCriar }: ModalCriarTarefa
                                     className="hidden"
                                 />
                                 <div className={`
-                                    py-2 text-center rounded-2xl border text-[10px] font-black uppercase tracking-tighter transition-all
+                                    py-2 text-center rounded-2xl border text-[10px] font-black uppercase tracking-tighter transition-all shadow-sm
                                     ${watch('prioridade') === key 
-                                        ? 'bg-primary border-primary text-primary-foreground shadow-md' 
-                                        : 'bg-muted/30 border-border md:hover:bg-muted/50'}
+                                        ? key === 'urgente' ? 'bg-rose-500 border-rose-500 text-white shadow-rose-500/20' :
+                                          key === 'alta' ? 'bg-amber-500 border-amber-500 text-white shadow-amber-500/20' :
+                                          key === 'media' ? 'bg-primary border-primary text-white shadow-primary/20' :
+                                          'bg-emerald-500 border-emerald-500 text-white shadow-emerald-500/20'
+                                        : 'bg-muted/30 border-border/50 md:hover:bg-muted/50 text-muted-foreground/60'}
                                 `}>
                                     {label}
                                 </div>

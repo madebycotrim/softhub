@@ -51,7 +51,7 @@ export const JustificativaCardMobile = memo(({
             <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5 text-[9px] font-black uppercase text-muted-foreground/40">
                     <MessageSquare size={10} />
-                    <span>Argumentação do Operador</span>
+                    <span>Explicação do Membro</span>
                 </div>
                 <p className="text-[11px] leading-relaxed text-muted-foreground italic bg-muted/10 p-3 rounded-2xl border border-border/20">
                     "{justificativa.motivo}"
@@ -76,7 +76,7 @@ export const JustificativaCardMobile = memo(({
                         className="h-10 px-4 bg-primary/5 hover:bg-primary/10 text-primary rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-30"
                     >
                         {carregandoIA ? <div className="w-3 h-3 border-2 border-primary/30 border-t-primary rounded-full animate-spin" /> : <BrainCircuit size={14} />}
-                        <span>Inspecionar IA</span>
+                        <span>Analisar com IA</span>
                     </button>
                 )}
                 

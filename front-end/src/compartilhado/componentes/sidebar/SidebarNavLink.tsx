@@ -32,7 +32,9 @@ export const SidebarNavLink = memo(({ link, ativo, projetoAtivoId, onNavegar }: 
             queryClient.prefetchQuery({
                 queryKey: ['dashboard', projetoAtivoId],
                 queryFn: async () => {
-                    const res = await api.get(`/api/dashboard/${projetoAtivoId}`);
+                    const res = await api.get('/api/dashboard', { 
+                        params: { projetoId: projetoAtivoId } 
+                    });
                     return res.data;
                 },
                 staleTime: 30000,

@@ -40,21 +40,21 @@ export const ModalAlocacaoDireta = memo(({ aberto, aoFechar, membro, grupos, equ
         <Modal aberto={aberto} aoFechar={aoFechar} titulo="Alocação Rápida" largura="sm">
             <div className="space-y-6">
                 {membro && (
-                    <div className="flex items-center gap-4 p-4 bg-muted/20 rounded-2xl border border-border/40">
+                    <div className="flex items-center gap-4 p-4 bg-background border border-border/40 rounded-2xl shadow-sm">
                         <Avatar nome={membro.nome} fotoPerfil={membro.foto_perfil} />
                         <div>
-                            <p className="text-xs font-black uppercase tracking-widest text-foreground">{membro.nome}</p>
-                            <p className="text-[10px] text-muted-foreground">{membro.email}</p>
+                            <p className="text-[13px] font-black uppercase tracking-tight text-slate-900">{membro.nome}</p>
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase opacity-60 tracking-wider transition-opacity">{membro.email}</p>
                         </div>
                     </div>
                 )}
 
                 <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">Equipe Destino</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 block ml-1">Equipe Destino</label>
                     <select
                         value={equipe_id}
                         onChange={e => setEquipeId(e.target.value)}
-                        className="w-full h-11 bg-muted/40 border border-border/40 rounded-xl px-4 text-[11px] font-bold outline-none focus:bg-background focus:border-primary/30 transition-all appearance-none cursor-pointer"
+                        className="h-11 w-full bg-background border border-border rounded-2xl px-4 text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer shadow-sm hover:bg-muted/30"
                     >
                         <option value="">Selecione uma equipe...</option>
                         {equipes.map((e: any) => <option key={e.id} value={e.id}>{e.nome}</option>)}
@@ -62,11 +62,11 @@ export const ModalAlocacaoDireta = memo(({ aberto, aoFechar, membro, grupos, equ
                 </div>
 
                 <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">Grupo Destino</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 block ml-1">Grupo Destino</label>
                     <select
                         value={grupo_id}
                         onChange={e => setGrupoId(e.target.value)}
-                        className="w-full h-11 bg-muted/40 border border-border/40 rounded-xl px-4 text-[11px] font-bold outline-none focus:bg-background focus:border-primary/30 transition-all appearance-none cursor-pointer"
+                        className="h-11 w-full bg-background border border-border rounded-2xl px-4 text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer shadow-sm hover:bg-muted/30 disabled:opacity-30 disabled:grayscale disabled:pointer-events-none"
                         disabled={!equipe_id}
                     >
                         <option value="">Selecione um grupo...</option>
@@ -78,7 +78,7 @@ export const ModalAlocacaoDireta = memo(({ aberto, aoFechar, membro, grupos, equ
                     <button
                         onClick={handleConfirmar}
                         disabled={salvando || !equipe_id || !grupo_id}
-                        className="w-full h-12 bg-primary text-primary-foreground rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-primary/90 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:translate-y-0 transition-all flex items-center justify-center gap-2"
+                        className="h-12 w-full bg-primary text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                         {salvando ? <Carregando Centralizar={false} tamanho="sm" className="border-t-white" /> : (
                             <>

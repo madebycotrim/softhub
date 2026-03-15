@@ -104,16 +104,16 @@ export function PainelJustificativas() {
                                 <thead>
                                     <tr className="border-b border-border bg-muted/10 sticky top-0 z-10 backdrop-blur-md">
                                         <th className="px-6 py-4 text-left text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 w-[25%]">
-                                            OPERADOR
+                                            MEMBRO
                                         </th>
                                         <th className="px-4 py-4 text-left text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 w-[20%]">
-                                            ESTADO & CRONOGRAMA
+                                            SITUAÇÃO & DATA
                                         </th>
                                         <th className="px-4 py-4 text-left text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
-                                            INCIDENTE & ARGUMENTAÇÃO
+                                            MOTIVO & EXPLICAÇÃO
                                         </th>
                                         <th className="px-6 py-4 text-right text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 w-[140px]">
-                                            CONTROLES
+                                            AÇÕES
                                         </th>
                                     </tr>
                                 </thead>
